@@ -25,8 +25,8 @@ def main():
     else:
         display_1D(data.variables[variable_target])
 
-#    display_2D(data.variables[variable_target])
-#    display_3D(data.variables[variable_target])
+    display_2D(data.variables[variable_target])
+    display_3D(data.variables[variable_target])
 
 
 #    dimension_target = data.variables[variable_target].dimensions # get access to all dimensions names
