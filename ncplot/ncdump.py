@@ -1,6 +1,6 @@
 from numpy import isin
 
-def ncdump(filename, nc_fid, verb=True):
+def ncextract(filename, nc_fid, verb=True):
     '''
     ncdump outputs dimensions, variables and their attribute information.
     The information is similar to that of NCAR's ncdump utility.

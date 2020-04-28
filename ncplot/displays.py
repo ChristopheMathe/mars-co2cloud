@@ -57,17 +57,42 @@ def display_3D(data):
 #======================================================================================================================#
 
 #TODO: display => gas non-condensable, la température, distribution de colonne de co2_ice, h2o_ice, h2o_vap, tau
-def display_colonne(data):
+def display_colonne(data, data_time, data_latitude):
     import matplotlib.pyplot as plt
     from numpy import sum, mean
 
+    print(data_latitude[:])
     zonal_mean_density_column = sum(mean(data[:,:,:,:], axis=3), axis=1)
     zonal_mean_density_column = zonal_mean_density_column.T
 
     plt.figure()
-    plt.contour(zonal_mean_density_column)
+    plt.title('Zonal mean column density of '+data.name)
+    plt.contourf(zonal_mean_density_column)
+    locs, labels = plt.yticks()
+    print(labels)
+    labels = data_latitude[:]
+    print(labels)
+    plt.yticks(yticks= locs, labels=labels)
+    plt.colorbar()
+    plt.xlabel('Solar Longitude (°)')
+    plt.ylabel('Latitude (°N)')
+    plt.savefig('zonal_mean_density_column_'+data.name+'.png', bbox_inches='tight')
     plt.show()
 
-
 def display_zonal_mean(data):
+    import matplotlib.pyplot as plt
+    from numpy import sum
+
+    print(data)
+    zonal_mean = sum(data[:, :, :], axis=2)
+    zonal_mean = zonal_mean.T
+
+    plt.figure()
+    plt.title('Zonal mean of ' + data.name)
+    plt.contourf(zonal_mean)
+    plt.colorbar()
+    plt.xlabel('Solar Longitude (°)')
+    plt.ylabel('Latitude (°N)')
+    plt.savefig('zonal_mean_' + data.name + '.png', bbox_inches='tight')
+    plt.show()
     print('To be build')
