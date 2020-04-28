@@ -66,9 +66,12 @@ def ncdump(filename, nc_fid, verb=True):
         print("|======================================================================|")
         print("|   NetCDF  information                                                |")
         print("|======================================================================|")
-        print("|Dimension                    | {} | {} | {} | {} |".format(nc_dims[0], nc_dims[1], nc_dims[2], nc_dims[3]))
+        print("|Dimension                    | {} | {} | {} | {} | {}".format(nc_dims[0], nc_dims[1], nc_dims[2],
+                                                                            nc_dims[3], nc_dims[4]))
         print("|-----------------------------+------+----------+----------+-----------|")
-        print("|Size                         | {:<4d} | {:<8d} | {:<8d} | {:<9d} |".format(nc_size[0], nc_size[1], nc_size[2], nc_size[3]))
+        print("|Size                         | {:<4d} | {:<8d} | {:<8d} | {:<9d} | {}".format(nc_size[0], nc_size[1],
+                                                                                            nc_size[2], nc_size[3],
+                                                                                              nc_size[4]))
         print("|=============================+======+==========+==========+===========|")
         test = [x for x in nc_vars if x not in nc_dims]
 
