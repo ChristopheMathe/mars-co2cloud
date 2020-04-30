@@ -59,27 +59,31 @@ def display_3D(data):
 #TODO: display => gas non-condensable, la température, distribution de colonne de co2_ice, h2o_ice, h2o_vap, tau
 def display_colonne(data, data_time, data_latitude):
     import matplotlib.pyplot as plt
-    from numpy import sum, mean
+    from numpy import sum, mean, arange, searchsorted, int_, flip
 
-    print(data_latitude[:])
-    zonal_mean_density_column = sum(mean(data[:,:,:,:], axis=3), axis=1)
-    zonal_mean_density_column = zonal_mean_density_column.T
-
+    ndx = searchsorted(data_time[:], [0,90,180,270,360])
+    zonal_mean_density_column = sum(mean(data[:,:,:,:], axis=3), axis=1) # Ls function of lat
     plt.figure()
-    plt.title('Zonal mean column density of '+data.name)
     plt.contourf(zonal_mean_density_column)
-    locs, labels = plt.yticks()
-    print(labels)
-    labels = data_latitude[:]
-    print(labels)
-    plt.yticks(yticks= locs, labels=labels)
-    plt.colorbar()
+    print(data_latitude[:])
+
+    zonal_mean_density_column = zonal_mean_density_column.T # lat function of Ls
+    zonal_mean_density_column = flip(zonal_mean_density_column, axis=0)
+    data_latitude = data_latitude[::-1]
+    plt.figure()
+    plt.title('Zonal mean column density of '+data.title)
+    plt.contourf(zonal_mean_density_column)
+    plt.yticks(ticks=arange(0,len(data_latitude), 6), labels=data_latitude[::6])
+    plt.xticks(ticks=ndx, labels=int_(data_time[ndx]))
+    cbar = plt.colorbar()
+    cbar.ax.set_title('kg/m$^{2}$')
     plt.xlabel('Solar Longitude (°)')
     plt.ylabel('Latitude (°N)')
-    plt.savefig('zonal_mean_density_column_'+data.name+'.png', bbox_inches='tight')
+    plt.savefig('zonal_mean_density_column_'+data.title+'.png', bbox_inches='tight')
+
     plt.show()
 
-def display_zonal_mean(data):
+def display_zonal_mean(data, data_time, data_latitude):
     import matplotlib.pyplot as plt
     from numpy import sum
 
@@ -88,11 +92,12 @@ def display_zonal_mean(data):
     zonal_mean = zonal_mean.T
 
     plt.figure()
-    plt.title('Zonal mean of ' + data.name)
+    plt.title('Zonal mean of ' + data.title)
     plt.contourf(zonal_mean)
-    plt.colorbar()
+    cbar = plt.colorbar()
+    cbar.ax.set_title(data.units)
     plt.xlabel('Solar Longitude (°)')
     plt.ylabel('Latitude (°N)')
-    plt.savefig('zonal_mean_' + data.name + '.png', bbox_inches='tight')
+    plt.savefig('zonal_mean_' + data.title + '.png', bbox_inches='tight')
     plt.show()
     print('To be build')
