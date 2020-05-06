@@ -57,31 +57,41 @@ def display_3D(data):
 #======================================================================================================================#
 
 #TODO: display => gas non-condensable, la température, distribution de colonne de co2_ice, h2o_ice, h2o_vap, tau
-def display_colonne(data, data_time, data_latitude):
+def display_colonne(data, data_time, data_latitude, unit):
     import matplotlib.pyplot as plt
-    from numpy import sum, mean, arange, searchsorted, int_, flip
+    from numpy import sum, mean, arange, searchsorted, int_, flip, linspace
+    from scipy.interpolate import interp2d
 
-    ndx = searchsorted(data_time[:], [0,90,180,270,360])
-    zonal_mean_density_column = sum(mean(data[:,:,:,:], axis=3), axis=1) # Ls function of lat
-    plt.figure()
-    plt.contourf(zonal_mean_density_column)
-    print(data_latitude[:])
+    # compute zonal mean column density
+    zonal_mean_column_density = sum(mean(data[:,:,:,:], axis=3), axis=1) # Ls function of lat
+    zonal_mean_column_density = zonal_mean_column_density.T # lat function of Ls
+    zonal_mean_column_density = flip(zonal_mean_column_density, axis=0) # reverse to get North pole on top of the fig
+    data_latitude = data_latitude[::-1] # And so the labels
 
-    zonal_mean_density_column = zonal_mean_density_column.T # lat function of Ls
-    zonal_mean_density_column = flip(zonal_mean_density_column, axis=0)
-    data_latitude = data_latitude[::-1]
-    plt.figure()
+    # interpolation to get linear Ls
+    f = interp2d(x=arange(len(data_time)), y=arange(len(data_latitude)), z=zonal_mean_column_density,kind='linear')
+    axis_ls = linspace(0, 360, len(data_time[:]))
+    ndx = searchsorted(axis_ls, [0, 90, 180, 270, 360])
+    interp_time = searchsorted(data_time,axis_ls)
+    zonal_mean_column_density = f(interp_time,arange(len(data_latitude)))
+
+    if unit is 'pr.µm':
+        zonal_mean_column_density = zonal_mean_column_density * 1e3 # convert kg/m2 to pr.µm
+
+    # plot
+    plt.figure(figsize=(11,8))
     plt.title('Zonal mean column density of '+data.title)
-    plt.contourf(zonal_mean_density_column)
+    plt.contourf(zonal_mean_column_density, levels=200, cmap='inferno')
+    plt.grid(axis='y',color='white')
     plt.yticks(ticks=arange(0,len(data_latitude), 6), labels=data_latitude[::6])
-    plt.xticks(ticks=ndx, labels=int_(data_time[ndx]))
+    plt.xticks(ticks=ndx, labels=int_(axis_ls[ndx]))
     cbar = plt.colorbar()
-    cbar.ax.set_title('kg/m$^{2}$')
+    cbar.ax.set_title(unit)
     plt.xlabel('Solar Longitude (°)')
     plt.ylabel('Latitude (°N)')
     plt.savefig('zonal_mean_density_column_'+data.title+'.png', bbox_inches='tight')
-
     plt.show()
+
 
 def display_zonal_mean(data, data_time, data_latitude):
     import matplotlib.pyplot as plt
