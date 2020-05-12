@@ -102,6 +102,7 @@ def display_rsedco2(data, data_time, data_latitude, unit):
     zonal_mean = mean(data[:,:,:,:], axis=3) # Ls function of lat
     print(zonal_mean.shape)
     zonal_mean_max = amax(zonal_mean, axis=1) # get the max value in altitude zonal mean
+    print(zonal_mean_max)
     zonal_mean_max = zonal_mean_max.T # lat function of Ls
     zonal_mean_max = flip(zonal_mean_max, axis=0) # reverse to get North pole on top of the fig
     data_latitude = data_latitude[::-1] # And so the labels
