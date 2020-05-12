@@ -2,7 +2,7 @@
 
 from netCDF4 import Dataset
 from ncdump import ncextract
-from displays import display_1D, display_2D, display_3D, display_colonne, display_zonal_mean
+from displays import display_1D, display_2D, display_3D, display_colonne, display_zonal_mean, display_rsedco2
 from os import listdir
 from sys import exit
 
@@ -32,6 +32,8 @@ def main():
         display_colonne(data.variables[variable_target], data_time, data_latitude, unit='pr.µm')
     elif data.variables[variable_target].name in ['co2_conservation']:
         display_1D(data.variables[variable_target])
+    elif data.variables[variable_target].name in ['rsedcloudco2']:
+        display_rsedco2(data.variables[variable_target], data_time, data_latitude, unit='m')
     else:
         print('Variable not used for the moment')
 

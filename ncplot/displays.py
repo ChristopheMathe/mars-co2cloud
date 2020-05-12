@@ -93,6 +93,41 @@ def display_colonne(data, data_time, data_latitude, unit):
     plt.show()
 
 
+def display_rsedco2(data, data_time, data_latitude, unit):
+    import matplotlib.pyplot as plt
+    from numpy import amax, mean, arange, searchsorted, int_, flip, linspace
+    from scipy.interpolate import interp2d
+
+    # zonal mean
+    zonal_mean = mean(data[:,:,:,:], axis=3) # Ls function of lat
+    zonal_mean_max = amax(zonal_mean, axis=2) # get the max value in altitude zonal mean
+    zonal_mean_max = zonal_mean_max.T # lat function of Ls
+    zonal_mean_max = flip(zonal_mean_max, axis=0) # reverse to get North pole on top of the fig
+    data_latitude = data_latitude[::-1] # And so the labels
+
+    # interpolation to get linear Ls
+    f = interp2d(x=arange(len(data_time)), y=arange(len(data_latitude)), z=zonal_mean_max,kind='linear')
+    axis_ls = linspace(0, 360, len(data_time[:]))
+    ndx = searchsorted(axis_ls, [0, 90, 180, 270, 360])
+    interp_time = searchsorted(data_time,axis_ls)
+    zonal_mean_column_density = f(interp_time,arange(len(data_latitude)))
+
+    # plot
+    plt.figure(figsize=(11,8))
+    plt.title('Zonal mean of max '+data.title)
+    plt.contourf(zonal_mean_max, levels=200, cmap='inferno')
+    plt.grid(axis='y',color='white')
+    plt.yticks(ticks=arange(0,len(data_latitude), 6), labels=data_latitude[::6])
+    plt.xticks(ticks=ndx, labels=int_(axis_ls[ndx]))
+    cbar = plt.colorbar()
+    cbar.ax.set_title(unit)
+    plt.xlabel('Solar Longitude (°)')
+    plt.ylabel('Latitude (°N)')
+    plt.savefig('zonal_mean_max_'+data.title+'.png', bbox_inches='tight')
+    plt.show()
+
+
+
 def display_zonal_mean(data, data_time, data_latitude):
     import matplotlib.pyplot as plt
     from numpy import sum
