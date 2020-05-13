@@ -2,7 +2,7 @@
 
 from netCDF4 import Dataset
 from ncdump import ncextract
-from displays import display_1D, display_2D, display_3D, display_colonne, display_zonal_mean, display_rsedco2
+from displays import display_1D, display_2D, display_3D, display_colonne, display_zonal_mean, display_max_lon_alt
 from os import listdir
 from sys import exit
 
@@ -24,10 +24,16 @@ def main():
     variable_target = input('Select the variable: ') #TODO faire les tests si la variable existe
     data_time = data.variables['Ls']
     data_latitude = data.variables['latitude']
-
+    data_altitude = data.variables['altitude']
 
     if data.variables[variable_target].name in ['co2_ice', 'h2o_ice']:
-        display_colonne(data.variables[variable_target], data_time, data_latitude, unit='kg/m$^2$')
+        view_mode = int(input('View (max=1, column=2): '))
+        if view_mode == 1:
+            display_max_lon_alt(data.variables[variable_target], data_time, data_latitude, data_altitude, unit='kg/kg')
+        elif view_mode == 2:
+            display_colonne(data.variables[variable_target], data_time, data_latitude, unit='kg/m$^2$')
+        else:
+            print('Wrong number')
     elif data.variables[variable_target].name in ['h2o_vap']:
         display_colonne(data.variables[variable_target], data_time, data_latitude, unit='pr.µm')
     elif data.variables[variable_target].name in ['co2_conservation']:

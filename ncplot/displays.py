@@ -59,7 +59,8 @@ def display_3D(data):
 #TODO: display => gas non-condensable, la température, distribution de colonne de co2_ice, h2o_ice, h2o_vap, tau
 def display_colonne(data, data_time, data_latitude, unit):
     import matplotlib.pyplot as plt
-    from numpy import sum, mean, arange, searchsorted, int_, flip, linspace
+    from matplotlib.colors import LogNorm
+    from numpy import sum, mean, arange, searchsorted, int_, flip, linspace, logspace, where
     from scipy.interpolate import interp2d
 
     # compute zonal mean column density
@@ -75,14 +76,16 @@ def display_colonne(data, data_time, data_latitude, unit):
     interp_time = searchsorted(data_time,axis_ls)
     zonal_mean_column_density = f(interp_time,arange(len(data_latitude)))
 
+    rows, cols = where(zonal_mean_column_density < 1e-10)
+    zonal_mean_column_density[rows, cols] = 1e-10
+
     if unit is 'pr.µm':
         zonal_mean_column_density = zonal_mean_column_density * 1e3 # convert kg/m2 to pr.µm
 
     # plot
     plt.figure(figsize=(11,8))
     plt.title('Zonal mean column density of '+data.title)
-    plt.contourf(zonal_mean_column_density, levels=200, cmap='inferno')
-    plt.grid(axis='y',color='white')
+    plt.contourf(zonal_mean_column_density, norm=LogNorm(), levels=logspace(-10,0,11), cmap='inferno')
     plt.yticks(ticks=arange(0,len(data_latitude), 6), labels=data_latitude[::6])
     plt.xticks(ticks=ndx, labels=int_(axis_ls[ndx]))
     cbar = plt.colorbar()
@@ -93,42 +96,78 @@ def display_colonne(data, data_time, data_latitude, unit):
     plt.show()
 
 
-def display_rsedco2(data, data_time, data_latitude, unit):
+#======================================================================================================================#
+#================================= DISPLAY max value in altitude / longitude ==========================================#
+#======================================================================================================================#
+
+
+def display_max_lon_alt(data, data_time, data_latitude, data_altitude, unit):
     import matplotlib.pyplot as plt
-    from numpy import amax, mean, arange, searchsorted, int_, flip, linspace
+    from matplotlib.colors import LogNorm
+    from numpy import amax, arange, searchsorted, int_, flip, linspace, where, logspace, argmax, zeros
     from scipy.interpolate import interp2d
 
-    # zonal mean
-    zonal_mean = mean(data[:,:,:,:], axis=3) # Ls function of lat
-    print(zonal_mean.shape)
-    zonal_mean_max = amax(zonal_mean, axis=1) # get the max value in altitude zonal mean
-    print(zonal_mean_max)
-    print(zonal_mean_max.shape)
-    zonal_mean_max = zonal_mean_max.T # lat function of Ls
-    zonal_mean_max = flip(zonal_mean_max, axis=0) # reverse to get North pole on top of the fig
+    # get max value along altitude and longitude
+    max_in_longitude = amax(data[:,:,:,:], axis=3) # get the max value in longitude
+    max_in_longitude_altitude = amax(max_in_longitude, axis=1) # get the max value in altitude
+
+    # get the altitude index of the max value
+    index_max = argmax(max_in_longitude, axis=1)
+    altitude_max = zeros((index_max.shape[0], index_max.shape[1]))
+    for i in range(index_max.shape[0]):
+        for j in range(index_max.shape[1]):
+            altitude_max[i,j] = data_altitude[index_max[i,j]]
+
+    # reshape data
+    max_in_longitude_altitude = max_in_longitude_altitude.T # lat function of Ls
+    max_in_longitude_altitude = flip(max_in_longitude_altitude, axis=0) # reverse to get North pole on top of the fig
+    altitude_max = altitude_max.T
+    altitude_max = flip(altitude_max, axis=0)
     data_latitude = data_latitude[::-1] # And so the labels
 
+
     # interpolation to get linear Ls
-    f = interp2d(x=arange(len(data_time)), y=arange(len(data_latitude)), z=zonal_mean_max,kind='linear')
+    f = interp2d(x=arange(len(data_time)), y=arange(len(data_latitude)), z=max_in_longitude_altitude,kind='linear')
     axis_ls = linspace(0, 360, len(data_time[:]))
     ndx = searchsorted(axis_ls, [0, 90, 180, 270, 360])
     interp_time = searchsorted(data_time,axis_ls)
-    zonal_mean_column_density = f(interp_time,arange(len(data_latitude)))
+    max_in_longitude_altitude = f(interp_time,arange(len(data_latitude)))
+
+    rows, cols = where(max_in_longitude_altitude < 1e-10)
+    max_in_longitude_altitude[rows, cols] = 1e-10
 
     # plot
-    plt.figure(figsize=(11,8))
-    plt.title('Zonal mean of max '+data.title)
-    plt.contourf(zonal_mean_max, levels=200, cmap='inferno')
-    plt.grid(axis='y',color='white')
-    plt.yticks(ticks=arange(0,len(data_latitude), 6), labels=data_latitude[::6])
-    plt.xticks(ticks=ndx, labels=int_(axis_ls[ndx]))
-    cbar = plt.colorbar()
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(11,8))
+    ax[0].set_title('Max '+data.title+' in altitude/longitude')
+    pc = ax[0].contourf(max_in_longitude_altitude, norm=LogNorm(), levels=logspace(-10,0,11), cmap='inferno')
+    ax[0].set_yticks(ticks=arange(0,len(data_latitude), 6))
+    ax[0].set_yticklabels(labels=data_latitude[::6])
+    ax[0].set_xticks(ticks=ndx)
+    ax[0].set_xticklabels(labels=int_(axis_ls[ndx]))
+    cbar = plt.colorbar(pc, ax=ax[0])
     cbar.ax.set_title(unit)
-    plt.xlabel('Solar Longitude (°)')
-    plt.ylabel('Latitude (°N)')
-    plt.savefig('zonal_mean_max_'+data.title+'.png', bbox_inches='tight')
+    ax[0].set_ylabel('Latitude (°N)')
+
+    # plot 2
+    print(altitude_max.shape)
+    ax[1].set_title('Altitude of max mmr co2_ice')
+    pc2 = ax[1].contourf(altitude_max, cmap='inferno')
+    ax[1].set_yticks(ticks=arange(0,len(data_latitude), 6))
+    ax[1].set_yticklabels(labels=data_latitude[::6])
+    ax[1].set_xticks(ticks=ndx)
+    ax[1].set_xticklabels(labels=int_(axis_ls[ndx]))
+    ax[1].set_xlabel('Solar Longitude (°)')
+    ax[1].set_ylabel('Latitude (°N)')
+    cbar2 = plt.colorbar(pc2, ax=ax[1])
+    cbar2.ax.set_title('km')
+
+    fig.savefig('max_'+data.title+'_in_altitude_longitude.png', bbox_inches='tight')
     plt.show()
 
+
+#======================================================================================================================#
+#============================================ DISPLAY XXXXXX ==============================================#
+#======================================================================================================================#
 
 
 def display_zonal_mean(data, data_time, data_latitude):
