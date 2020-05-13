@@ -139,7 +139,7 @@ def display_max_lon_alt(data, data_time, data_latitude, data_altitude, unit):
     # plot
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(11,8))
     ax[0].set_title('Max '+data.title+' in altitude/longitude')
-    pc = ax[0].contourf(max_in_longitude_altitude, norm=LogNorm(), levels=logspace(-10,0,11), cmap='inferno')
+    pc = ax[0].contourf(max_in_longitude_altitude, norm=LogNorm(), levels=logspace(-10,0,11), cmap='bwr')
     ax[0].set_yticks(ticks=arange(0,len(data_latitude), 6))
     ax[0].set_yticklabels(labels=data_latitude[::6])
     ax[0].set_xticks(ticks=ndx)
@@ -151,7 +151,7 @@ def display_max_lon_alt(data, data_time, data_latitude, data_altitude, unit):
     # plot 2
     print(altitude_max.shape)
     ax[1].set_title('Altitude of max mmr co2_ice')
-    pc2 = ax[1].contourf(altitude_max, cmap='inferno')
+    pc2 = ax[1].contourf(altitude_max, cmap='bwr')
     ax[1].set_yticks(ticks=arange(0,len(data_latitude), 6))
     ax[1].set_yticklabels(labels=data_latitude[::6])
     ax[1].set_xticks(ticks=ndx)
