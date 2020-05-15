@@ -103,10 +103,13 @@ def display_colonne(data, data_time, data_latitude, unit):
 
 def display_max_lon_alt(data, data_time, data_latitude, data_altitude, unit):
     import matplotlib.pyplot as plt
-    from matplotlib.colors import LogNorm
-    from numpy import amax, arange, searchsorted, int_, flip, linspace, where, logspace, argmax, zeros
+    from matplotlib import cm
+    from matplotlib.colors import LogNorm, ListedColormap
+    from numpy import amax, arange, searchsorted, int_, flip, linspace, where, logspace, argmax, zeros, array
     from scipy.interpolate import interp2d
 
+    print(data_altitude[:])
+    print(len(data_altitude[:]))
     # get max value along altitude and longitude
     max_in_longitude = amax(data[:,:,:,:], axis=3) # get the max value in longitude
     max_in_longitude_altitude = amax(max_in_longitude, axis=1) # get the max value in altitude
@@ -148,10 +151,16 @@ def display_max_lon_alt(data, data_time, data_latitude, data_altitude, unit):
     cbar.ax.set_title(unit)
     ax[0].set_ylabel('Latitude (°N)')
 
+    viridis = cm.get_cmap('bwr', len(data_altitude[:]))
+    newcolors = viridis(linspace(0, 1, len(data_altitude[:])))
+    black = array([0, 0, 0, 1])
+    newcolors[0, :] = black
+    newcmp = ListedColormap(newcolors)
+
     # plot 2
-    print(altitude_max.shape)
     ax[1].set_title('Altitude of max mmr co2_ice')
-    pc2 = ax[1].contourf(altitude_max, cmap='bwr')
+    pc2 = ax[1].contourf(altitude_max, vmin=data_altitude[0], vmax=data_altitude[-1], levels=data_altitude[:],
+                         cmap=newcmp)
     ax[1].set_yticks(ticks=arange(0,len(data_latitude), 6))
     ax[1].set_yticklabels(labels=data_latitude[::6])
     ax[1].set_xticks(ticks=ndx)
