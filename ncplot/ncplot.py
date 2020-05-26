@@ -5,7 +5,7 @@ from ncdump import ncextract
 from displays import display_1D, display_2D, display_3D, display_colonne, display_zonal_mean, display_max_lon_alt
 from os import listdir
 from sys import exit
-
+import numpy as np
 
 def main():
     files = listdir('.')
@@ -20,16 +20,21 @@ def main():
     data = Dataset(filename, "r", format="NETCDF4")
 
     ncextract(filename, data, verb=True)
+    #    dimension_target = data.variables[variable_target].dimensions # get access to all dimensions names
+    #    dimension1 = len(data.dimensions[dimension_target[0]]) # get access to the value of a dimension
 
     variable_target = input('Select the variable: ') #TODO faire les tests si la variable existe
     data_time = data.variables['Ls']
     data_latitude = data.variables['latitude']
     data_altitude = data.variables['altitude']
+    data_temperature = data.variables['temp']
+    data_satuco2 = data.variables['satuco2']
 
     if data.variables[variable_target].name in ['co2_ice', 'h2o_ice']:
         view_mode = int(input('View (max=1, column=2): '))
         if view_mode == 1:
-            display_max_lon_alt(data.variables[variable_target], data_time, data_latitude, data_altitude, unit='kg/kg')
+            display_max_lon_alt(data.variables[variable_target], data_time, data_latitude, data_altitude,
+                                data_temperature, data_satuco2, unit='kg/kg')
         elif view_mode == 2:
             display_colonne(data.variables[variable_target], data_time, data_latitude, unit='kg/m$^2$')
         else:
@@ -42,25 +47,6 @@ def main():
         display_rsedco2(data.variables[variable_target], data_time, data_latitude, unit='m')
     else:
         print('Variable not used for the moment')
-
- #   if len(data.variables[variable_target].shape) > 1:
- #       display_mode = input('View mode (2D/3D): ')
- #       if display_mode == '2D':
- #           purpose = input('What do you want (view/column/zonal)? ')
- #           if purpose == 'view':
- #               display_2D(data.variables[variable_target])
- #           else:
- #               print("Wrong input.")
- #       elif display_mode == '3D':
- #           display_3D(data.variables[variable_target])
- #       else:
- #           print('Choose between 2D and 3D')
- #   else:
- #       display_1D(data.variables[variable_target])
-
-
-#    dimension_target = data.variables[variable_target].dimensions # get access to all dimensions names
-#    dimension1 = len(data.dimensions[dimension_target[0]]) # get access to the value of a dimension
 
 
 if '__main__' == __name__:

@@ -101,76 +101,133 @@ def display_colonne(data, data_time, data_latitude, unit):
 #======================================================================================================================#
 
 
-def display_max_lon_alt(data, data_time, data_latitude, data_altitude, unit):
+def display_max_lon_alt(data, data_time, data_latitude, data_altitude, data_temp, data_satu, unit):
     import matplotlib.pyplot as plt
-    from matplotlib import cm
-    from matplotlib.colors import LogNorm, ListedColormap
-    from numpy import amax, arange, searchsorted, int_, flip, linspace, where, logspace, argmax, zeros, array
+    from matplotlib.colors import LogNorm
+    from numpy import arange, searchsorted, int_, flip, linspace, where, logspace, unravel_index, swapaxes, reshape, \
+        asarray
     from scipy.interpolate import interp2d
+    import numpy.ma as ma
 
-    print(data_altitude[:])
-    print(len(data_altitude[:]))
+    data_y = data[:,:,:,:]
     # get max value along altitude and longitude
-    max_in_longitude = amax(data[:,:,:,:], axis=3) # get the max value in longitude
-    max_in_longitude_altitude = amax(max_in_longitude, axis=1) # get the max value in altitude
+    #max_mmr = amax(data_y, axis=(1,3)) # get the max mmr value in longitude/altitude
 
-    # get the altitude index of the max value
-    index_max = argmax(max_in_longitude, axis=1)
-    altitude_max = zeros((index_max.shape[0], index_max.shape[1]))
-    for i in range(index_max.shape[0]):
-        for j in range(index_max.shape[1]):
-            altitude_max[i,j] = data_altitude[index_max[i,j]]
+    B = swapaxes(data_y, 1, 2)
+    max_idx = B.reshape((B.shape[0],B.shape[1], -1)).argmax(2)
+    x, y = unravel_index(max_idx, B[0, 0, :].shape)
+
+    max_mmr = [B[i, j,x[i,j],y[i,j]] for i in range(B.shape[0]) for j in range(B.shape[1])]
+    max_mmr = asarray(max_mmr)
+    max_mmr = reshape(max_mmr, (data_y.shape[0], data_y.shape[2]))
+
+    max_temp = swapaxes(data_temp, 1, 2)
+    max_temp = [max_temp[i, j,x[i,j],y[i,j]] for i in range(max_temp.shape[0]) for j in range(max_temp.shape[1])]
+    max_temp = asarray(max_temp)
+    max_temp = reshape(max_temp, (data_y.shape[0], data_y.shape[2]))
+
+    max_satu = swapaxes(data_satu, 1, 2)
+    max_satu = [max_satu[i, j,x[i,j],y[i,j]] for i in range(max_satu.shape[0]) for j in range(max_satu.shape[1])]
+    max_satu = asarray(max_satu)
+    max_satu = reshape(max_satu, (data_y.shape[0], data_y.shape[2]))
+
+    max_alt = [data_altitude[x[i,j]] for i in range(B.shape[0]) for j in range(B.shape[1])]
+    max_alt = asarray(max_alt)
+    max_alt = reshape(max_alt, (data_y.shape[0], data_y.shape[2]))
 
     # reshape data
-    max_in_longitude_altitude = max_in_longitude_altitude.T # lat function of Ls
-    max_in_longitude_altitude = flip(max_in_longitude_altitude, axis=0) # reverse to get North pole on top of the fig
-    altitude_max = altitude_max.T
-    altitude_max = flip(altitude_max, axis=0)
+    max_mmr = max_mmr.T # lat function of Ls
+    max_mmr = flip(max_mmr, axis=0) # reverse to get North pole on top of the fig
+
+    max_temp = max_temp.T
+    max_temp = flip(max_temp, axis=0)
+
+    max_satu = max_satu.T
+    max_satu = flip(max_satu, axis=0)
+
+    max_alt = max_alt.T
+    max_alt = flip(max_alt, axis=0)
+
     data_latitude = data_latitude[::-1] # And so the labels
 
 
     # interpolation to get linear Ls
-    f = interp2d(x=arange(len(data_time)), y=arange(len(data_latitude)), z=max_in_longitude_altitude,kind='linear')
+    f = interp2d(x=arange(len(data_time)), y=arange(len(data_latitude)), z=max_mmr,kind='linear')
+    f2 = interp2d(x=arange(len(data_time)), y=arange(len(data_latitude)), z=max_alt,kind='linear')
+    f3 = interp2d(x=arange(len(data_time)), y=arange(len(data_latitude)), z=max_temp, kind='linear')
+    f4 = interp2d(x=arange(len(data_time)), y=arange(len(data_latitude)), z=max_satu, kind='linear')
+
     axis_ls = linspace(0, 360, len(data_time[:]))
     ndx = searchsorted(axis_ls, [0, 90, 180, 270, 360])
     interp_time = searchsorted(data_time,axis_ls)
-    max_in_longitude_altitude = f(interp_time,arange(len(data_latitude)))
 
-    rows, cols = where(max_in_longitude_altitude < 1e-10)
-    max_in_longitude_altitude[rows, cols] = 1e-10
+    max_mmr = f(interp_time, arange(len(data_latitude)))
+    max_alt = f2(interp_time, arange(len(data_latitude)))
+    max_temp = f3(interp_time, arange(len(data_latitude)))
+    max_satu = f4(interp_time, arange(len(data_latitude)))
 
-    # plot
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(11,8))
+
+    # correct very low values of co2 mmr
+    rows, cols = where(max_mmr < 1e-10)
+    max_mmr[rows, cols] = 1e-10
+
+    # mask above/below 40 km
+    mask = (data_altitude[:] <= 40)
+    mask_40km = (max_alt >= 40)
+    max_mmr = ma.array(max_mmr, mask=mask_40km, fill_value=None)
+    max_alt = ma.array(max_alt, mask=mask_40km, fill_value=None)
+    max_temp = ma.array(max_temp, mask=mask_40km, fill_value=None)
+    max_satu = ma.array(max_satu, mask=mask_40km, fill_value=None)
+
+    # plot 1
+    fig, ax = plt.subplots(nrows=4, ncols=1, figsize=(11,20))
     ax[0].set_title('Max '+data.title+' in altitude/longitude')
-    pc = ax[0].contourf(max_in_longitude_altitude, norm=LogNorm(), levels=logspace(-10,0,11), cmap='bwr')
+    pc = ax[0].contourf(max_mmr, norm=LogNorm(), levels=logspace(-10,1,10) , cmap='seismic')
     ax[0].set_yticks(ticks=arange(0,len(data_latitude), 6))
     ax[0].set_yticklabels(labels=data_latitude[::6])
     ax[0].set_xticks(ticks=ndx)
-    ax[0].set_xticklabels(labels=int_(axis_ls[ndx]))
+    ax[0].set_xticklabels(labels='')
     cbar = plt.colorbar(pc, ax=ax[0])
     cbar.ax.set_title(unit)
     ax[0].set_ylabel('Latitude (°N)')
 
-    viridis = cm.get_cmap('bwr', len(data_altitude[:]))
-    newcolors = viridis(linspace(0, 1, len(data_altitude[:])))
-    black = array([0, 0, 0, 1])
-    newcolors[0, :] = black
-    newcmp = ListedColormap(newcolors)
-
     # plot 2
-    ax[1].set_title('Altitude of max mmr co2_ice')
-    pc2 = ax[1].contourf(altitude_max, vmin=data_altitude[0], vmax=data_altitude[-1], levels=data_altitude[:],
-                         cmap=newcmp)
-    ax[1].set_yticks(ticks=arange(0,len(data_latitude), 6))
+    ax[1].set_title('Altitude at co2_ice mmr max')
+    pc3 = ax[1].contourf(max_alt, levels=data_altitude[mask], cmap='seismic')
+    ax[1].set_yticks(ticks=arange(0, len(data_latitude), 6))
     ax[1].set_yticklabels(labels=data_latitude[::6])
     ax[1].set_xticks(ticks=ndx)
-    ax[1].set_xticklabels(labels=int_(axis_ls[ndx]))
-    ax[1].set_xlabel('Solar Longitude (°)')
+    ax[1].set_xticklabels(labels='')
     ax[1].set_ylabel('Latitude (°N)')
-    cbar2 = plt.colorbar(pc2, ax=ax[1])
-    cbar2.ax.set_title('km')
+    cbar3 = plt.colorbar(pc3, ax=ax[1])
+    cbar3.ax.set_title('km')
+
+    # plot 3
+    ax[2].set_title('Temperature at co2_ice mmr max')
+    pc3 = ax[2].contourf(max_temp, cmap='seismic')
+    ax[2].set_yticks(ticks=arange(0, len(data_latitude), 6))
+    ax[2].set_yticklabels(labels=data_latitude[::6])
+    ax[2].set_xticks(ticks=ndx)
+    ax[2].set_xticklabels(labels='')
+    ax[2].set_ylabel('Latitude (°N)')
+    cbar3 = plt.colorbar(pc3, ax=ax[2])
+    cbar3.ax.set_title('K')
+
+    # plot 4
+    ax[3].set_title('Saturation at co2_ice mmr max')
+    pc3 = ax[3].contourf(max_satu, norm=LogNorm(), cmap='seismic')
+    ax[3].set_yticks(ticks=arange(0, len(data_latitude), 6))
+    ax[3].set_yticklabels(labels=data_latitude[::6])
+    ax[3].set_xticks(ticks=ndx)
+    ax[3].set_xticklabels(labels=int_(axis_ls[ndx]))
+    ax[3].set_xlabel('Solar Longitude (°)')
+    ax[3].set_ylabel('Latitude (°N)')
+    cbar3 = plt.colorbar(pc3, ax=ax[3])
+    cbar3.ax.set_title('kg/kg')
+
 
     fig.savefig('max_'+data.title+'_in_altitude_longitude.png', bbox_inches='tight')
+
     plt.show()
 
 
