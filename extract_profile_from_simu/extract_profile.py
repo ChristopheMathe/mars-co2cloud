@@ -59,8 +59,8 @@ def main():
         elif value_i == 'dustq':
             savetxt('profile_dust_mass', c_[data], fmt='%.3f')
 
-        elif value_i == 'dustN_dust_number':
-            savetxt('profile', c_[data], fmt='%.3f')
+        elif value_i == 'dustN':
+            savetxt('profile_dust_number', c_[data], fmt='%.3f')
 
         else:
             savetxt('profile_'+str(value_i), c_[data], fmt='%.3f')
