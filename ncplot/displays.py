@@ -246,7 +246,7 @@ def display_max_lon_alt(data, data_time, data_latitude, data_altitude, data_temp
 
 def display_equa_profile(data, data_time, data_latitude, data_altitude, data_temperature, data_saturation, unit):
     import matplotlib.pyplot as plt
-    from numpy import abs, argmax, arange, linspace, searchsorted, int_, logspace, asarray, reshape, where
+    from numpy import abs, argmax, arange, linspace, searchsorted, int_, logspace, asarray, reshape, where, unravel_index
     from numpy.ma import masked_where
     from matplotlib.colors import LogNorm, DivergingNorm
     from scipy.interpolate import interp2d
@@ -265,16 +265,21 @@ def display_equa_profile(data, data_time, data_latitude, data_altitude, data_tem
     data[value_1, value_2, value_3] = 0
 
     # find the co2_ice max value along longitude
-    idx_max = argmax(data, axis=2)
-    B = [data[i, j, idx_max[i, j]] for i in range(dim1) for j in range(dim2)]
+    #idx_max = argmax(data, axis=2)
+    idx_max = data.reshape((data.shape[0], -1)).argmax(axis=1)
+    idx_alt, idx_lon = unravel_index(idx_max, (data.shape[1], data.shape[2]))
+#    B = [data[i, j, idx_max[i, j]] for i in range(dim1) for j in range(dim2)]
+    B = [data[i, :, idx_lon[i]] for i in range(dim1)]
     B = asarray(B)
     data = reshape(B, (dim1, dim2))
 
-    B = [data_temperature[i, j, idx_max[i, j]] for i in range(dim1) for j in range(dim2)]
+    #    B = [data_temperature[i, j, idx_max[i, j]] for i in range(dim1) for j in range(dim2)]
+    B = [data_temperature[i, :, idx_lon[i]] for i in range(dim1)]
     B = asarray(B)
     data_temperature = reshape(B, (dim1, dim2))
 
-    B = [data_saturation[i, j, idx_max[i, j]] for i in range(dim1) for j in range(dim2)]
+    #    B = [data_saturation[i, j, idx_max[i, j]] for i in range(dim1) for j in range(dim2)]
+    B = [data_saturation[i, :, idx_lon[i]] for i in range(dim1)]
     B = asarray(B)
     data_saturation = reshape(B, (dim1, dim2))
 

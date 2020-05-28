@@ -1,6 +1,6 @@
 #!/bin/bash python3
 
-from numpy import abs, argmin, savetxt, c_, append
+from numpy import abs, argmin, argmax, savetxt, c_, append, unravel_index
 from netCDF4 import Dataset
 from os import listdir
 
@@ -39,6 +39,8 @@ def main():
     # choose the solar longitude and latitude for the extraction
     target_ls = float(input('Select the ls for the extraction: '))
     target_latitude = float(input('Select the latitude for the extraction: '))
+    target_mmr_max = input('Select the longitude where the mmr is max? (y/n): ')
+
 
     idx_latitude = (abs(data_latitude[:] - target_latitude)).argmin()
     idx_ls = (abs(data_ls[:] - target_ls)).argmin()
@@ -47,15 +49,24 @@ def main():
     #TODO: add/remove a variable for the extraction
     print('Variable for the extraction: ',repr(list_var))
 
+    # extract data at longitude where co2_ice mmr is max
+    if target_mmr_max == 'y':
+        data = bigdata.variables['co2_ice'][idx_ls, :, idx_latitude, :]
+        idx_max = argmax(data)  # along longitude
+        tmp, idx_longitude = unravel_index(idx_max, data.shape)
+
+
     # extract data at longitude 0°E
     for i, value_i in enumerate(list_var):
         print(i, value_i)
-        data = bigdata.variables[list_var[i]][idx_ls, :, idx_latitude, 0]
+        if target_mmr_max == 'y':
+            data = bigdata.variables[list_var[i]][idx_ls, :, idx_latitude, idx_longitude]
+        else:
+            data = bigdata.variables[list_var[i]][idx_ls, :, idx_latitude, 0]
 
-        print(data.shape)
         # add a value
         data = append(data, data[-1])
-        print(data.shape)
+
         # write the extracted data in file
         if value_i == 'temp':
             savetxt('profile', c_[data], fmt=format_output)
