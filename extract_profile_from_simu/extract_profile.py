@@ -6,8 +6,16 @@ from os import listdir
 
 
 def main():
-    list_var = ['temp', 'co2', 'co2_ice', 'h2o_vap', 'h2o_ice', 'ccnco2_mass', 'ccnco2_number', 'dust_mass',
-                'dust_numer']
+    list_var = ['temp',    # temperature
+                'co2',     # co2 vap mmr
+                'co2_ice', # co2 ice mmr
+                'h2o_vap', # h2o vap mmr
+                'h2o_ice', # h2o ice mmr
+                'ccnqco2', # ccn mass for co2 (mmr)      => ccnco2_mass
+                'ccnNco2', # ccn number for co2 (#/kg)   => ccnco2_number
+                'dustq',   # dust mass (mmr)             => dust_mass
+                'dustN'    # dust number (#/kg)          => dust_number
+                ]
 
     files = listdir('.')
 
@@ -41,6 +49,19 @@ def main():
         # write the extracted data in file
         if value_i == 'temp':
             savetxt('profile', c_[data], fmt='%.3f')
+
+        elif value_i == 'ccnqco2':
+            savetxt('profile_ccnco2_mass', c_[data], fmt='%.3f')
+
+        elif value_i == 'ccnNco2':
+            savetxt('profile_ccnco2_number', c_[data], fmt='%.3f')
+
+        elif value_i == 'dustq':
+            savetxt('profile_dust_mass', c_[data], fmt='%.3f')
+
+        elif value_i == 'dustN_dust_number':
+            savetxt('profile', c_[data], fmt='%.3f')
+
         else:
             savetxt('profile_'+str(value_i), c_[data], fmt='%.3f')
 
