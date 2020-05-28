@@ -1,10 +1,13 @@
+#!/bin/bash python3
+
 from numpy import abs, argmin, savetxt, c_
 from netCDF4 import Dataset
 from os import listdir
 
 
 def main():
-    list_var = ['temp', 'co2', 'co2_ice', 'h2o_vap', 'h2o_ice']
+    list_var = ['temp', 'co2', 'co2_ice', 'h2o_vap', 'h2o_ice', 'ccnco2_mass', 'ccnco2_number', 'dust_mass',
+                'dust_numer']
 
     files = listdir('.')
 
@@ -31,16 +34,15 @@ def main():
     print('Variable for the extraction: ',repr(list_var))
 
     # extract data at longitde 0°E
-    for value_i, i in enumerate(list_var):
+    for i, value_i in enumerate(list_var):
+        print(i, value_i)
         data = bigdata.variables[list_var[i]][idx_ls, :, idx_latitude, 0]
-        print(value_i, i)
-        print(data)
 
         # write the extracted data in file
         if value_i == 'temp':
             savetxt('profile', c_[data], fmt='%.3f')
         else:
-            savetxt('profile', c_[data], fmt='%.3f')
+            savetxt('profile_'+str(value_i), c_[data], fmt='%.3f')
 
 if '__main__' == __name__:
     main()
