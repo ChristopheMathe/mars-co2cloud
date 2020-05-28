@@ -1,6 +1,6 @@
 #!/bin/bash python3
 
-from numpy import abs, argmin, savetxt, c_
+from numpy import abs, argmin, savetxt, c_, append
 from netCDF4 import Dataset
 from os import listdir
 
@@ -19,6 +19,7 @@ def main():
                 'dustN'    # dust number (#/kg)          => dust_number
                 ]
 
+    format_output ='%.8e'
     files = listdir('.')
 
     if any(".nc" in s for s in files):
@@ -46,35 +47,39 @@ def main():
     #TODO: add/remove a variable for the extraction
     print('Variable for the extraction: ',repr(list_var))
 
-    # extract data at longitde 0°E
+    # extract data at longitude 0°E
     for i, value_i in enumerate(list_var):
         print(i, value_i)
         data = bigdata.variables[list_var[i]][idx_ls, :, idx_latitude, 0]
 
+        print(data.shape)
+        # add a value
+        data = append(data, data[-1])
+        print(data.shape)
         # write the extracted data in file
         if value_i == 'temp':
-            savetxt('profile', c_[data], fmt='%.3f')
+            savetxt('profile', c_[data], fmt=format_output)
 
         elif value_i == 'ccnq':
-            savetxt('profile_ccn_mass', c_[data], fmt='%.3f')
+            savetxt('profile_ccn_mass', c_[data], fmt=format_output)
 
         elif value_i == 'ccnN':
-            savetxt('profile_ccn_number', c_[data], fmt='%.3f')
+            savetxt('profile_ccn_number', c_[data], fmt=format_output)
 
         elif value_i == 'ccnqco2':
-            savetxt('profile_ccnco2_mass', c_[data], fmt='%.3f')
+            savetxt('profile_ccnco2_mass', c_[data], fmt=format_output)
 
         elif value_i == 'ccnNco2':
-            savetxt('profile_ccnco2_number', c_[data], fmt='%.3f')
+            savetxt('profile_ccnco2_number', c_[data], fmt=format_output)
 
         elif value_i == 'dustq':
-            savetxt('profile_dust_mass', c_[data], fmt='%.3f')
+            savetxt('profile_dust_mass', c_[data], fmt=format_output)
 
         elif value_i == 'dustN':
-            savetxt('profile_dust_number', c_[data], fmt='%.3f')
+            savetxt('profile_dust_number', c_[data], fmt=format_output)
 
         else:
-            savetxt('profile_'+str(value_i), c_[data], fmt='%.3f')
+            savetxt('profile_'+str(value_i), c_[data], fmt=format_output)
 
 if '__main__' == __name__:
     main()
