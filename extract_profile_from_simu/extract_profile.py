@@ -11,6 +11,8 @@ def main():
                 'co2_ice', # co2 ice mmr
                 'h2o_vap', # h2o vap mmr
                 'h2o_ice', # h2o ice mmr
+                'ccnq',    # ccn mass for h2o (mmr)      => ccn_mass
+                'ccnN',    # ccn number for h2o (#/kg)   => ccn_number
                 'ccnqco2', # ccn mass for co2 (mmr)      => ccnco2_mass
                 'ccnNco2', # ccn number for co2 (#/kg)   => ccnco2_number
                 'dustq',   # dust mass (mmr)             => dust_mass
@@ -21,7 +23,10 @@ def main():
 
     if any(".nc" in s for s in files):
         list_files = [x for x in files if '.nc' in x]
-        filename = input("Choose between these files " + repr(list_files) + " ::")
+        if len(list_files) == 1:
+            filename = list_files[0]
+        else:
+            filename = input("Choose between these files " + repr(list_files) + " ::")
     else:
         print('There is no Netcdf file in this directory !')
         exit()
@@ -49,6 +54,12 @@ def main():
         # write the extracted data in file
         if value_i == 'temp':
             savetxt('profile', c_[data], fmt='%.3f')
+
+        elif value_i == 'ccnq':
+            savetxt('profile_ccn_mass', c_[data], fmt='%.3f')
+
+        elif value_i == 'ccnN':
+            savetxt('profile_ccn_number', c_[data], fmt='%.3f')
 
         elif value_i == 'ccnqco2':
             savetxt('profile_ccnco2_mass', c_[data], fmt='%.3f')

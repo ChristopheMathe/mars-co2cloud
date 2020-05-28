@@ -4,7 +4,7 @@ import subprocess
 def main():
     list_var = ['Time', 'aire', 'phisinit', 'controle', 'aps', 'bps', 'ap', 'bp',  # obligatoire
                 'Ls', 'Sols', 'temp', 'ps', 'tsurf', 'pressure',# basics
-                'satuco2', 'riceco2', 'co2_ice', 'co2', 'ccnqco2', 'ccnNco2', 'co2_ice', 'precip_co2_ice',
+                'satuco2', 'riceco2', 'co2_ice', 'co2', 'ccnqco2', 'ccnNco2', 'co2_ice', 'ccnq', 'ccnN', 'precip_co2_ice',
                 'h2o_vap', 'h2o_ice', 'tau', 'dustq', 'dustN', 'h2o_ice_s', 'co2_conservation']
 
     # Extraction: ncks -v var1, var2, diagfi1.nc extract.nc
