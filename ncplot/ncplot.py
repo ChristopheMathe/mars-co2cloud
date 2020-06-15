@@ -13,7 +13,10 @@ def main():
 
     if any(".nc" in s for s in files):
         list_files = [x for x in files if '.nc' in x]
-        filename = input("Choose between these files "+repr(list_files)+" ::")
+        if len(list_files) > 1:
+            filename = input("Choose between these files "+repr(list_files)+" ::")
+        else:
+            filename = list_files[0]
     else:
         print('There is no Netcdf file in this directory !')
         exit()
