@@ -4,7 +4,7 @@ from os import listdir, mkdir
 from os.path import isdir
 
 def main():
-    list_var = ['Time', 'aire', 'phisinit', 'controle', 'aps', 'bps', 'ap', 'bp' # obligatoire
+    list_var = ['Time', 'aire', 'phisinit', 'controle', 'aps', 'bps', 'ap', 'bp', # obligatoire
                 'Ls', 'Sols', 'temp', 'ps', 'tsurf', 'pressure', # basics
                 'satuco2', 'co2_ice', 'co2', 'ccnqco2', 'ccnNco2', 'co2_ice', 'ccnq', 'ccnN', 'precip_co2_ice',
                 'h2o_vap', 'h2o_ice', 'tau', 'dustq', 'dustN', 'h2o_ice_s', 'riceco2', 'co2conservation']
