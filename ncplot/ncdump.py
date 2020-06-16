@@ -61,7 +61,8 @@ def ncextract(filename, nc_fid, verb=True):
             else:
                 print('|   {}|'.format(nc_fid.getncattr(nc_attr)[:max_width], width=max_width))
                 print('|      {}{:{fill}{width}}|'.format(nc_fid.getncattr(nc_attr)[max_width:], '',
-                                                          fill='' ,width=max_width- len(nc_fid.getncattr(nc_attr)[max_width:]) - 3))
+                                                          fill='' , width=max_width- len(nc_fid.getncattr(nc_attr)[
+                                                                                         max_width:]) - 3))
 
         print("|======================================================================|")
         print("|   NetCDF  information                                                |")
