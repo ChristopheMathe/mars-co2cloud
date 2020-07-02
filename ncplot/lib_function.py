@@ -31,7 +31,7 @@ def extract_at_max_co2_ice(data, x, y, shape_big_data=None):
 
     # 1-D
     if data.ndim == 1:
-        data_max = [data[x[i, j]] for i in range(shape_big_data[0]) for j in range(shape_big_data[1])]
+        data_max = [data[x[i, j]] for i in range(shape_big_data[0]) for j in range(shape_big_data[2])]
         data_max = asarray(data_max)
         print(data_max.shape, shape_big_data[0], shape_big_data[2])
         data_max = reshape(data_max, (shape_big_data[0], shape_big_data[2]))
