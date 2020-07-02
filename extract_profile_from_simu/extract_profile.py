@@ -41,7 +41,6 @@ def main():
     target_latitude = float(input('Select the latitude for the extraction: '))
     target_mmr_max = input('Select the longitude where the mmr is max? (y/n): ')
 
-
     idx_latitude = (abs(data_latitude[:] - target_latitude)).argmin()
     idx_ls = (abs(data_ls[:] - target_ls)).argmin()
 

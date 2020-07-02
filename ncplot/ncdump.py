@@ -1,4 +1,5 @@
 from numpy import isin
+from math import ceil
 
 def ncextract(filename, nc_fid, verb=True):
     '''
@@ -45,9 +46,10 @@ def ncextract(filename, nc_fid, verb=True):
     nc_dims = [dim for dim in nc_fid.dimensions]  # list of nc dimensions
     nc_size = [nc_fid.dimensions[x].size for x in nc_dims]
     nc_vars = [var for var in nc_fid.variables]  # list of nc variables
-    max_width=67
+    max_width=82
     if verb:
-        print("========================================================================")
+        text= ''.rjust(max_width, '=')
+        print('|{}|'.format(text, '', width=max_width))
         print("|   NetCDF Global Attributes                                           |")
         print("|======================================================================|")
         print("|File name:                                                            |")
@@ -55,14 +57,16 @@ def ncextract(filename, nc_fid, verb=True):
         for nc_attr in nc_attrs:
             print('|{}: {:{fill}{width}} |'.format(nc_attr, '', fill='', width=max_width-len(nc_attr)))
 
-            width=len(nc_fid.getncattr(nc_attr)) - max_width
+            width = len(nc_fid.getncattr(nc_attr)) - max_width - 1
             if width < 0:
-                print('|   {}{:{fill}{width}}|'.format(nc_fid.getncattr(nc_attr), '', fill='', width=max_width-len(nc_fid.getncattr(nc_attr))))
+                print('|   {}{:{fill}{width}}|'.format(nc_fid.getncattr(nc_attr), '', fill='',
+                                                       width=max_width-len(nc_fid.getncattr(nc_attr))))
             else:
-                print('|   {}|'.format(nc_fid.getncattr(nc_attr)[:max_width], width=max_width))
-                print('|      {}{:{fill}{width}}|'.format(nc_fid.getncattr(nc_attr)[max_width:], '',
-                                                          fill='' , width=max_width- len(nc_fid.getncattr(nc_attr)[
-                                                                                         max_width:]) - 3))
+                for i in range(ceil(width/max_width)+1):
+                    lenght = len(nc_fid.getncattr(nc_attr)[(max_width - 1)*i: (max_width - 1) * (1+i)])
+                    print('|   {}{:{fill}{width}}|'.format(nc_fid.getncattr(nc_attr)[(max_width - 1)*i: (max_width - 1)
+                                                                                      * (1+i)], '', fill='' ,
+                                                           width=max_width - lenght ))
 
         print("|======================================================================|")
         print("|   NetCDF  information                                                |")
