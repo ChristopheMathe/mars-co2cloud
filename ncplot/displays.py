@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from lib_function import *
+
 # ==================================================================================================================== #
 # ================================================== DISPLAY 1D ====================================================== #
 # ==================================================================================================================== #
@@ -93,31 +94,29 @@ def hovmoller_diagram(data, data_latitude, data_altitude):
 def display_colonne(data, data_time, data_latitude, unit):
     from matplotlib.colors import LogNorm
     from numpy import sum, mean, arange, searchsorted, int_, flip, linspace, logspace, where
-    from scipy.interpolate import interp2d
+
+    data_y = correction_value_co2_ice(data[:,:,:,:])
+    shape_data_y = data_y.shape
 
     # compute zonal mean column density
-    zonal_mean_column_density = sum(mean(data[:, :, :, :], axis=3), axis=1)  # Ls function of lat
-    zonal_mean_column_density = zonal_mean_column_density.T  # lat function of Ls
-    zonal_mean_column_density = flip(zonal_mean_column_density, axis=0)  # reverse to get North pole on top of the fig
-    data_latitude = data_latitude[::-1]  # And so the labels
+    zonal_mean_column_density = sum(mean(data_y, axis=3), axis=1)  # Ls function of lat
 
     # interpolation to get linear Ls
-    f = interp2d(x=arange(len(data_time)), y=arange(len(data_latitude)), z=zonal_mean_column_density, kind='linear')
-    axis_ls = linspace(0, 360, len(data_time[:]))
-    ndx = searchsorted(axis_ls, [0, 90, 180, 270, 360])
-    interp_time = searchsorted(data_time, axis_ls)
-    zonal_mean_column_density = f(interp_time, arange(len(data_latitude)))
+    interp_time, axis_ls, ndx = linear_grid_ls(data_time)
 
-    rows, cols = where(zonal_mean_column_density < 1e-10)
-    zonal_mean_column_density[rows, cols] = 1e-10
+    zonal_mean_column_density = reshape_and_linearize_data(zonal_mean_column_density, shape_data_y[0], shape_data_y[2],
+                                                           interp_time)
 
     if unit is 'pr.µm':
         zonal_mean_column_density = zonal_mean_column_density * 1e3  # convert kg/m2 to pr.µm
 
+    data_latitude = data_latitude[::-1]  # And so the labels
     # plot
     plt.figure(figsize=(11, 8))
     plt.title('Zonal mean column density of ' + data.title)
-    plt.contourf(zonal_mean_column_density, norm=LogNorm(), levels=logspace(-10, 0, 11), cmap='inferno')
+    plt.contourf(zonal_mean_column_density, norm=LogNorm(), levels=logspace(-10, 1, 12), cmap='inferno')
+    ax = plt.gca()
+    ax.set_facecolor('black')
     plt.yticks(ticks=arange(0, len(data_latitude), 6), labels=data_latitude[::6])
     plt.xticks(ticks=ndx, labels=int_(axis_ls[ndx]))
     cbar = plt.colorbar()
@@ -125,6 +124,7 @@ def display_colonne(data, data_time, data_latitude, unit):
     plt.xlabel('Solar Longitude (°)')
     plt.ylabel('Latitude (°N)')
     plt.savefig('zonal_mean_density_column_' + data.title + '.png', bbox_inches='tight')
+    plt.show()
 
 
 # =====================================================================================================================#
@@ -255,9 +255,9 @@ def display_altitude_latitude_satuco2(data, data_time, data_altitude, data_latit
     plt.show()
 
 
-# =====================================================================================================================#
-# ================================ DISPLAY max value in altitude / longitude ==========================================#
-# =====================================================================================================================#
+# ==================================================================================================================== #
+# ================================ DISPLAY max value in altitude / longitude ========================================= #
+# ==================================================================================================================== #
 def display_max_lon_alt(data, data_time, data_latitude, data_altitude, data_temp, data_satu, data_riceco2, data_ccnNco2,
                         unit):
     from matplotlib.colors import LogNorm, DivergingNorm
@@ -279,19 +279,20 @@ def display_max_lon_alt(data, data_time, data_latitude, data_altitude, data_temp
     print('Extract other variable at co2_ice max value...')
     max_temp = extract_at_max_co2_ice(data_temp, x, y)
     max_satu = extract_at_max_co2_ice(data_satu, x, y)
-    max_riceco2 = extract_at_max_co2_ice(data_riceco2, x, y)
-    max_ccnNco2 = extract_at_max_co2_ice(data_ccnNco2, x, y)
+    max_radius = extract_at_max_co2_ice(data_riceco2, x, y)
+    max_ccnN = extract_at_max_co2_ice(data_ccnNco2, x, y)
     max_alt = extract_at_max_co2_ice(data_altitude, x, y, shape_data_y)
 
     print('Create linear grid time...')
     interp_time, axis_ls, ndx = linear_grid_ls(data_time)
 
     print('Reshape and linearized data...')
-    max_mmr = reshape_and_linearize_data(max_mmr, data_time, data_latitude)
-    max_satu = reshape_and_linearize_data(max_satu, data_time, data_latitude)
-    max_riceco2 = reshape_and_linearize_data(max_riceco2, data_time, data_latitude)
-    max_ccnNco2 = reshape_and_linearize_data(max_ccnNco2, data_time, data_latitude)
-    max_alt = reshape_and_linearize_data(max_alt, data_time, data_latitude)
+    max_mmr = reshape_and_linearize_data(max_mmr, shape_data_y[0], shape_data_y[2], interp_time)
+    max_temp = reshape_and_linearize_data(max_temp, shape_data_y[0], shape_data_y[2], interp_time)
+    max_satu = reshape_and_linearize_data(max_satu, shape_data_y[0], shape_data_y[2], interp_time)
+    max_radius = reshape_and_linearize_data(max_radius, shape_data_y[0], shape_data_y[2], interp_time)
+    max_ccnN = reshape_and_linearize_data(max_ccnN, shape_data_y[0], shape_data_y[2], interp_time)
+    max_alt = reshape_and_linearize_data(max_alt,  shape_data_y[0], shape_data_y[2], interp_time)
 
     data_latitude = data_latitude[::-1]  # And so the labels
 

@@ -49,7 +49,7 @@ def extract_at_max_co2_ice(data, x, y, shape_big_data=None):
     return data_max
 
 
-def reshape_and_linearize_data(data, data_time, data_latitude, interp_time):
+def reshape_and_linearize_data(data, dim_time, dim_latitude, interp_time):
     from numpy import flip, arange
     from scipy.interpolate import interp2d
 
@@ -58,9 +58,9 @@ def reshape_and_linearize_data(data, data_time, data_latitude, interp_time):
     data = flip(data, axis=0)  # reverse to get North pole on top of the fig
 
     # interpolation to get linear Ls
-    f = interp2d(x=arange(data_time.shape[0]), y=arange(data_latitude.shape[0]), z=data, kind='linear')
+    f = interp2d(x=arange(dim_time), y=arange(dim_latitude), z=data, kind='linear')
 
-    data = f(interp_time, arange(len(data_latitude)))
+    data = f(interp_time, arange(dim_latitude))
 
     return data
 

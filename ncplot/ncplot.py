@@ -58,8 +58,7 @@ def main():
             display_max_lon_alt(data_target, data_time, data_latitude, data_altitude,
                                          data_temperature, data_satuco2, data_riceco2, data_ccnNco2, unit='kg/kg')
         elif view_mode == 2:
-            display_colonne(data_target, data_time, data_altitude, data_latitude, data_longitude,
-                                     unit='kg/m$^2$')
+            display_colonne(data_target, data_time, data_latitude, unit='kg/m$^2$')
         elif view_mode == 3:
             display_equa_profile(data_target, data_time, data_latitude, data_altitude, data_temperature,
                                           data_satuco2, unit='kg/kg')
