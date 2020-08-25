@@ -79,15 +79,16 @@ def ncextract(filename, nc_fid, verb=True):
                                                                                               nc_size[4]))
         print("|=============================+======+==========+==========+===========|")
         test = [x for x in nc_vars if x not in nc_dims]
+        test.remove('controle')
+        if len(test) == 1:
+            target = test[0]
+        else:
+            for var in test:
+    #            if var not in nc_dims: #sinon on duplique les infos de nc_dims
+                a = isin(nc_size, nc_fid.variables[var].shape)
+                print("|{:29}| {:<4} | {:<8} | {:<8} | {:<9} |".format(var, a[0], a[1], a[2], a[3]))
+                if var is not test[-1]:
+                    print("|-----------------------------+------+----------+----------+-----------|")
+            print("========================================================================")
 
-        for var in test:
-#            if var not in nc_dims: #sinon on duplique les infos de nc_dims
-            a = isin(nc_size, nc_fid.variables[var].shape)
-            print("|{:29}| {:<4} | {:<8} | {:<8} | {:<9} |".format(var, a[0], a[1], a[2], a[3]))
-            if var is not test[-1]:
-                print("|-----------------------------+------+----------+----------+-----------|")
-
-
-        print("========================================================================")
-
-    return nc_attrs, nc_dims, nc_size, nc_vars
+    return nc_attrs, nc_dims, nc_size, nc_vars, target
