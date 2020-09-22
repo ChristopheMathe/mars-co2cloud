@@ -1,4 +1,4 @@
-from numpy import isin
+from numpy import isin, delete, array, append
 from math import ceil
 
 def ncextract(filename, nc_fid, verb=True):
@@ -46,7 +46,11 @@ def ncextract(filename, nc_fid, verb=True):
     nc_dims = [dim for dim in nc_fid.dimensions]  # list of nc dimensions
     nc_size = [nc_fid.dimensions[x].size for x in nc_dims]
     nc_vars = [var for var in nc_fid.variables]  # list of nc variables
+
     max_width=82
+    if len(filename) > max_width:
+        max_width = len(filename) + 10
+
     if verb:
         text= ''.rjust(max_width, '=')
         print('|{}|'.format(text, '', width=max_width))
@@ -67,20 +71,24 @@ def ncextract(filename, nc_fid, verb=True):
                     print('|   {}{:{fill}{width}}|'.format(nc_fid.getncattr(nc_attr)[(max_width - 1)*i: (max_width - 1)
                                                                                       * (1+i)], '', fill='' ,
                                                            width=max_width - lenght ))
-
+        idx = array([])
+        for i, value_i in enumerate(nc_dims):
+                if not value_i in ['longitude','latitude','altitude','Time']:
+                    idx = append(idx, i)
+        nc_dims = delete(nc_dims, idx)
+        nc_size = delete(nc_size, idx)
         print("|======================================================================|")
         print("|   NetCDF  information                                                |")
         print("|======================================================================|")
-        print("|Dimension                    | {} | {} | {} | {} | {}".format(nc_dims[0], nc_dims[1], nc_dims[2],
-                                                                            nc_dims[3], nc_dims[4]))
+        print("|Dimension                    | {} | {} | {} | {} |".format(nc_dims[0], nc_dims[1], nc_dims[2],
+                                                                            nc_dims[3]))
         print("|-----------------------------+------+----------+----------+-----------|")
-        print("|Size                         | {:<4d} | {:<8d} | {:<8d} | {:<9d} | {}".format(nc_size[0], nc_size[1],
-                                                                                            nc_size[2], nc_size[3],
-                                                                                              nc_size[4]))
+        print("|Size                         | {:<4d} | {:<8d} | {:<8d} | {:<9d} |".format(nc_size[0], nc_size[1],
+                                                                                            nc_size[2], nc_size[3]))
         print("|=============================+======+==========+==========+===========|")
         test = [x for x in nc_vars if x not in nc_dims]
-        test.remove('controle')
-        if len(test) == 1:
+        if len(test) == 2:
+            test.remove('controle')
             target = test[0]
         else:
             for var in test:
@@ -90,5 +98,6 @@ def ncextract(filename, nc_fid, verb=True):
                 if var is not test[-1]:
                     print("|-----------------------------+------+----------+----------+-----------|")
             print("========================================================================")
+            target = None
 
     return nc_attrs, nc_dims, nc_size, nc_vars, target

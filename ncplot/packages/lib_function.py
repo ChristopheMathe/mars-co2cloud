@@ -80,7 +80,7 @@ def extract_at_max_co2_ice(data, x, y, shape_big_data=None):
 
 
 def linearize_ls(data, dim_time, dim_latitude, interp_time):
-    from numpy import flip, arange
+    from numpy import arange
     from scipy.interpolate import interp2d
 
         # interpolation to get linear Ls
@@ -98,6 +98,7 @@ def linear_grid_ls(data):
     ndx = searchsorted(axis_ls, [0, 90, 180, 270, 360])
     #    ndx = searchsorted(axis_ls, [0, data_time[len(data_time[:])/2], data_time[-1]])
     interp_time = searchsorted(data, axis_ls)
+    axis_ls = axis_ls[ndx]
 
     return interp_time, axis_ls, ndx
 
@@ -114,3 +115,93 @@ def tcondco2(data_pressure, idx_ls=None, idx_lat=None, idx_lon=None):
         T_sat = B / (A - log10((data_pressure[:, :, :, :] + 0.0001) / 10 ** 5)) - C
 
     return T_sat
+
+
+def create_gif(filenames):
+    import numpy as np
+    import imageio
+
+    images = []
+    idx = np.array([], dtype=np.int)
+
+    print("Select files using number (one number per line/all): ")
+    for i, value_i in enumerate(filenames):
+        print('({}) {}'.format(i, value_i))
+
+    add_file = True
+    while add_file:
+        value = input('')
+        if value == '':
+            add_file = False
+        elif value == 'all':
+            idx = np.arange(len(filenames))
+            break
+        else:
+            idx = np.append(idx, int(value))
+    filenames = [filenames[i] for i in idx]
+
+    savename = input('Enter the gif name: ')
+
+    for filename in filenames:
+        images.append(imageio.imread(filename))
+    imageio.mimsave(savename+'.gif', images, fps=1)
+
+
+def zonal_mean_column_density(data_target, data_pressure, data_altitude, interp_time):
+    from numpy import mean, flip, sum, zeros
+
+    altitude_limit = input('Do you want perform the computation on the entire column(Y/n)? ')
+
+    if altitude_limit.lower() == 'n':
+        print('Altitude range (km): {:.3f} {:.3f}'.format(data_altitude[0], data_altitude[-1]))
+        z_min = float(input('Start altitude (km): '))
+        z_max = float(input('End altitude (km): '))
+        idx_z_min = (abs(data_altitude[:] - z_min)).argmin()
+        idx_z_max = (abs(data_altitude[:] - z_max)).argmin()
+        data_target = data_target[:, idx_z_min:idx_z_max, :, :]
+    else:
+        zmin = 0
+        zmax = 0
+
+    shape_data_target = data_target.shape
+    data = zeros((shape_data_target))
+    for alt in range(data_altitude.shape[0] -1):
+        data[:,alt,:,:] = data_target[:,alt,:,:] * (data_pressure[:,alt,:,:] - data_pressure[:,alt+1,:,:]) / 3.711 # g
+
+    data[:,-1,:,:] = data_target[:,-1,:,:] * data_pressure[:,-1,:,:] / 3.711
+    del data_target, data_pressure
+    # compute zonal mean column density
+    data = sum(mean(data, axis=3), axis=1)  # Ls function of lat
+
+    data = flip(data.T, axis=0)
+
+    if interp_time != 0:
+        data = linearize_ls(data, shape_data_target[0], shape_data_target[2], interp_time)
+
+    return data, altitude_limit, zmin, zmax
+
+
+def convert_sols_to_ls():
+    from numpy import array
+
+    # sols to ls, step 5°ls
+    time_grid_ls = array([0, 10, 20, 30, 41, 51, 61, 73, 83, 94, 105, 116, 126, 139, 150, 160, 171, 183, 193.47,
+           205, 215, 226, 236, 248, 259, 269, 279, 289, 299, 309, 317, 327, 337, 347, 355, 364,
+           371.99, 381, 390, 397, 406, 415, 422, 430, 437, 447, 457, 467, 470, 477, 485, 493, 500,
+           507, 514.76, 523, 533, 539, 547, 555, 563, 571, 580, 587, 597, 605, 613, 623, 632, 641,
+           650, 660, 669])
+
+    return time_grid_ls
+
+
+def get_ls_index(data_time):
+    from numpy import array, searchsorted
+
+    # ls = 0, 90, 180, 270, 360
+    axis_ls = array([0, 90, 180, 270, 360])
+    idx = searchsorted(data_time[:], [0, 193.47, 371.99, 514.76, 669])
+
+    return idx, axis_ls
+
+
+
