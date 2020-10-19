@@ -3,6 +3,7 @@ from matplotlib.colors import DivergingNorm, LogNorm
 from .lib_function import *
 from .ncdump import *
 
+
 # ==================================================================================================================== #
 # ================================================== DISPLAY 1D ====================================================== #
 # ==================================================================================================================== #
@@ -52,38 +53,39 @@ def display_2d(data):
 # ==================================================================================================================== #
 # =========================================== DISPLAY Column density ================================================= #
 # ==================================================================================================================== #
-def display_colonne(filename, data, altitude_limit, zmin, zmax, levels, unit, name):
+def display_colonne(filename, data, data_unit, altitude_limit, zmin, zmax, levels, unit, name):
     from matplotlib.colors import LogNorm
     from numpy import arange, int_
 
     data_time = getdata(filename, target='Time')
     ndx, axis_ls = get_ls_index(data_time)
+
     data_latitude = getdata(filename, target='latitude')
     data_latitude = data_latitude[::-1]
 
-    #data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
-    #data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS = mesoclouds_observed(data_time, data_latitude)
+    # data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
+    # data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS = mesoclouds_observed(data_time, data_latitude)
 
     # plot
     plt.figure(figsize=(11, 8))
 
     if unit is 'pr.µm':
         # convert kg/m2 to pr.µm
-        plt.contourf(data*1e3, levels=levels, cmap='coolwarm')
+        plt.contourf(data * 1e3, levels=levels, cmap='coolwarm')
     else:
         plt.contourf(data, norm=LogNorm(), levels=levels, cmap='coolwarm')
 
-    #plt.plot(data_CRISMlimb[:,0], data_CRISMlimb[:,1], ls='', marker='+', color='black')
-    #plt.plot(data_CRISMnadir[:,0], data_CRISMnadir[:,1],ls='', marker='+', color='black')
-    #plt.plot(data_OMEGA[:,0], data_OMEGA[:,1], ls='', marker='+', color='black')
-    #plt.plot(data_PFSeye[:,0], data_PFSeye[:,1], ls='', marker='+', color='black')
-    #plt.plot(data_PFSstats[:,0], data_PFSstats[:,1], ls='', marker='+', color='black')
-    #plt.plot(data_HRSC[:,0], data_HRSC[:,1], ls='', marker='+', color='black')
-    #plt.plot(data_IUVS[:,0], data_IUVS[:,1], ls='', marker='+', color='black')
-    #plt.plot(data_MAVENlimb[:,0], data_MAVENlimb[:,1], ls='', marker='+', color='black')
-    #plt.plot(data_SPICAM[:,0], data_SPICAM[:,1], ls='', marker='+', color='black')
-    #plt.plot(data_TESMOC[:,0], data_TESMOC[:,1], ls='', marker='+', color='black')
-    #plt.plot(data_THEMIS[:,0], data_THEMIS[:,1], ls='', marker='+', color='black')
+    # plt.plot(data_CRISMlimb[:,0], data_CRISMlimb[:,1], ls='', marker='+', color='black')
+    # plt.plot(data_CRISMnadir[:,0], data_CRISMnadir[:,1],ls='', marker='+', color='black')
+    # plt.plot(data_OMEGA[:,0], data_OMEGA[:,1], ls='', marker='+', color='black')
+    # plt.plot(data_PFSeye[:,0], data_PFSeye[:,1], ls='', marker='+', color='black')
+    # plt.plot(data_PFSstats[:,0], data_PFSstats[:,1], ls='', marker='+', color='black')
+    # plt.plot(data_HRSC[:,0], data_HRSC[:,1], ls='', marker='+', color='black')
+    # plt.plot(data_IUVS[:,0], data_IUVS[:,1], ls='', marker='+', color='black')
+    # plt.plot(data_MAVENlimb[:,0], data_MAVENlimb[:,1], ls='', marker='+', color='black')
+    # plt.plot(data_SPICAM[:,0], data_SPICAM[:,1], ls='', marker='+', color='black')
+    # plt.plot(data_TESMOC[:,0], data_TESMOC[:,1], ls='', marker='+', color='black')
+    # plt.plot(data_THEMIS[:,0], data_THEMIS[:,1], ls='', marker='+', color='black')
 
     ax = plt.gca()
     ax.set_facecolor('white')
@@ -94,14 +96,19 @@ def display_colonne(filename, data, altitude_limit, zmin, zmax, levels, unit, na
     cbar.ax.set_title(unit)
     plt.xticks(ticks=ndx, labels=int_(axis_ls))
 
-    if altitude_limit.lower() == 'y':
-        plt.title('Zonal mean column density of ' + name)
-        plt.savefig('zonal_mean_density_column_' + name + '.png', bbox_inches='tight')
+    if data_unit in ['m', 'km']:
+        if altitude_limit.lower() == 'y':
+            plt.title('Zonal mean column density of {}'.format(name))
+            plt.savefig('zonal_mean_density_column_{}.png'.format(name), bbox_inches='tight')
+        else:
+            plt.title(
+                'Zonal mean column density of {} between {} and {} km'.format(name, zmin / 1e3, zmax / 1e3))
+            plt.savefig('zonal_mean_density_column_{}_{}_{}_km.png'.format(name, zmin / 1e3, zmax / 1e3),
+                        bbox_inches='tight')
     else:
         plt.title(
-            'Zonal mean column density of ' + name + ' between ' + str(zmin/1e3) + ' and ' + str(zmax/1e3) + ' km')
-        plt.savefig('zonal_mean_density_column_' + name + '_' + str(zmin/1e3) + '_' + str(zmax/1e3) + '.png',
-                    bbox_inches='tight')
+            'Zonal mean column density of {} between {:.3e} and {:.3e} Pa'.format(name, zmin, zmax))
+        plt.savefig('zonal_mean_density_column_{}_{}_{}_Pa.png'.format(name, zmin, zmax), bbox_inches='tight')
 
     plt.show()
 
@@ -120,7 +127,7 @@ def display_altitude_latitude(data, unit, title, data_altitude, data_latitude, s
     plt.contourf(data, cmap='inferno')
 
     ax.set_yticks(ticks=arange(0, len(data_altitude), 3))
-    ax.set_yticklabels(labels=round(data_altitude[::3]/1e3, 2))
+    ax.set_yticklabels(labels=round(data_altitude[::3] / 1e3, 2))
     ax.set_xticks(ticks=arange(0, len(data_latitude), 3))
     ax.set_xticklabels(labels=data_latitude[::3])
 
@@ -130,7 +137,7 @@ def display_altitude_latitude(data, unit, title, data_altitude, data_latitude, s
     ax.set_xlabel('Latitude (°N)')
     ax.set_ylabel('Altitude (km)')
 
-    plt.savefig(savename+'.png', bbox_inches='tight')
+    plt.savefig(savename + '.png', bbox_inches='tight')
     plt.show()
 
 
@@ -292,29 +299,33 @@ def display_max_lon_alt(name, data_latitude, max_mmr, max_alt, max_temp, max_sat
 # =====================================================================================================================#
 # ============================================ DISPLAY Zonal mean =====================================================#
 # =====================================================================================================================#
-def display_zonal_mean(data, data_latitude, ndx, axis_ls, levels=None, title=None, units=None):
-    from numpy import arange, int_
+def display_zonal_mean(filename, data, levels=None, title=None, units=None):
+    from numpy import int_
 
-    plt.figure()
+    data_latitude = getdata(filename=filename, target='latitude')
+    data_latitude = data_latitude[::-1]
+
+    data_time = getdata(filename=filename, target='Time')
+    ndx, axis_ls = get_ls_index(data_time)
+
+    plt.figure(figsize=(11,8))
     plt.title('Zonal mean of ' + title)
-    plt.contourf(data, cmap='plasma', levels=levels, extend='max')
+    plt.contourf(data_time[:]*12, data_latitude[:], data, cmap='plasma', levels=levels, extend='max')
     ax = plt.gca()
     ax.set_facecolor('white')
     plt.xticks(ticks=ndx, labels=int_(axis_ls))
-    plt.yticks(ticks=arange(0, data_latitude.shape[0], 6), labels=data_latitude[::6])
+    plt.yticks(ticks=[-90, -60, -30, 0, 30, 60, 90], labels=[-90, -60, -30, 0, 30, 60, 90])
     cbar = plt.colorbar()
     cbar.ax.set_title(units)
     plt.xlabel('Solar Longitude (°)')
     plt.ylabel('Latitude (°N)')
     plt.savefig('zonal_mean_' + title + '.png', bbox_inches='tight')
-    plt.show()
 
 
 # ==================================================================================================================== #
 # ============================================ DISPLAY Zonal mean ==================================================== #
 # ==================================================================================================================== #
 def display_vertical_profile(data, data_latitude, data_pressure, title):
-
     plt.figure(figsize=(11, 8))
     plt.title(title)
 
@@ -401,8 +412,8 @@ def display_lat_ls_maxsatuco2(data_day, data_night, data_alt_day, data_alt_night
         pc2 = ax[1, 0].contourf(data_night, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=50),
                                 levels=scale, cmap='seismic', extend='max')
     elif unit == 'µm':
-        pc1 = ax[0, 0].contourf(data_day*1e6, cmap='seismic')
-        pc2 = ax[1, 0].contourf(data_night*1e6, cmap='seismic')
+        pc1 = ax[0, 0].contourf(data_day * 1e6, cmap='seismic')
+        pc2 = ax[1, 0].contourf(data_night * 1e6, cmap='seismic')
     elif unit == '#/kg':
         levels = ones(4)
         levels[1] = 1e6
@@ -414,13 +425,13 @@ def display_lat_ls_maxsatuco2(data_day, data_night, data_alt_day, data_alt_night
         pc1 = ax[0, 0].contourf(data_day, norm=LogNorm(), vmin=1e-10, levels=logspace(-10, 0, 11), cmap='seismic')
         pc2 = ax[1, 0].contourf(data_night, norm=LogNorm(), vmin=1e-10, levels=logspace(-10, 0, 11), cmap='seismic')
 
-    pc3 = ax[0, 1].contourf(data_alt_day/1e3, norm=DivergingNorm(vmin=0, vcenter=40, vmax=90), levels=arange(
-                            10)*10, cmap='seismic')
-    pc4 = ax[1, 1].contourf(data_alt_night/1e3, norm=DivergingNorm(vmin=0, vcenter=40, vmax=90), levels=arange(
-                            10)*10, cmap='seismic')
+    pc3 = ax[0, 1].contourf(data_alt_day / 1e3, norm=DivergingNorm(vmin=0, vcenter=40, vmax=90), levels=arange(
+        10) * 10, cmap='seismic')
+    pc4 = ax[1, 1].contourf(data_alt_night / 1e3, norm=DivergingNorm(vmin=0, vcenter=40, vmax=90), levels=arange(
+        10) * 10, cmap='seismic')
     fig.subplots_adjust(hspace=0.05, wspace=0.05, bottom=0.2)
-    pos1 = ax[0,0].get_position()
-    pos2 = ax[0,1].get_position()
+    pos1 = ax[0, 0].get_position()
+    pos2 = ax[0, 1].get_position()
     cbar_ax1 = fig.add_axes([pos1.x0, 0.07, 0.38, 0.03])
     cbar_ax2 = fig.add_axes([pos2.x0, 0.07, 0.38, 0.03])
     cbar1 = fig.colorbar(pc1, cax=cbar_ax1, orientation="horizontal", )
@@ -452,16 +463,16 @@ def display_lat_ls_maxsatuco2(data_day, data_night, data_alt_day, data_alt_night
 def display_temperature_profile_day_night(data_day, data_night, T_sat, data_altitude, temperature_stats_day,
                                           temperature_stats_night):
     plt.figure(figsize=(8, 11))
-    plt.plot(data_day, data_altitude/1e3, color='red', label='diagfi day <16h>')
-    plt.plot(data_night, data_altitude/1e3, color='blue', label='diagfi night <2h>')
-    plt.plot(temperature_stats_day, data_altitude/1e3, linestyle='--', color='red', label='stats day 16h')
-    plt.plot(temperature_stats_night, data_altitude/1e3, linestyle='--', color='blue', label='stats night 2h')
-    plt.plot(T_sat, data_altitude/1e3, linestyle='--', color='black', label='CO2 condensation')
+    plt.plot(data_day, data_altitude / 1e3, color='red', label='diagfi day <16h>')
+    plt.plot(data_night, data_altitude / 1e3, color='blue', label='diagfi night <2h>')
+    plt.plot(temperature_stats_day, data_altitude / 1e3, linestyle='--', color='red', label='stats day 16h')
+    plt.plot(temperature_stats_night, data_altitude / 1e3, linestyle='--', color='blue', label='stats night 2h')
+    plt.plot(T_sat, data_altitude / 1e3, linestyle='--', color='black', label='CO2 condensation')
     plt.xlabel('Temperature (K)')
     plt.ylabel('Altitude (km)')
     plt.legend(loc='best')
-    #plt.ylim(40, data_altitude[-1]/1e3)
-    #plt.xlim(80, 220)
+    # plt.ylim(40, data_altitude[-1]/1e3)
+    # plt.xlim(80, 220)
     plt.savefig('temperature_day_night_equator_ls_0-30.png', bbox_inches='tight')
     plt.show()
 
@@ -470,13 +481,13 @@ def display_altitude_localtime(data_target, data_altitude, title, unit, savename
     from numpy import arange, zeros, round
     from matplotlib.colors import DivergingNorm
 
-    fig = plt.figure(figsize=(8,11))
+    fig = plt.figure(figsize=(8, 11))
     if unit == '':
         scale = zeros(5)
         scale[1] = 1
         scale[2:] = 10 ** arange(1, 4)
         pc = plt.contourf(data_target.T, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=1000), levels=scale,
-                                cmap='seismic', extend='max')
+                          cmap='seismic', extend='max')
     else:
         pc = plt.contourf(data_target.T)
     cbar = fig.colorbar(pc, orientation="vertical")
@@ -484,9 +495,9 @@ def display_altitude_localtime(data_target, data_altitude, title, unit, savename
     plt.title(title)
     plt.ylabel('Altitude (km)')
     plt.xlabel('Local time (h)')
-    plt.xticks(ticks=arange(data_target.shape[0]), labels=arange(12)*2)
-    plt.yticks(ticks=arange(data_target.shape[1]), labels=round(data_altitude[:]/1e3, 2))
-    plt.savefig(savename+'.png', bbox_inches='tight')
+    plt.xticks(ticks=arange(data_target.shape[0]), labels=arange(12) * 2)
+    plt.yticks(ticks=arange(data_target.shape[1]), labels=round(data_altitude[:] / 1e3, 2))
+    plt.savefig(savename + '.png', bbox_inches='tight')
     plt.show()
 
 
@@ -494,13 +505,13 @@ def display_altitude_longitude(data_target, data_altitude, data_longitude, unit,
     from numpy import zeros, arange, round, int_, searchsorted
     from matplotlib.colors import DivergingNorm
 
-    fig = plt.figure(figsize=(8,11))
+    fig = plt.figure(figsize=(8, 11))
     if unit == '':
         scale = zeros(5)
         scale[1] = 1
         scale[2:] = 10 ** arange(1, 4)
         pc = plt.contourf(data_target, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=1000), levels=scale,
-                                cmap='seismic', extend='max')
+                          cmap='seismic', extend='max')
     else:
         pc = plt.contourf(data_target)
 
@@ -511,8 +522,8 @@ def display_altitude_longitude(data_target, data_altitude, data_longitude, unit,
     plt.xlabel('Longituge (°E)')
     plt.xticks(ticks=ndx, labels=[-180, -90, 0, 90, 180])
     plt.ylabel('Altitude (km)')
-    plt.yticks(ticks=arange(data_target.shape[0]), labels=round(data_altitude[:]/1e3, 2))
-    plt.savefig(savename+'.png', bbox_inches='tight')
+    plt.yticks(ticks=arange(data_target.shape[0]), labels=round(data_altitude[:] / 1e3, 2))
+    plt.savefig(savename + '.png', bbox_inches='tight')
     plt.show()
 
 
@@ -521,106 +532,106 @@ def display_thickness_co2ice_atm_layer(data, data_std, savename):
     data = ma.masked_where(data == 0, data)
 
     # data from Fig 9 in Hu et al., 2012
-    norhtpole = array((33,3))
-    southpole = array((35,3))
+    norhtpole = array((33, 3))
+    southpole = array((35, 3))
 
     northpole = array(([0.5, 0.95, 1.4],
-                      [0.6, 0.91, 1.3],
-                      [0.9, 1.1, 1.38],
-                      [0.2, 0.7, 1.15],
-                      [0.46, 1.01, 1.58],
-                      [0.45, 0.98, 1.50],
-                      [0.52, 1.18, 1.79],
-                      [0.63, 1.19, 1.63],
-                      [0.63, 1.36, 2.07],
-                      [0.59, 1.31, 2.06],
-                      [0.75, 1.59, 2.4],
-                      [0.82, 1.85, 2.85],
-                      [0.42, 0.9, 1.3],
-                      [1.2, 2.89, 4.5],
-                      [1.52, 3.12, 4.7],
-                      [0.85, 2.22, 3.63],
-                      [0.52, 0.88, 1.20],
-                      [0.7, 0.99, 1.28],
-                      [0.8, 1.2, 1.6],
-                      [0.82, 1.19, 1.50],
-                      [0.86, 1.19, 1.46],
-                      [0.7, 1.12, 1.59],
-                      [0.65, 1.48, 2.28],
-                      [0.73, 1.77, 2.78],
-                      [0.89, 2.08, 3.25],
-                      [1., 2.21, 3.45],
-                      [1.09, 2.41, 3.76],
-                      [1.04, 2.29, 3.5],
-                      [1.08, 2.15, 3.21],
-                      [1.20, 2.30, 3.40],
-                      [1.18, 2.23, 3.30],
-                      [0.81, 1.38,1.90],
-                      [0.71, 1.10, 1.47],
-                      )) * 5/1.1 # 1.1 cm pour 5 km
+                       [0.6, 0.91, 1.3],
+                       [0.9, 1.1, 1.38],
+                       [0.2, 0.7, 1.15],
+                       [0.46, 1.01, 1.58],
+                       [0.45, 0.98, 1.50],
+                       [0.52, 1.18, 1.79],
+                       [0.63, 1.19, 1.63],
+                       [0.63, 1.36, 2.07],
+                       [0.59, 1.31, 2.06],
+                       [0.75, 1.59, 2.4],
+                       [0.82, 1.85, 2.85],
+                       [0.42, 0.9, 1.3],
+                       [1.2, 2.89, 4.5],
+                       [1.52, 3.12, 4.7],
+                       [0.85, 2.22, 3.63],
+                       [0.52, 0.88, 1.20],
+                       [0.7, 0.99, 1.28],
+                       [0.8, 1.2, 1.6],
+                       [0.82, 1.19, 1.50],
+                       [0.86, 1.19, 1.46],
+                       [0.7, 1.12, 1.59],
+                       [0.65, 1.48, 2.28],
+                       [0.73, 1.77, 2.78],
+                       [0.89, 2.08, 3.25],
+                       [1., 2.21, 3.45],
+                       [1.09, 2.41, 3.76],
+                       [1.04, 2.29, 3.5],
+                       [1.08, 2.15, 3.21],
+                       [1.20, 2.30, 3.40],
+                       [1.18, 2.23, 3.30],
+                       [0.81, 1.38, 1.90],
+                       [0.71, 1.10, 1.47],
+                       )) * 5 / 1.1  # 1.1 cm pour 5 km
 
     southpole = array(([0.63, 0.98, 1.30],
-                      [0.9, 1.42, 1.99],
-                      [1.3, 1.95, 2.60],
-                      [1.43, 2.20, 2.89],
-                      [1.51, 2.40, 3.25],
-                      [1.40, 2.35, 3.28],
-                      [1.49, 2.40, 3.32],
-                      [1.52, 2.58, 3.60],
-                      [1.69, 2.70, 3.72],
-                      [1.68, 2.70, 3.75],
-                      [2.10, 3.40, 4.70],
-                      [2.23, 3.56, 4.85],
-                      [2.18, 3.47, 4.72],
-                      [2.49, 3.76, 5.05],
-                      [2.40, 3.70, 5.00],
-                      [2.30, 3.55, 4.82],
-                      [2.30, 3.53, 4.80],
-                      [2.21, 3.50, 4.73],
-                      [2.10, 3.30, 4.50],
-                      [1.81, 2.95, 4.08],
-                      [2.08, 3.23, 4.39],
-                      [2.19, 3.35, 4.51],
-                      [2.23, 3.39, 4.51],
-                      [2.22, 3.38, 4.50],
-                      [2.15, 3.28, 4.29],
-                      [2.00, 3.08, 4.13],
-                      [1.18, 2.89, 3.88],
-                      [1.92, 2.94, 3.94],
-                      [2.30, 3.32, 4.36],
-                      [1.28, 2.11, 2.94],
-                      [1.21, 2.10, 2.95],
-                      [0.92, 1.70, 2.49],
-                      [0.77, 1.50, 2.22],
-                      [0.18, 0.68, 1.12],
-                      [0.12, 0.22, 0.32],
-                      )) * 5 / 0.95 # 0.95 cm pour 5 km
+                       [0.9, 1.42, 1.99],
+                       [1.3, 1.95, 2.60],
+                       [1.43, 2.20, 2.89],
+                       [1.51, 2.40, 3.25],
+                       [1.40, 2.35, 3.28],
+                       [1.49, 2.40, 3.32],
+                       [1.52, 2.58, 3.60],
+                       [1.69, 2.70, 3.72],
+                       [1.68, 2.70, 3.75],
+                       [2.10, 3.40, 4.70],
+                       [2.23, 3.56, 4.85],
+                       [2.18, 3.47, 4.72],
+                       [2.49, 3.76, 5.05],
+                       [2.40, 3.70, 5.00],
+                       [2.30, 3.55, 4.82],
+                       [2.30, 3.53, 4.80],
+                       [2.21, 3.50, 4.73],
+                       [2.10, 3.30, 4.50],
+                       [1.81, 2.95, 4.08],
+                       [2.08, 3.23, 4.39],
+                       [2.19, 3.35, 4.51],
+                       [2.23, 3.39, 4.51],
+                       [2.22, 3.38, 4.50],
+                       [2.15, 3.28, 4.29],
+                       [2.00, 3.08, 4.13],
+                       [1.18, 2.89, 3.88],
+                       [1.92, 2.94, 3.94],
+                       [2.30, 3.32, 4.36],
+                       [1.28, 2.11, 2.94],
+                       [1.21, 2.10, 2.95],
+                       [0.92, 1.70, 2.49],
+                       [0.77, 1.50, 2.22],
+                       [0.18, 0.68, 1.12],
+                       [0.12, 0.22, 0.32],
+                       )) * 5 / 0.95  # 0.95 cm pour 5 km
 
-    northpole_ls = 192.5 + arange(33)*5
-    southpole_ls = 12.5 + arange(35)*5
+    northpole_ls = 192.5 + arange(33) * 5
+    southpole_ls = 12.5 + arange(35) * 5
 
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8,11))
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11))
 
-#    ax[0].text(0.05, 0.9, 'North pole above 60°N', transform=ax[0].transAxes, fontsize=14)
+    #    ax[0].text(0.05, 0.9, 'North pole above 60°N', transform=ax[0].transAxes, fontsize=14)
     ax[0].set_title('North pole above 60°N')
-    print(data[1,:])
-    ax[0].errorbar(arange(73)*5, data[1,:]/1e3,
-                  yerr=data_std[1,:]/1e3,
-                  ls=' ', marker='+', color='black', label='GCM') # 72 points binned in 5°
-    ax[0].errorbar(northpole_ls, northpole[:,1],
-                   yerr=[northpole[:,2]-northpole[:,1], northpole[:,1] - northpole[:,0]], color='blue', ls=' ',
+    print(data[1, :])
+    ax[0].errorbar(arange(73) * 5, data[1, :] / 1e3,
+                   yerr=data_std[1, :] / 1e3,
+                   ls=' ', marker='+', color='black', label='GCM')  # 72 points binned in 5°
+    ax[0].errorbar(northpole_ls, northpole[:, 1],
+                   yerr=[northpole[:, 2] - northpole[:, 1], northpole[:, 1] - northpole[:, 0]], color='blue', ls=' ',
                    marker='+', label='MCS MY28')
     ax[0].set_xticks(ticks=arange(0, 405, 45))
     ax[0].set_xticklabels(labels=arange(0, 405, 45))
     ax[0].legend(loc='best')
 
-#    ax[1].text(0.6, 0.9, 'South pole above 60°S', transform=ax[1].transAxes, fontsize=14)
+    #    ax[1].text(0.6, 0.9, 'South pole above 60°S', transform=ax[1].transAxes, fontsize=14)
     ax[1].set_title('South pole above 60°S')
-    ax[1].errorbar(arange(73)*5, data[0,:]/1e3,
-                   yerr=data_std[0,:]/1e3,
+    ax[1].errorbar(arange(73) * 5, data[0, :] / 1e3,
+                   yerr=data_std[0, :] / 1e3,
                    ls=' ', marker='+', color='black', label='GCM')
-    ax[1].errorbar(southpole_ls, southpole[:,1],
-                   yerr=[southpole[:,2]-southpole[:,1], southpole[:,1] - southpole[:,0]], color='blue', ls=' ',
+    ax[1].errorbar(southpole_ls, southpole[:, 1],
+                   yerr=[southpole[:, 2] - southpole[:, 1], southpole[:, 1] - southpole[:, 0]], color='blue', ls=' ',
                    marker='+', label='MCS MY29')
 
     ax[1].set_xticks(ticks=arange(0, 405, 45))
@@ -638,22 +649,22 @@ def display_distribution_altitude_latitude_polar(distribution_north, distributio
                                                  north_latitude, south_latitude, savename):
     from numpy import arange, round
 
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8,11))
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11))
 
     pc = ax[0].imshow(distribution_north.T, origin='lower', aspect='auto')
     ax[0].set_xticks(ticks=arange(north_latitude.shape[0]))
     ax[0].set_xticklabels(labels=north_latitude)
     ax[0].set_yticks(ticks=arange(data_altitude[:].shape[0]))
-    ax[0].set_yticklabels(labels=round(data_altitude[:]/1e3, 2))
+    ax[0].set_yticklabels(labels=round(data_altitude[:] / 1e3, 2))
 
     ax[1].imshow(distribution_south.T, origin='lower', aspect='auto')
     ax[1].set_xticks(ticks=arange(north_latitude.shape[0]))
     ax[1].set_xticklabels(labels=south_latitude)
     ax[1].set_yticks(ticks=arange(data_altitude[:].shape[0]))
-    ax[1].set_yticklabels(labels=round(data_altitude[:]/1e3, 2))
+    ax[1].set_yticklabels(labels=round(data_altitude[:] / 1e3, 2))
 
-    ax[0].set_ylim(0,15)
-    ax[1].set_ylim(0,15)
+    ax[0].set_ylim(0, 15)
+    ax[1].set_ylim(0, 15)
 
     plt.draw()
     p0 = ax[0].get_position().get_points().flatten()
@@ -664,7 +675,7 @@ def display_distribution_altitude_latitude_polar(distribution_north, distributio
     fig.text(0.02, 0.5, 'Altitude (km)', ha='center', va='center', rotation='vertical', fontsize=14)
     fig.text(0.5, 0.06, 'Latitude (°N)', ha='center', va='center', fontsize=14)
 
-    plt.savefig(savename+'.png', bbox_inches='tight')
+    plt.savefig(savename + '.png', bbox_inches='tight')
     plt.show()
 
 
@@ -678,20 +689,20 @@ def display_cloud_evolution_localtime(data, data_satuco2, data_temp, data_riceco
 
     ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
 
-    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(8,11))
+    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(8, 11))
     fig.subplots_adjust(wspace=0.4)
-    ax[0,0].title.set_text('CO$_2$ ice mmr')
-    pc0 = ax[0,0].contourf(data.T)
+    ax[0, 0].title.set_text('CO$_2$ ice mmr')
+    pc0 = ax[0, 0].contourf(data.T)
     cbar0 = plt.colorbar(pc0, ax=ax[0, 0])
     cbar0.ax.set_title('kg/kg')
     cbar0.ax.set_yticklabels(["{:.2e}".format(i) for i in cbar0.get_ticks()])
-    ax[0,0].set_xticks(ticks=arange(data.shape[0]))
-    ax[0,0].set_xticklabels(labels=round(data_time[idx_max[0]-2:idx_max[0]+2]*24%24, 0))
-    ax[0,0].set_yticks(ticks=ticks_altitude)
-    ax[0,0].set_yticklabels(labels=round(data_altitude[ticks_altitude]/1e3, 0))
+    ax[0, 0].set_xticks(ticks=arange(data.shape[0]))
+    ax[0, 0].set_xticklabels(labels=round(data_time[idx_max[0] - 2:idx_max[0] + 2] * 24 % 24, 0))
+    ax[0, 0].set_yticks(ticks=ticks_altitude)
+    ax[0, 0].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
 
-    ax[0,1].title.set_text('Temperature')
-    pc1 = ax[0,1].contourf(data_temp.T)
+    ax[0, 1].title.set_text('Temperature')
+    pc1 = ax[0, 1].contourf(data_temp.T)
     cbar1 = plt.colorbar(pc1, ax=ax[0, 1])
     cbar1.ax.set_title('K')
     ax[0, 1].set_xticks(ticks=arange(data.shape[0]))
@@ -699,8 +710,8 @@ def display_cloud_evolution_localtime(data, data_satuco2, data_temp, data_riceco
     ax[0, 1].set_yticks(ticks=ticks_altitude)
     ax[0, 1].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
 
-    ax[1,0].title.set_text('Saturation of CO$_2$ ice')
-    pc2 = ax[1,0].contourf(data_satuco2.T)
+    ax[1, 0].title.set_text('Saturation of CO$_2$ ice')
+    pc2 = ax[1, 0].contourf(data_satuco2.T)
     cbar2 = plt.colorbar(pc2, ax=ax[1, 0])
     cbar2.ax.set_title('')
     ax[1, 0].set_xticks(ticks=arange(data.shape[0]))
@@ -708,8 +719,8 @@ def display_cloud_evolution_localtime(data, data_satuco2, data_temp, data_riceco
     ax[1, 0].set_yticks(ticks=ticks_altitude)
     ax[1, 0].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
 
-    ax[1,1].title.set_text('Radius of CO$_2$ ice particle')
-    pc3 = ax[1,1].contourf(data_riceco2.T*1e6)
+    ax[1, 1].title.set_text('Radius of CO$_2$ ice particle')
+    pc3 = ax[1, 1].contourf(data_riceco2.T * 1e6)
     cbar3 = plt.colorbar(pc3, ax=ax[1, 1])
     cbar3.ax.set_title('µm')
     ax[1, 1].set_xticks(ticks=arange(data.shape[0]))
@@ -723,20 +734,21 @@ def display_cloud_evolution_localtime(data, data_satuco2, data_temp, data_riceco
     plt.savefig('cloud_evolution_local_time.png', bbox_inches='tight')
     plt.show()
 
+
 def display_cloud_evolution_longitude(data, data_satuco2, data_temp, data_riceco2, idx_max, xtime,
-                                       data_time, data_altitude, data_longitude):
+                                      data_time, data_altitude, data_longitude):
     from numpy import arange, round, logspace, zeros, min
     from matplotlib.colors import DivergingNorm, LogNorm
 
-    data = data[idx_max[0]+xtime, :, idx_max[2], idx_max[3]-2:idx_max[3]+3]
-    data_satuco2 = data_satuco2[idx_max[0]+xtime, :, idx_max[2], idx_max[3]-2:idx_max[3]+3]
-    data_temp = data_temp[idx_max[0]+xtime, :, idx_max[2], idx_max[3]-2:idx_max[3]+3]
-    data_riceco2 = data_riceco2[idx_max[0]+xtime, :, idx_max[2], idx_max[3]-2:idx_max[3]+3]
+    data = data[idx_max[0] + xtime, :, idx_max[2], idx_max[3] - 2:idx_max[3] + 3]
+    data_satuco2 = data_satuco2[idx_max[0] + xtime, :, idx_max[2], idx_max[3] - 2:idx_max[3] + 3]
+    data_temp = data_temp[idx_max[0] + xtime, :, idx_max[2], idx_max[3] - 2:idx_max[3] + 3]
+    data_riceco2 = data_riceco2[idx_max[0] + xtime, :, idx_max[2], idx_max[3] - 2:idx_max[3] + 3]
 
     ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
 
     fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(8, 11))
-    fig.suptitle('Local time: '+str(int(round(data_time[idx_max[0]+xtime]*24%24, 0)))+' h')
+    fig.suptitle('Local time: ' + str(int(round(data_time[idx_max[0] + xtime] * 24 % 24, 0))) + ' h')
     fig.subplots_adjust(wspace=0.4)
     ax[0, 0].title.set_text('CO$_2$ ice mmr')
     pc0 = ax[0, 0].contourf(data, norm=LogNorm(vmin=1e-12, vmax=1e-4), levels=logspace(-12, -4, 9), cmap='Greys')
@@ -774,7 +786,7 @@ def display_cloud_evolution_longitude(data, data_satuco2, data_temp, data_riceco
     ax[1, 0].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
 
     ax[1, 1].title.set_text('Radius of CO$_2$ ice particle')
-    pc3 = ax[1, 1].contourf(data_riceco2 * 1e6, vmin=0, vmax=180, levels=arange(0,200,20), cmap='Greys')
+    pc3 = ax[1, 1].contourf(data_riceco2 * 1e6, vmin=0, vmax=180, levels=arange(0, 200, 20), cmap='Greys')
     cbar3 = plt.colorbar(pc3, ax=ax[1, 1])
     cbar3.ax.set_title('µm')
     ax[1, 1].set_xticks(ticks=arange(data.shape[1]))
@@ -785,13 +797,13 @@ def display_cloud_evolution_longitude(data, data_satuco2, data_temp, data_riceco
     fig.text(0.02, 0.5, 'Altitude (km)', ha='center', va='center', rotation='vertical', fontsize=14)
     fig.text(0.5, 0.06, 'Longitude (°E)', ha='center', va='center', fontsize=14)
 
-    savename = 'cloud_evolution_longitude_'+str(round(data_time[idx_max[0]+xtime]*24%24, 0))+'h.png'
+    savename = 'cloud_evolution_longitude_' + str(round(data_time[idx_max[0] + xtime] * 24 % 24, 0)) + 'h.png'
     plt.savefig(savename, bbox_inches='tight')
     return savename
 
 
 def display_cloud_evolution_latitude(data, data_satuco2, data_temp, data_riceco2, idx_max, xtime,
-                                       data_time, data_altitude, data_latitude):
+                                     data_time, data_altitude, data_latitude):
     from numpy import arange, round, zeros, logspace, concatenate, array, max
     from matplotlib.colors import DivergingNorm, LogNorm
 
@@ -806,31 +818,31 @@ def display_cloud_evolution_latitude(data, data_satuco2, data_temp, data_riceco2
     if make_gif.lower() == 'y':
         libf.create_gif(filenames)
 
-    if idx_max[2]-3 < 0:
+    if idx_max[2] - 3 < 0:
         data = data[xtime, :, 0:idx_max[2] + 3]
         data_satuco2 = data_satuco2[xtime, :, 0:idx_max[2] + 3]
         data_temp = data_temp[xtime, :, 0:idx_max[2] + 3]
         data_riceco2 = data_riceco2[xtime, :, 0:idx_max[2] + 3]
-        data_latitude = data_latitude[0:idx_max[2]+3]
-    elif idx_max[2]+3 > data_latitude.shape[0]:
+        data_latitude = data_latitude[0:idx_max[2] + 3]
+    elif idx_max[2] + 3 > data_latitude.shape[0]:
         data = data[xtime, :, idx_max[2] - 3:-1]
         data_satuco2 = data_satuco2[xtime, :, idx_max[2] - 3:-1]
         data_temp = data_temp[xtime, :, idx_max[2] - 3:-1]
         data_riceco2 = data_riceco2[xtime, :, idx_max[2] - 3:-1]
-        data_latitude = data_latitude[idx_max[2]-3:-1]
+        data_latitude = data_latitude[idx_max[2] - 3:-1]
     else:
         dlatitude = 5
-        data = data[xtime, :, idx_max[2] - dlatitude:idx_max[2] + dlatitude+1]
-        data_satuco2 = data_satuco2[xtime, :, idx_max[2] - dlatitude:idx_max[2] + dlatitude+1]
-        data_temp = data_temp[xtime, :, idx_max[2] - dlatitude:idx_max[2] + dlatitude+1]
-        data_riceco2 = data_riceco2[xtime, :, idx_max[2] - dlatitude:idx_max[2] + dlatitude+1]
-        data_latitude = data_latitude[idx_max[2] - dlatitude:idx_max[2] + dlatitude+1]
+        data = data[xtime, :, idx_max[2] - dlatitude:idx_max[2] + dlatitude + 1]
+        data_satuco2 = data_satuco2[xtime, :, idx_max[2] - dlatitude:idx_max[2] + dlatitude + 1]
+        data_temp = data_temp[xtime, :, idx_max[2] - dlatitude:idx_max[2] + dlatitude + 1]
+        data_riceco2 = data_riceco2[xtime, :, idx_max[2] - dlatitude:idx_max[2] + dlatitude + 1]
+        data_latitude = data_latitude[idx_max[2] - dlatitude:idx_max[2] + dlatitude + 1]
 
     ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
 
     fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(8, 11))
     fig.subplots_adjust(wspace=0.4)
-    fig.suptitle('Sols: '+str(int(data_time))+', local time: '+str(int(round(data_time*24%24, 0)))+' h')
+    fig.suptitle('Sols: ' + str(int(data_time)) + ', local time: ' + str(int(round(data_time * 24 % 24, 0))) + ' h')
     ax[0, 0].title.set_text('CO$_2$ ice mmr')
     pc0 = ax[0, 0].contourf(data, norm=LogNorm(vmin=1e-12, vmax=1e-4), levels=logspace(-12, -3, 10), cmap='Greys')
     cbar0 = plt.colorbar(pc0, ax=ax[0, 0])
@@ -853,7 +865,7 @@ def display_cloud_evolution_latitude(data, data_satuco2, data_temp, data_riceco2
     ax[1, 0].title.set_text('Saturation of CO$_2$ ice')
     print(max(data_satuco2))
     pc2 = ax[1, 0].contourf(data_satuco2, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=17),
-                            levels=concatenate([array([0,1]),arange(3,19,2)]), cmap='seismic')
+                            levels=concatenate([array([0, 1]), arange(3, 19, 2)]), cmap='seismic')
     cbar2 = plt.colorbar(pc2, ax=ax[1, 0])
     cbar2.ax.set_title('')
     ax[1, 0].set_xticks(ticks=arange(0, data.shape[1], 2))
@@ -862,7 +874,7 @@ def display_cloud_evolution_latitude(data, data_satuco2, data_temp, data_riceco2
     ax[1, 0].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
 
     ax[1, 1].title.set_text('Radius of CO$_2$ ice particle')
-    pc3 = ax[1, 1].contourf(data_riceco2 * 1e6, vmin=0, vmax=200, levels=arange(0,220,20), cmap='Greys')
+    pc3 = ax[1, 1].contourf(data_riceco2 * 1e6, vmin=0, vmax=200, levels=arange(0, 220, 20), cmap='Greys')
     cbar3 = plt.colorbar(pc3, ax=ax[1, 1])
     cbar3.ax.set_title('µm')
     ax[1, 1].set_xticks(ticks=arange(0, data.shape[1], 2))
@@ -873,75 +885,143 @@ def display_cloud_evolution_latitude(data, data_satuco2, data_temp, data_riceco2
     fig.text(0.02, 0.5, 'Altitude (km)', ha='center', va='center', rotation='vertical', fontsize=14)
     fig.text(0.5, 0.06, 'Latitude (°N)', ha='center', va='center', fontsize=14)
 
-    savename = 'cloud_evolution_latitude_sols_'+str(int(data_time))+'_'+str(round(data_time*24%24, 0))+'h.png'
+    savename = 'cloud_evolution_latitude_sols_' + str(int(data_time)) + '_' + str(
+        round(data_time * 24 % 24, 0)) + 'h.png'
     plt.savefig(savename, bbox_inches='tight')
     plt.close()
 
     return savename
 
 
-def display_saturation_and_co2_ice(data_satuco2_north, data_satuco2_eq, data_satuco2_south,
-                                                    data_co2ice_north, data_co2ice_eq, data_co2ice_south,
-                                                    data_altitude, ndx, axis_ls):
-    from numpy import array, max, arange, round
+def display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north,
+                               data_co2ice_eq, data_co2ice_south, latitude_north, latitude_eq, latitude_south):
+    from numpy import array, round, ones
 
-    fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(8,11))
+    data_latitude = getdata(filename, target='latitude')
+    list_latitudes = [latitude_north, latitude_eq, latitude_south]
 
-    print(max(data_satuco2_north.T))
-    ax[0].set_title('48.75°N')
-    ax[0].contourf(data_satuco2_north.T, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100),cmap='seismic',
-                   levels=array([0, 1, 10, 20, 50, 100]), extend='max')
-    cs = ax[0].contour(data_co2ice_north.T, colors='black')
-    #ax[0].clabel(cs, inline=1, fontsize=10)
+    # chopper l'intervalle de latitude comprise entre value-1 et value+1
+    data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
+    data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS = mesoclouds_observed()
 
-    print(max(data_satuco2_eq.T))
-    ax[1].set_title('0°N')
-    ax[1].contourf(data_satuco2_eq.T, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100),cmap='seismic',
-                   levels=array([0, 1, 10, 20, 50, 100]), extend='max')
-    cs1 = ax[1].contour(data_co2ice_eq.T, colors='black')
-    #ax[1].clabel(cs1, inline=1, fontsize=10)
+    list_obs = [data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
+    data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS]
 
-    print(max(data_satuco2_south.T))
-    ax[2].set_title('60°S')
-    cb = ax[2].contourf(data_satuco2_south.T, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100), cmap='seismic',
-                   levels=array([0, 1, 10, 20, 50, 100]), extend='max')
-    cs2 = ax[2].contour(data_co2ice_south.T, colors='black')
-    #ax[2].clabel(cs2, inline=1, fontsize=10)
-
+    data_altitude = getdata(filename, target='altitude')
     ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
 
-    for axe in ax:
-        axe.set_xticks(ticks=ndx)
-        axe.set_xticklabels(labels=axis_ls)
+    if data_altitude.units == 'm':
+        altitude_unit = 'km'
+        altitude_name = 'Altitude'
+        data_altitude = data_altitude[:] / 1e3
+    elif data_altitude.units == 'km':
+        altitude_unit = data_altitude.units
+        altitude_name = 'Altitude'
+    else:
+        altitude_unit = data_altitude.units
+        altitude_name = 'Pressure'
+        try:
+            data_zareoid = getdata(filename, target='zareoid')
+        except:
+            print('Zareoid is missing!')
+            exit()
 
-        axe.set_yticks(ticks=ticks_altitude)
-        axe.set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
+    data_time = getdata(filename=filename, target='Time')
+    data_time = data_time[::60] # 5°Ls binned
+    ndx, axis_ls = get_ls_index(data_time)
+
+    fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(8, 11))
+    ax[0].set_title('{}°N'.format(latitude_north))
+    ax[0].contourf(data_time[:], data_altitude[:], data_satuco2_north,
+                   norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100), cmap='coolwarm',
+                   levels=array([0, 1, 10, 20, 50, 100]), extend='max')
+    ax[0].contour(data_time[:], data_altitude[:], data_co2ice_north, colors='black')
+
+    ax[1].set_title('{}°N'.format(latitude_eq))
+    ax[1].contourf(data_time[:], data_altitude[:], data_satuco2_eq,
+                   norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100), cmap='coolwarm',
+                   levels=array([0, 1, 10, 20, 50, 100]), extend='max')
+    ax[1].contour(data_time[:], data_altitude[:], data_co2ice_eq, colors='black')
+
+    ax[2].set_title('{}°S'.format(abs(latitude_south)))
+    cb = ax[2].contourf(data_time[:], data_altitude[:], data_satuco2_south,
+                        norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100), cmap='coolwarm',
+                        levels=array([0, 1, 10, 20, 50, 100]), extend='max')
+    ax[2].contour(data_time[:], data_altitude[:], data_co2ice_south, colors='black')
+
+    # TODO ajouter si il y a des nuages proches de co2 observés entre lat-1:lat+1
+
+    for i, axe in enumerate(ax):
+        axe.set_xticks(ticks=axis_ls)
+        axe.set_xticklabels(labels=axis_ls)
+        axe.set_xlim(0, 360)
+        axe.set_ylim(1e-3, 1e3)
+
+        for j, value in enumerate(list_obs):
+            data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
+                                                                         list_latitudes[i])
+            if data_obs_ls.shape[0] != 0:
+                axe.scatter(data_obs_ls, ones(data_obs_ls.shape[0])*3e-3*(j+1), color='black', marker='+')
+
+        if altitude_unit == 'Pa':
+            data_zareoid_sliced, tmp = slice_data(data_zareoid, dimension_data=data_latitude, value=list_latitudes[i])
+
+            lines_altitudes_0km = get_mean_index_alti(data_zareoid_sliced, 0)
+            lines_altitudes_10km = get_mean_index_alti(data_zareoid_sliced, 1e4)
+            lines_altitudes_40km = get_mean_index_alti(data_zareoid_sliced, 4e4)
+            lines_altitudes_80km = get_mean_index_alti(data_zareoid_sliced, 8e4)
+            del data_zareoid_sliced
+
+            axe.plot(data_altitude[lines_altitudes_0km[::12]], '--', color='grey')
+            axe.plot(data_altitude[lines_altitudes_10km[::12]], '--', color='grey')
+            axe.plot(data_altitude[lines_altitudes_40km[::12]], '--', color='grey')
+            axe.plot(data_altitude[lines_altitudes_80km[::12]], '--', color='grey')
+
+            axe.text(0, data_altitude[lines_altitudes_0km[0]], '0 km',
+                     verticalalignment='bottom',
+                     horizontalalignment='left', color='grey', fontsize=10)
+            axe.text(0, data_altitude[lines_altitudes_10km[0]], '10 km',
+                     verticalalignment='bottom',
+                     horizontalalignment='left', color='grey', fontsize=10)
+            axe.text(0, data_altitude[lines_altitudes_40km[0]], '40 km',
+                     verticalalignment='bottom',
+                     horizontalalignment='left', color='grey', fontsize=10)
+            axe.text(0, data_altitude[lines_altitudes_80km[0]], '80 km',
+                     verticalalignment='bottom',
+                     horizontalalignment='left', color='grey', fontsize=10)
+
+            axe.set_yscale('log')
+            axe.invert_yaxis()
+        else:
+            axe.set_yticks(ticks=ticks_altitude)
+            axe.set_yticklabels(labels=round(data_altitude))
 
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     fig.colorbar(cb, cax=cbar_ax)
 
-    fig.text(0.02, 0.5, 'Altitude (km)', ha='center', va='center', rotation='vertical', fontsize=14)
+    fig.text(0.02, 0.5, '{} ({})'.format(altitude_name, altitude_unit), ha='center', va='center', rotation='vertical',
+             fontsize=14)
     fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
 
-    plt.savefig('saturationco2_altitude_latitude_48p75N_0N_60S.png', bbox_inches='tight')
-    plt.show()
+    plt.savefig('satuco2_with_co2ice_altitude-ls_max_along_longitude_at_{}N_{}N_{}N.png'.format(latitude_north,
+                latitude_eq, latitude_south), bbox_inches='tight')
 
 
 def saturation_zonal_mean_day_night(data_satuco2_day, data_satuco2_night, data_co2ice_day, data_co2ice_night,
                                     data_altitude, ndx, axis_ls, title, savename):
     from numpy import array, round
 
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8,11))
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11))
     fig.suptitle(title)
     ax[0].set_title('Day 6h - 18h')
-    ax[0].contourf(data_satuco2_day.T, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100),cmap='seismic',
+    ax[0].contourf(data_satuco2_day.T, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100), cmap='seismic',
                    levels=array([0, 1, 10, 20, 50, 100]), extend='max')
     ax[0].contour(data_co2ice_day.T, colors='black')
 
     ax[1].set_title('Night 18h - 6h')
-    cb = ax[1].contourf(data_satuco2_night.T, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100),cmap='seismic',
-                   levels=array([0, 1, 10, 20, 50, 100]), extend='max')
+    cb = ax[1].contourf(data_satuco2_night.T, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100), cmap='seismic',
+                        levels=array([0, 1, 10, 20, 50, 100]), extend='max')
     ax[1].contour(data_co2ice_night.T, colors='black')
 
     ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
@@ -960,7 +1040,7 @@ def saturation_zonal_mean_day_night(data_satuco2_day, data_satuco2_night, data_c
     fig.text(0.02, 0.5, 'Altitude (km)', ha='center', va='center', rotation='vertical', fontsize=14)
     fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
 
-    plt.savefig(savename+'.png', bbox_inches='tight')
+    plt.savefig(savename + '.png', bbox_inches='tight')
     plt.show()
 
 
@@ -971,10 +1051,10 @@ def topcloud_altitude(top_cloud, data_latitude, data_altitude, ndx, axis_ls):
         dim2 = where(top_cloud[i, :] == 0)
         top_cloud[i, dim2] = None
 
-    plt.figure(figsize=(8,11))
+    plt.figure(figsize=(8, 11))
     plt.title('Zonal mean of top cloud altitude')
     cb = plt.contourf(flip(top_cloud.T, axis=0), norm=DivergingNorm(vmin=data_altitude[1], vcenter=40, vmax=50),
-                      levels=concatenate([array([data_altitude[1]]),arange(1,6)*10]), cmap='seismic')
+                      levels=concatenate([array([data_altitude[1]]), arange(1, 6) * 10]), cmap='seismic')
     ax = plt.gca()
     ax.set_facecolor('white')
 
@@ -989,24 +1069,23 @@ def topcloud_altitude(top_cloud, data_latitude, data_altitude, ndx, axis_ls):
     plt.show()
 
 
-#======================================================================================================================#
-#======================================================================================================================#
-#======================================================================================================================#
+# ======================================================================================================================#
+# ======================================================================================================================#
+# ======================================================================================================================#
 
 # figure in altitude - X
 def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel, xscale='linear', yscale='linear',
                           title='', savename='profiles'):
-
     data_altitude = getdata(filename, target='altitude')
     if data_altitude.units == 'm':
         units = 'km'
         altitude_name = 'Altitude'
-        data_altitude = data_altitude[:]/1e3
+        data_altitude = data_altitude[:] / 1e3
     elif data_altitude.units == 'km':
         units = data_altitude.units
         altitude_name = 'Altitude'
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8,11))
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 11))
 
     if data.ndim > 1:
         for i in range(data.shape[1]):
@@ -1019,66 +1098,101 @@ def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel,
         ax.plot()
 
     plt.xlim(xmin, xmax)
-    plt.ylim(data_altitude[0],data_altitude[-1])
+    plt.ylim(data_altitude[0], data_altitude[-1])
     plt.legend(loc='best')
     plt.xlabel(xlabel)
-    plt.ylabel(altitude_name+' ('+units+')')
+    plt.ylabel(altitude_name + ' (' + units + ')')
     plt.title(title)
-    plt.savefig(savename+'.png', bbox_inches='tight')
+    plt.savefig(savename + '.png', bbox_inches='tight')
     plt.show()
 
 
+# ======================================================================================================================#
+# ======================================================================================================================#
+# ======================================================================================================================#
 
-#======================================================================================================================#
-#======================================================================================================================#
-#======================================================================================================================#
 
-
-def display_alt_ls(filename, data_1, data_2, levels, title, savename):
+def display_alt_ls(filename, data_1, data_2, levels, title, savename, latitude_selected=None):
     from numpy import round
 
     data_altitude = getdata(filename, target='altitude')
     ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
+
     if data_altitude.units == 'm':
         units = 'km'
         altitude_name = 'Altitude'
-        data_altitude = data_altitude[:]/1e3
+        data_altitude = data_altitude[:] / 1e3
     elif data_altitude.units == 'km':
         units = data_altitude.units
         altitude_name = 'Altitude'
+    else:
+        units = data_altitude.units
+        altitude_name = 'Pressure'
 
     data_time = getdata(filename, target='Time')
     ndx, axis_ls = get_ls_index(data_time)
 
-    fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(11,8))
+    fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(11, 8))
 
-    cb = axes.contourf(data_1, norm=LogNorm(vmin=1e-13, vmax=1e2), levels=levels, cmap='coolwarm')
-    axes.contour(data_2, norm=LogNorm(vmin=1e-13, vmax=1e2), levels=levels, colors='black')
+    cb = axes.contourf(data_time[:] * 12, data_altitude[:], data_1, norm=LogNorm(vmin=1e-13, vmax=1e2), levels=levels,
+                       cmap='coolwarm')
+    axes.contour(data_time[:] * 12, data_altitude[:], data_2, norm=LogNorm(vmin=1e-13, vmax=1e2), levels=levels,
+                 colors='black')
 
     cbar = plt.colorbar(cb, ax=axes)
     cbar.ax.set_title('kg/kg')
 
+    axes.set_xlim(data_time[0], data_time[-1]*12)
     axes.set_xticks(ticks=ndx)
     axes.set_xticklabels(labels=axis_ls)
     axes.set_xlabel('Solar longitude (°)')
 
     axes.set_yticks(ticks=ticks_altitude)
-    axes.set_yticklabels(labels=round(data_altitude[ticks_altitude], 0))
-    axes.set_ylabel(altitude_name+' ('+units+')')
+    axes.set_ylabel(altitude_name + ' (' + units + ')')
+    if units == 'Pa':
+        try:
+            data_zareoid = getdata(filename, target='zareoid')
+        except:
+            print('Zareoid is missing!')
+            exit()
+        if latitude_selected is not None:
+            data_latitude = getdata(filename, target='latitude')
+            data_zareoid, tmp = slice_data(data_zareoid, dimension_data=data_latitude, value=latitude_selected)
+
+        lines_altitudes_0km = get_mean_index_alti(data_zareoid, 0)
+        lines_altitudes_10km = get_mean_index_alti(data_zareoid, 1e4)
+        lines_altitudes_40km = get_mean_index_alti(data_zareoid, 4e4)
+        lines_altitudes_80km = get_mean_index_alti(data_zareoid, 8e4)
+
+        axes.plot(data_altitude[lines_altitudes_0km], '--', color='grey')
+        axes.plot(data_altitude[lines_altitudes_10km], '--', color='grey')
+        axes.plot(data_altitude[lines_altitudes_40km], '--', color='grey')
+        axes.plot(data_altitude[lines_altitudes_80km], '--', color='grey')
+
+        axes.text(data_time[-1]*12 + 1, data_altitude[lines_altitudes_0km[0]], '0 km', verticalalignment='bottom',
+                  horizontalalignment='right', color='grey', fontsize=14)
+        axes.text(data_time[-1]*12 + 1, data_altitude[lines_altitudes_10km[0]], '10 km', verticalalignment='bottom',
+                  horizontalalignment='right', color='grey', fontsize=14)
+        axes.text(data_time[-1]*12 + 1, data_altitude[lines_altitudes_40km[0]], '40 km', verticalalignment='bottom',
+                  horizontalalignment='right', color='grey', fontsize=14)
+        axes.text(data_time[-1]*12 + 1, data_altitude[lines_altitudes_80km[0]], '80 km', verticalalignment='bottom',
+                  horizontalalignment='right', color='grey', fontsize=14)
+
+        axes.set_yscale('log')
+        axes.invert_yaxis()
+    else:
+        axes.set_yticklabels(labels=round(data_altitude[ticks_altitude], 0))
 
     axes.set_title(title)
-    fig.savefig(savename+'.png', bbox_inches='tight')
+    fig.savefig(savename + '.png', bbox_inches='tight')
     fig.show()
 
 
-
 def display_4figs_polar_projection(data_riceco2, data_co2ice, data_temp, data_satuco2):
-    from numpy import arange
-    latitude = arange(-90,90)
-    longitude = arange(-180,180)
+
+    from mpl_toolkits.basemap import Basemap
 
     fig = plt.figure()
     axes = fig.add_subplot(111, projection='polar')
-#    axes.contourf(data_riceco2[0,0,:,:])
-    plt.plot(latitude, longitude)
+    axes.contourf(data_riceco2[0, 0, :, :])
     plt.show()

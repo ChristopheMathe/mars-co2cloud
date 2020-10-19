@@ -6,7 +6,7 @@ from packages.displays import *
 from os import listdir, path
 
 from numpy import mean, abs, min, max, zeros, where, concatenate, flip, arange, unravel_index, argmax, array, \
-    std, savetxt, c_, append, loadtxt, asarray, power, logspace, random
+    std, savetxt, c_, append, loadtxt, asarray, power, logspace, random, linspace
 
 
 def main():
@@ -26,6 +26,7 @@ def main():
 
     data_target = getdata(filename)
     name_target = data_target.name
+    unit_target = data_target.units
 
     #    print('Create linear grid time...')
     #    data_time = ncdump.getdata(directory_store+filename, target="Time")
@@ -42,7 +43,7 @@ def main():
     if name_target in ['co2_ice', 'h2o_ice', 'q01']:  # q01 = h2o_ice
         # correct very low values of co2/h2o mmr < 1e-13
         print('Correction value...')
-        data_target = correction_value_co2_ice(data_target[:, :, :, :], threshold=1e-13)
+        data_target = correction_value(data_target[:, :, :, :], threshold=1e-13)
 
         print('What do you wanna do?')
         print('     1: maximum in altitude and longitude, with others variables at these places (fig: lat-ls)')
@@ -69,11 +70,12 @@ def main():
 
         elif view_mode == 2:
             print('Processing data:')
-            data_target, altitude_limit, zmin, zmax = vars_zonal_mean_column_density(filename, data_target)
+            data_processed, altitude_limit, zmin, zmax = vars_zonal_mean_column_density(filename, data_target)
+            del data_target
 
             print('Display:')
-            display_colonne(filename, data_target, altitude_limit, zmin, zmax, levels=logspace(-13, 2, 16),
-                                     unit='kg/m$^2$', name=name_target)
+            display_colonne(filename, data_processed, unit_target, altitude_limit, zmin, zmax,
+                            levels=logspace(-13, 2, 16), unit='kg/m$^2$', name=name_target)
 
         elif view_mode == 3:
             print('Processing data:')
@@ -129,7 +131,8 @@ def main():
             display_alt_ls(filename, data_target, data_co2_ice, levels=logspace(-13, 2, 16),
                            title='Zonal mean of H2O ice mmr and CO2 ice mmr (black), at '+str(int(
                                latitude_selected))+'°N',
-                           savename='h2o_ice_zonalmean_with_co2_ice_'+str(int(latitude_selected))+'N')
+                           savename='h2o_ice_zonalmean_with_co2_ice_'+str(int(latitude_selected))+'N',
+                           latitude_selected=latitude_selected)
 
     elif name_target in ['temp']:
         print('What do you wanna do?')
@@ -330,10 +333,23 @@ def main():
                                  name=name_target)
 
     elif name_target in ['satuco2']:
-        shape_data_y = data_target[:, :, :, :].shape
-        view_mode = int(input('View (alt-lat=1, max=2, max_day_night=3): '))
+
+        print('What do you wanna do?')
+        print('     1: ??? (fig: alt-lat)')
+        print('     2: maximum co2 saturation along altitude and longitude with altitude corresponding (fig: lat-ls)')
+        print('     3: ')
+        print('     4: ')
+        print('     5: ')
+        print('     6: ')
+        print('     7: profile at max satuco2 along longitude, for 3 latitudes, with co2ice mmr (fig: alt-ls)')
+        print('     8: ')
+        print('')
+        view_mode = int(input('Select number:'))
 
         if view_mode == 1:
+            print('Processing data:')
+
+            print('Display:')
             displays.display_altitude_latitude_satuco2(data_target, data_time, data_altitude, data_latitude)
 
         if view_mode == 2:
@@ -341,9 +357,6 @@ def main():
             max_satu, x, y = libf.get_extrema_in_alt_lon(data_target, extrema='max')
             max_alt = libf.extract_at_max_co2_ice(data_altitude, x, y, shape_data_y)
 
-            print('Reshape and linearized data...')
-            max_satu = libf.linearize_ls(max_satu, shape_data_y[0], shape_data_y[2], interp_time)
-            max_alt = libf.linearize_ls(max_alt, shape_data_y[0], shape_data_y[2], interp_time)
             displays.display_max_lon_alt_satuco2(max_satu, data_latitude, axis_ls, ndx, max_alt)
 
         if view_mode == 3:
@@ -535,77 +548,14 @@ def main():
                                                         savename='satuco2_thickness_polar_region.png')
 
         if view_mode == 7:
-            idx_lat_north = (abs(data_latitude[:] - 50)).argmin() + 1
-            idx_lat_eq = (abs(data_latitude[:] - 0)).argmin() + 1
-            idx_lat_south = (abs(data_latitude[:] + 60)).argmin() + 1
+            print('Processing data:')
+            data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq,\
+            data_co2ice_south, latitude_north, latitude_eq, latitude_south = satuco2_with_co2_ice(filename, data_target)
 
-            data_satuco2_north = data_target[:, :, -idx_lat_north, :]
-            ind_north = unravel_index(argmax(data_satuco2_north.reshape(data_satuco2_north.shape[0], -1), axis=1),
-                                      data_satuco2_north.shape[1:3])
-            data_satuco2_north = [data_satuco2_north[i, :, ind_north[1][i]] for i in range(data_satuco2_north.shape[0])]
-            data_satuco2_north = asarray(data_satuco2_north)
-
-            data_satuco2_eq = data_target[:, :, -idx_lat_eq, :]
-            ind_eq = unravel_index(argmax(data_satuco2_eq.reshape(data_satuco2_eq.shape[0], -1), axis=1),
-                                   data_satuco2_eq.shape[1:3])
-            data_satuco2_eq = [data_satuco2_eq[i, :, ind_eq[1][i]] for i in range(data_satuco2_eq.shape[0])]
-            data_satuco2_eq = asarray(data_satuco2_eq)
-
-            data_satuco2_south = data_target[:, :, -idx_lat_south, :]
-            ind_south = unravel_index(argmax(data_satuco2_south.reshape(data_satuco2_south.shape[0], -1), axis=1),
-                                      data_satuco2_south.shape[1:3])
-            data_satuco2_south = [data_satuco2_south[i, :, ind_south[1][i]] for i in range(data_satuco2_south.shape[0])]
-            data_satuco2_south = asarray(data_satuco2_south)
-
-            del data_target
-
-            data_co2ice = getdata(directory_store + filename, target='co2_ice')
-            data_co2ice = libf.correction_value_co2_ice(data_co2ice[:])
-
-            data_co2ice_north = data_co2ice[:, :, -idx_lat_north, :]
-            data_co2ice_north = [data_co2ice_north[i, :, ind_north[1][i]] for i in range(data_co2ice_north.shape[0])]
-            data_co2ice_north = asarray(data_co2ice_north)
-
-            data_co2ice_eq = data_co2ice[:, :, -idx_lat_eq, :]
-            data_co2ice_eq = [data_co2ice_eq[i, :, ind_eq[1][i]] for i in range(data_co2ice_eq.shape[0])]
-            data_co2ice_eq = asarray(data_co2ice_eq)
-
-            data_co2ice_south = data_co2ice[:, :, -idx_lat_south, :]
-            data_co2ice_south = [data_co2ice_south[i, :, ind_south[1][i]] for i in range(data_co2ice_south.shape[0])]
-            data_co2ice_south = asarray(data_co2ice_south)
-
-            del data_co2ice, ind_north, ind_eq, ind_south
-
-            data_altitude = getdata(directory_store + filename, target='altitude')[:]
-
-            time_grid_ls = libf.convert_sols_to_ls()
-            nb_bin = time_grid_ls.shape[0]
-            data_satuco2_north_binned = zeros((nb_bin, data_altitude.shape[0]))
-            data_satuco2_eq_binned = zeros((nb_bin, data_altitude.shape[0]))
-            data_satuco2_south_binned = zeros((nb_bin, data_altitude.shape[0]))
-            data_co2ice_north_binned = zeros((nb_bin, data_altitude.shape[0]))
-            data_co2ice_eq_binned = zeros((nb_bin, data_altitude.shape[0]))
-            data_co2ice_south_binned = zeros((nb_bin, data_altitude.shape[0]))
-
-            for i in range(nb_bin - 1):
-                idx_ls_1 = (abs(data_time[:] - time_grid_ls[i])).argmin()
-                idx_ls_2 = (abs(data_time[:] - time_grid_ls[i + 1])).argmin() + 1
-
-                data_satuco2_north_binned[i, :] = mean(data_satuco2_north[idx_ls_1:idx_ls_2, :], axis=0)
-                data_satuco2_eq_binned[i, :] = mean(data_satuco2_eq[idx_ls_1:idx_ls_2, :], axis=0)
-                data_satuco2_south_binned[i, :] = mean(data_satuco2_south[idx_ls_1:idx_ls_2, :], axis=0)
-                data_co2ice_north_binned[i, :] = mean(data_co2ice_north[idx_ls_1:idx_ls_2, :], axis=0)
-                data_co2ice_eq_binned[i, :] = mean(data_co2ice_eq[idx_ls_1:idx_ls_2, :], axis=0)
-                data_co2ice_south_binned[i, :] = mean(data_co2ice_south[idx_ls_1:idx_ls_2, :], axis=0)
-
-            del data_satuco2_north, data_satuco2_eq, data_satuco2_south, \
-                data_co2ice_north, data_co2ice_eq, data_co2ice_south
-
-            ndx, axis_ls = libf.get_ls_index(time_grid_ls)
-            displays.display_saturation_and_co2_ice(data_satuco2_north_binned, data_satuco2_eq_binned,
-                                                    data_satuco2_south_binned, data_co2ice_north_binned,
-                                                    data_co2ice_eq_binned, data_co2ice_south_binned,
-                                                    data_altitude, ndx, axis_ls)
+            print('Display:')
+            display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, data_satuco2_south,
+                                       data_co2ice_north, data_co2ice_eq, data_co2ice_south,
+                                       latitude_north, latitude_eq, latitude_south)
         if view_mode == 8:
             data_altitude = getdata(directory_store + filename, target='altitude')[:]
             idx_lat_1 = (abs(data_latitude[:] + 50)).argmin()
@@ -633,7 +583,7 @@ def main():
             print('Select co2_ice day file')
             filename_3 = getfilename(files)
             data_co2ice_day = getdata(directory_store + filename_3, target='co2_ice')
-            data_co2ice_day = libf.correction_value_co2_ice(data_co2ice_day[:])
+            data_co2ice_day = libf.correction_value(data_co2ice_day[:])
             data_co2ice_day = mean(data_co2ice_day[:, :, idx_lat_1:idx_lat_2 + 1, :], axis=3)
             data_co2ice_day = mean(data_co2ice_day, axis=2)
 
@@ -641,7 +591,7 @@ def main():
             print('Select co2_ice night file')
             filename_4 = getfilename(files)
             data_co2ice_night = getdata(directory_store + filename_4, target='co2_ice')
-            data_co2ice_night = libf.correction_value_co2_ice(data_co2ice_night[:])
+            data_co2ice_night = libf.correction_value(data_co2ice_night[:])
             data_co2ice_night = mean(data_co2ice_night[:, :, idx_lat_1:idx_lat_2 + 1, :], axis=3)
             data_co2ice_night = mean(data_co2ice_night, axis=2)
 
@@ -756,22 +706,17 @@ def main():
                                                savename='max_ccnNco2_day_night.png')
 
     elif name_target in ['tau1mic']:
-        view_mode = int(input('View (zonal_mean lat-ls=1): '))
+        print('What do you wanna do?')
+        print('     1: zonal mean column density (fig: lat-ls)')
+        print('')
+        view_mode = int(input('Select number:'))
+
         if view_mode == 1:
-            zonal_mean = mean(data_target[:, :, :], axis=2)
-            zonal_mean = flip(zonal_mean.T, axis=0)
+            print('Processing data:')
+            data_processed = vars_zonal_mean(data_target)
 
-            del data_target
-
-            for i in range(zonal_mean.shape[0]):
-                dim2 = where(zonal_mean[i, :] == 0)
-                zonal_mean[i, dim2] = None
-            if lslin:
-                print('Perform linearization in progress')
-                zonal_mean = libf.linearize_ls(zonal_mean, data_time.shape[0], data_latitude.shape[0], interp_time)
-
-            displays.display_zonal_mean(zonal_mean, data_latitude, ndx, axis_ls, levels=arange(0, 0.014, 0.002),
-                                        title=name_target, units='')
+            print('Display:')
+            display_zonal_mean(filename, data_processed, levels=arange(0, 0.014, 0.002), title=name_target, units='')
 
     elif name_target in ['tau']:  # Time, latitude, longitude
         zonal_mean = mean(data_target[:, :, :], axis=2)
