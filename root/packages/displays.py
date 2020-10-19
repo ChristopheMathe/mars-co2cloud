@@ -55,7 +55,7 @@ def display_2d(data):
 # ==================================================================================================================== #
 def display_colonne(filename, data, data_unit, altitude_limit, zmin, zmax, levels, unit, name):
     from matplotlib.colors import LogNorm
-    from numpy import arange, int_
+    from numpy import int_
 
     data_time = getdata(filename, target='Time')
     ndx, axis_ls = get_ls_index(data_time)
@@ -63,38 +63,36 @@ def display_colonne(filename, data, data_unit, altitude_limit, zmin, zmax, level
     data_latitude = getdata(filename, target='latitude')
     data_latitude = data_latitude[::-1]
 
-    # data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
-    # data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS = mesoclouds_observed(data_time, data_latitude)
+    # chopper l'intervalle de latitude comprise entre value-1 et value+1
+    data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
+    data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS = mesoclouds_observed()
+
+    list_obs = [data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
+    data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS]
 
     # plot
     plt.figure(figsize=(11, 8))
 
     if unit is 'pr.µm':
         # convert kg/m2 to pr.µm
-        plt.contourf(data * 1e3, levels=levels, cmap='coolwarm')
+        plt.contourf(data_time[:], data_latitude[:], data * 1e3, levels=levels, cmap='coolwarm')
     else:
-        plt.contourf(data, norm=LogNorm(), levels=levels, cmap='coolwarm')
+        print(data)
+        ctf = plt.contourf(data_time[:], data_latitude[:], data, norm=LogNorm(), levels=levels, cmap='coolwarm',
+                         zorder=10)
 
-    # plt.plot(data_CRISMlimb[:,0], data_CRISMlimb[:,1], ls='', marker='+', color='black')
-    # plt.plot(data_CRISMnadir[:,0], data_CRISMnadir[:,1],ls='', marker='+', color='black')
-    # plt.plot(data_OMEGA[:,0], data_OMEGA[:,1], ls='', marker='+', color='black')
-    # plt.plot(data_PFSeye[:,0], data_PFSeye[:,1], ls='', marker='+', color='black')
-    # plt.plot(data_PFSstats[:,0], data_PFSstats[:,1], ls='', marker='+', color='black')
-    # plt.plot(data_HRSC[:,0], data_HRSC[:,1], ls='', marker='+', color='black')
-    # plt.plot(data_IUVS[:,0], data_IUVS[:,1], ls='', marker='+', color='black')
-    # plt.plot(data_MAVENlimb[:,0], data_MAVENlimb[:,1], ls='', marker='+', color='black')
-    # plt.plot(data_SPICAM[:,0], data_SPICAM[:,1], ls='', marker='+', color='black')
-    # plt.plot(data_TESMOC[:,0], data_TESMOC[:,1], ls='', marker='+', color='black')
-    # plt.plot(data_THEMIS[:,0], data_THEMIS[:,1], ls='', marker='+', color='black')
+    for j, value in enumerate(list_obs):
+            plt.scatter(value[:,0], value[:,1], color='black', marker='+', zorder=1)
 
     ax = plt.gca()
     ax.set_facecolor('white')
-    plt.yticks(ticks=arange(0, len(data_latitude), 6), labels=data_latitude[::6])
+    plt.xticks(ticks=axis_ls, labels=int_(axis_ls))
+    plt.yticks(ticks=data_latitude[::6], labels=data_latitude[::6])
+    plt.xlim(0, 360)
     plt.xlabel('Solar Longitude (°)')
     plt.ylabel('Latitude (°N)')
-    cbar = plt.colorbar()
+    cbar = plt.colorbar(ctf)
     cbar.ax.set_title(unit)
-    plt.xticks(ticks=ndx, labels=int_(axis_ls))
 
     if data_unit in ['m', 'km']:
         if altitude_limit.lower() == 'y':
@@ -109,8 +107,6 @@ def display_colonne(filename, data, data_unit, altitude_limit, zmin, zmax, level
         plt.title(
             'Zonal mean column density of {} between {:.3e} and {:.3e} Pa'.format(name, zmin, zmax))
         plt.savefig('zonal_mean_density_column_{}_{}_{}_Pa.png'.format(name, zmin, zmax), bbox_inches='tight')
-
-    plt.show()
 
 
 # =====================================================================================================================#
@@ -949,7 +945,6 @@ def topcloud_altitude(top_cloud, data_latitude, data_altitude, ndx, axis_ls):
 # figure in altitude - X
 def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel, xscale='linear', yscale='linear',
                           title='', savename='profiles'):
-
     data_altitude = getdata(filename, target='altitude')
     if data_altitude.units == 'm':
         units = 'km'

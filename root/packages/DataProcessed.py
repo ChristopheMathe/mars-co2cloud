@@ -38,8 +38,9 @@ def vars_max_value_with_others(data_target):
     max_alt = extract_at_max_co2_ice(data_altitude, x, y, shape_data_target)
 
     print('Reshape data in progress...')
-    max_mmr, max_temp, max_satu, max_radius, max_ccnN, max_alt = libf.rotate_data(max_mmr, max_temp, max_satu,
-                                                                                  max_radius, max_ccnN, max_alt)
+    max_mmr, max_temp, max_satu, max_radius, max_ccnN, max_alt = rotate_data(max_mmr, max_temp, max_satu,
+                                                                                  max_radius, max_ccnN, max_alt,
+                                                                             doflip=True)
 
     print('Linearized data in progress...')
     if lslin:
@@ -78,7 +79,7 @@ def vars_zonal_mean_column_density(filename, data_target):
     data_target, altitude_limit, zmin, zmax = compute_zonal_mean_column_density(data_target, data_pressure,
                                                                                 data_altitude)
 
-    data_target = rotate_data(data_target)
+    data_target = rotate_data(data_target, doflip=True)
     data_target = asarray(data_target[0])
 
     del data_pressure
