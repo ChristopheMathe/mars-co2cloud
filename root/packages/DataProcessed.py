@@ -86,23 +86,15 @@ def vars_zonal_mean_column_density(filename, data_target):
     return data_target, altitude_limit, zmin, zmax
 
 
-def vars_zonal_mean_in_time_co2ice_exists(filename, data):
-    # extract co2_ice data
-    data_co2_ice = getdata(filename, target='co2_ice')
+def vars_zonal_mean_in_time_co2ice_exists(data, data_co2ice):
 
-    data_latitude = getdata(filename, target='latitude')
-
-    data, latitude_selected = slice_data(data, data_latitude, value=[-15, 15])
-    data_co2_ice_mod, latitude_selected = slice_data(data_co2_ice, data_latitude, value=[-15, 15])
-    data_co2_ice_mod = correction_value(data_co2_ice_mod, threshold=1e-13)
-
-
-    data = ma.masked_where(data_co2_ice_mod < 1e-13, data)
-    del data_co2_ice, data_co2_ice_mod
+    # Mask data where co2ice is inferior to 1e-13, so where co2ice exists
+    data = ma.masked_where(data_co2ice < 1e-13, data)
+    del data_co2ice
 
     data = mean(mean(data, axis=3), axis=0)  # zonal mean and temporal mean
 
-    return data, latitude_selected
+    return data
 
 
 def vars_select_profile(data_target):

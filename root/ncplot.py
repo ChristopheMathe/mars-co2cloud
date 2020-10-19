@@ -3,10 +3,10 @@ from packages.ncdump import *
 from packages.lib_function import *
 from packages.DataProcessed import *
 from packages.displays import *
-from os import listdir, path
+from os import listdir, path, mkdir
 
-from numpy import mean, abs, min, max, zeros, where, concatenate, flip, arange, unravel_index, argmax, array, \
-    std, savetxt, c_, append, loadtxt, asarray, power, logspace, random, linspace
+from numpy import mean, abs, min, max, zeros, where, concatenate, flip, arange, array, std, savetxt, c_, append,\
+    loadtxt, logspace, random
 
 
 def main():
@@ -556,6 +556,7 @@ def main():
             display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, data_satuco2_south,
                                        data_co2ice_north, data_co2ice_eq, data_co2ice_south,
                                        latitude_north, latitude_eq, latitude_south)
+
         if view_mode == 8:
             data_altitude = getdata(directory_store + filename, target='altitude')[:]
             idx_lat_1 = (abs(data_latitude[:] + 50)).argmin()
@@ -635,17 +636,73 @@ def main():
         view_mode = int(input('Select number:'))
 
         if view_mode == 1:
-            print('Processing data:')
-            data_target, latitude_selected = vars_zonal_mean_in_time_co2ice_exists(filename, data_target)
+            data_time = getdata(filename=filename, target='Time')
+            print('')
+            print('Time range: {} - {}'.format(data_time[0], data_time[-1]))
+            breakdown = input('Do you want compute mean radius over all the time (Y/n)?')
 
-            print('Display:')
-            display_1fig_profiles(filename, data_target*1e6, latitude_selected, xmin=1e-9, xmax=500,
-                            xlabel='Radius of ice particle (µm)',
-                            xscale='log', yscale='linear',
-                            title='Mean radius of ice particle between Ls=0-360° and '+str(latitude_selected[0])+'-'+
-                                  str(latitude_selected[-1])+'°N',
-                            savename='riceco2_mean_'+str(int(latitude_selected[0]))+'N_'+
-                                     str(int(latitude_selected[-1]))+'N')
+            if breakdown.lower() in ['y', 'yes']:
+                print('Processing data:')
+                data_target, latitude_selected = vars_zonal_mean_in_time_co2ice_exists(filename, data_target)
+
+                print('Display:')
+                display_1fig_profiles(filename, data_target * 1e6, latitude_selected, xmin=1e-9, xmax=500,
+                                      xlabel='Radius of ice particle (µm)',
+                                      xscale='log', yscale='linear',
+                                      title='Mean radius of ice particle between Ls=0-360° and {} - {} °N'.format(
+                                          latitude_selected[0], latitude_selected[-1]),
+                                      savename='riceco2_mean_{}N_{}N'.format(latitude_selected[0],
+                                                                             latitude_selected[-1]))
+            else:
+                timestep = float(input('Select the time step range: '))
+                nb_step = int(data_time[-1]/timestep) + 1
+                print('nb_step: {}'.format(nb_step))
+                if data_time[-1]%timestep != 0:
+                    print('data_time[-1]%timestep = {}'.format(data_time[-1]%timestep))
+
+                # extract co2_ice data
+                data_co2_ice = getdata(filename, target='co2_ice')
+
+                data_latitude = getdata(filename, target='latitude')
+                data_sliced_lat, latitude_selected = slice_data(data_target[:,:,:,:], data_latitude, value=[-15, 15])
+                data_co2_ice_sliced_lat, latitude_selected = slice_data(data_co2_ice[:,:,:,:], data_latitude,
+                                                                    value=[-15, 15])
+                directory_output = 'riceo2_mean_radius_{:.0f}N_{:.0f}N_png'.format(latitude_selected[0],
+                                                                                   latitude_selected[-1])
+                try:
+                    mkdir(directory_output)
+                except:
+                    pass
+
+                del data_target, data_co2_ice
+                filenames = list([])
+                for i in range(nb_step):
+                    print('Processing data:')
+                    data_sliced, time_selected = slice_data(data_sliced_lat, dimension_data=data_time[:],
+                                                            value=[i*timestep, (i+1)*timestep])
+                    data_co2_ice_sliced, time_selected = slice_data(data_co2_ice_sliced_lat,
+                                                                    dimension_data=data_time[:],
+                                                            value=[i*timestep, (i+1)*timestep])
+                    print('\t \t selected: {} {}'.format(time_selected[0], time_selected[-1]))
+
+                    data_sliced = vars_zonal_mean_in_time_co2ice_exists(data_sliced, data_co2_ice_sliced)
+
+                    print('Display:')
+                    name_output = directory_output+'/riceco2_mean_{:.0f}N_{:.0f}N_Ls_{:.0f}-{:.0f}'.format(
+                        latitude_selected[0], latitude_selected[-1], time_selected[0], time_selected[-1])
+                    filenames.append(name_output)
+                    display_1fig_profiles(filename, data_sliced*1e6, latitude_selected, xmin=1e-8, xmax=500,
+                                    xlabel='Radius of ice particle (µm)',
+                                    xscale='log', yscale='log',
+                                    title='Mean radius of ice particle between Ls={:.0f}-{:.0f}° and {} - {} °N'.format(
+                                          time_selected[0], time_selected[-1], latitude_selected[0],
+                                          latitude_selected[-1]),
+                                    savename=name_output)
+
+                make_gif = input('Do you want create a gif (Y/n)?: ')
+                if make_gif.lower() == 'y':
+                    filenames = [x+'.png' for x in filenames]
+                    create_gif(filenames)
 
         if view_mode == 2:
             print('Processing data:')

@@ -679,129 +679,6 @@ def display_distribution_altitude_latitude_polar(distribution_north, distributio
     plt.show()
 
 
-def display_cloud_evolution_localtime(data, data_satuco2, data_temp, data_riceco2, idx_max, data_altitude, data_time):
-    from numpy import arange, round
-
-    data = data[idx_max[0] - 2:idx_max[0] + 2, :, idx_max[2], idx_max[3]]
-    data_satuco2 = data_satuco2[idx_max[0] - 2:idx_max[0] + 2, :, idx_max[2], idx_max[3]]
-    data_temp = data_temp[idx_max[0] - 2:idx_max[0] + 2, :, idx_max[2], idx_max[3]]
-    data_riceco2 = data_riceco2[idx_max[0] - 2:idx_max[0] + 2, :, idx_max[2], idx_max[3]]
-
-    ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
-
-    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(8, 11))
-    fig.subplots_adjust(wspace=0.4)
-    ax[0, 0].title.set_text('CO$_2$ ice mmr')
-    pc0 = ax[0, 0].contourf(data.T)
-    cbar0 = plt.colorbar(pc0, ax=ax[0, 0])
-    cbar0.ax.set_title('kg/kg')
-    cbar0.ax.set_yticklabels(["{:.2e}".format(i) for i in cbar0.get_ticks()])
-    ax[0, 0].set_xticks(ticks=arange(data.shape[0]))
-    ax[0, 0].set_xticklabels(labels=round(data_time[idx_max[0] - 2:idx_max[0] + 2] * 24 % 24, 0))
-    ax[0, 0].set_yticks(ticks=ticks_altitude)
-    ax[0, 0].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
-
-    ax[0, 1].title.set_text('Temperature')
-    pc1 = ax[0, 1].contourf(data_temp.T)
-    cbar1 = plt.colorbar(pc1, ax=ax[0, 1])
-    cbar1.ax.set_title('K')
-    ax[0, 1].set_xticks(ticks=arange(data.shape[0]))
-    ax[0, 1].set_xticklabels(labels=round(data_time[idx_max[0] - 2:idx_max[0] + 2] * 24 % 24, 0))
-    ax[0, 1].set_yticks(ticks=ticks_altitude)
-    ax[0, 1].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
-
-    ax[1, 0].title.set_text('Saturation of CO$_2$ ice')
-    pc2 = ax[1, 0].contourf(data_satuco2.T)
-    cbar2 = plt.colorbar(pc2, ax=ax[1, 0])
-    cbar2.ax.set_title('')
-    ax[1, 0].set_xticks(ticks=arange(data.shape[0]))
-    ax[1, 0].set_xticklabels(labels=round(data_time[idx_max[0] - 2:idx_max[0] + 2] * 24 % 24, 0))
-    ax[1, 0].set_yticks(ticks=ticks_altitude)
-    ax[1, 0].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
-
-    ax[1, 1].title.set_text('Radius of CO$_2$ ice particle')
-    pc3 = ax[1, 1].contourf(data_riceco2.T * 1e6)
-    cbar3 = plt.colorbar(pc3, ax=ax[1, 1])
-    cbar3.ax.set_title('µm')
-    ax[1, 1].set_xticks(ticks=arange(data.shape[0]))
-    ax[1, 1].set_xticklabels(labels=round(data_time[idx_max[0] - 2:idx_max[0] + 2] * 24 % 24, 0))
-    ax[1, 1].set_yticks(ticks=ticks_altitude)
-    ax[1, 1].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
-
-    fig.text(0.02, 0.5, 'Altitude (km)', ha='center', va='center', rotation='vertical', fontsize=14)
-    fig.text(0.5, 0.06, 'Local time (h)', ha='center', va='center', fontsize=14)
-
-    plt.savefig('cloud_evolution_local_time.png', bbox_inches='tight')
-    plt.show()
-
-
-def display_cloud_evolution_longitude(data, data_satuco2, data_temp, data_riceco2, idx_max, xtime,
-                                      data_time, data_altitude, data_longitude):
-    from numpy import arange, round, logspace, zeros, min
-    from matplotlib.colors import DivergingNorm, LogNorm
-
-    data = data[idx_max[0] + xtime, :, idx_max[2], idx_max[3] - 2:idx_max[3] + 3]
-    data_satuco2 = data_satuco2[idx_max[0] + xtime, :, idx_max[2], idx_max[3] - 2:idx_max[3] + 3]
-    data_temp = data_temp[idx_max[0] + xtime, :, idx_max[2], idx_max[3] - 2:idx_max[3] + 3]
-    data_riceco2 = data_riceco2[idx_max[0] + xtime, :, idx_max[2], idx_max[3] - 2:idx_max[3] + 3]
-
-    ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
-
-    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(8, 11))
-    fig.suptitle('Local time: ' + str(int(round(data_time[idx_max[0] + xtime] * 24 % 24, 0))) + ' h')
-    fig.subplots_adjust(wspace=0.4)
-    ax[0, 0].title.set_text('CO$_2$ ice mmr')
-    pc0 = ax[0, 0].contourf(data, norm=LogNorm(vmin=1e-12, vmax=1e-4), levels=logspace(-12, -4, 9), cmap='Greys')
-    cbar0 = plt.colorbar(pc0, ax=ax[0, 0])
-    cbar0.ax.set_title('kg/kg')
-    cbar0.ax.set_yticklabels(["{:.2e}".format(i) for i in cbar0.get_ticks()])
-    ax[0, 0].set_xticks(ticks=arange(data.shape[1]))
-    ax[0, 0].set_xticklabels(labels=round(data_longitude[idx_max[3] - 2:idx_max[3] + 3], 2))
-    ax[0, 0].set_yticks(ticks=ticks_altitude)
-    ax[0, 0].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
-
-    ax[0, 1].title.set_text('Temperature')
-    pc1 = ax[0, 1].contourf(data_temp, vmin=80, vmax=260, levels=arange(80, 280, 20), cmap='plasma')
-    cbar1 = plt.colorbar(pc1, ax=ax[0, 1])
-    cbar1.ax.set_title('K')
-    ax[0, 1].set_xticks(ticks=arange(data.shape[1]))
-    ax[0, 1].set_xticklabels(labels=round(data_longitude[idx_max[3] - 2:idx_max[3] + 3], 2))
-    ax[0, 1].set_yticks(ticks=ticks_altitude)
-    ax[0, 1].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
-
-    ax[1, 0].title.set_text('Saturation of CO$_2$ ice')
-    scale = zeros(6)
-    scale[1] = 1
-    scale[2] = 10
-    scale[3] = 50
-    scale[4] = 100
-    scale[5] = 1000
-    pc2 = ax[1, 0].contourf(data_satuco2, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=12), levels=arange(13),
-                            cmap='seismic')
-    cbar2 = plt.colorbar(pc2, ax=ax[1, 0])
-    cbar2.ax.set_title('')
-    ax[1, 0].set_xticks(ticks=arange(data.shape[1]))
-    ax[1, 0].set_xticklabels(labels=round(data_longitude[idx_max[3] - 2:idx_max[3] + 3], 2))
-    ax[1, 0].set_yticks(ticks=ticks_altitude)
-    ax[1, 0].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
-
-    ax[1, 1].title.set_text('Radius of CO$_2$ ice particle')
-    pc3 = ax[1, 1].contourf(data_riceco2 * 1e6, vmin=0, vmax=180, levels=arange(0, 200, 20), cmap='Greys')
-    cbar3 = plt.colorbar(pc3, ax=ax[1, 1])
-    cbar3.ax.set_title('µm')
-    ax[1, 1].set_xticks(ticks=arange(data.shape[1]))
-    ax[1, 1].set_xticklabels(labels=round(data_longitude[idx_max[3] - 2:idx_max[3] + 3], 2))
-    ax[1, 1].set_yticks(ticks=ticks_altitude)
-    ax[1, 1].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
-
-    fig.text(0.02, 0.5, 'Altitude (km)', ha='center', va='center', rotation='vertical', fontsize=14)
-    fig.text(0.5, 0.06, 'Longitude (°E)', ha='center', va='center', fontsize=14)
-
-    savename = 'cloud_evolution_longitude_' + str(round(data_time[idx_max[0] + xtime] * 24 % 24, 0)) + 'h.png'
-    plt.savefig(savename, bbox_inches='tight')
-    return savename
-
-
 def display_cloud_evolution_latitude(data, data_satuco2, data_temp, data_riceco2, idx_max, xtime,
                                      data_time, data_altitude, data_latitude):
     from numpy import arange, round, zeros, logspace, concatenate, array, max
@@ -1069,13 +946,10 @@ def topcloud_altitude(top_cloud, data_latitude, data_altitude, ndx, axis_ls):
     plt.show()
 
 
-# ======================================================================================================================#
-# ======================================================================================================================#
-# ======================================================================================================================#
-
 # figure in altitude - X
 def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel, xscale='linear', yscale='linear',
                           title='', savename='profiles'):
+
     data_altitude = getdata(filename, target='altitude')
     if data_altitude.units == 'm':
         units = 'km'
@@ -1084,6 +958,9 @@ def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel,
     elif data_altitude.units == 'km':
         units = data_altitude.units
         altitude_name = 'Altitude'
+    else:
+        units = data_altitude.units
+        altitude_name = 'Pressure'
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 11))
 
@@ -1099,17 +976,14 @@ def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel,
 
     plt.xlim(xmin, xmax)
     plt.ylim(data_altitude[0], data_altitude[-1])
+    if altitude_name == 'Pressure':
+        ax.invert_yaxis()
     plt.legend(loc='best')
     plt.xlabel(xlabel)
     plt.ylabel(altitude_name + ' (' + units + ')')
     plt.title(title)
     plt.savefig(savename + '.png', bbox_inches='tight')
-    plt.show()
-
-
-# ======================================================================================================================#
-# ======================================================================================================================#
-# ======================================================================================================================#
+    plt.close(fig)
 
 
 def display_alt_ls(filename, data_1, data_2, levels, title, savename, latitude_selected=None):

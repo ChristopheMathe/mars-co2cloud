@@ -306,7 +306,6 @@ def slice_data(data, dimension_data, value):
         else:
             idx2 += 1
         selected_idx = dimension_data[idx1:idx2]
-        print(dimension_data[idx1:idx2])
     else:
         print('Error in value given, exceed 2 values')
         print(value)
@@ -373,7 +372,7 @@ def create_gif(filenames):
 
     print("Select files using number (one number per line/all): ")
     for i, value_i in enumerate(filenames):
-        print('({}) {}'.format(i, value_i))
+        print('({}) {:}'.format(i, value_i))
 
     add_file = True
     while add_file:
@@ -388,7 +387,6 @@ def create_gif(filenames):
     filenames = [filenames[i] for i in idx]
 
     savename = input('Enter the gif name: ')
-
     for filename in filenames:
         images.append(imageio.imread(filename))
     imageio.mimsave(savename + '.gif', images, fps=1)
