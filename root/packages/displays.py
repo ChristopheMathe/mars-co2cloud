@@ -51,16 +51,20 @@ def display_2d(data):
 
 
 # ==================================================================================================================== #
-# =========================================== DISPLAY Column density ================================================= #
+# =========================================== DISPLAY 1 fig: lat - ls ================================================ #
 # ==================================================================================================================== #
-def display_colonne(filename, data, data_unit, altitude_limit, zmin, zmax, levels, unit, name):
+def display_colonne(filename, data, unit, norm, levels, latitude_selected=None, title=None, savename='test'):
     from matplotlib.colors import LogNorm
     from numpy import int_
 
+    data_altitude = getdata(filename, target='altitude')
     data_time = getdata(filename, target='Time')
     ndx, axis_ls = get_ls_index(data_time)
 
     data_latitude = getdata(filename, target='latitude')
+    if latitude_selected is not None:
+        data_latitude, latitude_selected = slice_data(data_latitude, dimension_data=data_latitude,
+                                                      value=[latitude_selected[0], latitude_selected[-1]])
     data_latitude = data_latitude[::-1]
 
     # chopper l'intervalle de latitude comprise entre value-1 et value+1
@@ -75,38 +79,33 @@ def display_colonne(filename, data, data_unit, altitude_limit, zmin, zmax, level
 
     if unit is 'pr.µm':
         # convert kg/m2 to pr.µm
-        plt.contourf(data_time[:], data_latitude[:], data * 1e3, levels=levels, cmap='coolwarm')
+        plt.contourf(data_time[:], data_latitude[:], data * 1e3, levels=levels, cmap='coolwarm', zorder=1)
     else:
-        print(data)
-        ctf = plt.contourf(data_time[:], data_latitude[:], data, norm=LogNorm(), levels=levels, cmap='coolwarm',
-                         zorder=10)
+        if norm == 'log':
+            ctf = plt.contourf(data_time[:], data_latitude[:], data, norm=LogNorm(), levels=levels, cmap='coolwarm',
+                               zorder=1)
+        else:
+            ctf = plt.contourf(data_time[:], data_latitude[:], data, levels=levels, cmap='coolwarm', zorder=1)
 
     for j, value in enumerate(list_obs):
-            plt.scatter(value[:,0], value[:,1], color='black', marker='+', zorder=1)
+        data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
+                                                                     [latitude_selected[0],latitude_selected[-1]])
+        if data_obs_ls.shape[0] != 0:
+            plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='+', zorder=10)
 
     ax = plt.gca()
     ax.set_facecolor('white')
     plt.xticks(ticks=axis_ls, labels=int_(axis_ls))
-    plt.yticks(ticks=data_latitude[::6], labels=data_latitude[::6])
     plt.xlim(0, 360)
+    if data_latitude.shape[0] > 18:
+        plt.yticks(ticks=data_latitude[::6], labels=data_latitude[::6])
+    plt.ylim(data_latitude[0], data_latitude[-1])
     plt.xlabel('Solar Longitude (°)')
     plt.ylabel('Latitude (°N)')
     cbar = plt.colorbar(ctf)
     cbar.ax.set_title(unit)
-
-    if data_unit in ['m', 'km']:
-        if altitude_limit.lower() == 'y':
-            plt.title('Zonal mean column density of {}'.format(name))
-            plt.savefig('zonal_mean_density_column_{}.png'.format(name), bbox_inches='tight')
-        else:
-            plt.title(
-                'Zonal mean column density of {} between {} and {} km'.format(name, zmin / 1e3, zmax / 1e3))
-            plt.savefig('zonal_mean_density_column_{}_{}_{}_km.png'.format(name, zmin / 1e3, zmax / 1e3),
-                        bbox_inches='tight')
-    else:
-        plt.title(
-            'Zonal mean column density of {} between {:.3e} and {:.3e} Pa'.format(name, zmin, zmax))
-        plt.savefig('zonal_mean_density_column_{}_{}_{}_Pa.png'.format(name, zmin, zmax), bbox_inches='tight')
+    plt.title(title)
+    plt.savefig(savename+'.png', bbox_inches='tight')
 
 
 # =====================================================================================================================#
@@ -290,32 +289,6 @@ def display_max_lon_alt(name, data_latitude, max_mmr, max_alt, max_temp, max_sat
     fig.savefig('max_' + name + '_in_altitude_longitude.png', bbox_inches='tight')
 
     plt.show()
-
-
-# =====================================================================================================================#
-# ============================================ DISPLAY Zonal mean =====================================================#
-# =====================================================================================================================#
-def display_zonal_mean(filename, data, levels=None, title=None, units=None):
-    from numpy import int_
-
-    data_latitude = getdata(filename=filename, target='latitude')
-    data_latitude = data_latitude[::-1]
-
-    data_time = getdata(filename=filename, target='Time')
-    ndx, axis_ls = get_ls_index(data_time)
-
-    plt.figure(figsize=(11,8))
-    plt.title('Zonal mean of ' + title)
-    plt.contourf(data_time[:]*12, data_latitude[:], data, cmap='plasma', levels=levels, extend='max')
-    ax = plt.gca()
-    ax.set_facecolor('white')
-    plt.xticks(ticks=ndx, labels=int_(axis_ls))
-    plt.yticks(ticks=[-90, -60, -30, 0, 30, 60, 90], labels=[-90, -60, -30, 0, 30, 60, 90])
-    cbar = plt.colorbar()
-    cbar.ax.set_title(units)
-    plt.xlabel('Solar Longitude (°)')
-    plt.ylabel('Latitude (°N)')
-    plt.savefig('zonal_mean_' + title + '.png', bbox_inches='tight')
 
 
 # ==================================================================================================================== #
@@ -957,28 +930,30 @@ def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel,
         units = data_altitude.units
         altitude_name = 'Pressure'
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 11))
-
-    if data.ndim > 1:
-        for i in range(data.shape[1]):
+    for i, s in zip(data, savename):
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 11))
+        if i.ndim > 1:
+            for j in range(i.shape[1]):
+                ax.set_xscale(xscale)
+                ax.set_yscale(yscale)
+                ax.plot(i[:, j], data_altitude[:], label='%.2f°N' % (latitude_selected[j]))
+        else:
             ax.set_xscale(xscale)
             ax.set_yscale(yscale)
-            ax.plot(data[:, i], data_altitude[:], label='%.2f°N' % (latitude_selected[i]))
-    else:
-        ax.set_xscale(xscale)
-        ax.set_yscale(yscale)
-        ax.plot()
+            ax.plot()
 
-    plt.xlim(xmin, xmax)
-    plt.ylim(data_altitude[0], data_altitude[-1])
-    if altitude_name == 'Pressure':
-        ax.invert_yaxis()
-    plt.legend(loc='best')
-    plt.xlabel(xlabel)
-    plt.ylabel(altitude_name + ' (' + units + ')')
-    plt.title(title)
-    plt.savefig(savename + '.png', bbox_inches='tight')
-    plt.close(fig)
+        plt.xlim(xmin, xmax)
+        plt.ylim(data_altitude[0], data_altitude[-1])
+        if altitude_name == 'Pressure':
+            ax.invert_yaxis()
+        plt.legend(loc='best')
+        plt.xlabel(xlabel)
+        plt.ylabel(altitude_name + ' (' + units + ')')
+        plt.title(title)
+        plt.savefig(s + '.png', bbox_inches='tight')
+        plt.close(fig)
+
+    create_gif(savename)
 
 
 def display_alt_ls(filename, data_1, data_2, levels, title, savename, latitude_selected=None):

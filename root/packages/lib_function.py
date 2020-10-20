@@ -239,23 +239,43 @@ def get_nearest_clouds_observed(data_obs, dim, data_dim, value):
     from numpy import abs
 
     if dim is 'latitude':
-        if value >0:
-            idx = abs(data_dim[:] - value).argmin()
-        else:
-            idx = abs(data_dim[:] - value).argmin() + 1
 
-        latitude_range = data_dim[idx-1:idx+1]
+        # From the dimension, get the index(es) of the slice
+        if (isinstance(value, float) is True) or (isinstance(value, int) is True):
+            if value > 0:
+                idx = abs(data_dim[:] - value).argmin()
+            else:
+                idx = abs(data_dim[:] - value).argmin() + 1
+            latitude_range = data_dim[idx-1:idx+1]
+        elif len(value) == 2:
+            idx1 = (abs(data_dim[:] - value[0])).argmin()
+            idx2 = (abs(data_dim[:] - value[1])).argmin()
 
-        if (latitude_range[0] < 0) and (latitude_range[1] < 0):
-            mask = (data_obs[:,1] <= latitude_range[0]) & (data_obs[:,1] >= latitude_range[1])
-        elif (latitude_range[0] > 0) and (latitude_range[1] > 0):
-            mask = (data_obs[:,1] >= latitude_range[0]) & (data_obs[:,1] <= latitude_range[1])
+            if idx1 > idx2:
+                tmp = idx1
+                idx1 = idx2
+                idx2 = tmp + 1
+            else:
+                idx2 += 1
+            latitude_range = data_dim[idx1:idx2]
         else:
-            if latitude_range[0] > latitude_range[1]:
+            print('Error in value given, exceed 2 values')
+            print(value)
+            exit()
+
+        # Cas pour les latitudes sud
+        if (latitude_range[0] < 0) and (latitude_range[-1] < 0):
+            mask = (data_obs[:,1] <= latitude_range[0]) & (data_obs[:,1] >= latitude_range[-1])
+        # Cas pour les latitudes nord
+        elif (latitude_range[0] > 0) and (latitude_range[-1] > 0):
+            mask = (data_obs[:,1] >= latitude_range[0]) & (data_obs[:,1] <= latitude_range[-1])
+        # Cas pour un mélange des deux
+        else:
+            if latitude_range[0] > latitude_range[-1]:
                 tmp = latitude_range[0]
-                latitude_range[0] = latitude_range[1]
-                latitude_range[1] = tmp
-            mask = (data_obs[:,1] >= latitude_range[0]) & (data_obs[:,1] <= latitude_range[1])
+                latitude_range[0] = latitude_range[-1]
+                latitude_range[-1] = tmp
+            mask = (data_obs[:,1] >= latitude_range[0]) & (data_obs[:,1] <= latitude_range[-1])
 
         data_ls = data_obs[:,0][mask]
         data_latitude = data_obs[:,1][mask]
@@ -311,37 +331,42 @@ def slice_data(data, dimension_data, value):
         print(value)
         exit()
 
-    # 1st dimension
-    if dimension_data.shape[0] == data.shape[0]:
+    if data.ndim == 1:
         if idx is not None:
-            data = data[idx, :, :, :]
+            data = data[idx]
         else:
-            data = data[idx1:idx2, :, :, :]
+            data = data[idx1:idx2]
+    elif data.ndim == 4:
+        # 1st dimension
+        if dimension_data.shape[0] == data.shape[0]:
+            if idx is not None:
+                data = data[idx, :, :, :]
+            else:
+                data = data[idx1:idx2, :, :, :]
 
-    # 2nd dimension
-    elif dimension_data.shape[0] == data.shape[1]:
-        if idx is not None:
-            data = data[:, idx, :, :]
+        # 2nd dimension
+        elif dimension_data.shape[0] == data.shape[1]:
+            if idx is not None:
+                data = data[:, idx, :, :]
+            else:
+                data = data[:, idx1:idx2, :, :]
+
+        # 3rd dimension
+        elif dimension_data.shape[0] == data.shape[2]:
+            if idx is not None:
+                data = data[:, :, idx, :]
+            else:
+                data = data[:, :, idx1:idx2, :]
+
+        # 4th dimension
+        elif dimension_data.shape[0] == data.shape[3]:
+            if idx is not None:
+                data = data[:, :, :, idx]
+            else:
+                data = data[:, :, :, idx1:idx2]
         else:
-            data = data[:, idx1:idx2, :, :]
-
-    # 3rd dimension
-    elif dimension_data.shape[0] == data.shape[2]:
-        if idx is not None:
-            data = data[:, :, idx, :]
-        else:
-            data = data[:, :, idx1:idx2, :]
-
-    # 4th dimension
-    elif dimension_data.shape[0] == data.shape[3]:
-        if idx is not None:
-            data = data[:, :, :, idx]
-        else:
-            data = data[:, :, :, idx1:idx2]
-    else:
-        print('The dimension of data exceed dimension 4 !')
-        exit()
-
+            print('The dimension of data exceed dimension 4 !')
+            exit()
     return data, selected_idx
 
 
@@ -367,26 +392,34 @@ def create_gif(filenames):
     import numpy as np
     import imageio
 
-    images = []
-    idx = np.array([], dtype=np.int)
+    make_gif = input('Do you want create a gif (Y/n)?: ')
+    if make_gif.lower() == 'y':
+        filenames = [x + '.png' for x in filenames]
 
-    print("Select files using number (one number per line/all): ")
-    for i, value_i in enumerate(filenames):
-        print('({}) {:}'.format(i, value_i))
+        images = []
+        idx = np.array([], dtype=np.int)
 
-    add_file = True
-    while add_file:
-        value = input('')
-        if value == '':
-            add_file = False
-        elif value == 'all':
-            idx = np.arange(len(filenames))
-            break
-        else:
-            idx = np.append(idx, int(value))
-    filenames = [filenames[i] for i in idx]
+        print("Select files using number (one number per line/all): ")
+        for i, value_i in enumerate(filenames):
+            print('({}) {:}'.format(i, value_i))
 
-    savename = input('Enter the gif name: ')
-    for filename in filenames:
-        images.append(imageio.imread(filename))
-    imageio.mimsave(savename + '.gif', images, fps=1)
+        add_file = True
+        while add_file:
+            value = input('')
+            if value == '':
+                add_file = False
+            elif value == 'all':
+                idx = np.arange(len(filenames))
+                break
+            else:
+                idx = np.append(idx, int(value))
+        filenames = [filenames[i] for i in idx]
+
+        savename = input('Enter the gif name: ')
+        for filename in filenames:
+            images.append(imageio.imread(filename))
+        imageio.mimsave(savename + '.gif', images, fps=1)
+    else:
+        pass
+
+    return

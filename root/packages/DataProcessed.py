@@ -3,6 +3,7 @@ from numpy import mean, abs, min, max, zeros, where, ones, concatenate, flip, ar
 from .lib_function import *
 from .ncdump import getdata, getfilename
 from sys import exit
+from os import mkdir
 
 def vars_max_value_with_others(data_target):
 
@@ -84,18 +85,68 @@ def vars_zonal_mean_column_density(filename, data_target):
 
     del data_pressure
 
-    return data_target, altitude_limit, zmin, zmax
+    return data_target, altitude_limit, zmin, zmax, data_altitude.units
 
 
-def vars_zonal_mean_in_time_co2ice_exists(data, data_co2ice):
+def vars_zonal_mean_in_time_co2ice_exists(filename, data):
+    # extract co2_ice data
+    data_co2_ice = getdata(filename, target='co2_ice')
 
-    # Mask data where co2ice is inferior to 1e-13, so where co2ice exists
-    data = ma.masked_where(data_co2ice < 1e-13, data)
-    del data_co2ice
+    # select the latitude range
+    data_latitude = getdata(filename, target='latitude')
+    data_sliced_lat, latitude_selected = slice_data(data[:, :, :, :], data_latitude, value=[-15, 15])
+    data_co2_ice_sliced_lat, latitude_selected = slice_data(data_co2_ice[:, :, :, :], data_latitude, value=[-15, 15])
+    del data, data_co2_ice
 
-    data = mean(mean(data, axis=3), axis=0)  # zonal mean and temporal mean
+    # select the time range
+    data_time = getdata(filename=filename, target='Time')
+    print('')
+    print('Time range: {} - {}'.format(data_time[0], data_time[-1]))
+    breakdown = input('Do you want compute mean radius over all the time (Y/n)?')
 
-    return data
+    if breakdown.lower() in ['y', 'yes']:
+        # Mask data where co2ice is inferior to 1e-13, so where co2ice exists
+        data_final = ma.masked_where(data_co2_ice_sliced_lat < 1e-13, data_sliced_lat)
+        del data_co2_ice_sliced_lat, data_sliced_lat
+
+        data_final = mean(mean(data_final, axis=3), axis=0) * 1e6 # zonal mean and temporal mean, and m to µm
+        list_data = list([data_final])
+        filenames = list(['riceco2_mean_{:.0f}N_{:.0f}N_0-360Ls'.format(latitude_selected[0], latitude_selected[-1])])
+    else:
+        timestep = float(input('Select the time step range: '))
+        nb_step = int(data_time[-1] / timestep) + 1
+        print('nb_step: {}'.format(nb_step))
+        if data_time[-1] % timestep != 0:
+            print('data_time[-1]%timestep = {}'.format(data_time[-1] % timestep))
+
+        directory_output = 'riceo2_mean_radius_{:.0f}N_{:.0f}N_png'.format(latitude_selected[0], latitude_selected[-1])
+
+        try:
+            mkdir(directory_output)
+        except:
+            pass
+
+        list_data = list([])
+        filenames = list([])
+        for i in range(nb_step):
+            data_sliced_lat_ls, time_selected = slice_data(data_sliced_lat, dimension_data=data_time[:],
+                                                           value=[i * timestep, (i + 1) * timestep])
+            data_co2_ice_sliced_lat_ls, time_selected = slice_data(data_co2_ice_sliced_lat, dimension_data=data_time[:],
+                                                                   value=[i * timestep, (i + 1) * timestep])
+            print('\t \t selected: {} {}'.format(time_selected[0], time_selected[-1]))
+
+            # Mask data where co2ice is inferior to 1e-13, so where co2ice exists
+            data_final = ma.masked_where(data_co2_ice_sliced_lat_ls < 1e-13, data_sliced_lat_ls)
+            del data_co2_ice_sliced_lat_ls, data_sliced_lat_ls
+
+            data_final = mean(mean(data_final, axis=3), axis=0) * 1e6  # zonal mean and temporal mean, and m to µm
+            list_data.append(data_final)
+            filenames.append(directory_output + '/riceco2_mean_{:.0f}N_{:.0f}N_Ls_{:.0f}-{:.0f}'.format(
+                latitude_selected[0], latitude_selected[-1], time_selected[0], time_selected[-1]))
+
+        del data_sliced_lat, data_co2_ice_sliced_lat
+
+    return list_data, filenames, latitude_selected, time_selected
 
 
 def vars_select_profile(data_target):
@@ -308,6 +359,28 @@ def co2ice_cloud_evolution(data):
     print('the maximum is at :' + str(data_time[idx_max[0]] * 24 % 24) + 'h local time.')
 
     return
+
+
+def riceco2_zonal_mean_co2ice_exists(filename, data):
+    data_latitude = getdata(filename, target='latitude')
+
+    # extract co2_ice data
+    data_co2_ice = getdata(filename, target='co2_ice')
+
+    data_slice_lat, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[-15,15])
+    data_co2_ice_slice_lat, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:],
+                                                           value=[-15,15])
+
+    data = ma.masked_where(data_co2_ice_slice_lat < 1e-13, data_slice_lat)
+
+    zonal_mean = mean(data, axis=3) # zonal mean
+    zonal_mean = mean(zonal_mean, axis=1) # altitude mean
+    zonal_mean = rotate_data(zonal_mean, doflip=True)
+
+    zonal_mean = correction_value(zonal_mean[0], threshold=1e-13)
+    zonal_mean = zonal_mean * 1e6 # m to µm
+
+    return zonal_mean, latitude_selected
 
 
 def riceco2_topcloud_altitude():

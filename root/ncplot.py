@@ -70,12 +70,15 @@ def main():
 
         elif view_mode == 2:
             print('Processing data:')
-            data_processed, altitude_limit, zmin, zmax = vars_zonal_mean_column_density(filename, data_target)
+            data_processed, altitude_limit, zmin, zmax, altitude_unit = vars_zonal_mean_column_density(filename,
+                                                                                                       data_target)
             del data_target
 
             print('Display:')
-            display_colonne(filename, data_processed, unit_target, altitude_limit, zmin, zmax,
-                            levels=logspace(-13, 2, 16), unit='kg/m$^2$', name=name_target)
+            display_colonne(filename, data_processed, 'kg/m$^2$', norm='log', levels=logspace(-13, 2, 16),
+                            title='Zonal mean column density of {} between {} and {} {}'.format(name,
+                                  zmin, zmax, altitude_unit),
+                            savename='zonal_mean_density_column_{}_{}_{}_{}'.format(name, zmin, zmax, altitude_unit))
 
         elif view_mode == 3:
             print('Processing data:')
@@ -324,13 +327,7 @@ def main():
         data_target, altitude_limit, zmin, zmax = libf.zonal_mean_column_density(data_target, data_pressure,
                                                                                  data_altitude, interp_time)
 
-        displays.display_colonne(data_target, data_time, data_latitude, altitude_limit, zmin, zmax, ndx, axis_ls,
-                                 interp_time,
-                                 # levels=logspace(-7,0,8),
-                                 # unit='kg/m$^2$',
-                                 levels=arange(13) * 10,
-                                 unit='pr.µm',
-                                 name=name_target)
+        displays.display_colonne()
 
     elif name_target in ['satuco2']:
 
@@ -632,77 +629,23 @@ def main():
         print('     2: max radius day-night (fig: lat-ls)')
         print('     3: altitude of top clouds (fig: lat-ls)')
         print('     4: radius/co2ice/temp/satu in polar projection')
+        print('     5: zonal mean of mean radius where co2_ice exsists in the 15°N-15°S (fig: lat-ls)')
         print('')
         view_mode = int(input('Select number:'))
 
         if view_mode == 1:
-            data_time = getdata(filename=filename, target='Time')
-            print('')
-            print('Time range: {} - {}'.format(data_time[0], data_time[-1]))
-            breakdown = input('Do you want compute mean radius over all the time (Y/n)?')
+            print('Processing data:')
+            list_data, list_filename, latitude_selected, time_selected = vars_zonal_mean_in_time_co2ice_exists(
+                                                                         filename, data_target)
 
-            if breakdown.lower() in ['y', 'yes']:
-                print('Processing data:')
-                data_target, latitude_selected = vars_zonal_mean_in_time_co2ice_exists(filename, data_target)
-
-                print('Display:')
-                display_1fig_profiles(filename, data_target * 1e6, latitude_selected, xmin=1e-9, xmax=500,
-                                      xlabel='Radius of ice particle (µm)',
-                                      xscale='log', yscale='linear',
-                                      title='Mean radius of ice particle between Ls=0-360° and {} - {} °N'.format(
-                                          latitude_selected[0], latitude_selected[-1]),
-                                      savename='riceco2_mean_{}N_{}N'.format(latitude_selected[0],
-                                                                             latitude_selected[-1]))
-            else:
-                timestep = float(input('Select the time step range: '))
-                nb_step = int(data_time[-1]/timestep) + 1
-                print('nb_step: {}'.format(nb_step))
-                if data_time[-1]%timestep != 0:
-                    print('data_time[-1]%timestep = {}'.format(data_time[-1]%timestep))
-
-                # extract co2_ice data
-                data_co2_ice = getdata(filename, target='co2_ice')
-
-                data_latitude = getdata(filename, target='latitude')
-                data_sliced_lat, latitude_selected = slice_data(data_target[:,:,:,:], data_latitude, value=[-15, 15])
-                data_co2_ice_sliced_lat, latitude_selected = slice_data(data_co2_ice[:,:,:,:], data_latitude,
-                                                                    value=[-15, 15])
-                directory_output = 'riceo2_mean_radius_{:.0f}N_{:.0f}N_png'.format(latitude_selected[0],
-                                                                                   latitude_selected[-1])
-                try:
-                    mkdir(directory_output)
-                except:
-                    pass
-
-                del data_target, data_co2_ice
-                filenames = list([])
-                for i in range(nb_step):
-                    print('Processing data:')
-                    data_sliced, time_selected = slice_data(data_sliced_lat, dimension_data=data_time[:],
-                                                            value=[i*timestep, (i+1)*timestep])
-                    data_co2_ice_sliced, time_selected = slice_data(data_co2_ice_sliced_lat,
-                                                                    dimension_data=data_time[:],
-                                                            value=[i*timestep, (i+1)*timestep])
-                    print('\t \t selected: {} {}'.format(time_selected[0], time_selected[-1]))
-
-                    data_sliced = vars_zonal_mean_in_time_co2ice_exists(data_sliced, data_co2_ice_sliced)
-
-                    print('Display:')
-                    name_output = directory_output+'/riceco2_mean_{:.0f}N_{:.0f}N_Ls_{:.0f}-{:.0f}'.format(
-                        latitude_selected[0], latitude_selected[-1], time_selected[0], time_selected[-1])
-                    filenames.append(name_output)
-                    display_1fig_profiles(filename, data_sliced*1e6, latitude_selected, xmin=1e-8, xmax=500,
-                                    xlabel='Radius of ice particle (µm)',
-                                    xscale='log', yscale='log',
-                                    title='Mean radius of ice particle between Ls={:.0f}-{:.0f}° and {} - {} °N'.format(
-                                          time_selected[0], time_selected[-1], latitude_selected[0],
-                                          latitude_selected[-1]),
-                                    savename=name_output)
-
-                make_gif = input('Do you want create a gif (Y/n)?: ')
-                if make_gif.lower() == 'y':
-                    filenames = [x+'.png' for x in filenames]
-                    create_gif(filenames)
+            print('Display:')
+            display_1fig_profiles(filename, list_data, latitude_selected, xmin=1e-3, xmax=500,
+                                  xlabel='radius of ice particle (µm)',
+                                  xscale='log', yscale='log',
+                                  title='Mean radius of ice particle between Ls={:.0f}-{:.0f}° and {} - {} °N'.format(
+                                  time_selected[0], time_selected[-1], latitude_selected[0],
+                                  latitude_selected[-1]),
+                            savename=list_filename)
 
         if view_mode == 2:
             print('Processing data:')
@@ -729,6 +672,16 @@ def main():
             data_satuco2 = random.rand(10,32,48,64)
             print('Display:')
             display_4figs_polar_projection(data_riceco2, data_co2ice, data_temp, data_satuco2)
+
+        if view_mode == 5:
+            print('Processing data:')
+            data, latitude_selected = riceco2_zonal_mean_co2ice_exists(filename, data_target)
+
+            print('Display:')
+            display_colonne(filename, data, unit='µm', norm='log', levels=logspace(-2, 2, 5),
+                            latitude_selected=latitude_selected,
+                            title='Zonal mean of mean radius of co2 ice',
+                            savename='riceco2_zonalmean_altitudemean_equatorial_region')
 
     elif name_target in ['ccnNco2']:
         view_mode = int(input('View (max_day_night=1): '))
