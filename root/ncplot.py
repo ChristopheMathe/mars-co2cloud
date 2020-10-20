@@ -76,9 +76,9 @@ def main():
 
             print('Display:')
             display_colonne(filename, data_processed, 'kg/m$^2$', norm='log', levels=logspace(-13, 2, 16),
-                            title='Zonal mean column density of {} between {} and {} {}'.format(name,
-                                  zmin, zmax, altitude_unit),
-                            savename='zonal_mean_density_column_{}_{}_{}_{}'.format(name, zmin, zmax, altitude_unit))
+                            observation=True, title='Zonal mean column density of {} between {} and {} {}'.format(name,
+                            zmin, zmax, altitude_unit), savename='zonal_mean_density_column_{}_{}_{}_{}'.format(name,
+                            zmin, zmax, altitude_unit))
 
         elif view_mode == 3:
             print('Processing data:')
@@ -704,6 +704,7 @@ def main():
 
             print('Display:')
             display_colonne(filename, data, unit='µm', norm='log', levels=logspace(-2, 2, 5),
+                            observation=True,
                             latitude_selected=latitude_selected,
                             title='Zonal mean of mean radius of co2 ice',
                             savename='riceco2_zonalmean_altitudemean_equatorial_region')
@@ -742,7 +743,7 @@ def main():
 
     elif name_target in ['tau1mic']:
         print('What do you wanna do?')
-        print('     1: zonal mean column density (fig: lat-ls)')
+        print('     1: zonal mean (fig: lat-ls)')
         print('')
         view_mode = int(input('Select number:'))
 
@@ -751,7 +752,8 @@ def main():
             data_processed = vars_zonal_mean(data_target)
 
             print('Display:')
-            display_zonal_mean(filename, data_processed, levels=arange(0, 0.014, 0.002), title=name_target, units='')
+            display_colonne(filename, data_processed, unit='', norm='log', levels=logspace(-13, -2, 12),
+                            observation=False, latitude_selected=None, title=name_target, savename='tau1mic_zonalmean')
 
     elif name_target in ['tau']:  # Time, latitude, longitude
         zonal_mean = mean(data_target[:, :, :], axis=2)

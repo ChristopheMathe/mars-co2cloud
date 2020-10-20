@@ -17,47 +17,13 @@ def display_1d(data):
 
 
 # ==================================================================================================================== #
-# ================================================== DISPLAY 2D ====================================================== #
-# ==================================================================================================================== #
-def display_2d(data):
-    from matplotlib.widgets import Slider
-    from matplotlib.contour import QuadContourSet
-
-    def compute_and_plot(ax, alpha):
-        CS = QuadContourSet(ax, data[0, alpha, :, :])
-        plt.clabel(CS, inline=1, fontsize=10)
-
-    # Plot
-    fig, ax = plt.subplots(nrows=1, ncols=1)
-    ax.set_title('Add Ls and Altitude')
-    ax.set_xlabel('Longitude (°E)')
-    ax.set_ylabel('Latitude (°N)')
-
-    compute_and_plot(ax, 0)
-
-    # Define slider for alpha
-    alpha_axis = plt.axes([0.12, 0.1, 0.65, 0.03])
-    alpha_slider = Slider(alpha_axis, 'Alt', 0, len(data[0, :, 0, 0]) - 1, valinit=0, valstep=1)
-
-    def update(ax, val):
-        alpha = val
-        ax.cla()
-        compute_and_plot(ax, alpha)
-        plt.draw()
-
-    alpha_slider.on_changed(lambda val: update(ax, val))
-
-    plt.show()
-
-
-# ==================================================================================================================== #
 # =========================================== DISPLAY 1 fig: lat - ls ================================================ #
 # ==================================================================================================================== #
-def display_colonne(filename, data, unit, norm, levels, latitude_selected=None, title=None, savename='test'):
+def display_colonne(filename, data, unit, norm, levels, observation=False, latitude_selected=None, title=None, \
+                    savename='test'):
     from matplotlib.colors import LogNorm
     from numpy import int_
 
-    data_altitude = getdata(filename, target='altitude')
     data_time = getdata(filename, target='Time')
     ndx, axis_ls = get_ls_index(data_time)
 
@@ -87,11 +53,12 @@ def display_colonne(filename, data, unit, norm, levels, latitude_selected=None, 
         else:
             ctf = plt.contourf(data_time[:], data_latitude[:], data, levels=levels, cmap='coolwarm', zorder=1)
 
-    for j, value in enumerate(list_obs):
-        data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
-                                                                     [latitude_selected[0],latitude_selected[-1]])
-        if data_obs_ls.shape[0] != 0:
-            plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='+', zorder=10)
+    if observation:
+        for j, value in enumerate(list_obs):
+            data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
+                                                                         [latitude_selected[0],latitude_selected[-1]])
+            if data_obs_ls.shape[0] != 0:
+                plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='+', zorder=10)
 
     ax = plt.gca()
     ax.set_facecolor('white')
