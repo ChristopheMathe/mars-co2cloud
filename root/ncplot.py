@@ -141,10 +141,10 @@ def main():
         print('What do you wanna do?')
         print('     1: extract profile (fig: alt-K)')
         print('     2: mean profile during day and night (fig: alt-K)')
+        print('     3:')
+        print('     4: 12h-00h between Ls=0-30°, zonal mean [fig.8 G-G2011] (fig: alt-lat)')
         print('')
         view_mode = int(input('Select number:'))
-
-        view_mode = int(input('View (profile_evolution=1, compare_day_night=2): '))
         if view_mode == 1:
             data_pressure = getdata(directory_store + filename, target='pressure')
             data_longitude = getdata(directory_store + filename, target='longitude')
@@ -229,6 +229,14 @@ def main():
 
             displays.display_altitude_localtime(data_target, data_altitude, unit='K',
                                                 savename='temperature_altitude_localtime')
+
+        if view_mode == 4:
+            print('Processing data:')
+            data_processed = deltaT_thermal_tides(files, directory_store, filename, data_target, name_target)
+
+            print('Display:')
+            display_alt_lat(filename, data_processed, title='12h - 00h, between 0-30° Ls, zonal mean',
+                            savename='temperature_thermal_tides_0-30Ls_zonalmean')
 
     elif name_target in ['deltaT']:
         print('What do you wanna do?')
@@ -328,11 +336,11 @@ def main():
 
         if view_mode == 4:
             print('Processing data:')
-            data_processed = deltaT_thermal_tides(files, directory_store, filename, data_target)
+            data_processed = deltaT_thermal_tides(files, directory_store, filename, data_target, name_target)
 
             print('Display:')
-            display_alt_lat(filename, data_processed)
-
+            display_alt_lat(filename, data_processed, title='T - Tcondco2, 12h - 00h, between 0-30° Ls, zonal mean',
+                            savename='deltaT_thermal_tides_0-30Ls_zonalmean')
 
     elif name_target in ['h2o_vap', 'q02']:
         data_altitude = getdata(directory_store + filename, target='altitude')

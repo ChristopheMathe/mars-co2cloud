@@ -577,7 +577,7 @@ def satuco2_with_co2_ice(filename, data):
            data_co2ice_south, north_latitude_selected, eq_latitude_selected, south_latitude_selected, binned
 
 
-def deltaT_thermal_tides(files, directory_store, filename_day, data_day):
+def deltaT_thermal_tides(files, directory_store, filename_day, data_day, target_name):
 
     data_time_day = getdata(filename_day, target='Time')
 
@@ -587,12 +587,18 @@ def deltaT_thermal_tides(files, directory_store, filename_day, data_day):
     print('Night file is {}'.format(filename_night))
     print('')
 
-    data_night = getdata(filename_night, target='deltaT')
+    data_night = getdata(filename_night, target=target_name)
     data_time_night = getdata(filename_night, target='Time')
 
+    # Correct low value due to zrecast
+    data_day = correction_value(data_day[:,:,:,:], threshold=1e-6)
+    data_night = correction_value(data_night[:,:,:,:], threshold=1e-6)
+
     # Slice data from Ls = 0-30°
+    print(data_day.shape)
     data_day, ls_selected = slice_data(data_day, dimension_data=data_time_day, value=[0, 30])
     data_night, ls_selected = slice_data(data_night, dimension_data=data_time_night, value=[0, 30])
+    print(data_day.shape)
 
     # Mean data at 12h local time
     print(data_time_day[3]*24%24)
@@ -607,5 +613,6 @@ def deltaT_thermal_tides(files, directory_store, filename_day, data_day):
     data_night = mean(data_night, axis=2)
 
     data_thermal_tide = data_day - data_night
+    print(max(data_thermal_tide))
 
     return data_thermal_tide
