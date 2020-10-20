@@ -740,8 +740,8 @@ def display_cloud_evolution_latitude(data, data_satuco2, data_temp, data_riceco2
 
 
 def display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north,
-                               data_co2ice_eq, data_co2ice_south, latitude_north, latitude_eq, latitude_south):
-    from numpy import array, round, ones
+                               data_co2ice_eq, data_co2ice_south, latitude_north, latitude_eq, latitude_south, binned):
+    from numpy import array, round, ones, zeros, logspace, max, argmax
 
     data_latitude = getdata(filename, target='latitude')
     list_latitudes = [latitude_north, latitude_eq, latitude_south]
@@ -773,7 +773,9 @@ def display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, da
             exit()
 
     data_time = getdata(filename=filename, target='Time')
-    data_time = data_time[::60] # 5°Ls binned
+    if binned.lower() == 'y':
+        data_time = data_time[::60] # 5°Ls binned
+        data_zareoid = data_zareoid[::12,:,:,:]
     ndx, axis_ls = get_ls_index(data_time)
 
     fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(8, 11))
@@ -781,21 +783,22 @@ def display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, da
     ax[0].contourf(data_time[:], data_altitude[:], data_satuco2_north,
                    norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100), cmap='coolwarm',
                    levels=array([0, 1, 10, 20, 50, 100]), extend='max')
-    ax[0].contour(data_time[:], data_altitude[:], data_co2ice_north, colors='black')
+    ax[0].contour(data_time[:], data_altitude[:], data_co2ice_north, norm=LogNorm(), levels=logspace(-13, 1, 15),
+    colors='black')
 
     ax[1].set_title('{}°N'.format(latitude_eq))
     ax[1].contourf(data_time[:], data_altitude[:], data_satuco2_eq,
                    norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100), cmap='coolwarm',
                    levels=array([0, 1, 10, 20, 50, 100]), extend='max')
-    ax[1].contour(data_time[:], data_altitude[:], data_co2ice_eq, colors='black')
+    ax[1].contour(data_time[:], data_altitude[:], data_co2ice_eq, norm=LogNorm(), levels=logspace(-13, 1, 15),
+                  colors='black')
 
     ax[2].set_title('{}°S'.format(abs(latitude_south)))
     cb = ax[2].contourf(data_time[:], data_altitude[:], data_satuco2_south,
                         norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100), cmap='coolwarm',
                         levels=array([0, 1, 10, 20, 50, 100]), extend='max')
-    ax[2].contour(data_time[:], data_altitude[:], data_co2ice_south, colors='black')
-
-    # TODO ajouter si il y a des nuages proches de co2 observés entre lat-1:lat+1
+    ax[2].contour(data_time[:], data_altitude[:], data_co2ice_south, norm=LogNorm(), levels=logspace(-13, 1, 15),
+                  colors='black')
 
     for i, axe in enumerate(ax):
         axe.set_xticks(ticks=axis_ls)
@@ -807,7 +810,8 @@ def display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, da
             data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
                                                                          list_latitudes[i])
             if data_obs_ls.shape[0] != 0:
-                axe.scatter(data_obs_ls, ones(data_obs_ls.shape[0])*3e-3*(j+1), color='black', marker='+')
+                axe.quiver(data_obs_ls, ones(data_obs_ls.shape[0])*1e-3, zeros(data_obs_ls.shape[0]),
+                           -ones(data_obs_ls.shape[0])*3, color='black')
 
         if altitude_unit == 'Pa':
             data_zareoid_sliced, tmp = slice_data(data_zareoid, dimension_data=data_latitude, value=list_latitudes[i])
@@ -818,10 +822,10 @@ def display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, da
             lines_altitudes_80km = get_mean_index_alti(data_zareoid_sliced, 8e4)
             del data_zareoid_sliced
 
-            axe.plot(data_altitude[lines_altitudes_0km[::12]], '--', color='grey')
-            axe.plot(data_altitude[lines_altitudes_10km[::12]], '--', color='grey')
-            axe.plot(data_altitude[lines_altitudes_40km[::12]], '--', color='grey')
-            axe.plot(data_altitude[lines_altitudes_80km[::12]], '--', color='grey')
+            axe.plot(data_altitude[lines_altitudes_0km], '--', color='grey')
+            axe.plot(data_altitude[lines_altitudes_10km], '--', color='grey')
+            axe.plot(data_altitude[lines_altitudes_40km], '--', color='grey')
+            axe.plot(data_altitude[lines_altitudes_80km], '--', color='grey')
 
             axe.text(0, data_altitude[lines_altitudes_0km[0]], '0 km',
                      verticalalignment='bottom',
@@ -850,8 +854,13 @@ def display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, da
              fontsize=14)
     fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
 
-    plt.savefig('satuco2_with_co2ice_altitude-ls_max_along_longitude_at_{}N_{}N_{}N.png'.format(latitude_north,
-                latitude_eq, latitude_south), bbox_inches='tight')
+    if binned.lower() == 'y':
+        plt.savefig('satuco2_with_co2ice_altitude-ls_max_along_longitude_at_{}N_{}N_{}N_binned.png'.format(
+            latitude_north, latitude_eq, latitude_south), bbox_inches='tight')
+    else:
+        plt.savefig('satuco2_with_co2ice_altitude-ls_max_along_longitude_at_{}N_{}N_{}N.png'.format(latitude_north,
+                    latitude_eq, latitude_south), bbox_inches='tight')
+    plt.show()
 
 
 def saturation_zonal_mean_day_night(data_satuco2_day, data_satuco2_night, data_co2ice_day, data_co2ice_night,

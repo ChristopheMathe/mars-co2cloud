@@ -547,12 +547,13 @@ def main():
         if view_mode == 7:
             print('Processing data:')
             data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq,\
-            data_co2ice_south, latitude_north, latitude_eq, latitude_south = satuco2_with_co2_ice(filename, data_target)
+            data_co2ice_south, latitude_north, latitude_eq, latitude_south, binned = satuco2_with_co2_ice(filename,
+                                                                                                          data_target)
 
             print('Display:')
             display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, data_satuco2_south,
                                        data_co2ice_north, data_co2ice_eq, data_co2ice_south,
-                                       latitude_north, latitude_eq, latitude_south)
+                                       latitude_north, latitude_eq, latitude_south, binned)
 
         if view_mode == 8:
             data_altitude = getdata(directory_store + filename, target='altitude')[:]

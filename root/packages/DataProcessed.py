@@ -5,8 +5,8 @@ from .ncdump import getdata, getfilename
 from sys import exit
 from os import mkdir
 
-def vars_max_value_with_others(data_target):
 
+def vars_max_value_with_others(data_target):
     shape_data_target = data_target.shape
 
     print('Get max value of {} in progress...'.format(data_target.name))
@@ -40,7 +40,7 @@ def vars_max_value_with_others(data_target):
 
     print('Reshape data in progress...')
     max_mmr, max_temp, max_satu, max_radius, max_ccnN, max_alt = rotate_data(max_mmr, max_temp, max_satu,
-                                                                                  max_radius, max_ccnN, max_alt,
+                                                                             max_radius, max_ccnN, max_alt,
                                                                              doflip=True)
 
     print('Linearized data in progress...')
@@ -109,7 +109,7 @@ def vars_zonal_mean_in_time_co2ice_exists(filename, data):
         data_final = ma.masked_where(data_co2_ice_sliced_lat < 1e-13, data_sliced_lat)
         del data_co2_ice_sliced_lat, data_sliced_lat
 
-        data_final = mean(mean(data_final, axis=3), axis=0) * 1e6 # zonal mean and temporal mean, and m to µm
+        data_final = mean(mean(data_final, axis=3), axis=0) * 1e6  # zonal mean and temporal mean, and m to µm
         list_data = list([data_final])
         filenames = list(['riceco2_mean_{:.0f}N_{:.0f}N_0-360Ls'.format(latitude_selected[0], latitude_selected[-1])])
     else:
@@ -197,7 +197,7 @@ def vars_concat_localtime(directory_store, filename, data):
 
     data_target = slice_data(data_target, data_longitude, value=0)
 
-    data_target = slice_data(data_target, data_time, value=[259,318])  # here time is in sols
+    data_target = slice_data(data_target, data_time, value=[259, 318])  # here time is in sols
 
     shape_data_target = data_target.shape
     data_target = mean(data_target.reshape(-1, 59), axis=1)
@@ -367,18 +367,18 @@ def riceco2_zonal_mean_co2ice_exists(filename, data):
     # extract co2_ice data
     data_co2_ice = getdata(filename, target='co2_ice')
 
-    data_slice_lat, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[-15,15])
+    data_slice_lat, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[-15, 15])
     data_co2_ice_slice_lat, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:],
-                                                           value=[-15,15])
+                                                           value=[-15, 15])
 
     data = ma.masked_where(data_co2_ice_slice_lat < 1e-13, data_slice_lat)
 
-    zonal_mean = mean(data, axis=3) # zonal mean
-    zonal_mean = mean(zonal_mean, axis=1) # altitude mean
+    zonal_mean = mean(data, axis=3)  # zonal mean
+    zonal_mean = mean(zonal_mean, axis=1)  # altitude mean
     zonal_mean = rotate_data(zonal_mean, doflip=True)
 
     zonal_mean = correction_value(zonal_mean[0], threshold=1e-13)
-    zonal_mean = zonal_mean * 1e6 # m to µm
+    zonal_mean = zonal_mean * 1e6  # m to µm
 
     return zonal_mean, latitude_selected
 
@@ -468,7 +468,7 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data):
 
 def satuco2_with_co2_ice(filename, data):
     data_latitude = getdata(filename=filename, target='latitude')
-    data = correction_value(data[:,:,:,:], threshold=1e-13)
+    data = correction_value(data[:, :, :, :], threshold=1e-13)
 
     # Slice data for the 3 latitudes
     data_satuco2_north, north_latitude_selected = slice_data(data, dimension_data=data_latitude, value=50)
@@ -484,7 +484,7 @@ def satuco2_with_co2_ice(filename, data):
 
     # Get co2 ice mmr
     data_co2ice = getdata(filename, target='co2_ice')
-    data_co2ice = correction_value(data_co2ice[:,:,:,:], threshold=1e-13)
+    data_co2ice = correction_value(data_co2ice[:, :, :, :], threshold=1e-13)
 
     # Slice co2 ice mmr at these 3 latitudes
     data_co2ice_north, north_latitude_selected = slice_data(data_co2ice, dimension_data=data_latitude, value=50)
@@ -505,68 +505,73 @@ def satuco2_with_co2_ice(filename, data):
     data_co2ice_eq = correction_value(data_co2ice_eq, threshold=1e-13)
     data_co2ice_south = correction_value(data_co2ice_south, threshold=1e-13)
 
-    # Bin time in 5° Ls
-    data_time = getdata(filename=filename, target='Time')
-    if max(data_time) > 360:
-        time_grid_ls = convert_sols_to_ls()
-        nb_bin = time_grid_ls.shape[0]
+    binned = input('Do you want bin data (Y/n)? ')
 
-        data_satuco2_north_binned = zeros((nb_bin, data_satuco2_north.shape[1]))
-        data_satuco2_eq_binned = zeros((nb_bin, data_satuco2_eq.shape[1]))
-        data_satuco2_south_binned = zeros((nb_bin, data_satuco2_south.shape[1]))
-        data_co2ice_north_binned = zeros((nb_bin, data_co2ice_north.shape[1]))
-        data_co2ice_eq_binned = zeros((nb_bin, data_co2ice_eq.shape[1]))
-        data_co2ice_south_binned = zeros((nb_bin, data_co2ice_south.shape[1]))
+    if binned.lower() == 'y':
+        # Bin time in 5° Ls
+        data_time = getdata(filename=filename, target='Time')
+        if max(data_time) > 360:
+            time_grid_ls = convert_sols_to_ls()
+            nb_bin = time_grid_ls.shape[0]
 
-        for i in range(nb_bin - 1):
-            idx_ls_1 = (abs(data_time[:] - time_grid_ls[i])).argmin()
-            idx_ls_2 = (abs(data_time[:] - time_grid_ls[i + 1])).argmin() + 1
+            data_satuco2_north_binned = zeros((nb_bin, data_satuco2_north.shape[1]))
+            data_satuco2_eq_binned = zeros((nb_bin, data_satuco2_eq.shape[1]))
+            data_satuco2_south_binned = zeros((nb_bin, data_satuco2_south.shape[1]))
+            data_co2ice_north_binned = zeros((nb_bin, data_co2ice_north.shape[1]))
+            data_co2ice_eq_binned = zeros((nb_bin, data_co2ice_eq.shape[1]))
+            data_co2ice_south_binned = zeros((nb_bin, data_co2ice_south.shape[1]))
 
-            data_satuco2_north_binned[i, :] = mean(data_satuco2_north[idx_ls_1:idx_ls_2, :], axis=0)
-            data_satuco2_eq_binned[i, :] = mean(data_satuco2_eq[idx_ls_1:idx_ls_2, :], axis=0)
-            data_satuco2_south_binned[i, :] = mean(data_satuco2_south[idx_ls_1:idx_ls_2, :], axis=0)
-            data_co2ice_north_binned[i, :] = mean(data_co2ice_north[idx_ls_1:idx_ls_2, :], axis=0)
-            data_co2ice_eq_binned[i, :] = mean(data_co2ice_eq[idx_ls_1:idx_ls_2, :], axis=0)
-            data_co2ice_south_binned[i, :] = mean(data_co2ice_south[idx_ls_1:idx_ls_2, :], axis=0)
-    else:
-        if data_time.shape[0]%60 == 0:
-            print('Test 5°Ls binning: {} - {}'.format(data_time[0], data_time[60]))
+            for i in range(nb_bin - 1):
+                idx_ls_1 = (abs(data_time[:] - time_grid_ls[i])).argmin()
+                idx_ls_2 = (abs(data_time[:] - time_grid_ls[i + 1])).argmin() + 1
+
+                data_satuco2_north_binned[i, :] = mean(data_satuco2_north[idx_ls_1:idx_ls_2, :], axis=0)
+                data_satuco2_eq_binned[i, :] = mean(data_satuco2_eq[idx_ls_1:idx_ls_2, :], axis=0)
+                data_satuco2_south_binned[i, :] = mean(data_satuco2_south[idx_ls_1:idx_ls_2, :], axis=0)
+                data_co2ice_north_binned[i, :] = mean(data_co2ice_north[idx_ls_1:idx_ls_2, :], axis=0)
+                data_co2ice_eq_binned[i, :] = mean(data_co2ice_eq[idx_ls_1:idx_ls_2, :], axis=0)
+                data_co2ice_south_binned[i, :] = mean(data_co2ice_south[idx_ls_1:idx_ls_2, :], axis=0)
         else:
-            print('The data will not be binned in 5°Ls, need to work here')
+            if data_time.shape[0] % 60 == 0:
+                print('Test 5°Ls binning: {} - {}'.format(data_time[0], data_time[60]))
+            else:
+                print('The data will not be binned in 5°Ls, need to work here')
 
-        nb_bin = int(data_time.shape[0]/60)
-        data_satuco2_north_binned = zeros((nb_bin, data_satuco2_north.shape[1]))
-        data_satuco2_eq_binned = zeros((nb_bin, data_satuco2_eq.shape[1]))
-        data_satuco2_south_binned = zeros((nb_bin, data_satuco2_south.shape[1]))
-        data_co2ice_north_binned = zeros((nb_bin, data_co2ice_north.shape[1]))
-        data_co2ice_eq_binned = zeros((nb_bin, data_co2ice_eq.shape[1]))
-        data_co2ice_south_binned = zeros((nb_bin, data_co2ice_south.shape[1]))
-        print(min(data_satuco2_north))
-        print(min(data_satuco2_north_binned))
-        for i in range(nb_bin):
-            data_satuco2_north_binned[i, :] = mean(data_satuco2_north[i*60:(i+1)*60, :], axis=0)
-            data_satuco2_eq_binned[i, :] = mean(data_satuco2_eq[i*60:(i+1)*60, :], axis=0)
-            data_satuco2_south_binned[i, :] = mean(data_satuco2_south[i*60:(i+1)*60, :], axis=0)
-            data_co2ice_north_binned[i, :] = mean(data_co2ice_north[i*60:(i+1)*60, :], axis=0)
-            data_co2ice_eq_binned[i, :] = mean(data_co2ice_eq[i*60:(i+1)*60, :], axis=0)
-            data_co2ice_south_binned[i, :] = mean(data_co2ice_south[i*60:(i+1)*60, :], axis=0)
-        print(min(data_satuco2_north_binned))
+            nb_bin = int(data_time.shape[0] / 60)
+            data_satuco2_north_binned = zeros((nb_bin, data_satuco2_north.shape[1]))
+            data_satuco2_eq_binned = zeros((nb_bin, data_satuco2_eq.shape[1]))
+            data_satuco2_south_binned = zeros((nb_bin, data_satuco2_south.shape[1]))
+            data_co2ice_north_binned = zeros((nb_bin, data_co2ice_north.shape[1]))
+            data_co2ice_eq_binned = zeros((nb_bin, data_co2ice_eq.shape[1]))
+            data_co2ice_south_binned = zeros((nb_bin, data_co2ice_south.shape[1]))
 
-    del data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, data_co2ice_south
+            for i in range(nb_bin):
+                data_satuco2_north_binned[i, :] = mean(data_satuco2_north[i * 60:(i + 1) * 60, :], axis=0)
+                data_satuco2_eq_binned[i, :] = mean(data_satuco2_eq[i * 60:(i + 1) * 60, :], axis=0)
+                data_satuco2_south_binned[i, :] = mean(data_satuco2_south[i * 60:(i + 1) * 60, :], axis=0)
+                data_co2ice_north_binned[i, :] = mean(data_co2ice_north[i * 60:(i + 1) * 60, :], axis=0)
+                data_co2ice_eq_binned[i, :] = mean(data_co2ice_eq[i * 60:(i + 1) * 60, :], axis=0)
+                data_co2ice_south_binned[i, :] = mean(data_co2ice_south[i * 60:(i + 1) * 60, :], axis=0)
+            print(min(data_satuco2_north_binned))
 
-    data_satuco2_north_binned, data_satuco2_eq_binned, data_satuco2_south_binned, data_co2ice_north_binned, \
-    data_co2ice_eq_binned, data_co2ice_south_binned = rotate_data(data_satuco2_north_binned, data_satuco2_eq_binned,
-                                                                  data_satuco2_south_binned, data_co2ice_north_binned,
-                                                                  data_co2ice_eq_binned, data_co2ice_south_binned,
-                                                                  doflip=False)
+        del data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, data_co2ice_south
 
-    data_satuco2_north_binned = correction_value(data_satuco2_north_binned, threshold=1e-13)
-    data_satuco2_eq_binned = correction_value(data_satuco2_eq_binned, threshold=1e-13)
-    data_satuco2_south_binned = correction_value(data_satuco2_south_binned, threshold=1e-13)
-    data_co2ice_north_binned = correction_value(data_co2ice_north_binned, threshold=1e-13)
-    data_co2ice_eq_binned = correction_value(data_co2ice_eq_binned, threshold=1e-13)
-    data_co2ice_south_binned = correction_value(data_co2ice_south_binned, threshold=1e-13)
+        data_satuco2_north = correction_value(data_satuco2_north_binned, threshold=1e-13)
+        data_satuco2_eq = correction_value(data_satuco2_eq_binned, threshold=1e-13)
+        data_satuco2_south = correction_value(data_satuco2_south_binned, threshold=1e-13)
+        data_co2ice_north = correction_value(data_co2ice_north_binned, threshold=1e-13)
+        data_co2ice_eq = correction_value(data_co2ice_eq_binned, threshold=1e-13)
+        data_co2ice_south = correction_value(data_co2ice_south_binned, threshold=1e-13)
 
-    return data_satuco2_north_binned, data_satuco2_eq_binned, data_satuco2_south_binned, data_co2ice_north_binned, \
-           data_co2ice_eq_binned, data_co2ice_south_binned, north_latitude_selected, eq_latitude_selected, \
-           south_latitude_selected
+        del data_satuco2_north_binned, data_satuco2_eq_binned, data_satuco2_south_binned, data_co2ice_north_binned, \
+            data_co2ice_eq_binned, data_co2ice_south_binned
+    # No binning
+    else:
+        pass
+
+    data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, data_co2ice_south = \
+        rotate_data(data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq,
+                    data_co2ice_south, doflip=False)
+
+    return data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, \
+           data_co2ice_south, north_latitude_selected, eq_latitude_selected, south_latitude_selected, binned
