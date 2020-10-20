@@ -1041,6 +1041,24 @@ def display_alt_ls(filename, data_1, data_2, levels, title, savename, latitude_s
     fig.show()
 
 
+def display_alt_lat(filename, data):
+    data_altitude = getdata(filename, target='altitude')
+    data_latitude = getdata(filename, target='latitude')
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(11,11))
+    print(data_altitude.shape, data_latitude.shape, data.shape)
+    ctf = ax.contourf(data_latitude[:], data_altitude[:], data, cmap='coolwarm')
+    cbar = plt.colorbar(ctf)
+    cbar.ax.set_title('K')
+    ax.set_yscale('log')
+    ax.invert_yaxis()
+    ax.set_ylabel('Pressure (Pa)')
+    ax.set_xlabel('Latitude (°N)')
+    ax.set_title('T - Tcondco2, 12h - 00h, between 0-30° Ls, zonal mean')
+    fig.savefig('deltaT_thermal_tides_0-30Ls_zonalmean.png', bbox_inches='tight')
+    plt.show()
+
+
 def display_4figs_polar_projection(data_riceco2, data_co2ice, data_temp, data_satuco2):
 
     from mpl_toolkits.basemap import Basemap

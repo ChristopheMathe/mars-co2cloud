@@ -575,3 +575,37 @@ def satuco2_with_co2_ice(filename, data):
 
     return data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, \
            data_co2ice_south, north_latitude_selected, eq_latitude_selected, south_latitude_selected, binned
+
+
+def deltaT_thermal_tides(files, directory_store, filename_day, data_day):
+
+    data_time_day = getdata(filename_day, target='Time')
+
+    filename_night = getfilename(files)
+    filename_night = directory_store + filename_night
+    print('Day file is {}'.format(filename_day))
+    print('Night file is {}'.format(filename_night))
+    print('')
+
+    data_night = getdata(filename_night, target='deltaT')
+    data_time_night = getdata(filename_night, target='Time')
+
+    # Slice data from Ls = 0-30°
+    data_day, ls_selected = slice_data(data_day, dimension_data=data_time_day, value=[0, 30])
+    data_night, ls_selected = slice_data(data_night, dimension_data=data_time_night, value=[0, 30])
+
+    # Mean data at 12h local time
+    print(data_time_day[3]*24%24)
+    data_day = mean(data_day[3::7, :, :, :], axis=0)
+
+    # Mean data at 00h local time
+    print(data_time_night[3]*24%24)
+    data_night = mean(data_night[3::7, :, :, :], axis=0)
+
+    # Zonal mean
+    data_day = mean(data_day, axis=2)
+    data_night = mean(data_night, axis=2)
+
+    data_thermal_tide = data_day - data_night
+
+    return data_thermal_tide

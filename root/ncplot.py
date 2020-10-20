@@ -231,7 +231,15 @@ def main():
                                                 savename='temperature_altitude_localtime')
 
     elif name_target in ['deltaT']:
-        view_mode = int(input('View (altitude_vs_LT=1 (Fig 6, G-G2011), fig 7 = 2, fig 9 = 3):'))
+        print('What do you wanna do?')
+        print('     1: altitude_vs_LT=1 (Fig 6, G-G2011)')
+        print('     2: fig 7 = 2')
+        print('     3: fig 9 = 3')
+        print('     4: thermal tidal waves, midday - midnight, zonal mean between Ls=0-30° [as fig.8, G-G2011] (fig: '
+              'alt-lat)')
+        print('')
+        view_mode = int(input('Select number:'))
+
         if view_mode == 1:
             data_longitude = getdata(directory_store + filename, target='longitude')
             data_altitude = getdata(directory_store + filename, target='altitude')
@@ -317,6 +325,14 @@ def main():
                                                 unit='K',
                                                 title='Temperature -Tcond CO$_2$',
                                                 savename='difftemperature_altitude_longitude_ls_0-30_LT_16H_lat_0N')
+
+        if view_mode == 4:
+            print('Processing data:')
+            data_processed = deltaT_thermal_tides(files, directory_store, filename, data_target)
+
+            print('Display:')
+            display_alt_lat(filename, data_processed)
+
 
     elif name_target in ['h2o_vap', 'q02']:
         data_altitude = getdata(directory_store + filename, target='altitude')
