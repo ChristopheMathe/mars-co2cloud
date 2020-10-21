@@ -361,7 +361,7 @@ def main():
         print('     3: ')
         print('     4: ')
         print('     5: ')
-        print('     6: ')
+        print('     6: Thickness atmosphere layer in polar regions, to compare with Fig.9 of Hu2019 (fig: thick-ls)')
         print('     7: profile at max satuco2 along longitude, for 3 latitudes, with co2ice mmr (fig: alt-ls)')
         print('     8: ')
         print('')
@@ -470,103 +470,12 @@ def main():
                                                 savename='saturation_altitude_longitude')
 
         if view_mode == 6:
+            print('Processing data:')
+            data_icelayer, data_icelayer_std = satuco2_thickness_atm_layer(filename, data_target)
 
-            if path.exists('thickness_layer_satuco2_polar_region.dat'):
-                nbin = arange(0, 365, 5).shape[0]
-                data_icelayer = zeros((2, nbin))
-                data_icelayer_std = zeros((2, nbin))
-
-                data = loadtxt('thickness_layer_satuco2_polar_region.dat', usecols=[1, 2, 3, 4])
-                data_icelayer[0, :] = data[:, 0]
-                data_icelayer_std[0, :] = data[:, 1]
-                data_icelayer[1, :] = data[:, 2]
-                data_icelayer_std[1, :] = data[:, 3]
-            else:
-                data_altitude = getdata(directory_store + filename, 'altitude')
-
-                idx_lat_N = (abs(data_latitude[:] - 60)).argmin()
-                idx_lat_S = (abs(data_latitude[:] + 60)).argmin()
-
-                data_target_north = data_target[:, :, idx_lat_N:, :]  # north pole
-                data_target_south = data_target[:, :, :idx_lat_S + 1, :]  # south pole
-                print(data_latitude[idx_lat_N:])
-                print(data_latitude[:idx_lat_S + 1])
-
-                # bin ls to 5°
-                if max(data_time) <= 360:
-                    ls_bin = arange(0, 365, 5)
-                else:
-                    # sols binned at 5° Ls
-                    ls_bin = array(
-                        [0, 10, 20, 30, 41, 51, 61, 73, 83, 94, 105, 116, 126, 139, 150, 160, 171, 183, 193.47,
-                         205, 215, 226, 236, 248, 259, 269, 279, 289, 299, 309, 317, 327, 337, 347, 355, 364,
-                         371.99, 381, 390, 397, 406, 415, 422, 430, 437, 447, 457, 467, 470, 477, 485, 493, 500,
-                         507, 514.76, 523, 533, 539, 547, 555, 563, 571, 580, 587, 597, 605, 613, 623, 632, 641,
-                         650, 660, 669])
-                nbin = ls_bin.shape[0]
-                data_icelayer = zeros((2, nbin))
-                data_icelayer_std = zeros((2, nbin))
-
-                for bin in range(nbin - 1):
-                    print(bin, nbin - 1)
-                    idx = (abs(data_time[:] - ls_bin[bin])).argmin()
-                    idx2 = (abs(data_time[:] - ls_bin[bin + 1])).argmin()
-                    data_binned_north = data_target_north[idx:idx2, :, :, :]
-                    data_binned_south = data_target_south[idx:idx2, :, :, :]
-
-                    tmp_north = array([])
-                    tmp_south = array([])
-
-                    for i in range(data_binned_north.shape[0]):
-                        for longitude in range(data_target_north.shape[3]):
-                            for latitude_north in range(data_target_north.shape[2]):
-                                for l in range(data_target_north.shape[1]):
-                                    if data_target_north[i, l, latitude_north, longitude] >= 1:
-                                        idx_min_north = l
-                                        for l2 in range(l + 1, data_target_north.shape[1]):
-                                            if data_target_north[i, l2, latitude_north, longitude] < 1:
-                                                idx_max_north = l2 - 1
-                                                tmp_north = append(tmp_north, data_altitude[idx_max_north] -
-                                                                   data_altitude[idx_min_north])
-                                                break
-                                        break
-
-                            for latitude_south in range(data_target_south.shape[2]):
-                                for l in range(data_target_south.shape[1]):
-                                    if data_target_south[i, l, latitude_south, longitude] >= 1:
-                                        idx_min_south = l
-                                        for l2 in range(l + 1, data_target_south.shape[1]):
-                                            if data_target_south[i, l2, latitude_south, longitude] < 1:
-                                                idx_max_south = l2 - 1
-                                                tmp_south = append(tmp_south, data_altitude[idx_max_south] -
-                                                                   data_altitude[idx_min_south])
-                                                break
-                                        break
-                    if tmp_north.size != 0:
-                        data_icelayer[0, bin] = mean(tmp_north)
-                        data_icelayer_std[0, bin] = std(tmp_north)
-                    else:
-                        data_icelayer[0, bin] = 0
-                        data_icelayer_std[0, bin] = 0
-
-                    if tmp_south.size != 0:
-                        data_icelayer[1, bin] = mean(tmp_south)
-                        data_icelayer_std[1, bin] = std(tmp_south)
-                    else:
-                        data_icelayer[1, bin] = 0
-                        data_icelayer_std[1, bin] = 0
-
-                    nbp_north = data_binned_north.shape[0] * data_binned_north.shape[2] * data_binned_north.shape[3]
-                    nbp_south = data_binned_south.shape[0] * data_binned_south.shape[2] * data_binned_south.shape[3]
-                    print(tmp_north.size, tmp_north.size / nbp_north, data_icelayer[0, bin], data_icelayer_std[0, bin])
-                    print(tmp_south.size, tmp_south.size / nbp_south, data_icelayer[1, bin], data_icelayer_std[1, bin])
-
-                savetxt('thickness_layer_satuco2_polar_region.dat', c_[arange(0, 365, 5),
-                                                                       data_icelayer[0, :], data_icelayer_std[0, :],
-                                                                       data_icelayer[1, :], data_icelayer_std[1, :]])
-            displays.display_thickness_co2ice_atm_layer(data_icelayer,
-                                                        data_icelayer_std,
-                                                        savename='satuco2_thickness_polar_region.png')
+            print('Display:')
+            display_thickness_co2ice_atm_layer(data_icelayer, data_icelayer_std,
+                                               savename='satuco2_thickness_polar_region.png')
 
         if view_mode == 7:
             print('Processing data:')
@@ -653,7 +562,7 @@ def main():
         print('     1: mean radius at a latitude where co2_ice exists (fig: alt-µm)')
         print('     2: max radius day-night (fig: lat-ls)')
         print('     3: altitude of top clouds (fig: lat-ls)')
-        print('     4: radius/co2ice/temp/satu in polar projection')
+        print('     4: radius/co2ice/temp/satu in polar projection (not working)')
         print('     5: zonal mean of mean radius where co2_ice exists in the 15°N-15°S (fig: lat-ls)')
         print('')
         view_mode = int(input('Select number:'))

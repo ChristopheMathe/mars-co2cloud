@@ -89,7 +89,7 @@ def vars_zonal_mean_column_density(filename, data_target):
 
 
 def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, density=False):
-    latitude_range = [60, 90]
+    latitude_range = [-15, 15]
 
     # extract co2_ice data
     data_co2_ice = getdata(filename, target='co2_ice')
@@ -609,6 +609,105 @@ def satuco2_with_co2_ice(filename, data):
 
     return data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, \
            data_co2ice_south, north_latitude_selected, eq_latitude_selected, south_latitude_selected, binned
+
+
+def satuco2_thickness_atm_layer(filename, data):
+    data_altitude = getdata(filename, target='altitude')
+    data_latitude = getdata(filename, target='latitude')
+    data_zareoid = getdata(filename, target='zareoid')
+
+    data_north, latitude_selected = slice_data(data, dimension_data=data_latitude, value=[60, 90])
+    data_south, latitude_selected = slice_data(data, dimension_data=data_latitude, value=[-60, -90])
+    del data
+
+    data_zareoid_north, latitude_selected = slice_data(data_zareoid, dimension_data=data_latitude, value=[60, 90])
+    data_zareoid_south, latitude_selected = slice_data(data_zareoid, dimension_data=data_latitude, value=[-60, -90])
+    del data_zareoid
+
+    # Bin time in 5° Ls
+    data_time = getdata(filename=filename, target='Time')
+    if data_time.shape[0] % 60 == 0:
+        print('Test 5°Ls binning: {} - {}'.format(data_time[0], data_time[60]))
+    else:
+        print('The data will not be binned in 5°Ls, need to work here')
+
+    nb_bin = int(data_time.shape[0] / 60)
+
+    data_icelayer = zeros((2, nb_bin))
+    data_icelayer_std = zeros((2, nb_bin))
+
+    for bin in range(nb_bin - 1):
+        data_binned_north, time_selected = slice_data(data_north, dimension_data=data_time[:],
+                                                      value=[bin * 5, (bin + 1) * 5])
+        data_binned_south, time_selected = slice_data(data_south, dimension_data=data_time[:],
+                                                      value=[bin * 5, (bin + 1) * 5])
+
+        data_zareoid_binned_north, time_selected = slice_data(data_zareoid_north, dimension_data=data_time[:],
+                                                              value=[bin * 5, (bin + 1) * 5])
+        data_zareoid_binned_south, time_selected = slice_data(data_zareoid_south, dimension_data=data_time[:],
+                                                              value=[bin * 5, (bin + 1) * 5])
+        print('Time: {:.0f} / 360°Ls'.format(time_selected[0]))
+        tmp_north = array([])
+        tmp_south = array([])
+
+        # Find each super-saturation of co2 thickness
+        for ls in range(data_binned_north.shape[0]):
+            for longitude in range(data_binned_north.shape[3]):
+
+                # For northern polar region
+                for latitude_north in range(data_binned_north.shape[2]):
+                    for alt in range(data_binned_north.shape[1]):
+                        if data_binned_north[ls, alt, latitude_north, longitude] >= 1:
+                            idx_min_north = alt
+                            for alt2 in range(alt + 1, data_binned_north.shape[1]):
+                                if data_binned_north[ls, alt2, latitude_north, longitude] < 1:
+                                    idx_max_north = alt2 - 1
+                                    tmp_north = append(tmp_north, abs(data_zareoid_binned_north[ls,idx_max_north,
+                                                                                            latitude_north, longitude] -
+                                                       data_zareoid_binned_north[ls, idx_min_north, latitude_north,
+                                                                                 longitude]))
+                                    break
+                            break
+
+                # For southern polar region
+                for latitude_south in range(data_binned_south.shape[2]):
+                    for alt in range(data_binned_south.shape[1]):
+                        if data_binned_south[ls, alt, latitude_south, longitude] >= 1:
+                            idx_min_south = alt
+                            for alt2 in range(alt + 1, data_binned_south.shape[1]):
+                                if data_binned_south[ls, alt2, latitude_south, longitude] < 1:
+                                    idx_max_south = alt2 - 1
+                                    tmp_south = append(tmp_south, abs(data_zareoid_binned_south[ls, idx_max_south,
+                                                                                            latitude_south, longitude] -
+                                                       data_zareoid_binned_south[ls, idx_min_south, latitude_south,
+                                                                                 longitude]))
+                                    break
+                            break
+        tmp_north = correction_value(tmp_north, threshold=0)
+        tmp_south = correction_value(tmp_south, threshold=0)
+        if tmp_north.size != 0:
+            print(tmp_north)
+            data_icelayer[0, bin] = mean(tmp_north)
+            data_icelayer_std[0, bin] = std(tmp_north)
+            print(data_icelayer[0,bin], data_icelayer_std[0, bin])
+            print('---------')
+        else:
+            data_icelayer[0, bin] = 0
+            data_icelayer_std[0, bin] = 0
+
+        if tmp_south.size != 0:
+            data_icelayer[1, bin] = mean(tmp_south)
+            data_icelayer_std[1, bin] = std(tmp_south)
+        else:
+            data_icelayer[1, bin] = 0
+            data_icelayer_std[1, bin] = 0
+
+        nbp_north = data_binned_north.shape[0] * data_binned_north.shape[2] * data_binned_north.shape[3]
+        nbp_south = data_binned_south.shape[0] * data_binned_south.shape[2] * data_binned_south.shape[3]
+
+        del tmp_north, tmp_south
+
+    return data_icelayer, data_icelayer_std
 
 
 def deltaT_thermal_tides(files, directory_store, filename_day, data_day, target_name):

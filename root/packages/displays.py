@@ -548,11 +548,9 @@ def display_thickness_co2ice_atm_layer(data, data_std, savename):
 
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11))
 
-    #    ax[0].text(0.05, 0.9, 'North pole above 60°N', transform=ax[0].transAxes, fontsize=14)
     ax[0].set_title('North pole above 60°N')
-    print(data[1, :])
-    ax[0].errorbar(arange(73) * 5, data[1, :] / 1e3,
-                   yerr=data_std[1, :] / 1e3,
+    ax[0].errorbar(arange(data.shape[1]) * 5, data[0, :] / 1e3,
+                   yerr=data_std[0, :] / 1e3,
                    ls=' ', marker='+', color='black', label='GCM')  # 72 points binned in 5°
     ax[0].errorbar(northpole_ls, northpole[:, 1],
                    yerr=[northpole[:, 2] - northpole[:, 1], northpole[:, 1] - northpole[:, 0]], color='blue', ls=' ',
@@ -561,10 +559,9 @@ def display_thickness_co2ice_atm_layer(data, data_std, savename):
     ax[0].set_xticklabels(labels=arange(0, 405, 45))
     ax[0].legend(loc='best')
 
-    #    ax[1].text(0.6, 0.9, 'South pole above 60°S', transform=ax[1].transAxes, fontsize=14)
     ax[1].set_title('South pole above 60°S')
-    ax[1].errorbar(arange(73) * 5, data[0, :] / 1e3,
-                   yerr=data_std[0, :] / 1e3,
+    ax[1].errorbar(arange(data.shape[1]) * 5, data[1, :] / 1e3,
+                   yerr=data_std[1, :] / 1e3,
                    ls=' ', marker='+', color='black', label='GCM')
     ax[1].errorbar(southpole_ls, southpole[:, 1],
                    yerr=[southpole[:, 2] - southpole[:, 1], southpole[:, 1] - southpole[:, 0]], color='blue', ls=' ',
