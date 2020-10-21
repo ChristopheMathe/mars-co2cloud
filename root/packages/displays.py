@@ -893,7 +893,13 @@ def topcloud_altitude(top_cloud, data_latitude, data_altitude, ndx, axis_ls):
 
 # figure in altitude - X
 def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel, xscale='linear', yscale='linear',
-                          title='', savename='profiles'):
+                          second_var=None,
+                          xmin2=None, xmax2=None,
+                          xlabel2=None,
+                          xscale2=None,
+                          title='', savename='profiles', title_option=None):
+    from numpy import arange
+
     data_altitude = getdata(filename, target='altitude')
     if data_altitude.units == 'm':
         units = 'km'
@@ -906,30 +912,40 @@ def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel,
         units = data_altitude.units
         altitude_name = 'Pressure'
 
-    for i, s in zip(data, savename):
+    for i, d, s in zip(arange(len(savename)), data, savename):
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 11))
-        if i.ndim > 1:
-            for j in range(i.shape[1]):
+        # plot variable 1
+        if d.ndim > 1:
+            for j in range(d.shape[1]):
                 ax.set_xscale(xscale)
                 ax.set_yscale(yscale)
-                ax.plot(i[:, j], data_altitude[:], label='%.2f°N' % (latitude_selected[j]))
+                ax.plot(d[:, j], data_altitude[:], label='%.2f°N' % (latitude_selected[j]))
         else:
             ax.set_xscale(xscale)
             ax.set_yscale(yscale)
             ax.plot()
-
-        plt.xlim(xmin, xmax)
-        plt.ylim(data_altitude[0], data_altitude[-1])
+        # plot variable 2 if exists
+        if second_var is not None:
+            ax2 = ax.twiny()
+            ax2.set_xscale(xscale2)
+            ax2.set_xlim(xmin2, xmax2)
+            ax2.set_xlabel(xlabel2)
+            for j in range(second_var[0].shape[1]):
+                ax2.plot(second_var[i][:,j], data_altitude[:], ls='--')
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(1e-3, data_altitude[-1])
         if altitude_name == 'Pressure':
             ax.invert_yaxis()
-        plt.legend(loc='best')
-        plt.xlabel(xlabel)
-        plt.ylabel(altitude_name + ' (' + units + ')')
-        plt.title(title)
-        plt.savefig(s + '.png', bbox_inches='tight')
+        ax.legend(loc='best')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(altitude_name + ' (' + units + ')')
+        if title_option is not None:
+            ax.set_title(title+', and {:.0f} - {:.0f} °Ls'.format(title_option[i][0], title_option[i][1]))
+        fig.savefig(s + '.png', bbox_inches='tight')
         plt.close(fig)
 
     create_gif(savename)
+    return
 
 
 def display_alt_ls(filename, data_1, data_2, levels, title, savename, latitude_selected=None):

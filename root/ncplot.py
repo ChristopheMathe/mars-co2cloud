@@ -654,14 +654,15 @@ def main():
         print('     2: max radius day-night (fig: lat-ls)')
         print('     3: altitude of top clouds (fig: lat-ls)')
         print('     4: radius/co2ice/temp/satu in polar projection')
-        print('     5: zonal mean of mean radius where co2_ice exsists in the 15°N-15°S (fig: lat-ls)')
+        print('     5: zonal mean of mean radius where co2_ice exists in the 15°N-15°S (fig: lat-ls)')
         print('')
         view_mode = int(input('Select number:'))
 
         if view_mode == 1:
             print('Processing data:')
             list_data, list_filename, latitude_selected, time_selected = vars_zonal_mean_in_time_co2ice_exists(
-                                                                         filename, data_target)
+                                                                         filename, data_target, name_target,
+                                                                         density=False)
 
             print('Display:')
             display_1fig_profiles(filename, list_data, latitude_selected, xmin=1e-3, xmax=500,
@@ -710,7 +711,12 @@ def main():
                             savename='riceco2_zonalmean_altitudemean_equatorial_region')
 
     elif name_target in ['ccnNco2']:
-        view_mode = int(input('View (max_day_night=1): '))
+        print('What do you wanna do?')
+        print('     1: maximum day and night (fig: lat-ls)')
+        print('     2: Zonal mean of mean density where co2_ice exists (fig: alt-#/m3)')
+        print('')
+        view_mode = int(input('Select number:'))
+
         if view_mode == 1:
 
             filename_2 = getfilename(files)
@@ -740,6 +746,24 @@ def main():
                                                data_latitude, ndx, axis_ls, unit='#/kg',
                                                title='Max CCN number',
                                                savename='max_ccnNco2_day_night.png')
+
+        if view_mode == 2:
+            print('Processing data:')
+            list_data, list_filename, latitude_selected, list_time_selected, list_tau = \
+                vars_zonal_mean_in_time_co2ice_exists(filename, data_target, name_target, density=True)
+
+            print('Display:')
+            display_1fig_profiles(filename, list_data, latitude_selected, xmin=1e0, xmax=1e10,
+                                  xlabel='density of CCN (#.m$^{-3}$)',
+                                  xscale='log', yscale='log',
+                                  second_var=list_tau,
+                                  xmin2=1e-9, xmax2=1e-1,
+                                  xlabel2='opacity at 1 micron',
+                                  xscale2='log',
+                                  title='Zonal mean density of CCN and Opacity where co2 ice exists between {} - {} '
+                                        '°N'.format(latitude_selected[0], latitude_selected[-1]),
+                                  savename=list_filename,
+                                  title_option=list_time_selected)
 
     elif name_target in ['tau1mic']:
         print('What do you wanna do?')

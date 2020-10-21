@@ -88,14 +88,23 @@ def vars_zonal_mean_column_density(filename, data_target):
     return data_target, altitude_limit, zmin, zmax, data_altitude.units
 
 
-def vars_zonal_mean_in_time_co2ice_exists(filename, data):
+def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, density=False):
+    latitude_range = [60, 90]
+
     # extract co2_ice data
     data_co2_ice = getdata(filename, target='co2_ice')
 
     # select the latitude range
     data_latitude = getdata(filename, target='latitude')
-    data_sliced_lat, latitude_selected = slice_data(data[:, :, :, :], data_latitude, value=[-15, 15])
-    data_co2_ice_sliced_lat, latitude_selected = slice_data(data_co2_ice[:, :, :, :], data_latitude, value=[-15, 15])
+    data_sliced_lat, latitude_selected = slice_data(data[:, :, :, :], data_latitude, value=latitude_range)
+    data_co2_ice_sliced_lat, latitude_selected = slice_data(data_co2_ice[:, :, :, :], data_latitude,
+                                                            value=latitude_range)
+    if density:
+        data_rho = getdata(filename, target='rho')
+        data_rho_sliced_lat, latitude_selected = slice_data(data_rho[:, :, :, :], data_latitude, value=latitude_range)
+        data_tau = getdata(filename, target='Tau3D1mic')
+        data_tau_sliced_lat, latitude_selected = slice_data(data_tau[:, :, :, :], data_latitude, value=latitude_range)
+        del data_rho, data_tau
     del data, data_co2_ice
 
     # select the time range
@@ -107,46 +116,71 @@ def vars_zonal_mean_in_time_co2ice_exists(filename, data):
     if breakdown.lower() in ['y', 'yes']:
         # Mask data where co2ice is inferior to 1e-13, so where co2ice exists
         data_final = ma.masked_where(data_co2_ice_sliced_lat < 1e-13, data_sliced_lat)
+        if density:
+            data_rho_final = ma.masked_where(data_co2_ice_sliced_lat < 1e-13, data_rho_sliced_lat)
+            data_final = data_final * data_rho_final
+            data_tau_final = ma.masked_where(data_co2_ice_sliced_lat < 1e-13, data_tau_sliced_lat)
+            del data_rho_sliced_lat, data_tau_sliced_lat
+            data_tau_final = mean(mean(data_tau_final, axis=3), axis=0)
+            list_tau = list([data_tau_final])
         del data_co2_ice_sliced_lat, data_sliced_lat
 
         data_final = mean(mean(data_final, axis=3), axis=0) * 1e6  # zonal mean and temporal mean, and m to µm
         list_data = list([data_final])
-        filenames = list(['riceco2_mean_{:.0f}N_{:.0f}N_0-360Ls'.format(latitude_selected[0], latitude_selected[-1])])
+        filenames = list(['{}_mean_{:.0f}N_{:.0f}N_0-360Ls'.format(data_name, latitude_selected[0],
+                                                                   latitude_selected[-1])])
+        list_time_selected = list([data_time[0], data_time[-1]])
     else:
+        directory_output = '{}_mean_radius_{:.0f}N_{:.0f}N_png'.format(data_name, latitude_selected[0],
+                                                                       latitude_selected[-1])
+        try:
+            mkdir(directory_output)
+        except:
+            pass
+
         timestep = float(input('Select the time step range: '))
         nb_step = int(data_time[-1] / timestep) + 1
         print('nb_step: {}'.format(nb_step))
         if data_time[-1] % timestep != 0:
             print('data_time[-1]%timestep = {}'.format(data_time[-1] % timestep))
 
-        directory_output = 'riceo2_mean_radius_{:.0f}N_{:.0f}N_png'.format(latitude_selected[0], latitude_selected[-1])
-
-        try:
-            mkdir(directory_output)
-        except:
-            pass
-
         list_data = list([])
         filenames = list([])
+        list_time_selected = list([])
+        list_tau = list([])
         for i in range(nb_step):
             data_sliced_lat_ls, time_selected = slice_data(data_sliced_lat, dimension_data=data_time[:],
                                                            value=[i * timestep, (i + 1) * timestep])
             data_co2_ice_sliced_lat_ls, time_selected = slice_data(data_co2_ice_sliced_lat, dimension_data=data_time[:],
                                                                    value=[i * timestep, (i + 1) * timestep])
-            print('\t \t selected: {} {}'.format(time_selected[0], time_selected[-1]))
 
+            print('\t \t selected: {} {}'.format(time_selected[0], time_selected[-1]))
+            list_time_selected.append([time_selected[0], time_selected[-1]])
             # Mask data where co2ice is inferior to 1e-13, so where co2ice exists
             data_final = ma.masked_where(data_co2_ice_sliced_lat_ls < 1e-13, data_sliced_lat_ls)
+            if density:
+                data_rho_sliced_lat_ls, time_selected = slice_data(data_rho_sliced_lat, dimension_data=data_time[:],
+                                                                   value=[i * timestep, (i + 1) * timestep])
+                data_rho_final = ma.masked_where(data_co2_ice_sliced_lat_ls < 1e-13, data_rho_sliced_lat_ls)
+                data_final = data_final * data_rho_final
+
+                data_tau_sliced_lat_ls, time_selected = slice_data(data_tau_sliced_lat, dimension_data=data_time[:],
+                                                                   value=[i * timestep, (i + 1) * timestep])
+                data_tau_final = ma.masked_where(data_co2_ice_sliced_lat_ls < 1e-13, data_tau_sliced_lat_ls)
+                data_tau_final = mean(mean(data_tau_final, axis=3), axis=0)
+                list_tau.append(data_tau_final)
+                del data_rho_sliced_lat_ls, data_tau_sliced_lat_ls
+
             del data_co2_ice_sliced_lat_ls, data_sliced_lat_ls
 
             data_final = mean(mean(data_final, axis=3), axis=0) * 1e6  # zonal mean and temporal mean, and m to µm
             list_data.append(data_final)
-            filenames.append(directory_output + '/riceco2_mean_{:.0f}N_{:.0f}N_Ls_{:.0f}-{:.0f}'.format(
+            filenames.append(directory_output + '/{}_mean_{:.0f}N_{:.0f}N_Ls_{:.0f}-{:.0f}'.format(data_name,
                 latitude_selected[0], latitude_selected[-1], time_selected[0], time_selected[-1]))
 
         del data_sliced_lat, data_co2_ice_sliced_lat
 
-    return list_data, filenames, latitude_selected, time_selected
+    return list_data, filenames, latitude_selected, list_time_selected, list_tau
 
 
 def vars_select_profile(data_target):
