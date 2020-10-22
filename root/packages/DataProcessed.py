@@ -305,31 +305,32 @@ def co2ice_thickness_atm_layer(data_target):
     return data_icelayer
 
 
-def co2ice_polar_cloud_distribution():
-    data_altitude = getdata(directory_store + filename, 'altitude')
+def co2ice_polar_cloud_distribution(filename, data, normalization):
+    # sliced data on latitude region
+    data_latitude = getdata(filename, target='latitude')
+    data_north, latitude_north = slice_data(data, dimension_data=data_latitude, value=[60, 90])
+    data_south, latitude_south = slice_data(data, dimension_data=data_latitude, value=[-60, -90])
+    del data
 
-    idx_lat_N = (abs(data_latitude[:] - 60)).argmin()
-    idx_lat_S = (abs(data_latitude[:] + 60)).argmin()
+    # sliced data between 104 - 360°Ls time to compare with Fig8 of Neumann et al. 2003
+    data_time = getdata(filename, target='Time')
+    data_north, time_selected = slice_data(data_north, dimension_data=data_time, value=[104, 360])
+    data_south, time_selected = slice_data(data_south, dimension_data=data_time, value=[104, 360])
 
-    data_target_north = data_target[:, :, idx_lat_N:, :]  # north pole
-    data_target_south = data_target[:, :, :idx_lat_S + 1, :]  # south pole
+    distribution_north = zeros((data_north.shape[2], data_north.shape[1]))
+    distribution_south = zeros((data_south.shape[2], data_south.shape[1]))
 
-    idx_ls_1 = (abs(data_time[:] - 225)).argmin()  # ls = 104°
-    idx_ls_2 = (abs(data_time[:] - 669)).argmin()
-    data_target_north = data_target_north[idx_ls_1:idx_ls_2 + 1, :, :, :]
-    data_target_south = data_target_south[idx_ls_1:idx_ls_2 + 1, :, :, :]
+    for latitude in range(data_north.shape[2]):
+        for altitude in range(data_north.shape[1]):
+            distribution_north[latitude, altitude] = count_nonzero(data_north[:, altitude, latitude, :] >= 1e-13)
+            distribution_south[latitude, altitude] = count_nonzero(data_south[:, altitude, latitude, :] >= 1e-13)
 
-    distribution_north = zeros((data_target_north.shape[2], data_target_north.shape[1]))
-    distribution_south = zeros((data_target_north.shape[2], data_target_north.shape[1]))
+    # normalisation
+    if normalization:
+        distribution_north = distribution_north / max(distribution_north) * 2000 # To compare with Fig.8 of Neumann2003
+        distribution_south = distribution_south / max(distribution_south) * 2000
 
-    for latitude in range(data_target_north.shape[2]):
-        for altitude in range(data_target_north.shape[1]):
-            distribution_north[latitude, altitude] = count_nonzero(
-                data_target_north[:, altitude, latitude, :] >= 1e-10)
-            distribution_south[latitude, altitude] = count_nonzero(
-                data_target_south[:, altitude, latitude, :] >= 1e-10)
-
-    return distribution_north, distribution_south
+    return distribution_north, distribution_south, latitude_north, latitude_south
 
 
 def co2ice_cloud_evolution(data):

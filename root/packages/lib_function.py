@@ -370,22 +370,36 @@ def slice_data(data, dimension_data, value):
     return data, selected_idx
 
 
-def get_mean_index_alti(data_altitude, value):
+def get_mean_index_alti(data_altitude, value, dimension):
     from numpy import abs, zeros, mean
 
-    mean_idx_longitude = zeros(data_altitude.shape[0], dtype=int)
-    idx_longitude = zeros(data_altitude.shape[2], dtype=int)
+    if dimension == 'time':
+        mean_idx = zeros(data_altitude.shape[0], dtype=int)
+        idx = zeros(data_altitude.shape[2], dtype=int)
 
-    # (1) compute for each time (ls),
-    # (2) search the index where _value_ km is reached for all longitude
-    # (3) compute the mean of the index
-    for ls in range(data_altitude.shape[0]):
-        for longitude in range(data_altitude.shape[2]):
-            idx_longitude[longitude] = (abs(data_altitude[0, :, longitude] - value)).argmin()
-        mean_idx_longitude[ls] = mean(idx_longitude)
-        idx_longitude[:] = 0
+        # (1) compute for each time (ls),
+        # (2) search the index where _value_ km is reached for all longitude
+        # (3) compute the mean of the index
+        for ls in range(data_altitude.shape[0]):
+            for longitude in range(data_altitude.shape[2]):
+                idx[longitude] = (abs(data_altitude[ls, :, longitude] - value)).argmin()
+            mean_idx[ls] = mean(idx)
+            idx[:] = 0
 
-    return mean_idx_longitude
+    elif dimension == 'latitude':
+        # data_altitude = [ls, alt, lat, lon]
+        data_altitude = mean(data_altitude, axis=3)
+        mean_idx = zeros(data_altitude.shape[2], dtype=int)
+        idx = zeros((data_altitude.shape[0]), dtype=int)
+
+        # trop long => passé en zonal mean!
+        for latitude in range(data_altitude.shape[2]):
+            for ls in range(data_altitude.shape[0]):
+                idx[ls] = (abs(data_altitude[ls, :, latitude] - value)).argmin()
+            mean_idx[latitude] = mean(idx)
+            idx[:] = 0
+
+    return mean_idx
 
 
 def create_gif(filenames):

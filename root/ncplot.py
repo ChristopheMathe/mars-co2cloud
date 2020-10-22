@@ -52,7 +52,7 @@ def main():
         print('     4: maximum during day and night with altitude corresponding (fig: lat-ls)')
         print('     5: profile in function of localtime (fig: alt-localtime)')
         print('     6: layer ice thickness (fig: thickness-lat)')
-        print('     7: polar cloud distribution (fig: #clouds-lat)')
+        print('     7: polar cloud distribution to compare with Fig.8 of Neumann+2003 (fig: #clouds-lat)')
         print('     8: cloud evolution with satuco2/temperature/radius (fig: alt-lat, gif)')
         if  name_target in ['h2o_ice', 'q01']:
             print('     9: h2o_ice profile with co2_ice presence (fig: alt-ls)')
@@ -113,11 +113,13 @@ def main():
 
         if view_mode == 7:
             print('Processing data:')
-            distribution_north, distribution_south = polar_cloud_distribution()
+            distribution_north, distribution_south, latitude_north, latitude_south = co2ice_polar_cloud_distribution(
+                filename, data_target, normalization='False')
 
             print('Display:')
-            display_distribution_altitude_latitude_polar(distribution_north, distribution_south,
-                                                                  savename='distribution_polar_clouds')
+            display_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
+                                                         latitude_north, latitude_south,
+                                                         savename='distribution_polar_clouds')
 
         if view_mode == 8:
             print('Processing data:')
@@ -474,8 +476,8 @@ def main():
             data_icelayer, data_icelayer_std = satuco2_thickness_atm_layer(filename, data_target)
 
             print('Display:')
-            display_thickness_co2ice_atm_layer(data_icelayer, data_icelayer_std,
-                                               savename='satuco2_thickness_polar_region.png')
+            display_satuco2_thickness_atm_layer(data_icelayer, data_icelayer_std,
+                                                savename='satuco2_thickness_polar_region.png')
 
         if view_mode == 7:
             print('Processing data:')

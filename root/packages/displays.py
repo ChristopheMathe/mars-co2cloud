@@ -463,7 +463,7 @@ def display_altitude_longitude(data_target, data_altitude, data_longitude, unit,
     plt.show()
 
 
-def display_thickness_co2ice_atm_layer(data, data_std, savename):
+def display_satuco2_thickness_atm_layer(data, data_std, savename):
     from numpy import arange, ma, array
     data = ma.masked_where(data == 0, data)
 
@@ -578,37 +578,55 @@ def display_thickness_co2ice_atm_layer(data, data_std, savename):
     plt.show()
 
 
-def display_distribution_altitude_latitude_polar(distribution_north, distribution_south, data_altitude,
+def display_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
                                                  north_latitude, south_latitude, savename):
-    from numpy import arange, round
+    data_time = getdata(filename, target='Time')
+    data_altitude = getdata(filename, target='altitude')
+    data_latitude = getdata(filename, target='latitude')
+    data_zareoid = getdata(filename, target='zareoid')
+    data_zareoid_north, tmp = slice_data(data_zareoid, dimension_data=data_latitude, value=[north_latitude[0],
+                                         north_latitude[-1]])
+    data_zareoid_south, tmp = slice_data(data_zareoid, dimension_data=data_latitude, value=[south_latitude[0],
+                                         south_latitude[-1]])
+    data_zareoid_north, tmp = slice_data(data_zareoid_north, dimension_data=data_time, value=[104, 360])
+    data_zareoid_south, tmp = slice_data(data_zareoid_south, dimension_data=data_time, value=[104, 360])
+    del data_zareoid
 
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11))
+    # Add altitude lines at 0, 5, 10, 15, 20 km
+    lines_altitude = [0, 5e3, 1e4, 1.5e4, 2e4]
 
-    pc = ax[0].imshow(distribution_north.T, origin='lower', aspect='auto')
-    ax[0].set_xticks(ticks=arange(north_latitude.shape[0]))
-    ax[0].set_xticklabels(labels=north_latitude)
-    ax[0].set_yticks(ticks=arange(data_altitude[:].shape[0]))
-    ax[0].set_yticklabels(labels=round(data_altitude[:] / 1e3, 2))
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11), sharey=True)
 
-    ax[1].imshow(distribution_south.T, origin='lower', aspect='auto')
-    ax[1].set_xticks(ticks=arange(north_latitude.shape[0]))
-    ax[1].set_xticklabels(labels=south_latitude)
-    ax[1].set_yticks(ticks=arange(data_altitude[:].shape[0]))
-    ax[1].set_yticklabels(labels=round(data_altitude[:] / 1e3, 2))
+    pc = ax[0].contourf(north_latitude, data_altitude[:], distribution_north.T, cmap='Greys')
+    for i in lines_altitude:
+        data_line = get_mean_index_alti(data_zareoid_north, i, dimension='latitude')
+        ax[0].plot(north_latitude, data_altitude[data_line], '--', color='red')
+        ax[0].text(north_latitude[0], data_altitude[data_line[0]], '{:.0f} km'.format(i/1e3),
+                   verticalalignment='bottom', horizontalalignment='right', color='red', fontsize=10)
 
-    ax[0].set_ylim(0, 15)
-    ax[1].set_ylim(0, 15)
+    ax[1].contourf(south_latitude, data_altitude[:], distribution_south.T, cmap='Greys')
+    for i in lines_altitude:
+        data_line = get_mean_index_alti(data_zareoid_south, i, dimension='latitude')
+        ax[1].plot(south_latitude, data_altitude[data_line], '--', color='red')
+        ax[1].text(south_latitude[0], data_altitude[data_line[0]], '{:.0f} km'.format(i/1e3),
+                   verticalalignment='bottom', horizontalalignment='right', color='red', fontsize=10)
+
+
+    ax[0].set_ylim(1e-2, data_altitude[-1])
+    ax[0].set_yscale('log')
+    ax[0].invert_yaxis()
 
     plt.draw()
     p0 = ax[0].get_position().get_points().flatten()
-    ax_cbar = fig.add_axes([p0[0], 1, p0[2] - p0[0], 0.05])
+    ax_cbar = fig.add_axes([p0[0], 0.95, p0[2] - p0[0], 0.025]) # left, bottom, width, height
     cbar = plt.colorbar(pc, cax=ax_cbar, orientation='horizontal')
     cbar.ax.set_title('count')
 
-    fig.text(0.02, 0.5, 'Altitude (km)', ha='center', va='center', rotation='vertical', fontsize=14)
+    fig.text(0.02, 0.5, '{} ({})'.format('Pressure', data_altitude.units), ha='center', va='center',
+             rotation='vertical', fontsize=14)
     fig.text(0.5, 0.06, 'Latitude (°N)', ha='center', va='center', fontsize=14)
 
-    plt.savefig(savename + '.png', bbox_inches='tight')
+    fig.savefig(savename + '.png', bbox_inches='tight')
     plt.show()
 
 
@@ -890,11 +908,8 @@ def topcloud_altitude(top_cloud, data_latitude, data_altitude, ndx, axis_ls):
 
 # figure in altitude - X
 def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel, xscale='linear', yscale='linear',
-                          second_var=None,
-                          xmin2=None, xmax2=None,
-                          xlabel2=None,
-                          xscale2=None,
-                          title='', savename='profiles', title_option=None):
+                          second_var=None, xmin2=None, xmax2=None, xlabel2=None, xscale2=None, title='',
+                          savename='profiles', title_option=None):
     from numpy import arange
 
     data_altitude = getdata(filename, target='altitude')
@@ -1026,7 +1041,6 @@ def display_alt_lat(filename, data, title, savename='test'):
     data_latitude = getdata(filename, target='latitude')
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(11,11))
-    print(data_altitude.shape, data_latitude.shape, data.shape)
     ctf = ax.contourf(data_latitude[:], data_altitude[:], data, norm=DivergingNorm(vcenter=0), cmap='coolwarm')
     cbar = plt.colorbar(ctf)
     cbar.ax.set_title('K')
