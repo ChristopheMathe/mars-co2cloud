@@ -960,6 +960,23 @@ def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel,
     return
 
 
+def display_2fig_profile(filename, data1, data2, unit):
+    data_time = getdata(filename, target='Time')
+
+    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True, sharey=True, figsize=(11,11))
+
+    ax[0].plot(data_time[:], data1*1e3, color='black') # kg to g
+
+    ax[1].plot(data_time[:], data2*1e3, color='black') # kg to g
+
+    ax[0].set_xlim(data_time[0], data_time[-1])
+    fig.text(0.02, 0.5, 'Cumulative masses ({})'.format('g'), ha='center', va='center', rotation='vertical',
+             fontsize=14)
+    fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
+
+    fig.savefig('co2ice_cumulative_mass_polar_region.png', bbox_inches='tight')
+
+
 def display_alt_ls(filename, data_1, data_2, levels, title, savename, latitude_selected=None):
     from numpy import round
 

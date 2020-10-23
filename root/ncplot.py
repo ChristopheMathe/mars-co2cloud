@@ -1,12 +1,9 @@
 #!/bin/bash python3
-from packages.ncdump import *
-from packages.lib_function import *
 from packages.DataProcessed import *
 from packages.displays import *
-from os import listdir, path, mkdir
+from os import listdir
 
-from numpy import mean, abs, min, max, zeros, where, concatenate, flip, arange, array, std, savetxt, c_, append,\
-    loadtxt, logspace, random
+from numpy import mean, abs, min, max, zeros, where, concatenate, flip,  logspace, random
 
 
 def main():
@@ -709,6 +706,17 @@ def main():
     elif name_target in ['co2_conservation', 'Sols', 'Ls']:
         display_1d(data_target)
 
+    elif name_target in ['co2ice']:
+        print('What do you wanna do?')
+        print('     1: cumulative masses in polar cap region, to compare with fig.10 of Hu+2012 (fig: g-ls)')
+        print('')
+        view_mode = int(input('Select number:'))
+        if view_mode == 1:
+            print('Processing data:')
+            cumul_north, cumul_south = co2ice_cumulative_masses_polar_cap(filename, data_target)
+
+            print('Display:')
+            display_2fig_profile(filename, cumul_north, cumul_south, unit_target)
     else:
         print('Variable not used for the moment')
 

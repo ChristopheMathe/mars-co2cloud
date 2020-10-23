@@ -336,6 +336,44 @@ def slice_data(data, dimension_data, value):
             data = data[idx]
         else:
             data = data[idx1:idx2]
+
+    elif data.ndim == 2:
+        # 1st dimension
+        if dimension_data.shape[0] == data.shape[0]:
+            if idx is not None:
+                data = data[idx, :]
+            else:
+                data = data[idx1:idx2, :]
+
+        # 2nd dimension
+        elif dimension_data.shape[0] == data.shape[1]:
+            if idx is not None:
+                data = data[:, idx]
+            else:
+                data = data[:, idx1:idx2]
+
+    elif data.ndim == 3:
+        # 1st dimension
+        if dimension_data.shape[0] == data.shape[0]:
+            if idx is not None:
+                data = data[idx, :, :]
+            else:
+                data = data[idx1:idx2, :, :]
+
+        # 2nd dimension
+        elif dimension_data.shape[0] == data.shape[1]:
+            if idx is not None:
+                data = data[:, idx, :]
+            else:
+                data = data[:, idx1:idx2, :]
+
+        # 3rd dimension
+        elif dimension_data.shape[0] == data.shape[2]:
+            if idx is not None:
+                data = data[:, :, idx, :]
+            else:
+                data = data[:, :, idx1:idx2]
+
     elif data.ndim == 4:
         # 1st dimension
         if dimension_data.shape[0] == data.shape[0]:
@@ -367,6 +405,7 @@ def slice_data(data, dimension_data, value):
         else:
             print('The dimension of data exceed dimension 4 !')
             exit()
+
     return data, selected_idx
 
 

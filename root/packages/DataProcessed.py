@@ -396,6 +396,33 @@ def co2ice_cloud_evolution(data):
     return
 
 
+def co2ice_cumulative_masses_polar_cap(filename, data):
+    from numpy import sum
+
+    # TODO: improved by get polar cap
+    data_latitude = getdata(filename, target='latitude')
+    data_north, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[60, 90])
+    data_south, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[-60, -90])
+    del data
+
+    # extract the area of grid
+    data_aire = getdata('/home/mathe/Documents/owncloud/GCM/figures_run_analysis/runs_analysis/'
+                        'occigen_test_64x48x32_1years_Tµphy_para_start_simu_ref_Margaux/'
+                        'occigen_test_64x48x32_1years_Tµphy_para_start_simu_ref_Margaux/diagfi1.nc', target='aire')
+
+    data_aire_north, latitude_selected = slice_data(data_aire, dimension_data=data_latitude[:], value=[60, 90])
+    data_aire_south, latitude_selected = slice_data(data_aire, dimension_data=data_latitude[:], value=[-60, -90])
+
+    cumul_co2ice_north = zeros(data_north.shape[0])
+    cumul_co2ice_south = zeros(data_south.shape[0])
+
+    for ls in range(data_north.shape[0]):
+        cumul_co2ice_north[ls] = sum(data_north[ls,:,:] * data_aire_north[:,:])
+        cumul_co2ice_south[ls] = sum(data_south[ls,:,:] * data_aire_south[:,:])
+
+    return cumul_co2ice_north, cumul_co2ice_south
+
+
 def riceco2_zonal_mean_co2ice_exists(filename, data):
     data_latitude = getdata(filename, target='latitude')
 
