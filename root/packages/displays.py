@@ -21,7 +21,6 @@ def display_1d(data):
 # ==================================================================================================================== #
 def display_colonne(filename, data, unit, norm, levels, observation=False, latitude_selected=None, title=None, \
                     savename='test'):
-    from matplotlib.colors import LogNorm
     from numpy import int_
 
     data_time = getdata(filename, target='Time')
@@ -32,13 +31,6 @@ def display_colonne(filename, data, unit, norm, levels, observation=False, latit
         data_latitude, latitude_selected = slice_data(data_latitude, dimension_data=data_latitude,
                                                       value=[latitude_selected[0], latitude_selected[-1]])
     data_latitude = data_latitude[::-1]
-
-    # chopper l'intervalle de latitude comprise entre value-1 et value+1
-    data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
-    data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS = mesoclouds_observed()
-
-    list_obs = [data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
-    data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS]
 
     # plot
     plt.figure(figsize=(11, 8))
@@ -54,9 +46,15 @@ def display_colonne(filename, data, unit, norm, levels, observation=False, latit
             ctf = plt.contourf(data_time[:], data_latitude[:], data, levels=levels, cmap='coolwarm', zorder=1)
 
     if observation:
+        # chopper l'intervalle de latitude comprise entre value-1 et value+1
+        data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
+        data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS = mesoclouds_observed()
+
+        list_obs = [data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS,
+                    data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS]
         for j, value in enumerate(list_obs):
             data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
-                                                                         [latitude_selected[0],latitude_selected[-1]])
+                                                                         [latitude_selected[0], latitude_selected[-1]])
             if data_obs_ls.shape[0] != 0:
                 plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='+', zorder=10)
 
@@ -72,7 +70,7 @@ def display_colonne(filename, data, unit, norm, levels, observation=False, latit
     cbar = plt.colorbar(ctf)
     cbar.ax.set_title(unit)
     plt.title(title)
-    plt.savefig(savename+'.png', bbox_inches='tight')
+    plt.savefig(savename + '.png', bbox_inches='tight')
 
 
 # =====================================================================================================================#
@@ -585,9 +583,9 @@ def display_distribution_altitude_latitude_polar(filename, distribution_north, d
     data_latitude = getdata(filename, target='latitude')
     data_zareoid = getdata(filename, target='zareoid')
     data_zareoid_north, tmp = slice_data(data_zareoid, dimension_data=data_latitude, value=[north_latitude[0],
-                                         north_latitude[-1]])
+                                                                                            north_latitude[-1]])
     data_zareoid_south, tmp = slice_data(data_zareoid, dimension_data=data_latitude, value=[south_latitude[0],
-                                         south_latitude[-1]])
+                                                                                            south_latitude[-1]])
     data_zareoid_north, tmp = slice_data(data_zareoid_north, dimension_data=data_time, value=[104, 360])
     data_zareoid_south, tmp = slice_data(data_zareoid_south, dimension_data=data_time, value=[104, 360])
     del data_zareoid
@@ -601,16 +599,15 @@ def display_distribution_altitude_latitude_polar(filename, distribution_north, d
     for i in lines_altitude:
         data_line = get_mean_index_alti(data_zareoid_north, i, dimension='latitude')
         ax[0].plot(north_latitude, data_altitude[data_line], '--', color='red')
-        ax[0].text(north_latitude[0], data_altitude[data_line[0]], '{:.0f} km'.format(i/1e3),
+        ax[0].text(north_latitude[0], data_altitude[data_line[0]], '{:.0f} km'.format(i / 1e3),
                    verticalalignment='bottom', horizontalalignment='right', color='red', fontsize=10)
 
     ax[1].contourf(south_latitude, data_altitude[:], distribution_south.T, cmap='Greys')
     for i in lines_altitude:
         data_line = get_mean_index_alti(data_zareoid_south, i, dimension='latitude')
         ax[1].plot(south_latitude, data_altitude[data_line], '--', color='red')
-        ax[1].text(south_latitude[0], data_altitude[data_line[0]], '{:.0f} km'.format(i/1e3),
+        ax[1].text(south_latitude[0], data_altitude[data_line[0]], '{:.0f} km'.format(i / 1e3),
                    verticalalignment='bottom', horizontalalignment='right', color='red', fontsize=10)
-
 
     ax[0].set_ylim(1e-2, data_altitude[-1])
     ax[0].set_yscale('log')
@@ -618,7 +615,7 @@ def display_distribution_altitude_latitude_polar(filename, distribution_north, d
 
     plt.draw()
     p0 = ax[0].get_position().get_points().flatten()
-    ax_cbar = fig.add_axes([p0[0], 0.95, p0[2] - p0[0], 0.025]) # left, bottom, width, height
+    ax_cbar = fig.add_axes([p0[0], 0.95, p0[2] - p0[0], 0.025])  # left, bottom, width, height
     cbar = plt.colorbar(pc, cax=ax_cbar, orientation='horizontal')
     cbar.ax.set_title('count')
 
@@ -733,7 +730,7 @@ def display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, da
     data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS = mesoclouds_observed()
 
     list_obs = [data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
-    data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS]
+                data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS]
 
     data_altitude = getdata(filename, target='altitude')
     ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
@@ -756,8 +753,8 @@ def display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, da
 
     data_time = getdata(filename=filename, target='Time')
     if binned.lower() == 'y':
-        data_time = data_time[::60] # 5°Ls binned
-        data_zareoid = data_zareoid[::12,:,:,:]
+        data_time = data_time[::60]  # 5°Ls binned
+        data_zareoid = data_zareoid[::12, :, :, :]
     ndx, axis_ls = get_ls_index(data_time)
 
     fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(8, 11))
@@ -766,7 +763,7 @@ def display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, da
                    norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=100), cmap='coolwarm',
                    levels=array([0, 1, 10, 20, 50, 100]), extend='max')
     ax[0].contour(data_time[:], data_altitude[:], data_co2ice_north, norm=LogNorm(), levels=logspace(-13, 1, 15),
-    colors='black')
+                  colors='black')
 
     ax[1].set_title('{}°N'.format(latitude_eq))
     ax[1].contourf(data_time[:], data_altitude[:], data_satuco2_eq,
@@ -792,8 +789,8 @@ def display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, da
             data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
                                                                          list_latitudes[i])
             if data_obs_ls.shape[0] != 0:
-                axe.quiver(data_obs_ls, ones(data_obs_ls.shape[0])*1e-3, zeros(data_obs_ls.shape[0]),
-                           -ones(data_obs_ls.shape[0])*3, color='black')
+                axe.quiver(data_obs_ls, ones(data_obs_ls.shape[0]) * 1e-3, zeros(data_obs_ls.shape[0]),
+                           -ones(data_obs_ls.shape[0]) * 3, color='black')
 
         if altitude_unit == 'Pa':
             data_zareoid_sliced, tmp = slice_data(data_zareoid, dimension_data=data_latitude, value=list_latitudes[i])
@@ -841,7 +838,9 @@ def display_satuco2_view_mode7(filename, data_satuco2_north, data_satuco2_eq, da
             latitude_north, latitude_eq, latitude_south), bbox_inches='tight')
     else:
         plt.savefig('satuco2_with_co2ice_altitude-ls_max_along_longitude_at_{}N_{}N_{}N.png'.format(latitude_north,
-                    latitude_eq, latitude_south), bbox_inches='tight')
+                                                                                                    latitude_eq,
+                                                                                                    latitude_south),
+                    bbox_inches='tight')
     plt.show()
 
 
@@ -943,7 +942,7 @@ def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel,
             ax2.set_xlim(xmin2, xmax2)
             ax2.set_xlabel(xlabel2)
             for j in range(second_var[0].shape[1]):
-                ax2.plot(second_var[i][:,j], data_altitude[:], ls='--')
+                ax2.plot(second_var[i][:, j], data_altitude[:], ls='--')
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(1e-3, data_altitude[-1])
         if altitude_name == 'Pressure':
@@ -952,7 +951,7 @@ def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel,
         ax.set_xlabel(xlabel)
         ax.set_ylabel(altitude_name + ' (' + units + ')')
         if title_option is not None:
-            ax.set_title(title+', and {:.0f} - {:.0f} °Ls'.format(title_option[i][0], title_option[i][1]))
+            ax.set_title(title + ', and {:.0f} - {:.0f} °Ls'.format(title_option[i][0], title_option[i][1]))
         fig.savefig(s + '.png', bbox_inches='tight')
         plt.close(fig)
 
@@ -963,11 +962,11 @@ def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel,
 def display_2fig_profile(filename, data1, data2, unit):
     data_time = getdata(filename, target='Time')
 
-    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True, sharey=True, figsize=(11,11))
+    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True, sharey=True, figsize=(11, 11))
 
-    ax[0].plot(data_time[:], data1*1e3, color='black') # kg to g
+    ax[0].plot(data_time[:], data1 * 1e3, color='black')  # kg to g
 
-    ax[1].plot(data_time[:], data2*1e3, color='black') # kg to g
+    ax[1].plot(data_time[:], data2 * 1e3, color='black')  # kg to g
 
     ax[0].set_xlim(data_time[0], data_time[-1])
     fig.text(0.02, 0.5, 'Cumulative masses ({})'.format('g'), ha='center', va='center', rotation='vertical',
@@ -1007,7 +1006,7 @@ def display_alt_ls(filename, data_1, data_2, levels, title, savename, latitude_s
     cbar = plt.colorbar(cb, ax=axes)
     cbar.ax.set_title('kg/kg')
 
-    axes.set_xlim(data_time[0], data_time[-1]*12)
+    axes.set_xlim(data_time[0], data_time[-1] * 12)
     axes.set_xticks(ticks=ndx)
     axes.set_xticklabels(labels=axis_ls)
     axes.set_xlabel('Solar longitude (°)')
@@ -1034,13 +1033,13 @@ def display_alt_ls(filename, data_1, data_2, levels, title, savename, latitude_s
         axes.plot(data_altitude[lines_altitudes_40km], '--', color='grey')
         axes.plot(data_altitude[lines_altitudes_80km], '--', color='grey')
 
-        axes.text(data_time[-1]*12 + 1, data_altitude[lines_altitudes_0km[0]], '0 km', verticalalignment='bottom',
+        axes.text(data_time[-1] * 12 + 1, data_altitude[lines_altitudes_0km[0]], '0 km', verticalalignment='bottom',
                   horizontalalignment='right', color='grey', fontsize=14)
-        axes.text(data_time[-1]*12 + 1, data_altitude[lines_altitudes_10km[0]], '10 km', verticalalignment='bottom',
+        axes.text(data_time[-1] * 12 + 1, data_altitude[lines_altitudes_10km[0]], '10 km', verticalalignment='bottom',
                   horizontalalignment='right', color='grey', fontsize=14)
-        axes.text(data_time[-1]*12 + 1, data_altitude[lines_altitudes_40km[0]], '40 km', verticalalignment='bottom',
+        axes.text(data_time[-1] * 12 + 1, data_altitude[lines_altitudes_40km[0]], '40 km', verticalalignment='bottom',
                   horizontalalignment='right', color='grey', fontsize=14)
-        axes.text(data_time[-1]*12 + 1, data_altitude[lines_altitudes_80km[0]], '80 km', verticalalignment='bottom',
+        axes.text(data_time[-1] * 12 + 1, data_altitude[lines_altitudes_80km[0]], '80 km', verticalalignment='bottom',
                   horizontalalignment='right', color='grey', fontsize=14)
 
         axes.set_yscale('log')
@@ -1057,7 +1056,7 @@ def display_alt_lat(filename, data, title, savename='test'):
     data_altitude = getdata(filename, target='altitude')
     data_latitude = getdata(filename, target='latitude')
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(11,11))
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(11, 11))
     ctf = ax.contourf(data_latitude[:], data_altitude[:], data, norm=DivergingNorm(vcenter=0), cmap='coolwarm')
     cbar = plt.colorbar(ctf)
     cbar.ax.set_title('K')
@@ -1066,12 +1065,11 @@ def display_alt_lat(filename, data, title, savename='test'):
     ax.set_ylabel('Pressure (Pa)')
     ax.set_xlabel('Latitude (°N)')
     ax.set_title(title)
-    fig.savefig(savename+'.png', bbox_inches='tight')
+    fig.savefig(savename + '.png', bbox_inches='tight')
     plt.show()
 
 
 def display_4figs_polar_projection(data_riceco2, data_co2ice, data_temp, data_satuco2):
-
     from mpl_toolkits.basemap import Basemap
 
     fig = plt.figure()

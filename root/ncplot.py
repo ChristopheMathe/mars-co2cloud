@@ -4,7 +4,7 @@ from packages.displays import *
 from os import listdir
 
 from numpy import mean, abs, min, max, zeros, where, concatenate, flip,  logspace, random
-
+from math import floor, ceil
 
 def main():
     # TODO: si présence d'argument alors allez directement au processing et displays
@@ -140,10 +140,13 @@ def main():
         print('What do you wanna do?')
         print('     1: extract profile (fig: alt-K)')
         print('     2: mean profile during day and night (fig: alt-K)')
-        print('     3:')
+        print('     3: temperature_altitude_localtime (fig: alt-lt)')
         print('     4: 12h-00h between Ls=0-30°, zonal mean [fig.8 G-G2011] (fig: alt-lat)')
+        print('     5: zonal mean in a X layer (fig: lat-ls)')
         print('')
         view_mode = int(input('Select number:'))
+        print('')
+
         if view_mode == 1:
             data_pressure = getdata(directory_store + filename, target='pressure')
             data_longitude = getdata(directory_store + filename, target='longitude')
@@ -236,6 +239,18 @@ def main():
             print('Display:')
             display_alt_lat(filename, data_processed, title='12h - 00h, between 0-30° Ls, zonal mean',
                             savename='temperature_thermal_tides_0-30Ls_zonalmean')
+
+        if view_mode == 5:
+            print('Parameters:')
+            layer = input('\t layer:')
+            print('Processing data:')
+            data_processed, layer_selected = vars_zonal_mean(filename, data_target, layer=layer)
+
+            print('Display:')
+            print(min(data_processed), max(data_processed))
+            display_colonne(filename, data_processed, unit='K', norm='linear', levels=arange(100, 300, 20),
+                            observation=False, latitude_selected=None, title=name_target,
+                            savename='temp_zonalmean_layer{}_{:.0e}_Pa'.format(layer, layer_selected))
 
     elif name_target in ['deltaT']:
         print('What do you wanna do?')
@@ -681,7 +696,7 @@ def main():
 
         if view_mode == 1:
             print('Processing data:')
-            data_processed = vars_zonal_mean(data_target)
+            data_processed = vars_zonal_mean(filename, data_target)
 
             print('Display:')
             display_colonne(filename, data_processed, unit='', norm='log', levels=logspace(-13, -2, 12),

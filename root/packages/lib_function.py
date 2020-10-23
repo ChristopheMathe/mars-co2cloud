@@ -186,22 +186,6 @@ def get_ls_index(data_time):
     return idx, axis_ls
 
 
-def ObsCoordConvert2GcmGrid(data, data_time, data_latitude):
-    from numpy import zeros
-
-    data_converted = zeros((data.shape))
-    print(data_converted.shape, data.shape, data_time.shape, data_latitude.shape)
-
-    for nbp in range(data.shape[0]):
-        idx_ls = (abs(data_time - data[nbp, 0])).argmin()
-        data_converted[nbp, 0] = idx_ls
-
-        idx_lat = (abs(data_latitude - data[nbp, 1])).argmin()
-        data_converted[nbp, 1] = idx_lat
-
-    return data_converted
-
-
 def mesoclouds_observed():
     from numpy import loadtxt
 
@@ -326,6 +310,7 @@ def slice_data(data, dimension_data, value):
         else:
             idx2 += 1
         selected_idx = dimension_data[idx1:idx2]
+
     else:
         print('Error in value given, exceed 2 values')
         print(value)

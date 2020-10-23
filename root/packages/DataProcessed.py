@@ -55,15 +55,23 @@ def vars_max_value_with_others(data_target):
     return max_mmr, max_temp, max_satu, max_radius, max_ccnN, max_alt
 
 
-def vars_zonal_mean(data):
+def vars_zonal_mean(filename, data, layer=None):
+
+    if layer is not None:
+        data_altitude = getdata(filename=filename, target='altitude')
+        if data_altitude.units in ['Pa']:
+            layer = -layer # in pressure coordinate, the direction is reversed
+        data, layer_selected = slice_data(data, dimension_data=data_altitude[:], value=float(data_altitude[layer]))
+
+    data = correction_value(data, threshold=1e-13)
     zonal_mean = mean(data[:, :, :], axis=2)
     zonal_mean = rotate_data(zonal_mean, doflip=True)
 
     del data
 
     zonal_mean = correction_value(zonal_mean[0], threshold=1e-13)
+    return zonal_mean, layer_selected
 
-    return zonal_mean
 
 
 def vars_zonal_mean_column_density(filename, data_target):
