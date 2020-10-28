@@ -1,5 +1,4 @@
 from sys import exit
-from .ncdump import getdata
 
 
 # correct very low values of co2/h2o mmr

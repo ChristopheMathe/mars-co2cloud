@@ -87,7 +87,7 @@ def ncextract(filename, nc_fid, verb=True):
     nc_size = [nc_fid.dimensions[x].size for x in nc_dims]
     nc_vars = [var for var in nc_fid.variables]  # list of nc variables
 
-    max_width=82
+    max_width = 82
     if len(filename) >= max_width:
         max_width = len(filename) + 10
 
@@ -115,8 +115,9 @@ def ncextract(filename, nc_fid, verb=True):
         for i, value_i in enumerate(nc_dims):
                 if not value_i in ['Time','longitude','latitude','altitude']:
                     idx = append(idx, i)
-        nc_dims = delete(nc_dims, idx)
-        nc_size = delete(nc_size, idx)
+        if idx.shape[0] != 0:
+            nc_dims = delete(nc_dims, idx)
+            nc_size = delete(nc_size, idx)
         nc_dims = nc_dims[::-1]
         nc_size = nc_size[::-1]
         print("|======================================================================|")

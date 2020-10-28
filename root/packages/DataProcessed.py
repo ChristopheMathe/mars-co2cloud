@@ -2,7 +2,6 @@ from numpy import mean, abs, min, max, zeros, where, ones, concatenate, flip, ar
     count_nonzero, std, savetxt, c_, append, loadtxt, asarray, power, logspace, ma
 from .lib_function import *
 from .ncdump import getdata, getfilename
-from sys import exit
 from os import mkdir
 
 
@@ -71,7 +70,6 @@ def vars_zonal_mean(filename, data, layer=None):
 
     zonal_mean = correction_value(zonal_mean[0], threshold=1e-13)
     return zonal_mean, layer_selected
-
 
 
 def vars_zonal_mean_column_density(filename, data_target):

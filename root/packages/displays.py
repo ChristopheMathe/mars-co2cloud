@@ -3,7 +3,6 @@ from matplotlib.colors import DivergingNorm, LogNorm
 from .lib_function import *
 from .ncdump import *
 
-
 # ==================================================================================================================== #
 # ================================================== DISPLAY 1D ====================================================== #
 # ==================================================================================================================== #
@@ -1069,10 +1068,13 @@ def display_alt_lat(filename, data, title, savename='test'):
     plt.show()
 
 
-def display_4figs_polar_projection(data_riceco2, data_co2ice, data_temp, data_satuco2):
-    from mpl_toolkits.basemap import Basemap
+def display_4figs_polar_projection(filename, data_riceco2):
+    from cartopy import crs
 
-    fig = plt.figure()
-    axes = fig.add_subplot(111, projection='polar')
-    axes.contourf(data_riceco2[0, 0, :, :])
+    lons = getdata(filename, target='longitude')
+    lats = getdata(filename, target='latitude')
+
+    plt.figure(figsize=(3, 3))
+    ax1 = plt.subplot(1, 1, 1, projection=crs.Orthographic())
+    ax1.contourf(lons[:], lats[:], data_riceco2[0, 0, :, :], 60, transform=crs.Orthographic())
     plt.show()

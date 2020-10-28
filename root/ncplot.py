@@ -598,29 +598,26 @@ def main():
 
         if view_mode == 2:
             print('Processing data:')
-            processing.riceco2_max_day_night()
+            riceco2_max_day_night()
 
             print('Display:')
-            displays.display_lat_ls_maxsatuco2(max_satu_day, max_satu_night, max_alt_day, max_alt_night,
+            display_lat_ls_maxsatuco2(max_satu_day, max_satu_night, max_alt_day, max_alt_night,
                                                data_latitude, ndx, axis_ls, unit='µm',
                                                title='Max radius of CO$_2$ ice',
                                                savename='max_riceco2_day_night.png')
 
         if view_mode == 3:
             print('Processing data:')
-            top_cloud = processing.riceco2_topcloud_altitude(data_target)
+            top_cloud = riceco2_topcloud_altitude(data_target)
 
             print('Display:')
-            displays.topcloud_altitude(top_cloud)
+            topcloud_altitude(top_cloud)
 
         if view_mode == 4:
             print('Processing data:')
-            data_riceco2 = random.rand(10,32,48,64)
-            data_co2ice = random.rand(10,32,48,64)
-            data_temp = random.rand(10,32,48,64)
-            data_satuco2 = random.rand(10,32,48,64)
+
             print('Display:')
-            display_4figs_polar_projection(data_riceco2, data_co2ice, data_temp, data_satuco2)
+            display_4figs_polar_projection(filename, data_target[:, :, :, :])
 
         if view_mode == 5:
             print('Processing data:')
@@ -732,6 +729,7 @@ def main():
 
             print('Display:')
             display_2fig_profile(filename, cumul_north, cumul_south, unit_target)
+
     else:
         print('Variable not used for the moment')
 
