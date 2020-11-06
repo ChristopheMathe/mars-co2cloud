@@ -3,8 +3,8 @@ from packages.DataProcessed import *
 from packages.displays import *
 from os import listdir
 
-from numpy import mean, abs, min, max, zeros, where, concatenate, flip,  logspace, random
-from math import floor, ceil
+from numpy import mean, abs, min, max, zeros, where, concatenate, flip, logspace, random
+
 
 def main():
     # TODO: si présence d'argument alors allez directement au processing et displays
@@ -25,18 +25,11 @@ def main():
     name_target = data_target.name
     unit_target = data_target.units
 
-    #    print('Create linear grid time...')
-    #    data_time = ncdump.getdata(directory_store+filename, target="Time")
-    #
-    #    if max(data_time) <= 360:
-    #        interp_time, axis_ls, ndx = libf.linear_grid_ls(data_time)
-    #        print('Check if you correctly linearize data on ls')
-    #        lslin = True
-    #    else:
-    #        ndx, axis_ls = libf.get_ls_index(data_time[:])
-    #        interp_time = 0
-    #        lslin = False
+    # ================================================================================================================ #
 
+    # 4-Dimension variable
+
+    # ================================================================================================================ #
     if name_target in ['co2_ice', 'h2o_ice', 'q01']:  # q01 = h2o_ice
         # correct very low values of co2/h2o mmr < 1e-13
         print('Correction value...')
@@ -51,7 +44,7 @@ def main():
         print('     6: layer ice thickness (fig: thickness-lat)')
         print('     7: polar cloud distribution to compare with Fig.8 of Neumann+2003 (fig: #clouds-lat)')
         print('     8: cloud evolution with satuco2/temperature/radius (fig: alt-lat, gif)')
-        if  name_target in ['h2o_ice', 'q01']:
+        if name_target in ['h2o_ice', 'q01']:
             print('     9: h2o_ice profile with co2_ice presence (fig: alt-ls)')
         print('')
         view_mode = int(input('Select number:'))
@@ -63,7 +56,7 @@ def main():
 
             print('Display:')
             display_max_lon_alt(name_target, max_mmr, max_alt, max_temp, max_satu, max_radius, max_ccnN,
-                                         unit='kg/kg')
+                                unit='kg/kg')
 
         elif view_mode == 2:
             print('Processing data:')
@@ -74,8 +67,11 @@ def main():
             print('Display:')
             display_colonne(filename, data_processed, 'kg/m$^2$', norm='log', levels=logspace(-13, 2, 16),
                             observation=True, title='Zonal mean column density of {} between {} and {} {}'.format(name,
-                            zmin, zmax, altitude_unit), savename='zonal_mean_density_column_{}_{}_{}_{}'.format(name,
-                            zmin, zmax, altitude_unit))
+                                                                                                                  zmin,
+                                                                                                                  zmax,
+                                                                                                                  altitude_unit),
+                            savename='zonal_mean_density_column_{}_{}_{}_{}'.format(name,
+                                                                                    zmin, zmax, altitude_unit))
 
         elif view_mode == 3:
             print('Processing data:')
@@ -83,7 +79,7 @@ def main():
 
             print('Display:')
             display_vertical_profile(data_profile, unit='kg/kg',
-                                              savename='altitude_latitude_co2_ice_northpole.png')
+                                     savename='altitude_latitude_co2_ice_northpole.png')
 
         elif view_mode == 4:
             print('Processing data:')
@@ -91,7 +87,7 @@ def main():
 
             print('Display:')
             display_lat_ls_maxsatuco2(max_day, max_night, max_alt_day, max_alt_night, unit='kg/kg',
-                                               title='Max vmr of CO$_2$ ice', savename='max_co2_ice_day_night.png')
+                                      title='Max vmr of CO$_2$ ice', savename='max_co2_ice_day_night.png')
 
         if view_mode == 5:
             print('Processing data:')
@@ -99,7 +95,7 @@ def main():
 
             print('Display:')
             display_altitude_localtime(data_target, data_altitude, unit='kg/kg',
-                                                savename='co2_ice_altitude_localtime')
+                                       savename='co2_ice_altitude_localtime')
 
         if view_mode == 6:
             print('Processing data:')
@@ -131,9 +127,9 @@ def main():
 
             print('Display:')
             display_alt_ls(filename, data_target, data_co2_ice, levels=logspace(-13, 2, 16),
-                           title='Zonal mean of H2O ice mmr and CO2 ice mmr (black), at '+str(int(
-                               latitude_selected))+'°N',
-                           savename='h2o_ice_zonalmean_with_co2_ice_'+str(int(latitude_selected))+'N',
+                           title='Zonal mean of H2O ice mmr and CO2 ice mmr (black), at ' + str(int(
+                               latitude_selected)) + '°N',
+                           savename='h2o_ice_zonalmean_with_co2_ice_' + str(int(latitude_selected)) + 'N',
                            latitude_selected=latitude_selected)
 
     elif name_target in ['temp']:
@@ -247,7 +243,6 @@ def main():
             data_processed, layer_selected = vars_zonal_mean(filename, data_target, layer=layer)
 
             print('Display:')
-            print(min(data_processed), max(data_processed))
             display_colonne(filename, data_processed, unit='K', norm='linear', levels=arange(100, 300, 20),
                             observation=False, latitude_selected=None, title=name_target,
                             savename='temp_zonalmean_layer{}_{:.0e}_Pa'.format(layer, layer_selected))
@@ -493,7 +488,7 @@ def main():
 
         if view_mode == 7:
             print('Processing data:')
-            data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq,\
+            data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, \
             data_co2ice_south, latitude_north, latitude_eq, latitude_south, binned = satuco2_with_co2_ice(filename,
                                                                                                           data_target)
 
@@ -584,17 +579,17 @@ def main():
         if view_mode == 1:
             print('Processing data:')
             list_data, list_filename, latitude_selected, time_selected = vars_zonal_mean_in_time_co2ice_exists(
-                                                                         filename, data_target, name_target,
-                                                                         density=False)
+                filename, data_target, name_target,
+                density=False)
 
             print('Display:')
             display_1fig_profiles(filename, list_data, latitude_selected, xmin=1e-3, xmax=500,
                                   xlabel='radius of ice particle (µm)',
                                   xscale='log', yscale='log',
                                   title='Mean radius of ice particle between Ls={:.0f}-{:.0f}° and {} - {} °N'.format(
-                                  time_selected[0], time_selected[-1], latitude_selected[0],
-                                  latitude_selected[-1]),
-                            savename=list_filename)
+                                      time_selected[0], time_selected[-1], latitude_selected[0],
+                                      latitude_selected[-1]),
+                                  savename=list_filename)
 
         if view_mode == 2:
             print('Processing data:')
@@ -602,9 +597,9 @@ def main():
 
             print('Display:')
             display_lat_ls_maxsatuco2(max_satu_day, max_satu_night, max_alt_day, max_alt_night,
-                                               data_latitude, ndx, axis_ls, unit='µm',
-                                               title='Max radius of CO$_2$ ice',
-                                               savename='max_riceco2_day_night.png')
+                                      data_latitude, ndx, axis_ls, unit='µm',
+                                      title='Max radius of CO$_2$ ice',
+                                      savename='max_riceco2_day_night.png')
 
         if view_mode == 3:
             print('Processing data:')
@@ -715,9 +710,11 @@ def main():
         displays.display_zonal_mean(zonal_mean, data_latitude, ndx, axis_ls, levels=None, title=name_target,
                                     units='SI')
 
-    elif name_target in ['co2_conservation', 'Sols', 'Ls']:
-        display_1d(data_target)
+    # ================================================================================================================ #
 
+    # 3-Dimension variable
+
+    # ================================================================================================================ #
     elif name_target in ['co2ice']:
         print('What do you wanna do?')
         print('     1: cumulative masses in polar cap region, to compare with fig.10 of Hu+2012 (fig: g-ls)')
@@ -729,6 +726,29 @@ def main():
 
             print('Display:')
             display_2fig_profile(filename, cumul_north, cumul_south, unit_target)
+
+    elif name_target in ['tsurf']:
+        print('What do you wanna do?')
+        print('     1: ')
+        print('')
+        view_mode = int(input('Select number:'))
+        if view_mode == 1:
+            print('Processing data:')
+            zonal_mean, tmp = vars_zonal_mean(filename, data_target[:, :, :], layer=None)
+
+            print('Display:')
+            display_vars_lat_ls_compare_pfs_tes_mvals(filename, zonal_mean, name_target,
+                                                title='Zonal mean of {}'.format(name_target),
+                                                savename='{}_zonalmean_comparison_obs')
+
+
+    # ================================================================================================================ #
+
+    # 1-Dimension variable
+
+    # ================================================================================================================ #
+    elif name_target in ['co2_conservation', 'Sols', 'Ls']:
+        display_1d(data_target)
 
     else:
         print('Variable not used for the moment')

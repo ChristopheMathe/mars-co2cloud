@@ -61,6 +61,8 @@ def vars_zonal_mean(filename, data, layer=None):
         if data_altitude.units in ['Pa']:
             layer = -layer # in pressure coordinate, the direction is reversed
         data, layer_selected = slice_data(data, dimension_data=data_altitude[:], value=float(data_altitude[layer]))
+    else:
+        layer_selected = None
 
     data = correction_value(data, threshold=1e-13)
     zonal_mean = mean(data[:, :, :], axis=2)

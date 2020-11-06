@@ -37,7 +37,6 @@ def getdata(filename, target=None):
         variable_target = target
 
     data_target = data.variables[variable_target]
-
     return data_target
 
 

@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
 from matplotlib.colors import DivergingNorm, LogNorm
 from .lib_function import *
-from .ncdump import *
+from .DataObservation import *
+from .DataProcessed import *
 
 # ==================================================================================================================== #
 # ================================================== DISPLAY 1D ====================================================== #
@@ -1078,3 +1079,85 @@ def display_4figs_polar_projection(filename, data_riceco2):
     ax1 = plt.subplot(1, 1, 1, projection=crs.Orthographic())
     ax1.contourf(lons[:], lats[:], data_riceco2[0, 0, :, :], 60, transform=crs.Orthographic())
     plt.show()
+
+
+def display_vars_lat_ls_compare_pfs_tes_mvals(filename, zonal_mean, name_target, title, savename):
+    from numpy.ma import masked_outside
+
+    data_time = getdata(filename, target='Time')
+    data_latitude = getdata(filename, target='latitude')
+
+    # Extract mvals data
+    print('Takes M VALS data')
+    filename_mvals = '../simu_ref_cycle_eau_mvals/concat_vars_3D_Ls.nc'
+    data_mvals = getdata(filename=filename_mvals, target=name_target)
+    data_time_mvals = getdata(filename_mvals, target='Time')
+    data_latitude_mvals = getdata(filename_mvals, target='latitude')
+
+    # Extract PFS data
+    data_time_pfs = PFS(target='Time')
+    data_latitude_pfs = PFS(target='latitude')
+
+    data_time_tes = TES(target='time')
+    data_latitude_tes = TES(target='latitude')
+
+    if name_target == 'tsurf':
+        #print('Takes PFS data')
+        #data_pfs = PFS(target='T_surf')  # (time, latitude, longitude), also Tsurf_day
+
+        print('Takes TES data')
+        data_tes = TES(target='Tsurf_day')  # (time, latitude, longitude), also Tsurf_day/Tsurf_nit
+
+    # Select time range for PFS data
+    #mask = masked_outside(data_time_pfs, 360, 360*2)
+    #a = data_time_pfs[mask.mask]
+    #print(mask.mask)
+    #print(a)
+
+    # Select time range for TES data
+    year = 3
+    idx1 = abs(data_time_tes[:] - 360*(year)).argmin()
+    idx2 = abs(data_time_tes[:] - 360*(year +1)).argmin()
+
+    data_time_tes = data_time_tes[idx1:idx2] - 360 * year
+    data_tes = data_tes[idx1:idx2, :, :]
+
+    # Compute zonal mean
+    print('Compute zonal mean:')
+    print('\tM VALS data')
+    data_mvals, tmp = vars_zonal_mean(filename, data_mvals[:, :, :], layer=None)
+    #print('\tPFS data')
+    #data_pfs, tmp = vars_zonal_mean('', data_pfs[:, :, :], layer=None)
+    print('\tTES data')
+    data_tes, tmp = vars_zonal_mean('', data_tes[:, :, :], layer=None)
+
+    """
+    Top-left: my_data           Top-right: my_data - mvals_data
+    Bot-left: my_data - PFS     Bot-right: my_data - TES
+    """
+
+    fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(11, 11))
+    fig.subplots_adjust()
+
+    levels = arange(100, 350, 25)
+    ax[0].set_title('TES Mars Year {:d}'.format(24 + year))
+    ctf = ax[0].contourf(data_time_tes[:], data_latitude_tes[:], data_tes, levels=levels, cmap='plasma')
+    ax[0].set_ylabel('Latitude (°N)')
+
+    ax[1].set_title('M. VALS')
+    ax[1].contourf(data_time_mvals[:], data_latitude_mvals[:], data_mvals, levels=levels, cmap='plasma')
+    ax[1].set_ylabel('Latitude (°N)')
+
+    ax[2].set_title('My work')
+    ax[2].contourf(data_time[:], data_latitude[:], zonal_mean, levels=levels, cmap='plasma')
+    ax[2].set_xlabel('Solar longitude (°)')
+    ax[2].set_ylabel('Latitude (°N)')
+
+    pos0 = ax[0].get_position()
+    cbaxes = fig.add_axes([pos0.x0, 0.95, pos0.x1 - pos0.x0, 0.025])
+    cbar = plt.colorbar(ctf, cax=cbaxes, orientation="horizontal")
+    cbar.ax.set_title('K')
+
+    fig.savefig('tsurf_zonalmean_comparison_mvals_tes_MY{:d}.png'.format(24 + year), bbox_inches='tight')
+    plt.close(fig)
+    return

@@ -67,7 +67,7 @@ def extract_vars_max_along_lon(data, idx_lon=None):
     data = [data[i, :, idx_lon[i]] for i in range(data.shape[0])]
     data = asarray(data)
 
-    return  data, idx_lon
+    return data, idx_lon
 
 
 def linearize_ls(data, dim_time, dim_latitude, interp_time):
@@ -183,39 +183,6 @@ def get_ls_index(data_time):
         idx = searchsorted(data_time[:], axis_ls)
 
     return idx, axis_ls
-
-
-def mesoclouds_observed():
-    from numpy import loadtxt
-
-    directory = '/home/mathe/Documents/owncloud/observation_mesocloud/'
-    filenames = ['Mesocloud_obs_CO2_CRISMlimb.txt',
-                 'Mesocloud_obs_CO2_CRISMnadir.txt',
-                 'Mesocloud_obs_CO2_OMEGA.txt',
-                 'Mesocloud_obs_CO2_PFSeye.txt',
-                 'Mesocloud_obs_CO2_PFSstats.txt',
-                 'Mesocloud_obs_HRSC.txt',
-                 'Mesocloud_obs_IUVS.txt',
-                 'Mesocloud_obs_MAVENlimb.txt',
-                 'Mesocloud_obs_SPICAM.txt',
-                 'Mesocloud_obs_TES-MOC.txt',
-                 'Mesocloud_obs_THEMIS.txt']
-
-    # column:  1 = ls, 2 = lat (°N), 3 = lon (°E)
-    data_CRISMlimb = loadtxt(directory + filenames[0], skiprows=1)
-    data_CRISMnadir = loadtxt(directory + filenames[1], skiprows=1)
-    data_OMEGA = loadtxt(directory + filenames[2], skiprows=1)
-    data_PFSeye = loadtxt(directory + filenames[3], skiprows=1)
-    data_PFSstats = loadtxt(directory + filenames[4], skiprows=1)
-    data_HRSC = loadtxt(directory + filenames[5], skiprows=1)
-    data_IUVS = loadtxt(directory + filenames[6], skiprows=1)
-    data_MAVENlimb = loadtxt(directory + filenames[7], skiprows=1)
-    data_SPICAM = loadtxt(directory + filenames[8], skiprows=1)
-    data_TESMOC = loadtxt(directory + filenames[9], skiprows=1)
-    data_THEMIS = loadtxt(directory + filenames[10], skiprows=1)
-
-    return data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS,\
-           data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS
 
 
 def get_nearest_clouds_observed(data_obs, dim, data_dim, value):
