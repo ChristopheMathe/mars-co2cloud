@@ -57,10 +57,16 @@ def vars_max_value_with_others(data_target):
 def vars_zonal_mean(filename, data, layer=None):
 
     if layer is not None:
-        data_altitude = getdata(filename=filename, target='altitude')
-        if data_altitude.units in ['Pa']:
-            layer = -layer # in pressure coordinate, the direction is reversed
-        data, layer_selected = slice_data(data, dimension_data=data_altitude[:], value=float(data_altitude[layer]))
+        if filename != '':
+            data_altitude = getdata(filename=filename, target='altitude')
+            if data_altitude.units in ['Pa']:
+                data_altitude = data_altitude[::-1] # in pressure coordinate, the direction is reversed
+                data = data[:, ::-1, :, :]
+            data, layer_selected = slice_data(data, dimension_data=data_altitude[:], value=float(data_altitude[layer]))
+        else:
+            # for observational data
+            data = data[:, layer, :, :]
+            layer_selected = None
     else:
         layer_selected = None
 

@@ -238,14 +238,18 @@ def main():
 
         if view_mode == 5:
             print('Parameters:')
-            layer = input('\t layer:')
+            layer = int(input('\t layer (from 1 to {}): '.format(data_target.shape[1]))) - 1
+
             print('Processing data:')
             data_processed, layer_selected = vars_zonal_mean(filename, data_target, layer=layer)
 
             print('Display:')
-            display_colonne(filename, data_processed, unit='K', norm='linear', levels=arange(100, 300, 20),
-                            observation=False, latitude_selected=None, title=name_target,
-                            savename='temp_zonalmean_layer{}_{:.0e}_Pa'.format(layer, layer_selected))
+            #display_colonne(filename, data_processed, unit='K', norm='linear', levels=arange(100, 300, 20),
+            #                observation=False, latitude_selected=None, title=name_target,
+            #                savename='temp_zonalmean_layer{}_{:.0e}_Pa'.format(layer, layer_selected))
+
+            display_vars_lat_ls_compare_pfs_tes_mvals(filename, data_processed, name_target, layer,
+                                                      savename='temp_zonalmean_layer{}_{:.0e}_Pa_comparison_tes_mvals'.format(layer, layer_selected))
 
     elif name_target in ['deltaT']:
         print('What do you wanna do?')

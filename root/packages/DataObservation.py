@@ -5,6 +5,9 @@ from .ncdump import getdata
                                         TES OBSERVATIONS INFORMATION
 ========================================================================================================================
 avec TES.MappedClimatology.limb.MY(24-25-26-27).nc => on a accès à la température à 2h et 14h (ls, alt, lat, lon)
+        T_limb_day
+        T_limb_nit
+        altitude [Pa]
 
 avec TES.MappedClimatology.nadir.MY(24-25-26-27).nc => on a accès à :
         tau_dust(time, latitude, longitude)              ; "Dust optical depth at 1075 cm-1"
@@ -28,13 +31,22 @@ avec TES.SeasonalClimatology.nc => on a accès à:
 '''
 
 
-def TES(target):
+def TES(target, year=None):
     directory_tes = '/home/mathe/Documents/owncloud/GCM/TES/'
-    try:
-        data = getdata(directory_tes + 'TES.SeasonalClimatology.nc', target=target)
-    except:
-        print('Wrong target for TES.SeasonalClimatology.nc !')
-        exit()
+
+    if year is not None:
+        filename = 'TES.MappedClimatology.limb.MY{:d}.nc'.format(year)
+        try:
+            data = getdata(directory_tes + filename, target=target)
+        except:
+            print('Wrong target for {} !'.format(filename))
+            exit()
+    else:
+        try:
+            data = getdata(directory_tes + 'TES.SeasonalClimatology.nc', target=target)
+        except:
+            print('Wrong target for TES.SeasonalClimatology.nc !')
+            exit()
 
     return data
 
