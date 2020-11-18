@@ -37,13 +37,13 @@ def display_colonne(filename, data, unit, norm, levels, observation=False, latit
 
     if unit is 'pr.µm':
         # convert kg/m2 to pr.µm
-        plt.contourf(data_time[:], data_latitude[:], data * 1e3, levels=levels, cmap='coolwarm', zorder=1)
+        plt.contourf(data_time[:], data_latitude[:], data * 1e3, levels=levels, cmap='coolwarm', zorder=10)
     else:
         if norm == 'log':
             ctf = plt.contourf(data_time[:], data_latitude[:], data, norm=LogNorm(), levels=levels, cmap='coolwarm',
-                               zorder=1)
+                               zorder=10)
         else:
-            ctf = plt.contourf(data_time[:], data_latitude[:], data, levels=levels, cmap='coolwarm', zorder=1)
+            ctf = plt.contourf(data_time[:], data_latitude[:], data, levels=levels, cmap='coolwarm', zorder=10)
 
     if observation:
         # chopper l'intervalle de latitude comprise entre value-1 et value+1
@@ -56,7 +56,7 @@ def display_colonne(filename, data, unit, norm, levels, observation=False, latit
             data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
                                                                          [latitude_selected[0], latitude_selected[-1]])
             if data_obs_ls.shape[0] != 0:
-                plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='+', zorder=10)
+                plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='+', zorder=1)
 
     ax = plt.gca()
     ax.set_facecolor('white')
@@ -549,9 +549,9 @@ def display_satuco2_thickness_atm_layer(data, data_std, savename):
     ax[0].set_title('North pole above 60°N')
     ax[0].errorbar(arange(data.shape[1]) * 5, data[0, :] / 1e3,
                    yerr=data_std[0, :] / 1e3,
-                   ls=' ', marker='+', color='black', label='GCM')  # 72 points binned in 5°
+                   ls=' ', marker='+', color='blue', label='GCM')  # 72 points binned in 5°
     ax[0].errorbar(northpole_ls, northpole[:, 1],
-                   yerr=[northpole[:, 2] - northpole[:, 1], northpole[:, 1] - northpole[:, 0]], color='blue', ls=' ',
+                   yerr=[northpole[:, 2] - northpole[:, 1], northpole[:, 1] - northpole[:, 0]], color='black', ls=' ',
                    marker='+', label='MCS MY28')
     ax[0].set_xticks(ticks=arange(0, 405, 45))
     ax[0].set_xticklabels(labels=arange(0, 405, 45))
@@ -560,9 +560,9 @@ def display_satuco2_thickness_atm_layer(data, data_std, savename):
     ax[1].set_title('South pole above 60°S')
     ax[1].errorbar(arange(data.shape[1]) * 5, data[1, :] / 1e3,
                    yerr=data_std[1, :] / 1e3,
-                   ls=' ', marker='+', color='black', label='GCM')
+                   ls=' ', marker='+', color='blue', label='GCM')
     ax[1].errorbar(southpole_ls, southpole[:, 1],
-                   yerr=[southpole[:, 2] - southpole[:, 1], southpole[:, 1] - southpole[:, 0]], color='blue', ls=' ',
+                   yerr=[southpole[:, 2] - southpole[:, 1], southpole[:, 1] - southpole[:, 0]], color='black', ls=' ',
                    marker='+', label='MCS MY29')
 
     ax[1].set_xticks(ticks=arange(0, 405, 45))
@@ -627,91 +627,79 @@ def display_distribution_altitude_latitude_polar(filename, distribution_north, d
     plt.show()
 
 
-def display_cloud_evolution_latitude(data, data_satuco2, data_temp, data_riceco2, idx_max, xtime,
-                                     data_time, data_altitude, data_latitude):
-    from numpy import arange, round, zeros, logspace, concatenate, array, max
+def display_cloud_evolution_latitude(filename, data, data_satuco2, data_temp, data_riceco2, idx_max, xtime,
+                                     latitude_selected):
+    from numpy import arange, round, logspace, concatenate, array, max
     from matplotlib.colors import DivergingNorm, LogNorm
 
-    filenames = []
-    for i in range(-3, 3):
-        filenames.append(displays.display_cloud_evolution_latitude(data_target, data_satuco2,
-                                                                   data_temp, data_riceco2, idx_max, i,
-                                                                   data_time[idx_max[0] + i], data_altitude,
-                                                                   data_latitude))
+    data_time = getdata(filename, target='Time')
+    data_altitude = getdata(filename, target='altitude')
+    data_latitude = getdata(filename, target='latitude')
+    data_latitude, latitude_selected = slice_data(data_latitude, dimension_data=data_latitude, value=[latitude_selected[0], latitude_selected[-1]])
+    print(data_latitude[:].shape, data.shape)
+    data = data[xtime, :, :]
+    data_satuco2 = data_satuco2[xtime, :, :]
+    data_temp = data_temp[xtime, :, :]
+    data_riceco2 = data_riceco2[xtime, :, :]
 
-    make_gif = input('Do you want create a gif (Y/n)?: ')
-    if make_gif.lower() == 'y':
-        libf.create_gif(filenames)
-
-    if idx_max[2] - 3 < 0:
-        data = data[xtime, :, 0:idx_max[2] + 3]
-        data_satuco2 = data_satuco2[xtime, :, 0:idx_max[2] + 3]
-        data_temp = data_temp[xtime, :, 0:idx_max[2] + 3]
-        data_riceco2 = data_riceco2[xtime, :, 0:idx_max[2] + 3]
-        data_latitude = data_latitude[0:idx_max[2] + 3]
-    elif idx_max[2] + 3 > data_latitude.shape[0]:
-        data = data[xtime, :, idx_max[2] - 3:-1]
-        data_satuco2 = data_satuco2[xtime, :, idx_max[2] - 3:-1]
-        data_temp = data_temp[xtime, :, idx_max[2] - 3:-1]
-        data_riceco2 = data_riceco2[xtime, :, idx_max[2] - 3:-1]
-        data_latitude = data_latitude[idx_max[2] - 3:-1]
-    else:
-        dlatitude = 5
-        data = data[xtime, :, idx_max[2] - dlatitude:idx_max[2] + dlatitude + 1]
-        data_satuco2 = data_satuco2[xtime, :, idx_max[2] - dlatitude:idx_max[2] + dlatitude + 1]
-        data_temp = data_temp[xtime, :, idx_max[2] - dlatitude:idx_max[2] + dlatitude + 1]
-        data_riceco2 = data_riceco2[xtime, :, idx_max[2] - dlatitude:idx_max[2] + dlatitude + 1]
-        data_latitude = data_latitude[idx_max[2] - dlatitude:idx_max[2] + dlatitude + 1]
-
-    ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
+#    ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
 
     fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(8, 11))
     fig.subplots_adjust(wspace=0.4)
-    fig.suptitle('Sols: ' + str(int(data_time)) + ', local time: ' + str(int(round(data_time * 24 % 24, 0))) + ' h')
+    fig.suptitle('Sols: ' + str(int(data_time[:][idx_max[0]+xtime])) + ', local time: ' + str(int(round(data_time[:][idx_max[0]+xtime] * 24 % 24, 0))) + ' h')
     ax[0, 0].title.set_text('CO$_2$ ice mmr')
-    pc0 = ax[0, 0].contourf(data, norm=LogNorm(vmin=1e-12, vmax=1e-4), levels=logspace(-12, -3, 10), cmap='Greys')
+    pc0 = ax[0, 0].contourf(data_latitude[:], data_altitude[:], data, norm=LogNorm(vmin=1e-12, vmax=1e-4), levels=logspace(-11, -1, 11), cmap='Greys')
+    ax[0,0].set_yscale('log')
+    ax[0,0].invert_yaxis()
     cbar0 = plt.colorbar(pc0, ax=ax[0, 0])
     cbar0.ax.set_title('kg/kg')
     cbar0.ax.set_yticklabels(["{:.2e}".format(i) for i in cbar0.get_ticks()])
-    ax[0, 0].set_xticks(ticks=arange(0, data.shape[1], 2))
-    ax[0, 0].set_xticklabels(labels=round(data_latitude[::2], 2))
-    ax[0, 0].set_yticks(ticks=ticks_altitude)
-    ax[0, 0].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
+  #  ax[0, 0].set_xticks(ticks=arange(0, data.shape[1], 2))
+  #  ax[0, 0].set_xticklabels(labels=round(data_latitude[::2], 2))
+#    ax[0, 0].set_yticks(ticks=ticks_altitude)
+ #   ax[0, 0].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
 
     ax[0, 1].title.set_text('Temperature')
-    pc1 = ax[0, 1].contourf(data_temp, vmin=80, vmax=240, levels=arange(80, 260, 20), cmap='plasma')
+    pc1 = ax[0, 1].contourf(data_latitude[:], data_altitude[:], data_temp, vmin=80, vmax=240, levels=arange(80, 260, 20), cmap='plasma')
     cbar1 = plt.colorbar(pc1, ax=ax[0, 1])
+    ax[0,1].set_yscale('log')
+    ax[0,1].invert_yaxis()
     cbar1.ax.set_title('K')
-    ax[0, 1].set_xticks(ticks=arange(0, data.shape[1], 2))
-    ax[0, 1].set_xticklabels(labels=round(data_latitude[::2], 2))
-    ax[0, 1].set_yticks(ticks=ticks_altitude)
-    ax[0, 1].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
+   # ax[0, 1].set_xticks(ticks=arange(0, data.shape[1], 2))
+   # ax[0, 1].set_xticklabels(labels=round(data_latitude[::2], 2))
+  #  ax[0, 1].set_yticks(ticks=ticks_altitude)
+   # ax[0, 1].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
 
     ax[1, 0].title.set_text('Saturation of CO$_2$ ice')
     print(max(data_satuco2))
-    pc2 = ax[1, 0].contourf(data_satuco2, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=17),
+    pc2 = ax[1, 0].contourf(data_latitude[:], data_altitude[:], data_satuco2, norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=17),
                             levels=concatenate([array([0, 1]), arange(3, 19, 2)]), cmap='seismic')
+    ax[1,0].set_yscale('log')
+    ax[1,0].invert_yaxis()
     cbar2 = plt.colorbar(pc2, ax=ax[1, 0])
     cbar2.ax.set_title('')
-    ax[1, 0].set_xticks(ticks=arange(0, data.shape[1], 2))
-    ax[1, 0].set_xticklabels(labels=round(data_latitude[::2], 2))
-    ax[1, 0].set_yticks(ticks=ticks_altitude)
-    ax[1, 0].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
+  #  ax[1, 0].set_xticks(ticks=arange(0, data.shape[1], 2))
+ #   ax[1, 0].set_xticklabels(labels=round(data_latitude[::2], 2))
+    #ax[1, 0].set_yticks(ticks=ticks_altitude)
+   # ax[1, 0].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
 
     ax[1, 1].title.set_text('Radius of CO$_2$ ice particle')
-    pc3 = ax[1, 1].contourf(data_riceco2 * 1e6, vmin=0, vmax=200, levels=arange(0, 220, 20), cmap='Greys')
+    print(max(data_riceco2*1e6))
+    pc3 = ax[1, 1].contourf(data_latitude[:], data_altitude[:], data_riceco2 * 1e6, vmin=0, vmax=60, levels=arange(0, 65, 5), cmap='Greys')
+    ax[1,1].set_yscale('log')
+    ax[1,1].invert_yaxis()
     cbar3 = plt.colorbar(pc3, ax=ax[1, 1])
     cbar3.ax.set_title('µm')
-    ax[1, 1].set_xticks(ticks=arange(0, data.shape[1], 2))
-    ax[1, 1].set_xticklabels(labels=round(data_latitude[::2], 2))
-    ax[1, 1].set_yticks(ticks=ticks_altitude)
-    ax[1, 1].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
+#    ax[1, 1].set_xticks(ticks=arange(0, data.shape[1], 2))
+#    ax[1, 1].set_xticklabels(labels=round(data_latitude[::2], 2))
+    #ax[1, 1].set_yticks(ticks=ticks_altitude)
+#    ax[1, 1].set_yticklabels(labels=round(data_altitude[ticks_altitude] / 1e3, 0))
 
-    fig.text(0.02, 0.5, 'Altitude (km)', ha='center', va='center', rotation='vertical', fontsize=14)
+    fig.text(0.02, 0.5, 'Altitude (Pa)', ha='center', va='center', rotation='vertical', fontsize=14)
     fig.text(0.5, 0.06, 'Latitude (°N)', ha='center', va='center', fontsize=14)
 
-    savename = 'cloud_evolution_latitude_sols_' + str(int(data_time)) + '_' + str(
-        round(data_time * 24 % 24, 0)) + 'h.png'
+    savename = 'cloud_evolution_latitude_sols_' + str(int(data_time[:][idx_max[0]+xtime])) + '_' + str(
+        round(data_time[:][idx_max[0]+xtime] * 24 % 24, 0)) + 'h.png'
     plt.savefig(savename, bbox_inches='tight')
     plt.close()
 
@@ -1088,67 +1076,75 @@ def display_vars_lat_ls_compare_pfs_tes_mvals(filename, zonal_mean, name_target,
 
     # Extract mvals data
     print('Takes M VALS data')
-    filename_mvals = '../simu_ref_cycle_eau_mvals/concat_vars_4D_P_Ls.nc'
+    filename_mvals = '../simu_ref_cycle_eau_mvals/concat_vars_3D_Ls.nc'
     data_mvals = getdata(filename=filename_mvals, target=name_target)
     data_time_mvals = getdata(filename_mvals, target='Time')
     data_latitude_mvals = getdata(filename_mvals, target='latitude')
     data_altitude_mvals = getdata(filename_mvals, target='altitude')
 
     # Extract TES data
-    data_time_tes = TES(target='time', year=25)
-    data_latitude_tes = TES(target='latitude', year=25)
-    data_altitude_tes = TES(target='altitude', year=25) # Pa
-
     if name_target == 'tsurf':
+        data_time_tes = TES(target='time', year=None)
+        data_latitude_tes = TES(target='latitude', year=None)
         print('Takes TES data')
-        data_tes = TES(target='Tsurf_day')  # (time, latitude, longitude), also Tsurf_day/Tsurf_nit
-
+        data_tes = TES(target='Tsurf_day', year=None)  # (time, latitude, longitude), also Tsurf_day/Tsurf_nit
         # Select time range for TES data: year = 0 = MY24
-        year = 1
+        year = 2
         idx1 = abs(data_time_tes[:] - 360*(year)).argmin()
         idx2 = abs(data_time_tes[:] - 360*(year +1)).argmin()
         data_time_tes = data_time_tes[idx1:idx2] - 360 * year
-        data_tes = data_tes[idx1:idx2, :, :, :]
-
+        data_tes = data_tes[idx1:idx2, :, :]
+        data_mvals = correction_value(data_mvals[:, :, :], threshold=1e-13)
     elif name_target == 'temp':
+        data_time_tes = TES(target='time', year=25)
+        data_latitude_tes = TES(target='latitude', year=25)
+        data_altitude_tes = TES(target='altitude', year=25)  # Pa
         data_tes = TES(target='T_limb_day', year=25)
         year = 1
 
-    # Select altitude for TES data close to the specified layer
-    target_layer = data_altitude[::-1][layer]
-    in_range = (data_altitude_tes[:] >= target_layer) & (data_altitude_tes[:] <= target_layer)
-    if not in_range.any():
-        data_tes = zeros((data_tes.shape[2], data_tes.shape[0]))
-        altitude_tes = 'out range'
-    else:
-        idx = abs(data_altitude_tes[:] - data_altitude[::-1][layer]).argmin()
-        data_tes = data_tes[:, idx, :, :]
-        data_tes, tmp = vars_zonal_mean('', data_tes[:, :, :], layer=None)
-        altitude_tes = data_altitude_tes[idx]
+        # Select altitude for TES data close to the specified layer
+        target_layer = data_altitude[::-1][layer]
+        in_range = (data_altitude_tes[:] >= target_layer) & (data_altitude_tes[:] <= target_layer)
+        if not in_range.any():
+            data_tes = zeros((data_tes.shape[2], data_tes.shape[0]))
+            altitude_tes = 'out range'
+        else:
+            idx = abs(data_altitude_tes[:] - data_altitude[::-1][layer]).argmin()
+            data_tes = data_tes[:, idx, :, :]
+            data_tes, tmp = vars_zonal_mean('', data_tes[:, :, :], layer=None)
+            altitude_tes = data_altitude_tes[idx]
+
+        data_mvals = correction_value(data_mvals[:, layer, :, :], threshold=1e-13)
 
     # Compute zonal mean
     print('Compute zonal mean:')
     print('\tM VALS data')
-    data_mvals = correction_value(data_mvals[:, layer, :, :], threshold=1e-13)
     data_mvals = mean(data_mvals[:, :, :], axis=2)
     data_mvals = rotate_data(data_mvals, doflip=True)[0]
+    data_tes, tmp = vars_zonal_mean('', data_tes[:, :, :], layer=None)
 
     # PLOT
     fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(11, 11))
     fig.subplots_adjust()
 
-    levels = arange(50, 425, 25)
-    ax[0].set_title('TES Mars Year {:d} at {} {}'.format(24 + year, altitude_tes, data_altitude_tes.units))
-    ctf = ax[0].contourf(data_time_tes[:], data_latitude_tes[:], data_tes, levels=levels, cmap='plasma')
+    levels = arange(140, 320, 10)
+    if name_target == 'temp':
+        ax[0].set_title('TES Mars Year {:d} at {} {}'.format(24 + year, altitude_tes, data_altitude_tes.units))
+        ax[1].set_title('M. VALS at {:.2e} {}'.format(data_altitude_mvals[layer], data_altitude_mvals.units))
+        ax[2].set_title('My work at {:.2e} {}'.format(data_altitude[::-1][layer], data_altitude.units))
+    else:
+        ax[0].set_title('TES Mars Year {:d}'.format(24 + year))
+        ax[1].set_title('M. VALS')
+        ax[2].set_title('My work')
+
+    ctf = ax[0].contourf(data_time_tes[:], data_latitude_tes[:], flip(data_tes, axis=0), levels=levels, cmap='plasma')
     ax[0].set_ylabel('Latitude (°N)')
     ax[0].set_xlim(0, 360)
 
-    ax[1].set_title('M. VALS at {:.2e} {}'.format(data_altitude_mvals[layer], data_altitude_mvals.units))
-    ax[1].contourf(data_time_mvals[:], data_latitude_mvals[:], data_mvals, levels=levels, cmap='plasma')
+    ax[1].contourf(data_time_mvals[:], data_latitude_mvals[:], flip(data_mvals, axis=0), levels=levels, cmap='plasma')
     ax[1].set_ylabel('Latitude (°N)')
 
-    ax[2].set_title('My work at {:.2e} {}'.format(data_altitude[::-1][layer], data_altitude.units))
-    ax[2].contourf(data_time[:], data_latitude[:], zonal_mean, levels=levels, cmap='plasma')
+    ax[2].contourf(data_time[:], data_latitude[:], flip(zonal_mean,axis=0), levels=levels, cmap='plasma')
     ax[2].set_xlabel('Solar longitude (°)')
     ax[2].set_ylabel('Latitude (°N)')
 
@@ -1159,4 +1155,18 @@ def display_vars_lat_ls_compare_pfs_tes_mvals(filename, zonal_mean, name_target,
 
     fig.savefig(savename+'_MY{:d}.png'.format(24 + year), bbox_inches='tight')
     plt.close(fig)
+    return
+
+
+def display_saturation_profile(filename, data):
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=())
+
+    for i in range(data.shape[0]/5):
+        for lat in range(data.shape[2]):
+            ax.plot(data[i, :, lat], color='black')
+
+    fig.show()
+    plt.close(fig)
+
     return

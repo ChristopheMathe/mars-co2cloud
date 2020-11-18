@@ -5,6 +5,7 @@
       <option name="ignoredIdentifiers">
         <list>
           <option value="root.ncplot.*" />
+          <option value="ncplot.*" />
         </list>
       </option>
     </inspection_tool>

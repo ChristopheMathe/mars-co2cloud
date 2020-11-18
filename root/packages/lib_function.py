@@ -136,7 +136,6 @@ def compute_zonal_mean_column_density(data_target, data_pressure, data_altitude)
         zmin = 0
         zmax = 0
 
-    print(min(data_target), max(data_target))
     shape_data_target = data_target.shape
     data = zeros((shape_data_target))
 
@@ -398,7 +397,8 @@ def create_gif(filenames):
 
     make_gif = input('Do you want create a gif (Y/n)?: ')
     if make_gif.lower() == 'y':
-        filenames = [x + '.png' for x in filenames]
+        #filenames = [x + '.png' for x in filenames]
+        filenames = [x for x in filenames]
 
         images = []
         idx = np.array([], dtype=np.int)

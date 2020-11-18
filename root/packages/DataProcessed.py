@@ -93,11 +93,11 @@ def vars_zonal_mean_column_density(filename, data_target):
 
     data_target, altitude_limit, zmin, zmax = compute_zonal_mean_column_density(data_target, data_pressure,
                                                                                 data_altitude)
+    del data_pressure
 
     data_target = rotate_data(data_target, doflip=True)
     data_target = asarray(data_target[0])
 
-    del data_pressure
 
     return data_target, altitude_limit, zmin, zmax, data_altitude.units
 
@@ -347,67 +347,35 @@ def co2ice_polar_cloud_distribution(filename, data, normalization):
     return distribution_north, distribution_south, latitude_north, latitude_south
 
 
-def co2ice_cloud_evolution(data):
-    data_altitude = getdata(directory_store + filename, target='altitude')
-    data_longitude = getdata(directory_store + filename, target='longitude')
+def co2ice_cloud_evolution(filename, data):
+    data_latitude = getdata(filename, target='latitude')
 
     print('Select the latitude region (°N):')
-    input_latitude_1 = int(input('   latitude 1: '))
-    input_latitude_2 = int(input('   latitude 2: '))
-    idx_lat_1 = (abs(data_latitude[:] - input_latitude_1)).argmin()
-    idx_lat_2 = (abs(data_latitude[:] - input_latitude_2)).argmin()
+    lat_1 = float(input('   latitude 1: '))
+    lat_2 = float(input('   latitude 2: '))
 
-    if idx_lat_1 > idx_lat_2:
-        tmp = idx_lat_2
-        idx_lat_2 = idx_lat_1
-        idx_lat_1 = tmp
+    data, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[lat_1, lat_2])
 
-    data_target = flip(data_target, axis=2)
-    idx_max = unravel_index(argmax(data_target[:, :, idx_lat_1:idx_lat_2 + 1, :], axis=None),
-                            data_target[:, :, idx_lat_1:idx_lat_2 + 1, :].shape)
+    idx_max = unravel_index(argmax(data[:, :, :, :], axis=None), data[:, :, :, :].shape)
     idx_max = asarray(idx_max)
-    idx_max[2] += idx_lat_1
+    data = data[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
 
-    data_target = data_target[idx_max[0] - 3:idx_max[0] + 3, :, :, idx_max[3]]
+    data_satuco2 = getdata(filename, 'satuco2')
+    data_satuco2, latitude_selected = slice_data(data_satuco2, dimension_data=data_latitude[:], value=[lat_1, lat_2])
+    data_satuco2 = data_satuco2[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
 
-    data_satuco2 = getdata(directory_store + filename, 'satuco2')
-    data_satuco2 = data_satuco2[idx_max[0] - 3:idx_max[0] + 3, :, :, idx_max[3]]
-    data_satuco2 = flip(data_satuco2, axis=2)
+    data_temp = getdata(filename, 'temp')
+    data_temp, latitude_selected = slice_data(data_temp, dimension_data=data_latitude[:], value=[lat_1, lat_2])
+    data_temp = data_temp[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
 
-    data_temp = getdata(directory_store + filename, 'temp')
+    data_riceco2 = getdata(filename, 'riceco2')
+    data_riceco2, latitude_selected = slice_data(data_riceco2, dimension_data=data_latitude[:], value=[lat_1, lat_2])
+    data_riceco2 = data_riceco2[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
 
-    print('Temperature profile save in progres...')
-    savetxt('temperature_profile_sols_{}_lat_{}N_lon_{}E.txt'.format(int(data_time[idx_max[0] - 25]),
-                                                                     data_latitude[idx_max[2]],
-                                                                     data_longitude[idx_max[3]]),
-            c_[data_temp[idx_max[0] - 25:idx_max[0] + 25, :, idx_max[2], idx_max[3]]])
-    print('Done.')
-
-    print('Pressure profile save in progres...')
-    savetxt('pressure_profile_sols_{}_lat_{}N_lon_{}E.txt'.format(int(data_time[idx_max[0] - 25]),
-                                                                  data_latitude[idx_max[2]],
-                                                                  data_longitude[idx_max[3]]),
-            c_[data_pressure[idx_max[0] - 25:idx_max[0] + 25, :, idx_max[2], idx_max[3]]])
-    print('Done.')
-
-    print('Dust profile save in progres...')
-    data_dust = getdata(directory_store + 'concat_sols_dustq_S.nc', target='dustq')
-    savetxt('dust_profile_sols_{}_lat_{}N_lon_{}E.txt'.format(int(data_time[idx_max[0] - 25]),
-                                                              data_latitude[idx_max[2]],
-                                                              data_longitude[idx_max[3]]),
-            c_[data_dust[idx_max[0] - 25:idx_max[0] + 25, :, idx_max[2], idx_max[3]]])
-    print('Done.')
-
-    data_temp = data_temp[idx_max[0] - 3:idx_max[0] + 3, :, :, idx_max[3]]
-    data_temp = flip(data_temp, axis=2)
-
-    data_riceco2 = getdata(directory_store + filename, 'riceco2')
-    data_riceco2 = data_riceco2[idx_max[0] - 3:idx_max[0] + 3, :, :, idx_max[3]]
-    data_riceco2 = flip(data_riceco2, axis=2)
-
+    data_time = getdata(filename, target='Time')
     print('the maximum is at :' + str(data_time[idx_max[0]] * 24 % 24) + 'h local time.')
 
-    return
+    return data, data_satuco2, data_temp, data_riceco2, idx_max, latitude_selected
 
 
 def co2ice_cumulative_masses_polar_cap(filename, data):

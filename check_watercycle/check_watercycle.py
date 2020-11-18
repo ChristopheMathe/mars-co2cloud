@@ -2,7 +2,7 @@
 from netCDF4 import Dataset
 import matplotlib.pyplot as plt
 from matplotlib.colors import DivergingNorm, LogNorm, LinearSegmentedColormap
-from numpy import mean, min, max, zeros, where, arange, linspace, flip, asarray, interp
+from numpy.ma import masked_inside
 from pylab import *
 
 def correction_value(data, threshold):
@@ -154,6 +154,7 @@ class nlcmap(LinearSegmentedColormap):
 
 
 def main():
+    from numpy import min, max
     # Data from Margaux Vals
     data_ref = Dataset('../simu_ref_cycle_eau_mvals/concat_vars_3D_Ls.nc', "r", format="NETCDF4")
     data_ref_h2o_ice_s, data_ref_icetot, data_ref_tauTES, data_ref_mtot, data_ref_ps, data_ref_tsurf, data_ref_co2ice\
@@ -223,35 +224,10 @@ def main():
                 savename='check_watercycle_relative_error_co2ice')
 
     # Compare with TES obs
-    '''
-                                            TES OBSERVATIONS INFORMATION
-    avec TES.MappedClimatology.limb.MY(24-25-26-27).nc => on a accès à la température à 2h et 14h (ls, alt, lat, lon)
-    
-    avec TES.MappedClimatology.nadir.MY(24-25-26-27).nc => on a accès à :
-            tau_dust(time, latitude, longitude)              ; "Dust optical depth at 1075 cm-1"
-            tau_ice(time, latitude, longitude)               ; "Water ice optical depth at 825 cm-1"
-            water_vapor(time, latitude, longitude)           ; "Water vapor column" ; "precip-microns"
-            Psurf_day(time, latitude, longitude)             ; "Daytime (~2 pm) surface pressure"
-            Psurf_nit(time, latitude, longitude)             ; "Nighttime (~2 am) surface pressure"
-            Tsurf_day(time, latitude, longitude)             ; "Daytime (~2 pm) surface temperature"
-            Tsurf_nit(time, latitude, longitude)             ; "Nighttime (~2 am) surface temperature"
-            T_nadir_day(time, altitude, latitude, longitude) ; "Daytime (~2 pm) atmospheric temperature"
-            T_nadir_nit(time, altitude, latitude, longitude) ; "Nighttime (~2 am) atmospheric temperature"
-    
-    avec TES.SeasonalClimatology.nc => on a accès à:
-            taudust(time, latitude, longitude) ; "Dust optical depth at 1075 cm-1 (scaled to a 610 Pa surface)"
-            tauice(time, latitude, longitude) ; tauice:long_name = "Water ice optical depth at 825 cm-1" ;
-            water(time, latitude, longitude) ; water:long_name = "Water vapor column" ; water:units = "precip-microns" ; 
-            Tsurf_day(time, latitude, longitude) ; Tsurf_day:long_name = "Daytime (~2 pm) surface temperature" ;
-            T_50Pa_day(time, latitude, longitude) ; T_50Pa_day:long_name = "Daytime (~2 pm) temperature at 50 Pa" ;
-            Tsurf_nit(time, latitude, longitude) ; Tsurf_nit:long_name = "Nighttime (~2 pm) surface temperature" ;
-            T_50Pa_nit(time, latitude, longitude) ; T_50Pa_nit:long_name = "Nighttime (~2 am) temperature at 50 Pa" ;
-    '''
-
     # pour comparer avec la figure 2 de Navarro2014
     # faire water_vapor zonal mean
     # fait tau_ice  zonal mean
-    directory_tes = '/home/mathe/Documents/owncloud/GCM/figures_run_analysis/runs_analysis/TES/'
+    directory_tes = '/home/mathe/Documents/owncloud/GCM/TES/'
 
     data_tes = Dataset(directory_tes + 'TES.SeasonalClimatology.nc', "r", format="NETCDF4")
     data_tes_tauice = data_tes.variables['tauice']
@@ -357,6 +333,90 @@ def main():
     fig.text(0.5, 0.05, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
     plt.savefig('check_watercycle_tes_mvals_me_h2ovap.png', bbox_inche='tight')
     plt.close()
+
+
+    # Compare with PFS obs
+    # pour comparer avec la figure 2 de Navarro2014
+    # faire water_vapor zonal mean
+    # fait tau_ice  zonal mean
+    directory_pfs = '/home/mathe/Documents/owncloud/GCM/PFS/PFS_dataset_20793/PFS_data/PFS_data.nc'
+
+    data_pfs = Dataset(directory_pfs, "r", format="NETCDF4")
+    data_pfs_tauice = data_pfs.variables['ice']
+
+    data_pfs_time = data_pfs.variables['Time']
+    data_pfs_latitude = data_pfs.variables['latitude']
+
+    max_martian_year = int(ceil(data_pfs_time[-1]/360))
+    martian_year = arange(0, 360*(max_martian_year+1), 360)
+
+    zonal_mean = zeros((max_martian_year, 360, data_pfs_latitude.shape[0]))
+
+    for j in range(martian_year.shape[0]-1):
+        print('{}%'.format(j/martian_year.shape[0] * 100))
+        idx1 = abs(data_pfs_time[:] - martian_year[j]).argmin()
+        idx2 = abs(data_pfs_time[:] - martian_year[j+1]).argmin()
+        one_year_time = data_pfs_time[idx1:idx2+1] - 360*j
+        print('\t', one_year_time[0], one_year_time[-1])
+        one_year_data = data_pfs_tauice[idx1:idx2+1, :, :]
+        one_year_data = correction_value(one_year_data, threshold=1e-13)
+        one_year_data = mean(one_year_data, axis=2)
+        one_year_data = correction_value(one_year_data, threshold=1e-13)
+        for i in range(359):
+            mask = masked_inside(one_year_time, i, i+1)
+            if mask.mask.any():
+                for lat in range(data_pfs_latitude[:].shape[0]):
+                    a = mean(one_year_data[mask.mask, lat])
+                    if math.isnan(a):
+                        print(one_year_data[mask.mask, lat])
+                    else:
+                        zonal_mean[j, i, lat] = a
+            del mask
+        del one_year_time, one_year_data
+
+    print(zonal_mean)
+    print('toto', min(zonal_mean), max(zonal_mean))
+    zonal_mean = correction_value(zonal_mean, threshold=1e-13)
+    print('titi', min(zonal_mean), max(zonal_mean))
+    zonal_mean_final = mean(zonal_mean, axis=0)
+    print('tata', min(zonal_mean_final), max(zonal_mean_final))
+
+    # FIRST PLOTS: TAU-TES
+    fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20,8))
+    fig.subplots_adjust(wspace=0)
+    ax[0].set_title('PFS')
+    ctf = ax[0].contourf(arange(360), data_pfs_latitude[:], zonal_mean_final.T, levels=levels1, cmap=cmap_nonlin1)
+    cbar = fig.colorbar(ctf)
+    cbar.set_label('Cloud opacity at 825 cm$^{-1}$')
+
+    ax[1].set_title('M. VALS')
+    ax[1].contourf(data_time[:], data_latitude[:], data_ref_tauTES, levels=levels1, cmap=cmap_nonlin1)
+
+    ax[2].set_title('Our')
+    ax[2].contourf(data_time[:], data_latitude[:], data_tauTES, levels=levels1, cmap=cmap_nonlin1)
+
+    ax[0].set_yticks(ticks=[-90, -60, -30, 0, 30, 60, 90])
+    ax[0].set_yticklabels(labels=[-90, -60, -30, 0, 30, 60, 90])
+    ax[1].set_yticks(ticks=[-90, -60, -30, 0, 30, 60, 90])
+    ax[1].set_yticklabels(labels='')
+    ax[2].set_yticks(ticks=[-90, -60, -30, 0, 30, 60, 90])
+    ax[2].set_yticklabels(labels='')
+
+    ax[0].set_xticks(ticks=[0, 90, 180, 270, 360])
+    ax[0].set_xticklabels(labels=[0, 90, 180, 270, 360])
+    ax[1].set_xticks(ticks=[0, 90, 180, 270, 360])
+    ax[1].set_xticklabels(labels=['', 90, 180, 270, 360])
+    ax[2].set_xticks(ticks=[0, 90, 180, 270, 360])
+    ax[2].set_xticklabels(labels=['', 90, 180, 270, 360])
+
+    ax[0].grid(color='black')
+    ax[1].grid(color='black')
+    ax[2].grid(color='black')
+
+    fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=14)
+    fig.text(0.5, 0.05, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
+    fig.savefig('check_watercycle_pfs_mvals_me_tauice.png', bbox_inche='tight')
+    plt.close(fig)
 
 
 if __name__ == '__main__':

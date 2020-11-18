@@ -66,11 +66,11 @@ def main():
 
             print('Display:')
             display_colonne(filename, data_processed, 'kg/m$^2$', norm='log', levels=logspace(-13, 2, 16),
-                            observation=True, title='Zonal mean column density of {} between {} and {} {}'.format(name,
+                            observation=True, title='Zonal mean column density of {} between {} and {} {}'.format(name_target,
                                                                                                                   zmin,
                                                                                                                   zmax,
                                                                                                                   altitude_unit),
-                            savename='zonal_mean_density_column_{}_{}_{}_{}'.format(name,
+                            savename='zonal_mean_density_column_{}_{}_{}_{}'.format(name_target,
                                                                                     zmin, zmax, altitude_unit))
 
         elif view_mode == 3:
@@ -116,10 +116,18 @@ def main():
 
         if view_mode == 8:
             print('Processing data:')
-            data_target, data_satuco2, data_temp, data_riceco2, idx_max = cloud_evolution(data_target)
+            data_target, data_satuco2, data_temp, data_riceco2, idx_max, latitude_selected = co2ice_cloud_evolution(filename, data_target)
 
             print('Display:')
-            display_cloud_evolution_latitude(data_target, data_satuco2, data_temp, data_riceco2, idx_max)
+            filenames = []
+            for i in range(-9, 3):
+                filenames.append(display_cloud_evolution_latitude(filename, data_target, data_satuco2,
+                                                                           data_temp, data_riceco2, idx_max, i, latitude_selected))
+
+            make_gif = input('Do you want create a gif (Y/n)?: ')
+            if make_gif.lower() == 'y':
+                create_gif(filenames)
+
 
         if view_mode == 9:
             print('Processing data:')
@@ -714,6 +722,29 @@ def main():
         displays.display_zonal_mean(zonal_mean, data_latitude, ndx, axis_ls, levels=None, title=name_target,
                                     units='SI')
 
+    elif name_target in ['saturation']:
+        print('What do you wanna do?')
+        print('     1: profile of saturation zonal-mean in a latitude region (fig: satu-alt)')
+        print('')
+        view_mode = int(input('Select number:'))
+
+        if view_mode == 1:
+            lat1 = float(input('Select the first latitude (°N): '))
+            lat2 = float(input('Select the second latitude (°N): '))
+            data_latitude = getdata(filename, target='latitude')
+            data_target, tmp = slice_data(data_target, dimension_data=data_latitude[:], value=[lat1, lat2])
+
+            data_target = correction_value(data_target[:, :, :, :], threshold=1e-13)
+            data_target = mean(data_target[:, :, :, :], axis=3)
+
+            data_target = mean(data_target[::72,: ,:], axis=0)
+            print(data_target.shape)
+
+            display_saturation_profiles(filename, data_target)
+
+
+    #elif name_target in ['rice']:
+
     # ================================================================================================================ #
 
     # 3-Dimension variable
@@ -742,9 +773,7 @@ def main():
 
             print('Display:')
             display_vars_lat_ls_compare_pfs_tes_mvals(filename, zonal_mean, name_target,
-                                                title='Zonal mean of {}'.format(name_target),
-                                                savename='{}_zonalmean_comparison_obs')
-
+                                                savename='tsurf_zonalmean_comparison_obs')
 
     # ================================================================================================================ #
 

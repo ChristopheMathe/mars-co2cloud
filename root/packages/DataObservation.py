@@ -208,7 +208,7 @@ def PFS(target):
 def mesoclouds_observed():
     from numpy import loadtxt
 
-    directory = '/home/mathe/Documents/owncloud/observation_mesocloud/'
+    directory = '/home/mathe/Documents/GCM/owncloud/observation_mesocloud/'
     filenames = ['Mesocloud_obs_CO2_CRISMlimb.txt',
                  'Mesocloud_obs_CO2_CRISMnadir.txt',
                  'Mesocloud_obs_CO2_OMEGA.txt',
