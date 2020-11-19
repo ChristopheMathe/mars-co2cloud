@@ -110,7 +110,7 @@ def ncextract(filename, nc_fid, verb=True):
                     print('|   {}{:{fill}{width}}|'.format(nc_fid.getncattr(nc_attr)[(max_width - 1)*i: (max_width - 1)
                                                                                       * (1+i)], '', fill='' ,
                                                            width=max_width - lenght ))
-        idx = array([])
+        idx = array([], dtype=int)
         for i, value_i in enumerate(nc_dims):
                 if not value_i in ['Time','longitude','latitude','altitude']:
                     idx = append(idx, i)

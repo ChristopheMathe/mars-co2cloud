@@ -1170,3 +1170,18 @@ def display_saturation_profile(filename, data):
     plt.close(fig)
 
     return
+
+
+def display_stats_vars_zonalmean(filename, data):
+    data_latitude = getdata(filename, target='latitude')
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 11))
+    ax.set_title('Zonal mean of surface emissivity at 14h')
+    ctf = ax.contourf(arange(12), data_latitude[:], data.T, levels=([0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.]))
+    ax.set_xlabel('Months')
+    ax.set_ylabel('Latitude (°N)')
+    cbar = plt.colorbar(ctf)
+    cbar.ax.set_title('W.m$^{-1}$')
+    plt.savefig('emis_stats_zonalmean_14h.png', bbox_inches='tight')
+    plt.close(fig)
+    return

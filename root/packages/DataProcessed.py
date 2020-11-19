@@ -75,7 +75,6 @@ def vars_zonal_mean(filename, data, layer=None):
     zonal_mean = rotate_data(zonal_mean, doflip=True)
 
     del data
-
     zonal_mean = correction_value(zonal_mean[0], threshold=1e-13)
     return zonal_mean, layer_selected
 
