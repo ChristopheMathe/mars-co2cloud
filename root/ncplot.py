@@ -1,9 +1,8 @@
 #!/bin/bash python3
-from packages.DataProcessed import *
 from packages.displays import *
 from os import listdir
 
-from numpy import mean, abs, min, max, zeros, where, concatenate, flip, logspace, random
+from numpy import mean, abs, min, max, zeros, where, concatenate, flip, logspace
 
 
 def main():
