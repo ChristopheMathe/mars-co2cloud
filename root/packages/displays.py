@@ -899,14 +899,18 @@ def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel,
                           savename='profiles', title_option=None):
     from numpy import arange
 
+    time_unit = 'sols'
+
     data_altitude = getdata(filename, target='altitude')
     if data_altitude.units == 'm':
         units = 'km'
         altitude_name = 'Altitude'
         data_altitude = data_altitude[:] / 1e3
+        yscale='linear'
     elif data_altitude.units == 'km':
         units = data_altitude.units
         altitude_name = 'Altitude'
+        yscale='linear'
     else:
         units = data_altitude.units
         altitude_name = 'Pressure'
@@ -939,7 +943,7 @@ def display_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xlabel,
         ax.set_xlabel(xlabel)
         ax.set_ylabel(altitude_name + ' (' + units + ')')
         if title_option is not None:
-            ax.set_title(title + ', and {:.0f} - {:.0f} °Ls'.format(title_option[i][0], title_option[i][1]))
+            ax.set_title(title + ', and {:.0f} - {:.0f} {}'.format(title_option[i][0], title_option[i][1], time_unit))
         fig.savefig(s + '.png', bbox_inches='tight')
         plt.close(fig)
 

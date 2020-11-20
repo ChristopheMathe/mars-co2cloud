@@ -102,21 +102,23 @@ def vars_zonal_mean_column_density(filename, data_target):
 
 
 def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, density=False):
-    latitude_range = [-15, 15]
+
+    lat1 = int(input('\t Latitude range 1 (°N): '))
+    lat2 = int(input('\t Latitude range 2 (°N): '))
 
     # extract co2_ice data
     data_co2_ice = getdata(filename, target='co2_ice')
 
     # select the latitude range
     data_latitude = getdata(filename, target='latitude')
-    data_sliced_lat, latitude_selected = slice_data(data[:, :, :, :], data_latitude, value=latitude_range)
+    data_sliced_lat, latitude_selected = slice_data(data[:, :, :, :], data_latitude, value=[lat1, lat2])
     data_co2_ice_sliced_lat, latitude_selected = slice_data(data_co2_ice[:, :, :, :], data_latitude,
-                                                            value=latitude_range)
+                                                            value=[lat1, lat2])
     if density:
         data_rho = getdata(filename, target='rho')
-        data_rho_sliced_lat, latitude_selected = slice_data(data_rho[:, :, :, :], data_latitude, value=latitude_range)
+        data_rho_sliced_lat, latitude_selected = slice_data(data_rho[:, :, :, :], data_latitude, value=[lat1, lat2])
         data_tau = getdata(filename, target='Tau3D1mic')
-        data_tau_sliced_lat, latitude_selected = slice_data(data_tau[:, :, :, :], data_latitude, value=latitude_range)
+        data_tau_sliced_lat, latitude_selected = slice_data(data_tau[:, :, :, :], data_latitude, value=[lat1, lat2])
         del data_rho, data_tau
     del data, data_co2_ice
 
@@ -194,6 +196,7 @@ def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, density=Fal
         del data_sliced_lat, data_co2_ice_sliced_lat
 
     return list_data, filenames, latitude_selected, list_time_selected, list_tau
+
 
 
 def vars_select_profile(data_target):

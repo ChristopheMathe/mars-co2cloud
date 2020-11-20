@@ -397,8 +397,10 @@ def create_gif(filenames):
 
     make_gif = input('Do you want create a gif (Y/n)?: ')
     if make_gif.lower() == 'y':
-        #filenames = [x + '.png' for x in filenames]
-        filenames = [x for x in filenames]
+        if all(".png" in s for s in filenames):
+            filenames = [x for x in filenames]
+        else:
+            filenames = [x + '.png' for x in filenames]
 
         images = []
         idx = np.array([], dtype=np.int)

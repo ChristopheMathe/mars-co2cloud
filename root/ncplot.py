@@ -590,18 +590,17 @@ def main():
 
         if view_mode == 1:
             print('Processing data:')
-            list_data, list_filename, latitude_selected, time_selected = vars_zonal_mean_in_time_co2ice_exists(
-                filename, data_target, name_target,
-                density=False)
+            list_data, list_filename, latitude_selected, time_selected, list_tau = vars_zonal_mean_in_time_co2ice_exists(
+                filename, data_target, name_target, density=False)
 
             print('Display:')
-            display_1fig_profiles(filename, list_data, latitude_selected, xmin=1e-3, xmax=500,
+            display_1fig_profiles(filename, list_data, latitude_selected, xmin=1e-3, xmax=2000,
                                   xlabel='radius of ice particle (µm)',
                                   xscale='log', yscale='log',
-                                  title='Mean radius of ice particle between Ls={:.0f}-{:.0f}° and {} - {} °N'.format(
-                                      time_selected[0], time_selected[-1], latitude_selected[0],
-                                      latitude_selected[-1]),
-                                  savename=list_filename)
+                                  second_var=None, xmin2=None, xmax2=None, xlabel2=None, xscale2=None,
+                                  title='Mean radius of ice particle between {:.2f} - {:.2f} °N'.format(latitude_selected[0],
+                                        latitude_selected[-1]),
+                                  savename=list_filename, title_option=time_selected)
 
         if view_mode == 2:
             print('Processing data:')
