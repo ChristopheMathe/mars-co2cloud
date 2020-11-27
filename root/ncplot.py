@@ -5,25 +5,7 @@ from os import listdir
 from numpy import mean, abs, min, max, zeros, where, concatenate, flip, logspace
 
 
-def main():
-    # TODO: si présence d'argument alors allez directement au processing et displays
-
-    files = listdir('.')
-
-    directory_store = [x for x in files if 'occigen' in x][0] + '/'
-
-    if directory_store is None:
-        directory_store = ''
-    else:
-        files = listdir(directory_store)
-
-    filename = getfilename(files)
-    filename = directory_store + filename
-
-    data_target = getdata(filename)
-    name_target = data_target.name
-    unit_target = data_target.units
-
+def plot_simu_3D(filename, data_target, name_target, unit_target):
     # ================================================================================================================ #
 
     # 4-Dimension variable
@@ -782,6 +764,90 @@ def main():
 
     else:
         print('Variable not used for the moment')
+
+
+def plot_simu_1D(filename, data_target, name_target, unit_target):
+    if name_target in ['riceco2']:
+        print('What do you wanna do?')
+        print('     1: mean radius at a latitude where co2_ice exists (fig: alt-µm)')
+        print('')
+        view_mode = int(input('Select number:'))
+
+        if view_mode == 1:
+            plt.figure(0)
+            ctf = plt.contourf(data_target[:,:,0,0].T*1e6, levels=arange(0,650, 50))
+            cbar = plt.colorbar(ctf)
+            cbar.ax.set_title('µm')
+            plt.xlabel('Time')
+            plt.ylabel('Level')
+            plt.show()
+
+    if name_target in ['emis']:
+        print('What do you wanna do?')
+        print('     1: basic plot ls - altitude')
+        print('')
+        view_mode = int(input('Select number:'))
+
+        if view_mode == 1:
+            data_co2ice_surf = getdata(filename, target='co2ice')
+            data_co2ice_atm = getdata(filename, target='iceco2atm')
+            data_pfallice = getdata(filename, target='pfallice')
+            data_co2ice_tt = getdata(filename, target='icetotco2')
+            data_riceco2 = getdata(filename, target='riceco2')
+            fig, ax = plt.subplots(nrows=1, ncols=6, sharex=True, figsize=(15,8))
+            ax[0].set_title('Surf Emis')
+            ax[0].plot(data_target[:])
+
+            ax[1].set_title('Atm')
+            ax[1].plot(data_co2ice_atm[:])
+            ax[2].set_title('Surf')
+            ax[2].plot(data_co2ice_surf[:])
+
+            ax[3].set_title('Zfallice')
+            ax[3].plot(data_pfallice[:])
+
+            ax[4].set_title('ice total')
+            ax[4].plot(data_co2ice_tt[:])
+            data_riceco2 = correction_value(data_riceco2[:,:,0,0], threshold=1e-13)
+            ctf = ax[5].contourf(data_riceco2.T*1e6, levels=arange(0, 650, 50))
+            plt.colorbar(ctf)
+            ax[1].set_xlabel('Time')
+            ax[0].set_ylabel('Emissivity')
+            plt.savefig('surface_emissivity_plus_co2_ice.png', bbox_inches='tight')
+            plt.show()
+
+
+def main():
+    # TODO: si présence d'argument alors allez directement au processing et displays
+
+    files = listdir('.')
+
+    try:
+        directory_store = [x for x in files if 'occigen' in x][0] + '/'
+    except:
+        directory_store = None
+
+    if directory_store is None:
+        directory_store = ''
+    else:
+        files = listdir(directory_store)
+
+    filename = getfilename(files)
+    filename = directory_store + filename
+
+    data_target = getdata(filename)
+    name_target = data_target.name
+    unit_target = data_target.units
+
+    data_latitude = getdata(filename, target='latitude')
+    data_longitude = getdata(filename, target='longitude')
+
+    if (data_latitude[:].shape[0] == 1) and (data_longitude[:].shape[0] == 1):
+        plot_simu_1D(filename, data_target, name_target, unit_target)
+    else:
+        plot_simu_3D(filename, data_target, name_target, unit_target)
+
+    return
 
 
 if '__main__' == __name__:
