@@ -7,7 +7,10 @@ from os import listdir
 def main():
     files = listdir('.')
 
-    directory_store = [x for x in files if 'occigen' in x][0] + '/'
+    try:
+        directory_store = [x for x in files if 'occigen' in x][0] + '/'
+    except:
+        directory_store = None
 
     if directory_store is None:
         directory_store = ''
@@ -35,11 +38,12 @@ def main():
             for f, file in enumerate(filenames):
                 data_target = getdata(directory_store + file, target=name_target)
                 data_target, time_selected = slice_data(data_target, dimension_data=data_time[:], value=14)
-                data_target = correction_value(data_target, threshold=1e-13)
+                data_target = correction_value(data_target, 'inf', threshold=1e-13)
                 data_processed[f, :] = mean(data_target, axis=1)
 
             print('Display:')
             display_stats_vars_zonalmean(directory_store + filenames[0], data_processed)
+
 
 if '__main__' == __name__:
     main()

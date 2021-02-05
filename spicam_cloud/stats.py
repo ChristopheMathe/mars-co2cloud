@@ -81,6 +81,7 @@ import matplotlib as mpl
 import numpy as np
 from scipy.io import readsav
 from matplotlib.lines import Line2D
+from sys import exit
 
 '''
     -------------------
@@ -243,7 +244,12 @@ def main(directory_profT, directory_profq_200, directory_profq_250, directory_pr
                 print('         altitude of the cold pocket %i: %9.5f - %9.5f km' % (obs.coldpocket[i].number,
                                                                                      obs.coldpocket[i].index_bot,
                                                                                      obs.coldpocket[i].index_top))
-
+    with open('test.txt', 'w') as fin:
+        for i in list_good_obs:
+            print(i.latitude, i.longitude, i.solarlon, i.localtime, i.coldpocket,
+                      i.coldpocket.altitude_bot,  i.coldpocket.altitude_top, i.coldpocket.dT)
+    fin.close()
+    exit()
     cpt_day=0
     cpt_night=0
     # list_thickness = np.array([])

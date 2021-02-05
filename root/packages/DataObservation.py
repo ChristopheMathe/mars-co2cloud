@@ -1,4 +1,40 @@
 from .ncdump import getdata
+from .lib_function import correction_value
+
+def MOLA():
+    '''
+    dimensions:
+        x = 361 ;
+        y = 181 ;
+    variables:
+        float Latitude(y) ;
+            Latitude:long_name = "Latitude" ;
+            Latitude:units = "Degrees" ;
+        float Ls(x) ;
+            Ls:long_name = "Ls" ;
+            Ls:units = "Degrees" ;
+        float Altitude(y, x) ;
+            Altitude:units = "km" ;
+            Altitude:long_name = "Cloud top altitude above surface" ;
+
+    // global attributes:
+            :Title = "MOLA cloud top altitude above surface data (binned)" ;
+    '''
+    path ='/home/mathe/Documents/owncloud/GCM/MOLA_cloudaltis_1x1.nc'
+    mola_latitude = getdata(filename=path, target='Latitude')
+    mola_ls = getdata(filename=path, target='Ls')
+    mola_altitude = getdata(filename=path, target='Altitude')
+    mola_altitude = mola_altitude[:,:]
+    from numpy import max, min, ma, array, NaN, isnan, where
+
+    for i in range(mola_altitude.shape[0]):
+        for j in range(mola_altitude.shape[1]):
+            if mola_altitude[i,j] != mola_altitude[i,j]:
+                mola_altitude[i,j]= None
+
+    print(max(mola_altitude), min(mola_altitude))
+
+    return mola_latitude, mola_ls, mola_altitude
 
 '''
 ========================================================================================================================
@@ -31,7 +67,7 @@ avec TES.SeasonalClimatology.nc => on a accès à:
 '''
 
 
-def TES(target, year=None):
+def ObsTES(target, year=None):
     directory_tes = '/home/mathe/Documents/owncloud/GCM/TES/'
 
     if year is not None:
@@ -42,12 +78,13 @@ def TES(target, year=None):
             print('Wrong target for {} !'.format(filename))
             exit()
     else:
+        filename = 'TES.SeasonalClimatology.nc'
         try:
-            data = getdata(directory_tes + 'TES.SeasonalClimatology.nc', target=target)
+            data = getdata(directory_tes + filename, target=target)
         except:
             print('Wrong target for TES.SeasonalClimatology.nc !')
             exit()
-
+    print('TES file is: {}'.format(directory_tes+filename))
     return data
 
 
@@ -208,7 +245,7 @@ def PFS(target):
 def mesoclouds_observed():
     from numpy import loadtxt
 
-    directory = '/home/mathe/Documents/GCM/owncloud/observation_mesocloud/'
+    directory = '/home/mathe/Documents/owncloud/GCM/observation_mesocloud/'
     filenames = ['Mesocloud_obs_CO2_CRISMlimb.txt',
                  'Mesocloud_obs_CO2_CRISMnadir.txt',
                  'Mesocloud_obs_CO2_OMEGA.txt',
@@ -236,3 +273,19 @@ def mesoclouds_observed():
 
     return data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
            data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS
+
+
+def SimuMV(target, localtime):
+
+    if target in ['tsurf', 'Time', 'latitude', 'longitude', 'altitude']:
+        if localtime == 2:
+            filename = '../simu_ref_cycle_eau_mvals/simu_ref_cycle_eau_mvals/concat_vars_3D_LT_2h_Ls.nc'
+        if localtime == 14:
+            filename = '../simu_ref_cycle_eau_mvals/simu_ref_cycle_eau_mvals/concat_vars_3D_LT_14h_Ls.nc'
+    elif target in ['temp']:
+        filename = '../simu_ref_cycle_eau_mvals/simu_ref_cycle_eau_mvals/concat_vars_4D_P_LT_14h_Ls.nc'
+
+
+    print('\tFile name: {}'.format(filename))
+
+    return getdata(filename=filename, target=target)

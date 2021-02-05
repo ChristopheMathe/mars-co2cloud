@@ -5,12 +5,32 @@ from matplotlib.colors import DivergingNorm, LogNorm, LinearSegmentedColormap
 from numpy.ma import masked_inside
 from pylab import *
 
+
 def correction_value(data, threshold):
     from numpy import ma
 
     data = ma.masked_where(data <= threshold, data)
 
     return data
+
+
+def getfilename(files):
+    if any(".nc" in s for s in files):
+        list_files = sorted([x for x in files if '.nc' in x])
+        if len(list_files) > 1:
+            print('Netcdf files available: (0) {}'.format(list_files[0]))
+            for i, value_i in enumerate(list_files[1:]):
+                print('                        ({}) {}'.format(i + 1, value_i))
+            filename = int(input("Select the file number: "))
+            filename = list_files[filename]
+            print('')
+        else:
+            filename = list_files[0]
+    else:
+        print('There is no Netcdf file in this directory !')
+        filename = ''
+        exit()
+    return filename
 
 
 def rotate_data(*list_data, doflip):
@@ -155,15 +175,29 @@ class nlcmap(LinearSegmentedColormap):
 
 def main():
     from numpy import min, max
+    from os import listdir
     # Data from Margaux Vals
-    data_ref = Dataset('../simu_ref_cycle_eau_mvals/concat_vars_3D_Ls.nc', "r", format="NETCDF4")
+    data_ref = Dataset('../simu_ref_cycle_eau_mvals/simu_ref_cycle_eau_mvals/concat_vars_3D_LT_14h_Ls.nc', "r",
+                       format="NETCDF4")
     data_ref_h2o_ice_s, data_ref_icetot, data_ref_tauTES, data_ref_mtot, data_ref_ps, data_ref_tsurf, data_ref_co2ice\
         = extract_data(data_ref)
 
     # My data
-    data_3D = Dataset('occigen_test_64x48x32_1years_Tµphy_para_start_simu_ref_Margaux_co2useh2o/concat_vars_3D_Ls.nc',
-                      "r",
-                      format="NETCDF4")
+    files = listdir('.')
+
+    try:
+        directory_store = [x for x in files if 'occigen' in x][0] + '/'
+    except:
+        directory_store = None
+
+    if directory_store is None:
+        directory_store = ''
+    else:
+        files = listdir(directory_store)
+
+    filename = getfilename(files)
+    filename = directory_store + filename
+    data_3D = Dataset(filename, "r", format="NETCDF4")
     data_h2o_ice_s, data_icetot, data_tauTES, data_mtot, data_ps, data_tsurf, data_co2ice = extract_data(data_3D)
 
     # Get ndx and axis_ls

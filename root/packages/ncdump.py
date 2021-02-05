@@ -3,14 +3,17 @@ from math import ceil
 from netCDF4 import Dataset
 
 
-def getfilename(files):
+def getfilename(files, selection=None):
     if any(".nc" in s for s in files):
         list_files = sorted([x for x in files if '.nc' in x])
         if len(list_files) > 1:
             print('Netcdf files available: (0) {}'.format(list_files[0]))
             for i, value_i in enumerate(list_files[1:]):
                 print('                        ({}) {}'.format(i + 1, value_i))
-            filename = int(input("Select the file number: "))
+            if selection is None:
+                filename = int(input("Select the file number: "))
+            else:
+                filename = selection
             filename = list_files[filename]
             print('')
         else:
@@ -19,6 +22,7 @@ def getfilename(files):
         print('There is no Netcdf file in this directory !')
         filename = ''
         exit()
+    print('You have selected the file: {}'.format(filename))
     return filename
 
 
@@ -31,8 +35,6 @@ def getdata(filename, target=None):
         tmp, tmp, tmp, tmp, variable_target = ncextract(filename, data, verb=True)
         if variable_target is None:
             variable_target = input('Select the variable: ')  # TODO faire les tests si la variable existe
-        else:
-            print("Variable selected is {}".format(variable_target))
     else:
         variable_target = target
 
@@ -62,6 +64,7 @@ def ncextract(filename, nc_fid, verb=True):
     nc_vars : list
         A Python list of the NetCDF file variables
     '''
+
     def print_ncattr(key):
         """
         Prints the NetCDF file attributes for a given key
@@ -74,7 +77,7 @@ def ncextract(filename, nc_fid, verb=True):
         try:
             print("\t\ttype:", repr(nc_fid.variables[key].dtype))
             for ncattr in nc_fid.variables[key].ncattrs():
-                print('\t\t%s:' % ncattr,\
+                print('\t\t%s:' % ncattr, \
                       repr(nc_fid.variables[key].getncattr(ncattr)))
         except KeyError:
             print("\t\tWARNING: %s does not contain variable attributes" % key)
@@ -91,29 +94,31 @@ def ncextract(filename, nc_fid, verb=True):
         max_width = len(filename) + 10
 
     if verb:
-        text= ''.rjust(max_width, '=')
+        text = ''.rjust(max_width, '=')
         print('|{}|'.format(text, '', width=max_width))
         print("|   NetCDF Global Attributes                                           |")
         print("|======================================================================|")
         print("|File name:                                                            |")
-        print("|   {} {:{fill}{width}}|".format(filename, '', fill='', width=max_width-len(filename)-1))
+        print("|   {} {:{fill}{width}}|".format(filename, '', fill='', width=max_width - len(filename) - 1))
         for nc_attr in nc_attrs:
-            print('|{}: {:{fill}{width}} |'.format(nc_attr, '', fill='', width=max_width-len(nc_attr)))
+            print('|{}: {:{fill}{width}} |'.format(nc_attr, '', fill='', width=max_width - len(nc_attr)))
 
             width = len(nc_fid.getncattr(nc_attr)) - max_width - 1
             if width < 0:
                 print('|   {}{:{fill}{width}}|'.format(nc_fid.getncattr(nc_attr), '', fill='',
-                                                       width=max_width-len(nc_fid.getncattr(nc_attr))))
+                                                       width=max_width - len(nc_fid.getncattr(nc_attr))))
             else:
-                for i in range(ceil(width/max_width)+1):
-                    lenght = len(nc_fid.getncattr(nc_attr)[(max_width - 1)*i: (max_width - 1) * (1+i)])
-                    print('|   {}{:{fill}{width}}|'.format(nc_fid.getncattr(nc_attr)[(max_width - 1)*i: (max_width - 1)
-                                                                                      * (1+i)], '', fill='' ,
-                                                           width=max_width - lenght ))
+                for i in range(ceil(width / max_width) + 1):
+                    lenght = len(nc_fid.getncattr(nc_attr)[(max_width - 1) * i: (max_width - 1) * (1 + i)])
+                    print(
+                        '|   {}{:{fill}{width}}|'.format(nc_fid.getncattr(nc_attr)[(max_width - 1) * i: (max_width - 1)
+                                                                                                        * (1 + i)], '',
+                                                         fill='',
+                                                         width=max_width - lenght))
         idx = array([], dtype=int)
         for i, value_i in enumerate(nc_dims):
-                if not value_i in ['Time','longitude','latitude','altitude']:
-                    idx = append(idx, i)
+            if not value_i in ['Time', 'longitude', 'latitude', 'altitude']:
+                idx = append(idx, i)
         if idx.shape[0] != 0:
             nc_dims = delete(nc_dims, idx)
             nc_size = delete(nc_size, idx)
@@ -123,10 +128,10 @@ def ncextract(filename, nc_fid, verb=True):
         print("|   NetCDF  information                                                |")
         print("|======================================================================|")
         print("|Dimension                    | {} | {} | {} | {} |".format(nc_dims[0], nc_dims[1], nc_dims[2],
-                                                                            nc_dims[3]))
+                                                                           nc_dims[3]))
         print("|-----------------------------+------+----------+----------+-----------|")
         print("|Size                         | {:<4d} | {:<8d} | {:<8d} | {:<9d} |".format(nc_size[0], nc_size[1],
-                                                                                            nc_size[2], nc_size[3]))
+                                                                                           nc_size[2], nc_size[3]))
         print("|=============================+======+==========+==========+===========|")
         test = [x for x in nc_vars if x not in nc_dims]
         if len(test) == 2:
@@ -134,7 +139,7 @@ def ncextract(filename, nc_fid, verb=True):
             target = test[0]
         else:
             for var in test:
-    #            if var not in nc_dims: #sinon on duplique les infos de nc_dims
+                #            if var not in nc_dims: #sinon on duplique les infos de nc_dims
                 a = isin(nc_size, nc_fid.variables[var].shape)
                 print("|{:29}| {:<4} | {:<8} | {:<8} | {:<9} |".format(var, a[0], a[1], a[2], a[3]))
                 if var is not test[-1]:
