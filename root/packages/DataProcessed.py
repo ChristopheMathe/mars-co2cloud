@@ -763,6 +763,20 @@ def vars_max_value_with_others(filename, data_target):
     return max_mmr, max_temp, max_satu, max_radius, max_ccnN, max_alt
 
 
+def vars_time_mean(filename, data, duration):
+    from math import ceil
+    data_time = getdata(filename=filename, target='Time')
+    nbin = ceil(data_time[-1] / duration)
+    data_mean = zeros((nbin, data.shape[1], data.shape[2]))
+    time_bin = arange(0, data_time[-1]+duration, duration)
+    for i in range(nbin):
+        data_sliced, time = slice_data(data=data, dimension_data=data_time[:], value=[duration*i, duration*(i+1)])
+        print(time[0], time[-1])
+        data_mean[i, : , :] = mean(data_sliced, axis=0)
+
+    return data_mean, time_bin
+
+
 def vars_zonal_mean(filename, data, layer=None, flip=None):
     if layer is not None:
         if filename != '':

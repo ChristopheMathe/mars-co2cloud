@@ -1244,7 +1244,7 @@ def display_vars_stats_zonalmean(filename, data):
     return
 
 
-def workaround_gridlines(src_proj, lat_min, lat_max):
+def workaround_gridlines(src_proj, axes, lat_min, lat_max):
     from numpy import linspace, zeros
     # Workaround for plotting lines of constant latitude/longitude as gridlines
     # labels not supported for this projection.
@@ -1254,16 +1254,16 @@ def workaround_gridlines(src_proj, lat_min, lat_max):
     yn = zeros(len(lats))
     lona = lons + yn.reshape(len(lats), 1)
 
-    cs2 = plt.contour(lons, lats, lona, 10, transform=src_proj, colors='grey', linestyles='solid', levels=arange(0, 450, 90), linewidths=0.5)
-    plt.clabel(cs2, fontsize=5, inline=True, fmt='%1.0f', inline_spacing=30)
+    cs2 = axes.contour(lons, lats, lona, 10, transform=src_proj, colors='grey', linestyles='solid', levels=arange(0, 450, 90), linewidths=0.5)
+    axes.clabel(cs2, fontsize=5, inline=True, fmt='%1.0f', inline_spacing=30)
 
     yt = zeros(len(lons))
     lata = lats.reshape(len(lats), 1) + yt
-    cs = plt.contour(lons, lats, lata, 10, transform=src_proj, colors='grey', linestyles='solid', levels=2, linewidths=0.5)
-    plt.clabel(cs, fontsize=5, inline=True, fmt='%1.0f', inline_spacing=20)
+    cs = axes.contour(lons, lats, lata, 10, transform=src_proj, colors='grey', linestyles='solid', levels=2, linewidths=0.5)
+    axes.clabel(cs, fontsize=5, inline=True, fmt='%1.0f', inline_spacing=20)
 
 
-def display_vars_polar_projection(filename, data):
+def display_vars_polar_projection(filename, data, savename):
     import cartopy.crs as ccrs
 
     data_longitude = getdata(filename=filename, target='longitude')
@@ -1307,7 +1307,65 @@ def display_vars_polar_projection(filename, data):
     ax = plt.axes(projection=platecarree)
     ctf = ax.contourf(data_longitude[:], latitude_sp, data_sp, transform=platecarree, cmap='inferno')
 
+    plt.savefig(savename+'.png', bbox_inches='inches')
     plt.show()
-
     return
 
+
+def display_vars_polar_projection_multiplot(filename, data, time, levels, cmap, unit, savename):
+    import cartopy.crs as ccrs
+
+    platecarree = ccrs.PlateCarree(central_longitude=0)
+
+    data_longitude = getdata(filename=filename, target='longitude')
+    data_latitude = getdata(filename=filename, target='latitude')
+
+    # Slice data in polar regions
+    latitude_np, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[60, 90])
+    data_np, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[60, 90])
+
+    latitude_sp, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[-90, -60])
+    data_sp, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[-90, -60])
+
+    # North polar region
+    orthographic = ccrs.Orthographic(central_longitude=0, central_latitude=90, globe=False)
+    y_min, y_max = orthographic._y_limits
+    orthographic._y_limits = (y_min*0.5, y_max*0.5)
+    orthographic._x_limits = (y_min*0.5, y_max*0.5)  # Zoom de 60° à 90°
+    fig, ax = plt.subplots(nrows=5, ncols=5, subplot_kw={'projection': orthographic}, figsize=(20, 20))
+    fig.suptitle('North polar region ({})'.format(unit), fontsize=20)
+    for i, axes in enumerate(ax.reshape(-1)):
+        if i <24:
+            axes.set_title(f'{int(time[i])}° - {int(time[i+1])}°')
+            ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], levels=levels, transform=platecarree,
+                                cmap=cmap)
+            axes.set_global()
+            workaround_gridlines(platecarree, axes=axes, lat_min=60, lat_max=90)
+    pos1 = ax[0, 0].get_position().x0
+    pos2 = (ax[0, 4].get_position().x0 + ax[0, 4].get_position().width) - pos1
+    cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
+    fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
+    fig.tight_layout()
+    plt.savefig(savename+'northern_polar_region.png', bbox_inches='tight')
+
+    # South polar region
+    orthographic = ccrs.Orthographic(central_longitude=0, central_latitude=-90, globe=False)
+    y_min, y_max = orthographic._y_limits
+    orthographic._y_limits = (y_min*0.5, y_max*0.5)
+    orthographic._x_limits = (y_min*0.5, y_max*0.5)  # Zoom de 60° à 90°
+    fig, ax = plt.subplots(nrows=5, ncols=5, subplot_kw={'projection': orthographic}, figsize=(20, 20))
+    fig.suptitle('South polar region ({})'.format(unit), fontsize=20)
+    for i, axes in enumerate(ax.reshape(-1)):
+        if i <24:
+            axes.set_title(f'{int(time[i])}° - {int(time[i+1])}°')
+            ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], levels=levels, transform=platecarree,
+                                cmap=cmap)
+            workaround_gridlines(platecarree, axes=axes, lat_min=-90, lat_max=-59)
+            axes.set_global()
+    pos1 = ax[0, 0].get_position().x0
+    pos2 = (ax[0, 4].get_position().x0 + ax[0, 4].get_position().width) - pos1
+    cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
+    fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
+    fig.tight_layout()
+
+    plt.savefig(savename+'southern_polar_region.png', bbox_inches='tight')

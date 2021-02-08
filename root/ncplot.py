@@ -524,8 +524,10 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
     elif name_target in ['emis']:
         print('What do you wanna do?')
         print('     1: zonal mean (fig: ls-lat)')
-
-        view_mode = int(input('Select number:'))
+        print('     2: Polar plot every 15° ls mean, lat=60°-90° (fig: lat-ls)')
+        print('')
+        if view_mode is None:
+            view_mode = int(input('Select number:'))
 
         if view_mode == 1:
             print('Processing:')
@@ -538,6 +540,17 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
                             latitude_selected=layer_selected,
                             title='Zonal mean of {}'.format(name_target),
                             savename='{}_zonal_mean'.format(name_target))
+
+        if view_mode == 2:
+            print('Processing data:')
+            data_mean, time_bin = vars_time_mean(filename=filename, data=data_target, duration=15)
+
+            print('Display:')
+            print(min(data_mean))
+            display_vars_polar_projection_multiplot(filename=filename, data=data_mean, time=time_bin,
+                                                    levels=[0.5, 0.6, 0.7, 0.8, 0.9, 1.0], cmap='inferno', unit=unit_target,
+                                                    savename='emis_15ls_mean_')
+
 
     elif name_target in ['fluxtop_lw', 'fluxtop_sw', 'fluxsurf_lw', 'fluxsurf_sw']:
         print('What do you wanna do?')
@@ -557,6 +570,7 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
                                      title='Zonal mean of {}'.format(name_target),
                                      TES=None, PFS=None, MVALS=None, layer=None,
                                      savename='{}_zonal_mean'.format(name_target))
+
 
     elif name_target in ['tau1mic']:
         print('What do you wanna do?')
@@ -628,9 +642,14 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
                                      savename='tsurf_zonal_mean')
 
         if view_mode == 2:
+            print('Processing data:')
+            data_mean, time_bin = vars_time_mean(filename=filename, data=data_target, duration=15)
 
             print('Display:')
-            display_vars_polar_projection(filename=filename, data=data_target)
+            print(min(data_mean))
+            display_vars_polar_projection_multiplot(filename=filename, data=data_mean, time=time_bin,
+                                                    levels=arange(140, 310, 10), cmap='seismic', unit=unit_target,
+                                                    savename='tsurf_15ls_mean_')
 
     # ================================================================================================================ #
 
