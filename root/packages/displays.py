@@ -1242,3 +1242,78 @@ def display_vars_stats_zonalmean(filename, data):
     plt.savefig('emis_stats_zonalmean_14h.png', bbox_inches='tight')
     plt.close(fig)
     return
+
+
+def workaround_gridlines(src_proj, lat_min, lat_max):
+    from numpy import linspace, zeros
+    # Workaround for plotting lines of constant latitude/longitude as gridlines
+    # labels not supported for this projection.
+    lats = linspace(lat_min, lat_max, num=lat_max-lat_min, endpoint=True)
+    lons = linspace(0, 360, num=360, endpoint=False)
+
+    yn = zeros(len(lats))
+    lona = lons + yn.reshape(len(lats), 1)
+
+    cs2 = plt.contour(lons, lats, lona, 10, transform=src_proj, colors='grey', linestyles='solid', levels=arange(0, 450, 90), linewidths=0.5)
+    plt.clabel(cs2, fontsize=5, inline=True, fmt='%1.0f', inline_spacing=30)
+
+    yt = zeros(len(lons))
+    lata = lats.reshape(len(lats), 1) + yt
+    cs = plt.contour(lons, lats, lata, 10, transform=src_proj, colors='grey', linestyles='solid', levels=2, linewidths=0.5)
+    plt.clabel(cs, fontsize=5, inline=True, fmt='%1.0f', inline_spacing=20)
+
+
+def display_vars_polar_projection(filename, data):
+    import cartopy.crs as ccrs
+    data_longitude = getdata(filename=filename, target='longitude')
+    data_latitude = getdata(filename=filename, target='latitude')
+
+    latitude_np, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[60, 90])
+    data_np, tmp = slice_data(data[10,:,:], dimension_data=data_latitude[:], value=[60, 90])
+
+    latitude_sp, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[-90, -60])
+    data_sp, tmp = slice_data(data[10,:,:], dimension_data=data_latitude[:], value=[-90, -60])
+
+    platecarree = ccrs.PlateCarree(central_longitude=0)
+
+    # North polar region
+    orthographic = ccrs.Orthographic(central_longitude=0, central_latitude=90, globe=False)
+    y_min, y_max = orthographic._y_limits
+    orthographic._y_limits = (y_min*0.5, y_max*0.5)
+    orthographic._x_limits = (y_min*0.5, y_max*0.5)  # Zoom de 60° à 90°
+    plt.figure(figsize=(11, 11))
+    ax = plt.axes(projection=orthographic)
+    ax.set_title('North polar region')
+    ctf = ax.contourf(data_longitude[:], latitude_np, data_np, transform=platecarree, cmap='inferno')
+    workaround_gridlines(platecarree, lat_min=60, lat_max=90)
+    ax.set_global()
+    plt.colorbar(ctf)
+
+    # South polar region
+    orthographic = ccrs.Orthographic(central_longitude=0, central_latitude=-90, globe=False)
+    y_min, y_max = orthographic._y_limits
+    orthographic._y_limits = (y_min*0.5, y_max*0.5)
+    orthographic._x_limits = (y_min*0.5, y_max*0.5)  # Zoom de 60° à 90°
+    plt.figure(figsize=(11, 11))
+    ax = plt.axes(projection=orthographic)
+    ax.set_title('South polar region')
+    ctf = ax.contourf(data_longitude[:], latitude_sp, data_sp, transform=platecarree, cmap='inferno')
+    workaround_gridlines(platecarree, lat_min=-90, lat_max=-59)
+    plt.colorbar(ctf)
+    ax.set_global()
+
+    plt.figure(figsize=(11, 11))
+    ax = plt.axes(projection=platecarree)
+    ctf = ax.contourf(data_longitude[:], latitude_sp, data_sp, transform=platecarree, cmap='inferno')
+
+    plt.show()
+
+    return
+#    stereographic = ccrs.Stereographic(central_latitude=-90.0, central_longitude=0.0, false_easting=0.0,
+#                                       false_northing=0.0, true_scale_latitude=True, scale_factor=None, globe=False)
+#    stereographic._y_limits = (6378073/2., -6378073/2.)
+#    stereographic._x_limits = (6378073/2., -6378073/2.)
+
+#    southpolarstereo = ccrs.SouthPolarStereo(central_longitude=0)
+#    southpolarstereo._y_limits = (6378073/2., -6378073/2.)
+#    southpolarstereo._x_limits = (6378073/2., -6378073/2.)

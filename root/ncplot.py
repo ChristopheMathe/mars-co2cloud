@@ -514,6 +514,13 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
             print('Display:')
             display_vars_2fig_profile(filename, cumul_north, cumul_south)
 
+        if view_mode == 2:
+            print('Processing data:')
+
+            print('Display:')
+            display_vars_polar_projection(filename=filename, data=data_target)
+
+
     elif name_target in ['emis']:
         print('What do you wanna do?')
         print('     1: zonal mean (fig: ls-lat)')
@@ -618,6 +625,11 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
                                      levels=arange(100, 375, 25), observation=False, latitude_selected=None,
                                      title=None, TES=True, PFS=None, MVALS=True, layer=None,
                                      savename='tsurf_zonal_mean')
+
+        if view_mode == 2:
+
+            print('Display:')
+            display_vars_polar_projection(filename=filename, data=data_target)
 
     # ================================================================================================================ #
 

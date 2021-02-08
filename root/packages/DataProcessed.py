@@ -400,13 +400,6 @@ def satuco2_time_mean_with_co2_ice(filename, data):
     data_co2ice_south = mean(data_co2ice_south, axis=0)
     del data_co2ice
 
-#    data_satuco2_north = correction_value(data_satuco2_north, operator='inf', threshold=1e-13)
-#    data_satuco2_eq = correction_value(data_satuco2_eq, operator='inf', threshold=1e-13)
-#    data_satuco2_south = correction_value(data_satuco2_south, operator='inf', threshold=1e-13)
-#    data_co2ice_north = correction_value(data_co2ice_north, operator='inf', threshold=1e-13)
-#    data_co2ice_eq = correction_value(data_co2ice_eq, operator='inf', threshold=1e-13)
-#    data_co2ice_south = correction_value(data_co2ice_south, operator='inf', threshold=1e-13)
-
     binned = input('Do you want bin data (Y/n)? ')
     if binned.lower() == 'y':
         # Bin time in 5° Ls
@@ -458,12 +451,6 @@ def satuco2_time_mean_with_co2_ice(filename, data):
     # No binning
     else:
         pass
-
-#    data_satuco2_north, data_satuco2_south, data_co2ice_north, data_co2ice_south = rotate_data(data_satuco2_north,
-#                                                                                               data_satuco2_south,
-#                                                                                               data_co2ice_north,
-#                                                                                               data_co2ice_south,
-#                                                                                               doflip=False)
 
     return [data_satuco2_north, data_satuco2_south, data_co2ice_north, data_co2ice_south, north_latitude_selected,
             south_latitude_selected, binned]
