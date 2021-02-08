@@ -1265,14 +1265,15 @@ def workaround_gridlines(src_proj, lat_min, lat_max):
 
 def display_vars_polar_projection(filename, data):
     import cartopy.crs as ccrs
+
     data_longitude = getdata(filename=filename, target='longitude')
     data_latitude = getdata(filename=filename, target='latitude')
 
     latitude_np, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[60, 90])
-    data_np, tmp = slice_data(data[10,:,:], dimension_data=data_latitude[:], value=[60, 90])
+    data_np, tmp = slice_data(data[:, :], dimension_data=data_latitude[:], value=[60, 90])
 
     latitude_sp, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[-90, -60])
-    data_sp, tmp = slice_data(data[10,:,:], dimension_data=data_latitude[:], value=[-90, -60])
+    data_sp, tmp = slice_data(data[:, :], dimension_data=data_latitude[:], value=[-90, -60])
 
     platecarree = ccrs.PlateCarree(central_longitude=0)
 
@@ -1309,11 +1310,4 @@ def display_vars_polar_projection(filename, data):
     plt.show()
 
     return
-#    stereographic = ccrs.Stereographic(central_latitude=-90.0, central_longitude=0.0, false_easting=0.0,
-#                                       false_northing=0.0, true_scale_latitude=True, scale_factor=None, globe=False)
-#    stereographic._y_limits = (6378073/2., -6378073/2.)
-#    stereographic._x_limits = (6378073/2., -6378073/2.)
 
-#    southpolarstereo = ccrs.SouthPolarStereo(central_longitude=0)
-#    southpolarstereo._y_limits = (6378073/2., -6378073/2.)
-#    southpolarstereo._x_limits = (6378073/2., -6378073/2.)

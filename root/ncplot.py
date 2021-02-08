@@ -611,7 +611,8 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
 
     elif name_target in ['tsurf']:
         print('What do you wanna do?')
-        print('     1: ')
+        print('     1: Zonal mean (fig: lat-ls)')
+        print('     2: Polar plot every 15° ls mean, lat=60°-90° (fig: lat-ls)')
         print('')
         if view_mode is None:
             view_mode = int(input('Select number:'))
