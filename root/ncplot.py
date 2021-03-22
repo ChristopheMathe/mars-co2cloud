@@ -564,9 +564,10 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
             print('Display:')
             if view_mode == 2:
                 display_vars_polar_projection_multiplot(filename=filename, data=data_mean, time=time_bin,
-                                                        levels=linspace(0.55, 1., 100), cmap='inferno',
+                                                        localtime=local_time,
+                                                        levels=linspace(0.55, 1., 100), norm=None, cmap='inferno',
                                                         unit='',
-                                                        savename='emis_15ls_mean_')
+                                                        savename='emis_15ls_mean')
             if view_mode == 201:
                 display_emis_polar_projection_garybicas2020_figs11_12(filename=filename, data=data_mean, time=time_bin,
                                                                       levels=linspace(0.55, 1., 100), cmap='inferno',

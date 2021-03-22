@@ -1766,9 +1766,9 @@ def display_vars_polar_projection(filename, data_np, data_sp, levels, unit, cmap
 
 def display_vars_polar_projection_multiplot(filename, data, time, localtime, levels, norm, cmap, unit, savename):
     import cartopy.crs as ccrs
-    from numpy import max, unique
+    from numpy import max, unique, ma
 
-    if isinstance(data, ndarray):
+    if isinstance(data, ma.MaskedArray):
         array_mask = True
     else:
         array_mask = False
@@ -1783,8 +1783,9 @@ def display_vars_polar_projection_multiplot(filename, data, time, localtime, lev
     data_np, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[60, 90])
     latitude_sp, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[-90, -60])
     data_sp, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[-90, -60])
-    data_np[data_np.mask] = -1
-    data_sp[data_sp.mask] = -1
+    if array_mask:
+        data_np[data_np.mask] = -1
+        data_sp[data_sp.mask] = -1
 
     cmap = cm.get_cmap(cmap)
     cmap.set_under('w')
@@ -1806,6 +1807,10 @@ def display_vars_polar_projection_multiplot(filename, data, time, localtime, lev
                 #  => il faut au moins 1 ligne complète sans valeurs masqués pour que ça fonctionne
                 ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], levels=levels, norm=norm,
                                     transform=platecarree, cmap=cmap, extend='max')
+            else:
+                ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], levels=levels, norm=norm,
+                                    transform=platecarree, cmap=cmap, extend='max')
+
             axes.set_global()
             workaround_gridlines(platecarree, axes=axes, pole='north')
             axes.set_facecolor('white')
@@ -1832,6 +1837,10 @@ def display_vars_polar_projection_multiplot(filename, data, time, localtime, lev
             if array_mask and unique(data_sp[i, :, :]).shape[0] != 1:
                 ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], levels=levels, norm=norm,
                                     transform=platecarree, cmap=cmap, extend='max')
+            else:
+                ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], levels=levels, norm=norm,
+                                    transform=platecarree, cmap=cmap, extend='max')
+
             axes.set_global()
             workaround_gridlines(platecarree, axes=axes, pole='south')
             axes.set_facecolor('white')

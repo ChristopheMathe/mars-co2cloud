@@ -237,23 +237,26 @@ def riceco2_zonal_mean_co2ice_exists(filename, data):
 
 
 def riceco2_topcloud_altitude(filename, data_target):
-    data_altitude = getdata(filename, target='zareoid')
+    #TODO: il faut que cela soit au-dessus de la surface local!
+    data_altitude = getdata(filename, target='altitude')
+
+    if data_altitude.long_name != 'Above the local surface':
+        print('')
+        exit()
+
     data_ccnNco2 = getdata(filename, target='ccnNco2')
     data_rho = getdata(filename, target='rho')
 
-    data_altitude = correction_value(data_altitude[:, :, :, :], operator='inf', threshold=1e-13)
     data_ccnNco2 = correction_value(data_ccnNco2[:, :, :, :], operator='inf', threshold=1e-13)
     data_rho = correction_value(data_rho[:, :, :, :], operator='inf', threshold=1e-13)
-
-    data_altitude = gcm_surface_local(data_altitude)
 
     data_target = mean(data_target[:, :, :, :], axis=3)
     data_ccnNco2 = mean(data_ccnNco2[:, :, :, :], axis=3)
     data_rho = mean(data_rho[:, :, :, :], axis=3)
-    data_altitude = mean(data_altitude[:, :, :, :], axis=3)
 
     N_reflect = 2e-8 * power(data_target * 1e6, -2)  # valid latitude range > 60°
     N_part = data_rho * data_ccnNco2
+
     nb_time = data_target.shape[0]
     nb_alt = data_target.shape[1]
     nb_lat = data_target.shape[2]
@@ -268,7 +271,7 @@ def riceco2_topcloud_altitude(filename, data_target):
         for lat in polar_latitude:
             for alt in range(nb_alt - 1, -1, -1):
                 if N_part[t, alt, lat] >= N_reflect[t, alt, lat] and alt > 1:
-                    top_cloud[t, lat] = data_altitude[t, alt, lat]
+                    top_cloud[t, lat] = data_altitude[alt]
                     break
 
     top_cloud = rotate_data(top_cloud, doflip=False)[0]
@@ -848,15 +851,17 @@ def vars_max_value_with_others(filename, data_target):
 def vars_time_mean(filename, data, duration, localtime=None):
     from math import ceil
     data_time = getdata(filename=filename, target='Time')
+
     if localtime is not None:
         data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=localtime)
         data_time = data_time[idx::len(data_local_time)]
     nbin = ceil(data_time[-1] / duration)
     data_mean = zeros((nbin, data.shape[1], data.shape[2]))
     time_bin = arange(0, data_time[-1] + duration, duration)
+
     for i in range(nbin):
         data_sliced, time = slice_data(data=data, dimension_data=data_time[:], value=[duration * i, duration * (i + 1)])
-        print(time[0], time[-1])
+        print(f'{time[0]:.2f} - {time[-1]:.2f}')
         data_mean[i, :, :] = mean(data_sliced, axis=0)
 
     return data_mean, time_bin
