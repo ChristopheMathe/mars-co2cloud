@@ -29,8 +29,8 @@ def MOLA():
 
     for i in range(mola_altitude.shape[0]):
         for j in range(mola_altitude.shape[1]):
-            if mola_altitude[i,j] != mola_altitude[i,j]:
-                mola_altitude[i,j]= None
+            if mola_altitude[i, j] != mola_altitude[i, j]:
+                mola_altitude[i, j] = None
 
     print(max(mola_altitude), min(mola_altitude))
 

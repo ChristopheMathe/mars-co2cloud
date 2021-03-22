@@ -21,7 +21,7 @@ def getfilename(files):
             print('Netcdf files available: (0) {}'.format(list_files[0]))
             for i, value_i in enumerate(list_files[1:]):
                 print('                        ({}) {}'.format(i + 1, value_i))
-            filename = int(input("Select the file number: "))
+            filename = int(input("Select the file number at 14h: "))
             filename = list_files[filename]
             print('')
         else:
@@ -46,13 +46,19 @@ def rotate_data(*list_data, doflip):
 
 
 def extract_data(data):
+    data_time = data.variables['Time'][:]
+    data_local_time, idx, stats_file = check_local_time(data_time, selected_time=None)
+    comparison = data_local_time == [7., 19.]
+    if not comparison.all():
+        print('Not localtime at 14h!')
+        exit()
     data_h2o_ice_s = data.variables['h2o_ice_s'][:, :, :]
     data_icetot = data.variables['icetot'][:, :, :]
     data_tauTES = data.variables['tauTES'][:, :, :]
-    data_mtot = data.variables['mtot'][:, :, :]
+    data_mtot =data.variables['mtot'][:, :, :]
     data_ps = data.variables['ps'][:, :, :]
     data_tsurf = data.variables['tsurf'][:, :, :]
-    data_co2ice = data.variables['co2ice'][:,:,:,]
+    data_co2ice = data.variables['co2ice'][:, :, :]
 
     # correct data
     data_h2o_ice_s = correction_value(data_h2o_ice_s, threshold=1e-13)
@@ -78,16 +84,40 @@ def extract_data(data):
     return data_h2o_ice_s, data_icetot, data_tauTES, data_mtot, data_ps, data_tsurf, data_co2ice
 
 
+def check_local_time(data_time, selected_time=None):
+    from numpy import unique, round, delete, arange
+
+    # Deals with stats file
+    if all(data_time == arange(2., 26., 2.)):
+        data_local_time = data_time
+        stats_file = True
+    else:
+        data_local_time = unique(round(data_time[:]*24%24, 0))
+        if 0 in data_local_time and 24 in data_local_time:
+            data_local_time = delete(data_local_time, -1)
+        stats_file = False
+
+    print('Local time available: {}'.format(data_local_time))
+
+    if selected_time != None:
+        idx = (abs(data_local_time[:] - selected_time)).argmin()
+        print('\tSelected: {}'.format(data_local_time[idx]))
+    else:
+        idx = None
+
+    return data_local_time, idx, stats_file
+
+
 def compute_error(data_ref, data):
     shape_data = data.shape
     delta = zeros((shape_data))
-
+    print(data_ref.shape, data.shape)
     for i in range(shape_data[0]):
         for j in range(shape_data[1]):
-            if data_ref[i,j] == 0:
-                delta[i,j] == 0
+            if data_ref[i, j] == 0:
+                delta[i, j] == 0
             else:
-                delta[i,j] = (data[i,j] - data_ref[i,j]) * 100 / data_ref[i,j]
+                delta[i, j] = (data[i, j] - data_ref[i, j]) * 100 / data_ref[i, j]
 
     return delta
 
@@ -121,9 +151,9 @@ def plot_figure(data_ref, data, delta, levels, title, unit, format, ndx, data_la
     axes[0].set_yticks(ticks=arange(0, len(data_latitude), 6))
     axes[0].set_yticklabels(labels=data_latitude[::6])
     axes[0].set_xticks(ticks=ndx)
-    axes[0].set_xticklabels(labels=[0, 90, 180, 270, 360])
-    axes[1].set_xticklabels(labels=['', 90, 180, 270, 360])
-    axes[2].set_xticklabels(labels=['', 90, 180, 270, 360])
+    axes[0].set_xticklabels(labels=[0, 90, 180, 270, 359])
+    axes[1].set_xticklabels(labels=['', 90, 180, 270, 359])
+    axes[2].set_xticklabels(labels=['', 90, 180, 270, 359])
 
     pos1 = axes[0].get_position()
     pos2 = axes[1].get_position()
@@ -284,8 +314,8 @@ def main():
 
 
     # FIRST PLOTS: TAU-TES
-    fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20,8))
-    fig.subplots_adjust(wspace=0)
+    fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20, 8))
+    fig.subplots_adjust(wspace=0.1)
     ax[0].set_title('TES')
     ctf = ax[0].contourf(data_tes_time[idx1:idx2]-360, data_tes_latitude[:], zonal_mean_tes_tauice[:, idx1:idx2],
                          levels=levels1, cmap=cmap_nonlin1)
@@ -323,7 +353,7 @@ def main():
 
     # PLOT 2 : H2O_VAP
     fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20, 8))
-    fig.subplots_adjust(wspace=0)
+    fig.subplots_adjust(wspace=0.1)
     ax[0].set_title('TES')
     ctf = ax[0].contourf(data_tes_time[idx1:idx2]-360, data_tes_latitude[:], zonal_mean_tes_h2ovap[:, idx1:idx2],
                          levels=levels2, cmap=cmap_nonlin2)
@@ -408,16 +438,12 @@ def main():
             del mask
         del one_year_time, one_year_data
 
-    print(zonal_mean)
-    print('toto', min(zonal_mean), max(zonal_mean))
     zonal_mean = correction_value(zonal_mean, threshold=1e-13)
-    print('titi', min(zonal_mean), max(zonal_mean))
     zonal_mean_final = mean(zonal_mean, axis=0)
-    print('tata', min(zonal_mean_final), max(zonal_mean_final))
 
     # FIRST PLOTS: TAU-TES
     fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20,8))
-    fig.subplots_adjust(wspace=0)
+    fig.subplots_adjust(wspace=0.1)
     ax[0].set_title('PFS')
     ctf = ax[0].contourf(arange(360), data_pfs_latitude[:], zonal_mean_final.T, levels=levels1, cmap=cmap_nonlin1)
     cbar = fig.colorbar(ctf)

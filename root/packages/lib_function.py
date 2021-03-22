@@ -3,33 +3,47 @@ from .ncdump import getdata, getfilename
 
 
 # correct very low values of co2/h2o mmr
-def correction_value(data, operator,threshold):
-    from numpy import ma
+def correction_value(data, operator, threshold):
+    from numpy import ma, nan
 
     if operator == 'inf':
         data = ma.masked_where(data <= threshold, data, None)
-    else:
+    elif operator == 'sup':
         data = ma.masked_where(data >= threshold, data, None)
+    elif operator == 'eq':
+        data = ma.masked_values(data, threshold)
 
+    data.set_fill_value(1e-14)
     return data
 
 
 def check_local_time(data_time, selected_time=None):
     from numpy import unique, round, delete
 
-    data_local_time = unique(round(data_time[:]*24%24, 0))
-    if 0 in data_local_time and 24 in data_local_time:
-        data_local_time = delete(data_local_time, -1)
+    # Deals with stats file
+    if data_time.shape[0] == 12:
+        data_local_time = data_time
+        stats_file = True
+    else:
+        data_local_time = unique(round(data_time[:]*24%24, 0))
+        if 0 in data_local_time and 24 in data_local_time:
+            data_local_time = delete(data_local_time, -1)
+        stats_file = False
 
     print('Local time available: {}'.format(data_local_time))
 
-    if selected_time != None:
+    if selected_time is not None:
         idx = (abs(data_local_time[:] - selected_time)).argmin()
         print('\tSelected: {}'.format(data_local_time[idx]))
     else:
-        idx = None
+        test = input('Do you want extract at a local time (y/N)? ')
+        if test.lower() == 'y':
+            selected_time = int(input('\tEnter the local time: '))
+            idx = (abs(data_local_time[:] - selected_time)).argmin()
+        else:
+            idx = None
 
-    return data_local_time, idx
+    return data_local_time, idx, stats_file
 
 
 def create_gif(filenames):
@@ -85,8 +99,18 @@ def convert_sols_to_ls():
     return time_grid_ls
 
 
-def compute_zonal_mean_column_density(data_target, data_pressure, data_altitude):
-    from numpy import mean, sum, zeros, max
+def compute_column_density(filename, data):
+    from numpy import zeros, sum
+
+    data_altitude = getdata(filename, target='altitude')
+
+    if data_altitude.units in ['m', 'km']:
+        try:
+            data_pressure = getdata(filename, target='pressure')
+        except:
+            data_pressure = getdata('concat_sols_vars_S.nc', target='pressure')
+    else:
+        data_pressure = data_altitude
 
     altitude_limit = input('Do you want perform the computation on the entire column(Y/n)? ')
 
@@ -112,26 +136,44 @@ def compute_zonal_mean_column_density(data_target, data_pressure, data_altitude)
         idx_z_max = tmp + 1
     else:
         idx_z_max += 1
-    data_target = data_target[:, idx_z_min:idx_z_max, :, :]
+    data = data[:, idx_z_min:idx_z_max, :, :]
 
-    shape_data_target = data_target.shape
-    data = zeros(shape_data_target)
+    shape_data = data.shape
+    data_column = zeros(shape_data)
 
     if data_altitude.units in ['m', 'km']:
         for alt in range(data.shape[1] - 1):
-            data[:, alt, :, :] = data_target[:, alt, :, :] * (
-                                 data_pressure[:, alt, :, :] - data_pressure[:, alt + 1, :, :]) / 3.711  # g
-        data[:, -1, :, :] = data_target[:, -1, :, :] * data_pressure[:, -1, :, :] / 3.711
+            data_column[:, alt, :, :] = data[:, alt, :, :] * \
+                                        (data_pressure[:, alt, :, :] - data_pressure[:, alt+1, :, :]) / 3.711  # g
+        data_column[:, -1, :, :] = data[:, -1, :, :] * data_pressure[:, -1, :, :] / 3.711
     else:
         for alt in range(data.shape[1] - 1):
-            data[:, alt, :, :] = data_target[:, alt, :, :] *\
-                                ( data_altitude[idx_z_min + alt] - data_altitude[idx_z_min + alt + 1]) / 3.711  # g
-        data[:, -1, :, :] = data_target[:, -1, :, :] * data_altitude[idx_z_min + alt + 1] / 3.711
-    data = correction_value(data, 'inf', threshold=1e-13)
+            data_column[:, alt, :, :] = data[:, alt, :, :] * \
+                                        (data_altitude[idx_z_min+alt] - data_altitude[idx_z_min+alt+1]) / 3.711  # g
+        data_column[:, -1, :, :] = data[:, -1, :, :] * data_altitude[idx_z_min + alt + 1] / 3.711
 
-    # compute zonal mean column density
-    data = sum(mean(data, axis=3), axis=1)  # Ls function of lat
-    return data, altitude_limit, zmin, zmax
+    data_column = correction_value(data_column, 'inf', threshold=1e-13)
+    data_column = sum(data_column, axis=1)
+    data_column = correction_value(data_column, 'inf', threshold=1e-13)
+
+    return data_column, altitude_limit, zmin, zmax, data_altitude.units
+
+
+def extract_at_a_local_time(filename, data):
+    data_time = getdata(filename=filename, target='Time')
+
+    data_local_time, idx, stats_file = check_local_time(data_time=data_time)
+    local_time = data_local_time[idx]
+
+    if data.ndim == 4:
+        data_processed = data[idx::len(data_local_time), :, :, :]
+    elif data.ndim == 3:
+        data_processed = data[idx::len(data_local_time), :, :]
+    else:
+        data_processed = data[idx::len(data_local_time)]
+
+    return data_processed, local_time
+
 
 
 def extract_at_max_co2_ice(data, x, y, shape_big_data):
@@ -357,6 +399,7 @@ def slice_data(data, dimension_data, value):
     idx, idx1, idx2, idx_dim = None, None, None, None
 
     # Select the dimension where the slice will be done
+    #TODO: check if 2 dim have the same length ....
     for i in range(data.ndim):
         if data.shape[i] == dimension_data.shape[0]:
             idx_dim = dimension_data.shape[0]
@@ -468,13 +511,21 @@ def slice_data(data, dimension_data, value):
     return data, selected_idx
 
 
-def tcondco2(data_pressure):
-    from numpy import log10
+def tcondco2(data_pressure=None, data_temperature=None, data_rho=None):
+    from numpy import log10, log
 
-    A = 6.81228
-    B = 1301.679
-    C = -3.494
+    R = 8.31
 
-    T_sat = B / (A - log10((data_pressure + 1e-13) / 10 ** 5)) - C
+    if data_pressure is not None:
+        A = 6.81228
+        B = 1301.679
+        C = -3.494
+
+        T_sat = B / (A - log10((data_pressure + 1e-13) / 10 ** 5)) - C
+    elif (data_temperature is not None) and (data_rho is not None):
+        # Equation from Washburn (1948) enfin tcond.. in G-G2011
+        T_sat = -3148. / (log(0.01*data_temperature*data_rho*R) - 23.102)  # rho en kg/m3
 
     return T_sat
+
+

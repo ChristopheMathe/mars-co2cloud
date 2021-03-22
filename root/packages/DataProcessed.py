@@ -1,5 +1,5 @@
-from numpy import mean, abs, min, max, zeros, where, ones, concatenate, flip, arange, unravel_index, argmax, array, \
-    count_nonzero, std, savetxt, c_, append, loadtxt, asarray, power, logspace, ma, round, unique, delete
+from numpy import mean, abs, min, max, zeros, where, ones, concatenate, arange, unravel_index, argmax, array, \
+    count_nonzero, std, append, asarray, power, ma, ndarray
 from .lib_function import *
 from .ncdump import getdata, getfilename
 from os import mkdir
@@ -129,6 +129,71 @@ def co2ice_cumulative_masses_polar_cap(filename, data):
         cumul_co2ice_south[ls] = sum(data_south[ls, :, :] * data_aire_south[:, :])
 
     return cumul_co2ice_north, cumul_co2ice_south
+
+
+def co2ice_time_mean(filename, data, duration, localtime):
+    data, time = vars_time_mean(filename=filename, data=data, duration=duration, localtime=localtime)
+
+    data = correction_value(data, operator='eq', threshold=0)
+    data_aire = gcm_aire()
+    data = data * data_aire[:, :]
+
+    return data, time
+
+
+def co2ice_density_column_evolution(filename, data):
+    from math import floor
+    from numpy import zeros
+    # Show the evolution of density column at winter polar region
+    data_time = getdata(filename=filename, target='Time')
+    if data_time.units == 'degrees':
+        print('The netcdf file is in ls !')
+        print(f'Time[0] = {data_time[0]}, Time[-1] = {data_time[-1]}')
+    #        exit()
+
+    # Slice in time:
+    print(f'Select the time range in sols from {floor(data_time[0])} to {int(data_time[-1])}')
+    time_begin = float(input('Start time: '))
+    time_end = float(input('End time: '))
+    data, time_range = slice_data(data=data, dimension_data=data_time, value=[time_begin, time_end])
+
+    # Slice data in polar region:
+    data_latitude = getdata(filename=filename, target='latitude')
+    pole = input('Select the polar region (N/S):')
+    if pole.lower() == 'n':
+        data, latitude = slice_data(data=data, dimension_data=data_latitude, value=[60, 90])
+    elif pole.lower() == 's':
+        data, latitude = slice_data(data=data, dimension_data=data_latitude, value=[-60, -90])
+    else:
+        latitude = None
+        print('Wrong selection')
+        exit()
+    data, altitude_limit, zmin, zmax, altitude_unit = compute_column_density(filename=filename, data=data)
+
+    print(data[0, :, :].filled())
+    return data, time_range, latitude
+
+
+def emis_polar_winter_gg2020_fig13(filename, data):
+    # Slice in time
+    data_time = getdata(filename=filename, target='Time')
+    #       NP: 180°-360°
+    data_np, time = slice_data(data=data, dimension_data=data_time, value=[180, 360])
+
+    #       SP: 0°-180°
+    data_sp, time = slice_data(data=data, dimension_data=data_time, value=[0, 180])
+
+    # Slice in latitude > 60°
+    data_latitude = getdata(filename=filename, target='latitude')
+
+    data_np, latitude = slice_data(data=data_np, dimension_data=data_latitude[:], value=[60, 90])
+    data_sp, latitude = slice_data(data=data_sp, dimension_data=data_latitude[:], value=[-60, -90])
+
+    # Mean in time
+    data_mean_np = mean(data_np, axis=0)
+    data_mean_sp = mean(data_sp, axis=0)
+
+    return data_mean_np, data_mean_sp
 
 
 def h2o_ice_alt_ls_with_co2_ice(filename, data):
@@ -274,12 +339,12 @@ def satuco2_zonal_mean_with_co2_ice(filename, data):
     data_co2ice_south = mean(data_co2ice_south, axis=2)
     del data_co2ice
 
-#    data_satuco2_north = correction_value(data_satuco2_north, operator='inf', threshold=1e-13)
-#    data_satuco2_eq = correction_value(data_satuco2_eq, operator='inf', threshold=1e-13)
-#    data_satuco2_south = correction_value(data_satuco2_south, operator='inf', threshold=1e-13)
-#    data_co2ice_north = correction_value(data_co2ice_north, operator='inf', threshold=1e-13)
-#    data_co2ice_eq = correction_value(data_co2ice_eq, operator='inf', threshold=1e-13)
-#    data_co2ice_south = correction_value(data_co2ice_south, operator='inf', threshold=1e-13)
+    #    data_satuco2_north = correction_value(data_satuco2_north, operator='inf', threshold=1e-13)
+    #    data_satuco2_eq = correction_value(data_satuco2_eq, operator='inf', threshold=1e-13)
+    #    data_satuco2_south = correction_value(data_satuco2_south, operator='inf', threshold=1e-13)
+    #    data_co2ice_north = correction_value(data_co2ice_north, operator='inf', threshold=1e-13)
+    #    data_co2ice_eq = correction_value(data_co2ice_eq, operator='inf', threshold=1e-13)
+    #    data_co2ice_south = correction_value(data_co2ice_south, operator='inf', threshold=1e-13)
 
     binned = input('Do you want bin data (Y/n)? ')
 
@@ -456,27 +521,23 @@ def satuco2_time_mean_with_co2_ice(filename, data):
             south_latitude_selected, binned]
 
 
-def satuco2_thickness_atm_layer(filename, data):
+def satuco2_hu2012_fig9(filename, data):
     data_latitude = getdata(filename, target='latitude')
-    data_zareoid = getdata(filename, target='zareoid')
+    data_altitude = getdata(filename=filename, target='altitude')
 
-    data_zareoid = correction_value(data_zareoid[:, :, :, :], operator='inf', threshold=1e-13)
-    data_surface_local = gcm_surface_local(data_zareoid)
+    if data_altitude.long_name != 'Altitude above local surface':
+        print('The netCDF file did not zrecasted above the local surface')
+        exit()
 
-    data_north, latitude_selected = slice_data(data, dimension_data=data_latitude, value=[60, 90])
-    data_south, latitude_selected = slice_data(data, dimension_data=data_latitude, value=[-60, -90])
+    data_north, latitude_selected = slice_data(data, dimension_data=data_latitude, value=[50, 90])
+    data_south, latitude_selected = slice_data(data, dimension_data=data_latitude, value=[-50, -90])
     del data
-
-    data_zareoid_north, latitude_selected = slice_data(data_surface_local, dimension_data=data_latitude, value=[60, 90])
-    data_zareoid_south, latitude_selected = slice_data(data_surface_local, dimension_data=data_latitude,
-                                                       value=[-60, -90])
-    del data_zareoid
 
     # Bin time in 5° Ls
     data_time = getdata(filename=filename, target='Time')
     if data_time.shape[0] % 60 == 0:
         print('5°Ls binning: {} - {}'.format(data_time[0], data_time[60]))
-        nb_bin = int(data_time.shape[0] / 60)
+        nb_bin = int(data_time.shape[0] / 60) + 1
     else:
         print('5°Ls binning: from {} to {}'.format(data_time[0], data_time[-1]))
         nb_bin = 72
@@ -489,12 +550,7 @@ def satuco2_thickness_atm_layer(filename, data):
                                                       value=[bin * 5, (bin + 1) * 5])
         data_binned_south, time_selected = slice_data(data_south, dimension_data=data_time[:],
                                                       value=[bin * 5, (bin + 1) * 5])
-
-        data_zareoid_binned_north, time_selected = slice_data(data_zareoid_north, dimension_data=data_time[:],
-                                                              value=[bin * 5, (bin + 1) * 5])
-        data_zareoid_binned_south, time_selected = slice_data(data_zareoid_south, dimension_data=data_time[:],
-                                                              value=[bin * 5, (bin + 1) * 5])
-        print('Time: {:.0f} / 360°Ls'.format(time_selected[0]))
+        print(f'Time: {time_selected[0]:.0f} / {time_selected[-1]:.0f}°Ls')
         tmp_north = array([])
         tmp_south = array([])
 
@@ -510,11 +566,8 @@ def satuco2_thickness_atm_layer(filename, data):
                             for alt2 in range(alt + 1, data_binned_north.shape[1]):
                                 if data_binned_north[ls, alt2, latitude_north, longitude] < 1:
                                     idx_max_north = alt2 - 1
-                                    tmp_north = append(tmp_north, abs(data_zareoid_binned_north[ls, idx_max_north,
-                                                                                                latitude_north, longitude] -
-                                                                      data_zareoid_binned_north[
-                                                                          ls, idx_min_north, latitude_north,
-                                                                          longitude]))
+                                    tmp_north = append(tmp_north, abs(data_altitude[idx_max_north] -
+                                                                      data_altitude[idx_min_north]))
                                     break
                             break
 
@@ -526,15 +579,13 @@ def satuco2_thickness_atm_layer(filename, data):
                             for alt2 in range(alt + 1, data_binned_south.shape[1]):
                                 if data_binned_south[ls, alt2, latitude_south, longitude] < 1:
                                     idx_max_south = alt2 - 1
-                                    tmp_south = append(tmp_south, abs(data_zareoid_binned_south[ls, idx_max_south,
-                                                                                                latitude_south, longitude] -
-                                                                      data_zareoid_binned_south[
-                                                                          ls, idx_min_south, latitude_south,
-                                                                          longitude]))
+                                    tmp_south = append(tmp_south, abs(data_altitude[idx_max_south] -
+                                                                      data_altitude[idx_min_south]))
                                     break
                             break
         tmp_north = correction_value(tmp_north, 'inf', threshold=0)
         tmp_south = correction_value(tmp_south, 'inf', threshold=0)
+
         if tmp_north.size != 0:
             print(tmp_north)
             data_icelayer[0, bin] = mean(tmp_north)
@@ -552,97 +603,123 @@ def satuco2_thickness_atm_layer(filename, data):
             data_icelayer[1, bin] = 0
             data_icelayer_std[1, bin] = 0
 
-        nbp_north = data_binned_north.shape[0] * data_binned_north.shape[2] * data_binned_north.shape[3]
-        nbp_south = data_binned_south.shape[0] * data_binned_south.shape[2] * data_binned_south.shape[3]
-
         del tmp_north, tmp_south
 
     return data_icelayer, data_icelayer_std
 
 
 def temp_gg2011_fig6(filename, data):
+    # GG2011 worked with stats file
     data_latitude = getdata(filename=filename, target='latitude')
     data_longitude = getdata(filename=filename, target='longitude')
     data_time = getdata(filename=filename, target='Time')
+    data_altitude = getdata(filename=filename, target='altitude')
+    data_rho = getdata(filename=filename, target='rho')
 
-    # Slice data: Ls = 120–150°, lon = 0°, lat = 0° [Fig 6, G - G2011]
-    data_tmp, longitude = slice_data(data=data[:, :, :, :], dimension_data=data_longitude[:], value=0)
-    data_tmp, latitude = slice_data(data=data_tmp, dimension_data=data_latitude[:], value=0)
-    data_tmp, ls = slice_data(data=data_tmp, dimension_data=data_time[:], value=[120, 150])
+    # Check the kind of zrecast have been performed : above areroid (A) must be performed
+    if data_altitude.long_name != 'Altitude above areoid':
+        print(data_altitude.long_name)
+        print('The netcdf did not zrecasted above the aeroid.')
+        exit()
+    data_surface_local_tmp = data_altitude[:]
 
-    # Check local time available
-    data_local_time, idx = check_local_time(data_time[:])
-
-    # Compute Tcond CO2 from pressure, ensure that was zrecasted
-    data_pressure = getdata(filename=filename, target='altitude')
-    if data_pressure.units != 'Pa':
-        print('STOP !!! not zrecasted !')
+    # Check if we have a stats file with the local time
+    data_local_time, idx, stats_file = check_local_time(data_time[:])
+    if not stats_file:
+        print('This file is not a stats file required to compare with GG2011')
         exit()
 
-    data_tcondco2 = tcondco2(data_pressure=data_pressure[:])
+    # Slice data: lon = 0°, lat = 0° [Fig 6, GG2011]
+    ## For temperature
+    data_tmp, longitude = slice_data(data=data[:, :, :, :], dimension_data=data_longitude[:], value=0)
+    data_tmp, latitude = slice_data(data=data_tmp, dimension_data=data_latitude[:], value=0)
+
+    ## For density
+    data_rho_tmp, longitude = slice_data(data=data_rho[:, :, :, :], dimension_data=data_longitude[:], value=0)
+    data_rho_tmp, latitude = slice_data(data=data_rho_tmp, dimension_data=data_latitude[:], value=0)
+
+    # Compute Tcond CO2 from pressure
+    data_tcondco2 = tcondco2(data_pressure=None, data_temperature=data_tmp, data_rho=data_rho_tmp)
 
     # Mean for each local time and subtract tcondco2
     data_final = zeros((len(data_local_time), data_tmp.shape[1]))
+    data_tcondco2_final = zeros((len(data_local_time), data_tmp.shape[1]))
+
     for i in range(len(data_local_time)):
         data_final[i, :] = mean(data_tmp[i::len(data_local_time), :], axis=0)
+        data_tcondco2_final[i, :] = mean(data_tcondco2[i::len(data_local_time), :], axis=0)
 
     data_p = ma.masked_values(data_final, 0.)
-
+    data_tcondco2_p = ma.masked_values(data_tcondco2_final, 0.)
     for i in range(len(data_local_time)):
-        data_p[i, :] = data_p[i, :] - data_tcondco2[:]
+        data_p[i, :] = data_p[i, :] - data_tcondco2_p[i, :]
 
     del data, data_tmp
 
-    print('T-Tcondco2: min = {:.2f}, max = {:.2f}'.format(min(data_p), max(data_p)))
-    return data_p, data_local_time
+    print(f'T-Tcondco2: min = {min(data_p):.2f}, max = {max(data_p):.2f}')
+    return data_p, data_local_time, data_surface_local_tmp
 
 
 def temp_gg2011_fig7(filename, data):
     data_time = getdata(filename=filename, target='Time')
+    data_altitude = getdata(filename=filename, target='altitude')
+    data_rho = getdata(filename=filename, target='rho')
 
-    # Slice data: Ls=0–30°, LT=16 [Fig 7, G - G2011]
-    data_tmp, ls = slice_data(data=data[:, :, :, :], dimension_data=data_time[:], value=[0, 30])
+    # Check the kind of zrecast have been performed : above areroid (A) must be performed
+    if data_altitude.long_name != 'Altitude above areoid':
+        print(data_altitude.long_name)
+        print('The netcdf did not zrecasted above the aeroid.')
+        exit()
+    data_surface_local = data_altitude[:]
 
-    # Check local time available
-    data_local_time, idx = check_local_time(data_time[:])
-    data_tmp = data_tmp[idx::len(data_local_time), :, :, :]
+    # Check if we have a stats file with the local time
+    data_local_time, idx, stats_file = check_local_time(data_time[:], selected_time=16)
+    if not stats_file:
+        print('This file is not a stats file required to compare with GG2011')
+        exit()
+    data = data[idx, :, :, :]
+    data_rho = data_rho[idx, :, :, :]
 
     # Compute Tcond CO2 from pressure, ensure that was zrecasted
-    data_pressure = getdata(filename=filename, target='altitude')
-    if data_pressure.units != 'Pa':
-        print('STOP !!! not zrecasted !')
-        exit()
-
-    data_tcondco2 = tcondco2(data_pressure=data_pressure[:])
+    data_tcondco2 = tcondco2(data_pressure=None, data_temperature=data, data_rho=data_rho)
 
     # Mean for each local time and subtract tcondco2
-    data_final = zeros((data_tmp.shape[2], data_tmp.shape[1]))
+    data = mean(data, axis=2)
+    data_tcondco2 = mean(data_tcondco2, axis=2)
 
-    data_final = mean(mean(data_tmp, axis=3), axis=0)
+    data_final = zeros((data.shape[0], data.shape[1]))
     data_final = ma.masked_values(data_final, 0.)
     for i in range(data_final.shape[1]):
-        data_final[:, i] = data_final[:, i] - data_tcondco2[:]
+        data_final[:, i] = data[:, i] - data_tcondco2[:, i]
 
-    del data, data_tmp
+    del data
 
     print('T-Tcondco2: min = {:.2f}, max = {:.2f}'.format(min(data_final), max(data_final)))
-    return data_final
+    return data_final, data_surface_local
 
 
 def temp_gg2011_fig8(filename, data):
-    data_time = getdata(filename, target='Time')
+    data_time = getdata(filename=filename, target='Time')
+    data_altitude = getdata(filename=filename, target='altitude')
 
     # Slice data: Ls=0-30°
     data, ls = slice_data(data=data, dimension_data=data_time[:], value=[0, 30])
     data_zonal_mean = mean(data, axis=3)
 
+    # Check the kind of zrecast have been performed : above areroid (A) must be performed
+    if data_altitude.long_name != 'Altitude above areoid':
+        print(data_altitude.long_name)
+        print('The netcdf did not zrecasted above the aeroid.')
+        exit()
+    data_surface_local = data_altitude[:]
+
     # Check local time available and slice data at 0, 12, 16 H
-    data_local_time, idx = check_local_time(data_time=data_time[:], selected_time=0)
-    data_zonal_mean_0h = data_zonal_mean[idx::len(data_local_time), :, :]
-    data_local_time, idx = check_local_time(data_time=data_time[:], selected_time=12)
-    data_zonal_mean_12h = data_zonal_mean[idx::len(data_local_time), :, :]
-    data_local_time, idx = check_local_time(data_time=data_time[:], selected_time=16)
-    data_zonal_mean_16h = data_zonal_mean[idx::len(data_local_time), :, :]
+    data_local_time, idx_0 = check_local_time(data_time=data_time[:], selected_time=0)
+    data_zonal_mean_0h = data_zonal_mean[idx_0::len(data_local_time), :, :]
+    data_local_time, idx_12 = check_local_time(data_time=data_time[:], selected_time=12)
+    data_zonal_mean_12h = data_zonal_mean[idx_12::len(data_local_time), :, :]
+    data_local_time, idx_16 = check_local_time(data_time=data_time[:], selected_time=16)
+    data_zonal_mean_16h = data_zonal_mean[idx_16::len(data_local_time), :, :]
 
     # Mean
     data_zonal_mean_0h = mean(data_zonal_mean_0h, axis=0)
@@ -652,7 +729,7 @@ def temp_gg2011_fig8(filename, data):
     # 12h - 00h
     data_thermal_tide = data_zonal_mean_12h - data_zonal_mean_0h
 
-    return data_zonal_mean_16h, data_thermal_tide
+    return data_zonal_mean_16h, data_thermal_tide, data_surface_local
 
 
 def temp_gg2011_fig9(filename, data):
@@ -660,36 +737,41 @@ def temp_gg2011_fig9(filename, data):
 
     data_time = getdata(filename=filename, target='Time')
     data_latitude = getdata(filename=filename, target='latitude')
+    data_altitude = getdata(filename=filename, target='altitude')
+    data_rho = getdata(filename=filename, target='rho')
 
-    # Average over Ls=0–30°, LT = 16, lat = 0°.
-    data, ls = slice_data(data=data, dimension_data=data_time[:], value=[0, 30])
+    # Check the kind of zrecast have been performed : above areroid (A) must be performed
+    if data_altitude.long_name != 'Altitude above areoid':
+        print(data_altitude.long_name)
+        print('The netcdf did not zrecasted above the aeroid.')
+        exit()
+    data_surface_local = data_altitude[:]
+
+    # Check if we have a stats file with the local time
+    data_local_time, idx, stats_file = check_local_time(data_time[:], selected_time=16)
+    if not stats_file:
+        print('This file is not a stats file required to compare with GG2011')
+        exit()
+    data = data[idx, :, :, :]
+    data_rho = data_rho[idx, :, :, :]
+
+    # Slice data at 0°N latitude
     data, latitude = slice_data(data=data, dimension_data=data_latitude[:], value=0)
-
-    data_local_time, idx = check_local_time(data_time[:], selected_time=16)
-    data = data[idx::len(data_local_time), :, :]
-
-    data = mean(data, axis=0)
-    data = ma.masked_values(data, 0.)
+    data_rho, latitude = slice_data(data=data_rho, dimension_data=data_latitude[:], value=0)
 
     # Compute Tcond CO2 from pressure, ensure that was zrecasted
-    data_pressure = getdata(filename=filename, target='altitude')
-    if data_pressure.units != 'Pa':
-        print('STOP !!! not zrecasted !')
-        exit()
-
-    data_tcondco2 = tcondco2(data_pressure=data_pressure[:])
+    data_tcondco2 = tcondco2(data_pressure=None, data_temperature=data, data_rho=data_rho)
 
     # Mean for each local time and subtract tcondco2
     data_final = zeros(data.shape)
     for i in range(data_final.shape[1]):
-        data_final[:, i] = data[:, i] - data_tcondco2[:]
+        data_final[:, i] = data[:, i] - data_tcondco2[:, i]
     data_final = ma.masked_values(data_final, 0.)
 
     del data
 
     print('T-Tcondco2: min = {:.2f}, max = {:.2f}'.format(min(data_final), max(data_final)))
-
-    return data_final
+    return data_final, data_surface_local
 
 
 def temp_thermal_structure_polar_region(filename, data):
@@ -763,16 +845,19 @@ def vars_max_value_with_others(filename, data_target):
     return max_mmr, max_temp, max_satu, max_radius, max_ccnN, max_alt
 
 
-def vars_time_mean(filename, data, duration):
+def vars_time_mean(filename, data, duration, localtime=None):
     from math import ceil
     data_time = getdata(filename=filename, target='Time')
+    if localtime is not None:
+        data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=localtime)
+        data_time = data_time[idx::len(data_local_time)]
     nbin = ceil(data_time[-1] / duration)
     data_mean = zeros((nbin, data.shape[1], data.shape[2]))
-    time_bin = arange(0, data_time[-1]+duration, duration)
+    time_bin = arange(0, data_time[-1] + duration, duration)
     for i in range(nbin):
-        data_sliced, time = slice_data(data=data, dimension_data=data_time[:], value=[duration*i, duration*(i+1)])
+        data_sliced, time = slice_data(data=data, dimension_data=data_time[:], value=[duration * i, duration * (i + 1)])
         print(time[0], time[-1])
-        data_mean[i, : , :] = mean(data_sliced, axis=0)
+        data_mean[i, :, :] = mean(data_sliced, axis=0)
 
     return data_mean, time_bin
 
@@ -803,23 +888,14 @@ def vars_zonal_mean(filename, data, layer=None, flip=None):
 
 
 def vars_zonal_mean_column_density(filename, data_target):
-    data_altitude = getdata(filename, target='altitude')
+    data_target, altitude_limit, zmin, zmax, altitude_unit = compute_column_density(filename=filename, data=data_target)
 
-    if data_altitude.units in ['m', 'km']:
-        try:
-            data_pressure = getdata(filename, target='pressure')
-        except:
-            data_pressure = getdata('concat_sols_vars_S.nc', target='pressure')
-    else:
-        data_pressure = data_altitude
-
-    data_target, altitude_limit, zmin, zmax = compute_zonal_mean_column_density(data_target, data_pressure,
-                                                                                data_altitude)
-    del data_pressure
+    # compute zonal mean column density
+    data_target = mean(data_target, axis=2)  # Ls function of lat
 
     data_target = rotate_data(data_target, doflip=True)[0]
 
-    return data_target, altitude_limit, zmin, zmax, data_altitude.units
+    return data_target, altitude_limit, zmin, zmax, altitude_unit
 
 
 def vars_zonal_mean_where_co2ice_exists(filename, data, polar_region):

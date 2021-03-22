@@ -3,9 +3,275 @@ from matplotlib.colors import LogNorm, TwoSlopeNorm
 from .lib_function import *
 from .DataObservation import *
 from .DataProcessed import *
+from matplotlib import cm
+
+
+def colormap_idl_rainbow_plus_white():
+    from matplotlib.colors import LinearSegmentedColormap
+
+    cm_data = [[0., 0., 0.],
+               [0.0156863, 0., 0.0117647],
+               [0.0352941, 0., 0.027451],
+               [0.0509804, 0., 0.0392157],
+               [0.0705882, 0., 0.054902],
+               [0.0862745, 0., 0.0745098],
+               [0.105882, 0., 0.0901961],
+               [0.121569, 0., 0.109804],
+               [0.141176, 0., 0.12549],
+               [0.156863, 0., 0.14902],
+               [0.176471, 0., 0.168627],
+               [0.196078, 0., 0.188235],
+               [0.227451, 0., 0.231373],
+               [0.239216, 0., 0.247059],
+               [0.25098, 0., 0.266667],
+               [0.266667, 0., 0.282353],
+               [0.270588, 0., 0.301961],
+               [0.282353, 0., 0.317647],
+               [0.290196, 0., 0.337255],
+               [0.301961, 0., 0.356863],
+               [0.309804, 0., 0.372549],
+               [0.313725, 0., 0.392157],
+               [0.321569, 0., 0.407843],
+               [0.32549, 0., 0.427451],
+               [0.329412, 0., 0.462745],
+               [0.337255, 0., 0.478431],
+               [0.341176, 0., 0.498039],
+               [0.345098, 0., 0.517647],
+               [0.337255, 0., 0.533333],
+               [0.341176, 0., 0.552941],
+               [0.341176, 0., 0.568627],
+               [0.341176, 0., 0.588235],
+               [0.333333, 0., 0.603922],
+               [0.329412, 0., 0.623529],
+               [0.329412, 0., 0.639216],
+               [0.329412, 0., 0.658824],
+               [0.309804, 0., 0.694118],
+               [0.305882, 0., 0.713725],
+               [0.301961, 0., 0.729412],
+               [0.298039, 0., 0.74902],
+               [0.278431, 0., 0.764706],
+               [0.27451, 0., 0.784314],
+               [0.266667, 0., 0.8],
+               [0.258824, 0., 0.819608],
+               [0.235294, 0., 0.839216],
+               [0.227451, 0., 0.854902],
+               [0.215686, 0., 0.87451],
+               [0.180392, 0., 0.909804],
+               [0.168627, 0., 0.92549],
+               [0.156863, 0., 0.945098],
+               [0.141176, 0., 0.960784],
+               [0.129412, 0., 0.980392],
+               [0.0980392, 0., 1.],
+               [0.0823529, 0., 1.],
+               [0.0627451, 0., 1.],
+               [0.0470588, 0., 1.],
+               [0.0156863, 0., 1.],
+               [0., 0., 1.],
+               [0., 0.0156863, 1.],
+               [0., 0.0627451, 1.],
+               [0., 0.0823529, 1.],
+               [0., 0.0980392, 1.],
+               [0., 0.113725, 1.],
+               [0., 0.14902, 1.],
+               [0., 0.164706, 1.],
+               [0., 0.180392, 1.],
+               [0., 0.2, 1.],
+               [0., 0.215686, 1.],
+               [0., 0.247059, 1.],
+               [0., 0.262745, 1.],
+               [0., 0.282353, 1.],
+               [0., 0.329412, 1.],
+               [0., 0.34902, 1.],
+               [0., 0.364706, 1.],
+               [0., 0.380392, 1.],
+               [0., 0.415686, 1.],
+               [0., 0.431373, 1.],
+               [0., 0.447059, 1.],
+               [0., 0.466667, 1.],
+               [0., 0.498039, 1.],
+               [0., 0.513725, 1.],
+               [0., 0.529412, 1.],
+               [0., 0.54902, 1.],
+               [0., 0.596078, 1.],
+               [0., 0.615686, 1.],
+               [0., 0.631373, 1.],
+               [0., 0.647059, 1.],
+               [0., 0.682353, 1.],
+               [0., 0.698039, 1.],
+               [0., 0.713725, 1.],
+               [0., 0.733333, 1.],
+               [0., 0.764706, 1.],
+               [0., 0.780392, 1.],
+               [0., 0.796078, 1.],
+               [0., 0.847059, 1.],
+               [0., 0.862745, 1.],
+               [0., 0.882353, 1.],
+               [0., 0.898039, 1.],
+               [0., 0.913725, 1.],
+               [0., 0.94902, 1.],
+               [0., 0.964706, 1.],
+               [0., 0.980392, 1.],
+               [0., 1., 1.],
+               [0., 1., 0.964706],
+               [0., 1., 0.94902],
+               [0., 1., 0.933333],
+               [0., 1., 0.882353],
+               [0., 1., 0.862745],
+               [0., 1., 0.847059],
+               [0., 1., 0.831373],
+               [0., 1., 0.796078],
+               [0., 1., 0.780392],
+               [0., 1., 0.764706],
+               [0., 1., 0.74902],
+               [0., 1., 0.733333],
+               [0., 1., 0.698039],
+               [0., 1., 0.682353],
+               [0., 1., 0.666667],
+               [0., 1., 0.615686],
+               [0., 1., 0.596078],
+               [0., 1., 0.580392],
+               [0., 1., 0.564706],
+               [0., 1., 0.529412],
+               [0., 1., 0.513725],
+               [0., 1., 0.498039],
+               [0., 1., 0.482353],
+               [0., 1., 0.447059],
+               [0., 1., 0.431373],
+               [0., 1., 0.415686],
+               [0., 1., 0.4],
+               [0., 1., 0.34902],
+               [0., 1., 0.329412],
+               [0., 1., 0.313725],
+               [0., 1., 0.298039],
+               [0., 1., 0.262745],
+               [0., 1., 0.247059],
+               [0., 1., 0.231373],
+               [0., 1., 0.215686],
+               [0., 1., 0.180392],
+               [0., 1., 0.164706],
+               [0., 1., 0.14902],
+               [0., 1., 0.0980392],
+               [0., 1., 0.0823529],
+               [0., 1., 0.0627451],
+               [0., 1., 0.0470588],
+               [0., 1., 0.0313725],
+               [0., 1., 0.],
+               [0.0156863, 1., 0.],
+               [0.0313725, 1., 0.],
+               [0.0470588, 1., 0.],
+               [0.0823529, 1., 0.],
+               [0.0980392, 1., 0.],
+               [0.113725, 1., 0.],
+               [0.164706, 1., 0.],
+               [0.180392, 1., 0.],
+               [0.2, 1., 0.],
+               [0.215686, 1., 0.],
+               [0.247059, 1., 0.],
+               [0.262745, 1., 0.],
+               [0.282353, 1., 0.],
+               [0.298039, 1., 0.],
+               [0.313725, 1., 0.],
+               [0.34902, 1., 0.],
+               [0.364706, 1., 0.],
+               [0.380392, 1., 0.],
+               [0.431373, 1., 0.],
+               [0.447059, 1., 0.],
+               [0.466667, 1., 0.],
+               [0.482353, 1., 0.],
+               [0.513725, 1., 0.],
+               [0.529412, 1., 0.],
+               [0.54902, 1., 0.],
+               [0.564706, 1., 0.],
+               [0.6, 1., 0.],
+               [0.615686, 1., 0.],
+               [0.631373, 1., 0.],
+               [0.647059, 1., 0.],
+               [0.698039, 1., 0.],
+               [0.713725, 1., 0.],
+               [0.733333, 1., 0.],
+               [0.74902, 1., 0.],
+               [0.780392, 1., 0.],
+               [0.796078, 1., 0.],
+               [0.815686, 1., 0.],
+               [0.831373, 1., 0.],
+               [0.866667, 1., 0.],
+               [0.882353, 1., 0.],
+               [0.898039, 1., 0.],
+               [0.94902, 1., 0.],
+               [0.964706, 1., 0.],
+               [0.980392, 1., 0.],
+               [1., 1., 0.],
+               [1., 0.980392, 0.],
+               [1., 0.94902, 0.],
+               [1., 0.933333, 0.],
+               [1., 0.913725, 0.],
+               [1., 0.898039, 0.],
+               [1., 0.866667, 0.],
+               [1., 0.847059, 0.],
+               [1., 0.831373, 0.],
+               [1., 0.780392, 0.],
+               [1., 0.764706, 0.],
+               [1., 0.74902, 0.],
+               [1., 0.733333, 0.],
+               [1., 0.698039, 0.],
+               [1., 0.682353, 0.],
+               [1., 0.666667, 0.],
+               [1., 0.647059, 0.],
+               [1., 0.631373, 0.],
+               [1., 0.6, 0.],
+               [1., 0.580392, 0.],
+               [1., 0.564706, 0.],
+               [1., 0.513725, 0.],
+               [1., 0.498039, 0.],
+               [1., 0.482353, 0.],
+               [1., 0.466667, 0.],
+               [1., 0.431373, 0.],
+               [1., 0.415686, 0.],
+               [1., 0.4, 0.],
+               [1., 0.380392, 0.],
+               [1., 0.34902, 0.],
+               [1., 0.333333, 0.],
+               [1., 0.313725, 0.],
+               [1., 0.298039, 0.],
+               [1., 0.247059, 0.],
+               [1., 0.231373, 0.],
+               [1., 0.215686, 0.],
+               [1., 0.2, 0.],
+               [1., 0.164706, 0.],
+               [1., 0.14902, 0.],
+               [1., 0.133333, 0.],
+               [1., 0.113725, 0.],
+               [1., 0.0823529, 0.],
+               [1., 0.0666667, 0.],
+               [1., 0.0470588, 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 0., 0.],
+               [1., 1., 1.]]
+
+    test_cm = LinearSegmentedColormap.from_list('test', cm_data)
+    return test_cm
 
 
 def display_co2_ice_MOLA(filename, data):
+    from numpy import logspace
     data_time = getdata(filename=filename, target='Time')
     data_latitude = getdata(filename=filename, target='latitude')
     mola_latitude, mola_ls, mola_altitude = MOLA()
@@ -255,6 +521,138 @@ def display_co2_ice_max_longitude_altitude(name, data_latitude, max_mmr, max_alt
     fig.savefig('max_' + name + '_in_altitude_longitude.png', bbox_inches='tight')
 
     plt.show()
+
+
+def display_co2_ice_density_column_evolution_polar_region(filename, data, time, latitude):
+    from numpy import logspace
+    from math import floor
+    import cartopy.crs as ccrs
+
+    data_longitude = getdata(filename=filename, target='longitude')
+
+    platecarree = ccrs.PlateCarree(central_longitude=0)
+
+    if latitude[0] > 0:
+        orthographic = ccrs.Orthographic(central_longitude=0, central_latitude=90, globe=False)
+        title = 'North polar region'
+        pole = 'north'
+    else:
+        orthographic = ccrs.Orthographic(central_longitude=0, central_latitude=-90, globe=False)
+        title = 'South polar region'
+        pole = 'south'
+
+    y_min, y_max = orthographic._y_limits
+    orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
+    orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
+
+    levels = logspace(-13, 1, 15)
+    cmap = cm.get_cmap('inferno')
+    cmap.set_under('w')
+
+    norm = LogNorm()
+    savename = list([])
+
+    # PLOT
+    for i in range(data.shape[0]):
+        fig, ax = plt.subplots(nrows=1, ncols=1, subplot_kw={'projection': orthographic}, figsize=(11, 11),
+                               facecolor='white')
+        ax.set_title(title + f', sols {floor(time[i]):.0f} LT {time[i]*24%24:.0f}')
+        ax.set_facecolor('white')
+        ctf = ax.contourf(data_longitude[:], latitude, data[i, :, :].filled(), norm=norm, levels=levels, transform=platecarree,
+                          cmap=cmap)
+        workaround_gridlines(platecarree, axes=ax, pole=pole)
+        ax.set_global()
+        cbar = fig.colorbar(ctf)
+        cbar.ax.set_title('kg.m$^{-2}$')
+        savename.append(f'co2_ice_density_column_evolution_{i}.png')
+        plt.savefig(savename[i], bbox_inches='tight')
+        plt.close(fig)
+
+    # create the gif
+    create_gif(savename)
+    return
+
+
+def display_emis_polar_projection_garybicas2020_figs11_12(filename, data, time, levels, cmap, unit, savename):
+    import cartopy.crs as ccrs
+
+    if isinstance(data, ndarray):
+        array_mask = True
+    else:
+        array_mask = False
+
+    platecarree = ccrs.PlateCarree(central_longitude=0)
+
+    data_longitude = getdata(filename=filename, target='longitude')
+    data_latitude = getdata(filename=filename, target='latitude')
+
+    # Slice data in polar regions
+    latitude_np, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[60, 90])
+    data_np, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[60, 90])
+
+    latitude_sp, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[-90, -60])
+    data_sp, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[-90, -60])
+
+    # Slice data binned in 15°Ls during their winter period
+    data_np = data_np[12:, :, :]
+    data_sp = data_sp[0:12, :, :]
+
+    # North polar region
+    orthographic = ccrs.Orthographic(central_longitude=0, central_latitude=90, globe=False)
+    y_min, y_max = orthographic._y_limits
+    orthographic._y_limits = (y_min*0.5, y_max*0.5)
+    orthographic._x_limits = (y_min*0.5, y_max*0.5)  # Zoom de 60° à 90°
+    fig, ax = plt.subplots(nrows=3, ncols=4, subplot_kw={'projection': orthographic}, figsize=(20, 15))
+    fig.suptitle('North polar region', fontsize=20)
+    for i, axes in enumerate(ax.reshape(-1)):
+        if i <12:
+            axes.set_title(f'{int(time[i] + 180)}° - {int(time[i+1] + 180)}°')
+            if array_mask:
+                ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], levels=levels,
+                                    transform=platecarree, cmap=cmap)
+            else:
+                if data_np[i, :, :].mask.all():
+                    continue
+                else:
+                    ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], levels=levels,
+                                        transform=platecarree, cmap=cmap)
+            axes.set_global()
+            workaround_gridlines(platecarree, axes=axes, pole='north')
+            axes.set_facecolor('white')
+    pos1 = ax[0, 0].get_position().x0
+    pos2 = (ax[0, 3].get_position().x0 + ax[0, 3].get_position().width) - pos1
+    cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
+    fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
+    plt.savefig(savename+'northern_polar_region_as_fig11_gary-bicas2020.png', bbox_inches='tight')
+
+    # South polar region
+    orthographic = ccrs.Orthographic(central_longitude=0, central_latitude=-90, globe=False)
+    y_min, y_max = orthographic._y_limits
+    orthographic._y_limits = (y_min*0.5, y_max*0.5)
+    orthographic._x_limits = (y_min*0.5, y_max*0.5)  # Zoom de 60° à 90°
+    fig, ax = plt.subplots(nrows=3, ncols=4, subplot_kw={'projection': orthographic}, figsize=(20, 15))
+    fig.suptitle('South polar region', fontsize=20)
+    for i, axes in enumerate(ax.reshape(-1)):
+        if i <12:
+            axes.set_title(f'{int(time[i])}° - {int(time[i+1])}°')
+            if array_mask:
+                ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], levels=levels,
+                                    transform=platecarree, cmap=cmap)
+            else:
+                if data_sp[i, :, :].mask.all():
+                    continue
+                else:
+                    ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], levels=levels,
+                                        transform=platecarree, cmap=cmap)
+            workaround_gridlines(platecarree, axes=axes, pole='south')
+            axes.set_global()
+            axes.set_facecolor('white')
+    pos1 = ax[0, 0].get_position().x0
+    pos2 = (ax[0, 3].get_position().x0 + ax[0, 3].get_position().width) - pos1
+    cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
+    fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
+    plt.savefig(savename+'southern_polar_region_as_fig12_gary-bicas2020.png', bbox_inches='tight')
+    return
 
 
 def display_riceco2_global_mean(filename, list_data):
@@ -766,27 +1164,91 @@ def display_satuco2_altitude_latitude(data, data_altitude, data_latitude):
     plt.show()
 
 
-def display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides):
-    data_altitude = getdata(filename=filename, target='altitude')
+def display_temp_gg2011_fig6(data, data_localtime, data_surface):
+    from numpy import arange
+
+    cmap = colormap_idl_rainbow_plus_white()
+    data_surface = data_surface / 1e3
+
+    fig = plt.figure(figsize=(8, 11))
+    pc = plt.contourf(data_localtime, data_surface, data.T, levels=arange(0, 125, 5), cmap=cmap)
+    plt.ylim(0, 120)
+
+    cbar = fig.colorbar(pc, orientation="vertical")
+    cbar.ax.set_title('K')
+    plt.title('Temperature - Tcond CO$_2$')
+    plt.ylabel('Altitude above areoid (km)')
+    plt.xlabel('Local time (h)')
+    plt.savefig('temp_altitude_localtime_ls120-150_lat0N_lon0E_gg2011_fig6.png', bbox_inches='tight')
+    plt.show()
+    return
+
+
+def display_temp_gg2011_fig7(filename, data, data_altitude):
     data_latitude = getdata(filename=filename, target='latitude')
 
-    fig, ax = plt.subplots(nrows=2, figsize=(8, 11))
+    cmap = colormap_idl_rainbow_plus_white()
 
-    # Zonal mean at 16 H local time
-    ctf1 = ax[0].contourf(data_latitude[:], data_altitude[:], data_zonal_mean, cmap='hot')
-    cbar = plt.colorbar(ctf1, ax=ax[0])
+    # plot
+    fig, ax = plt.subplots(figsize=(11, 8))
+    ax.set_title('Temperature - Tcond CO$_2$')
+    ctf = ax.contourf(data_latitude[:], data_altitude/1e3, data, levels=arange(0, 130, 10), cmap=cmap)
+    ax.set_ylim(40, 120)
+
+    cbar = plt.colorbar(ctf)
     cbar.ax.set_title('K')
 
+    ax.set_xlabel('Latitude (°N)')
+    ax.set_ylabel('Altitude above areoid (km)')
+
+    plt.savefig('temp_zonalmean_altitude_latitude_ls_0-30_gg2011_fig7.png', bbox_inches='tight')
+    plt.show()
+    return
+
+
+def display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides, data_altitude):
+    data_latitude = getdata(filename=filename, target='latitude')
+
+    fig, ax = plt.subplots(nrows=2, figsize=(11, 8))
+
+    cmap = colormap_idl_rainbow_plus_white()
+    # Zonal mean at 16 H local time
+    ctf1 = ax[0].contourf(data_latitude[:], data_altitude/1e3, data_zonal_mean, levels=arange(110, 240, 10), cmap=cmap)
+    cbar = plt.colorbar(ctf1, ax=ax[0])
+    cbar.ax.set_title('K')
+    ax[0].set_ylim(40, 120)
+    ax[0].set_xlabel('Latitude (°N)')
+    ax[0].set_ylabel('Altitude above areoid (km)')
+
     # Thermal tides: 12h - 00h
-    ctf2 = ax[1].contourf(data_latitude[:], data_altitude[:], data_thermal_tides, cmap='coolwarm')
+    ctf2 = ax[1].contourf(data_latitude[:], data_altitude/1e3, data_thermal_tides, levels=arange(-20, 32, 4), cmap=cmap)
     cbar2 = plt.colorbar(ctf2, ax=ax[1])
     cbar2.ax.set_title('K')
+    ax[1].set_ylim(40, 120)
 
-    for axes in ax.reshape(-1):
-        axes.set_yscale('log')
-        axes.invert_yaxis()
-
+    ax[1].set_xlabel('Latitude (°N)')
+    ax[1].set_ylabel('Altitude above areoid (km)')
     plt.savefig('temp_gg2011_fig8.png', bbox_inches='tight')
+    plt.show()
+    return
+
+
+def display_temp_gg2011_fig9(filename, data, data_altitude):
+    data_longitude = getdata(filename=filename, target='longitude')
+
+    cmap = colormap_idl_rainbow_plus_white()
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 11))
+    pc = ax.contourf(data_longitude[:], data_altitude/1e3, data, levels=arange(0, 130, 10), cmap=cmap)
+
+    cbar = fig.colorbar(pc, orientation="vertical")
+    cbar.ax.set_title('K')
+    ax.set_ylim(40, 120)
+
+    plt.title('Temperature -Tcond CO$_2$')
+    plt.xlabel('Longituge (°E)')
+    plt.ylabel('Altitude above areoid (km)')
+    plt.savefig('temp_altitude_longitude_ls_0-30_LT_16H_lat_0N_gg2011_fig9.png', bbox_inches='tight')
     plt.show()
     return
 
@@ -851,11 +1313,13 @@ def display_vars_altitude_latitude(filename, data, unit, title, savename):
     if unit == 'pr.µm':
         data = data * 1e3  # convert kg/m2 to pr.µm
 
+    cmap = 'hot'
+
     # plot
     fig, ax = plt.subplots(figsize=(11, 8))
     ax.set_title(title)
     ax.set_yscale('log')
-    ctf = ax.contourf(data_latitude[:], data_altitude[:], data, cmap='hot')
+    ctf = ax.contourf(data_latitude[:], data_altitude[:], data, cmap=cmap)
     ax.invert_yaxis()
 
     cbar = plt.colorbar(ctf)
@@ -882,7 +1346,7 @@ def display_vars_altitude_localtime(filename, data, data_localtime, title, unit,
                           levels=scale, cmap='seismic', extend='max')
     else:
         plt.yscale('log')
-        pc = plt.contourf(data_localtime, data_altitude[:], data.T, levels=arange(0, 140, 10), cmap='hot')
+        pc = plt.contourf(data_localtime, data_altitude[:], data.T, levels=arange(0, 140, 10), cmap='seismic')
         ax = plt.gca()
         ax.invert_yaxis()
 
@@ -998,7 +1462,8 @@ def display_vars_altitude_ls(filename, data_1, data_2, levels, title, savename, 
 
 
 def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, observation=False, latitude_selected=None,
-                             title=None, TES=None, PFS=None, MVALS=None, layer=None, savename='test'):
+                             localtime_selected=None,title=None, TES=None, PFS=None, MVALS=None, layer=None,
+                             savename='test'):
     nsubplot = 1
     if TES:
         nsubplot += 1
@@ -1008,6 +1473,9 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
     cmap = 'coolwarm'
 
     data_time = getdata(filename, target='Time')
+    if localtime_selected is not None:
+        data_local_time, idx, statsfile = check_local_time(data_time=data_time[:], selected_time=localtime_selected)
+        data_time = data_time[idx::len(data_local_time)]
     ndx, axis_ls = get_ls_index(data_time)
 
     data_altitude = getdata(filename, target='altitude')
@@ -1123,9 +1591,6 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
         for axes in ax.reshape(-1):
             axes.set_facecolor('white')
             axes.set_xticks(ticks=axis_ls)
-        #            if data_latitude.shape[0] > 18:
-        #                axes.set_yticks(ticks=data_latitude[::6])
-        #            axes.set_ylim(data_latitude[0], data_latitude[-1])
         fig.text(0.02, 0.5, 'Latitude (°N)'.format('g'), ha='center', va='center', rotation='vertical', fontsize=14)
         fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
         plt.title(title)
@@ -1134,6 +1599,8 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
         cbar = plt.colorbar(ctf, cax=cbaxes, orientation="horizontal")
         cbar.ax.set_title(unit)
     else:
+        ax.set_xticks(ticks=axis_ls)
+        ax.set_xlim(axis_ls[0], axis_ls[-1])
         ax.set_xlabel('Solar longitude (°)')
         ax.set_ylabel('Latitude (°N)')
         cbar = plt.colorbar(ctf)
@@ -1244,76 +1711,63 @@ def display_vars_stats_zonalmean(filename, data):
     return
 
 
-def workaround_gridlines(src_proj, axes, lat_min, lat_max):
-    from numpy import linspace, zeros
-    # Workaround for plotting lines of constant latitude/longitude as gridlines
-    # labels not supported for this projection.
-    lats = linspace(lat_min, lat_max, num=lat_max-lat_min, endpoint=True)
-    lons = linspace(0, 360, num=360, endpoint=False)
-
-    yn = zeros(len(lats))
-    lona = lons + yn.reshape(len(lats), 1)
-
-    cs2 = axes.contour(lons, lats, lona, 10, transform=src_proj, colors='grey', linestyles='solid', levels=arange(0, 450, 90), linewidths=0.5)
-    axes.clabel(cs2, fontsize=5, inline=True, fmt='%1.0f', inline_spacing=30)
-
-    yt = zeros(len(lons))
-    lata = lats.reshape(len(lats), 1) + yt
-    cs = axes.contour(lons, lats, lata, 10, transform=src_proj, colors='grey', linestyles='solid', levels=2, linewidths=0.5)
-    axes.clabel(cs, fontsize=5, inline=True, fmt='%1.0f', inline_spacing=20)
-
-
-def display_vars_polar_projection(filename, data, savename):
+def display_vars_polar_projection(filename, data_np, data_sp, levels, unit, cmap, suptitle, savename):
     import cartopy.crs as ccrs
 
     data_longitude = getdata(filename=filename, target='longitude')
     data_latitude = getdata(filename=filename, target='latitude')
 
-    latitude_np, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[60, 90])
-    data_np, tmp = slice_data(data[:, :], dimension_data=data_latitude[:], value=[60, 90])
-
-    latitude_sp, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[-90, -60])
-    data_sp, tmp = slice_data(data[:, :], dimension_data=data_latitude[:], value=[-90, -60])
+    latitude_np, tmp = slice_data(data=data_latitude, dimension_data=data_latitude, value=[60, 90])
+    latitude_sp, tmp = slice_data(data=data_latitude, dimension_data=data_latitude, value=[-60, -90])
 
     platecarree = ccrs.PlateCarree(central_longitude=0)
 
-    # North polar region
-    orthographic = ccrs.Orthographic(central_longitude=0, central_latitude=90, globe=False)
-    y_min, y_max = orthographic._y_limits
-    orthographic._y_limits = (y_min*0.5, y_max*0.5)
-    orthographic._x_limits = (y_min*0.5, y_max*0.5)  # Zoom de 60° à 90°
-    plt.figure(figsize=(11, 11))
-    ax = plt.axes(projection=orthographic)
-    ax.set_title('North polar region')
-    ctf = ax.contourf(data_longitude[:], latitude_np, data_np, transform=platecarree, cmap='inferno')
-    workaround_gridlines(platecarree, lat_min=60, lat_max=90)
-    ax.set_global()
-    plt.colorbar(ctf)
+    orthographic_north = ccrs.Orthographic(central_longitude=0, central_latitude=90, globe=False)
+    y_min, y_max = orthographic_north._y_limits
+    orthographic_north._y_limits = (y_min*0.5, y_max*0.5)
+    orthographic_north._x_limits = (y_min*0.5, y_max*0.5)  # Zoom de 60° à 90°
+
+    orthographic_south = ccrs.Orthographic(central_longitude=0, central_latitude=-90, globe=False)
+    y_min, y_max = orthographic_south._y_limits
+    orthographic_south._y_limits = (y_min*0.5, y_max*0.5)
+    orthographic_south._x_limits = (y_min*0.5, y_max*0.5)  # Zoom de 60° à 90°
+
+    # PLOT
+    fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(24, 11))
+    fig.suptitle(suptitle, fontsize=20)
+    ax1 = plt.subplot(121, projection=orthographic_south)
+    ax2 = plt.subplot(122, projection=orthographic_north)
 
     # South polar region
-    orthographic = ccrs.Orthographic(central_longitude=0, central_latitude=-90, globe=False)
-    y_min, y_max = orthographic._y_limits
-    orthographic._y_limits = (y_min*0.5, y_max*0.5)
-    orthographic._x_limits = (y_min*0.5, y_max*0.5)  # Zoom de 60° à 90°
-    plt.figure(figsize=(11, 11))
-    ax = plt.axes(projection=orthographic)
-    ax.set_title('South polar region')
-    ctf = ax.contourf(data_longitude[:], latitude_sp, data_sp, transform=platecarree, cmap='inferno')
-    workaround_gridlines(platecarree, lat_min=-90, lat_max=-59)
-    plt.colorbar(ctf)
-    ax.set_global()
+    ax1.set_title('South polar region')
+    ctf = ax1.contourf(data_longitude[:], latitude_sp, data_sp, levels=levels, transform=platecarree, cmap=cmap)
+    workaround_gridlines(platecarree, axes=ax1, pole='south')
+    ax1.set_global()
 
-    plt.figure(figsize=(11, 11))
-    ax = plt.axes(projection=platecarree)
-    ctf = ax.contourf(data_longitude[:], latitude_sp, data_sp, transform=platecarree, cmap='inferno')
+    # North polar region
+    ax2.set_title('North polar region')
+    ax2.contourf(data_longitude[:], latitude_np, data_np, levels=levels, transform=platecarree, cmap=cmap)
+    workaround_gridlines(platecarree, axes=ax2, pole='north')
+    ax2.set_global()
 
-    plt.savefig(savename+'.png', bbox_inches='inches')
-    plt.show()
+    pos1 = ax2.get_position().x0 + ax2.get_position().width + 0.05
+    fig.subplots_adjust(right=0.9)
+    cbar_ax = fig.add_axes([pos1, ax2.get_position().y0, 0.03, ax2.get_position().height])
+    cbar = fig.colorbar(ctf, cax=cbar_ax)
+    cbar.ax.set_title(unit)
+
+    plt.savefig(savename+'.png', bbox_inches='tight')
     return
 
 
-def display_vars_polar_projection_multiplot(filename, data, time, levels, cmap, unit, savename):
+def display_vars_polar_projection_multiplot(filename, data, time, localtime, levels, norm, cmap, unit, savename):
     import cartopy.crs as ccrs
+    from numpy import max, unique
+
+    if isinstance(data, ndarray):
+        array_mask = True
+    else:
+        array_mask = False
 
     platecarree = ccrs.PlateCarree(central_longitude=0)
 
@@ -1323,9 +1777,13 @@ def display_vars_polar_projection_multiplot(filename, data, time, levels, cmap, 
     # Slice data in polar regions
     latitude_np, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[60, 90])
     data_np, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[60, 90])
-
     latitude_sp, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[-90, -60])
     data_sp, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[-90, -60])
+    data_np[data_np.mask] = -1
+    data_sp[data_sp.mask] = -1
+
+    cmap = cm.get_cmap(cmap)
+    cmap.set_under('w')
 
     # North polar region
     orthographic = ccrs.Orthographic(central_longitude=0, central_latitude=90, globe=False)
@@ -1334,19 +1792,26 @@ def display_vars_polar_projection_multiplot(filename, data, time, levels, cmap, 
     orthographic._x_limits = (y_min*0.5, y_max*0.5)  # Zoom de 60° à 90°
     fig, ax = plt.subplots(nrows=5, ncols=5, subplot_kw={'projection': orthographic}, figsize=(20, 20))
     fig.suptitle('North polar region ({})'.format(unit), fontsize=20)
+
     for i, axes in enumerate(ax.reshape(-1)):
-        if i <24:
+        if i < 24:
             axes.set_title(f'{int(time[i])}° - {int(time[i+1])}°')
-            ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], levels=levels, transform=platecarree,
-                                cmap=cmap)
+            print(unique(data_np[i, :, :]).shape[0])
+            if array_mask and unique(data_np[i, :, :]).shape[0] != 1:
+                # Cas special où il y a une ligne qui a des valeurs mais pas totalement
+                #  => il faut au moins 1 ligne complète sans valeurs masqués pour que ça fonctionne
+                ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], levels=levels, norm=norm,
+                                    transform=platecarree, cmap=cmap, extend='max')
             axes.set_global()
-            workaround_gridlines(platecarree, axes=axes, lat_min=60, lat_max=90)
+            workaround_gridlines(platecarree, axes=axes, pole='north')
+            axes.set_facecolor('white')
+
     pos1 = ax[0, 0].get_position().x0
     pos2 = (ax[0, 4].get_position().x0 + ax[0, 4].get_position().width) - pos1
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
     fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
     fig.tight_layout()
-    plt.savefig(savename+'northern_polar_region.png', bbox_inches='tight')
+    plt.savefig(savename+'_northern_polar_region.png', bbox_inches='tight')
 
     # South polar region
     orthographic = ccrs.Orthographic(central_longitude=0, central_latitude=-90, globe=False)
@@ -1355,17 +1820,48 @@ def display_vars_polar_projection_multiplot(filename, data, time, levels, cmap, 
     orthographic._x_limits = (y_min*0.5, y_max*0.5)  # Zoom de 60° à 90°
     fig, ax = plt.subplots(nrows=5, ncols=5, subplot_kw={'projection': orthographic}, figsize=(20, 20))
     fig.suptitle('South polar region ({})'.format(unit), fontsize=20)
+
     for i, axes in enumerate(ax.reshape(-1)):
         if i <24:
             axes.set_title(f'{int(time[i])}° - {int(time[i+1])}°')
-            ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], levels=levels, transform=platecarree,
-                                cmap=cmap)
-            workaround_gridlines(platecarree, axes=axes, lat_min=-90, lat_max=-59)
+            print(unique(data_sp[i, :, :]).shape[0])
+            if array_mask and unique(data_sp[i, :, :]).shape[0] != 1:
+                ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], levels=levels, norm=norm,
+                                    transform=platecarree, cmap=cmap, extend='max')
             axes.set_global()
+            workaround_gridlines(platecarree, axes=axes, pole='south')
+            axes.set_facecolor('white')
     pos1 = ax[0, 0].get_position().x0
     pos2 = (ax[0, 4].get_position().x0 + ax[0, 4].get_position().width) - pos1
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
     fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
     fig.tight_layout()
 
-    plt.savefig(savename+'southern_polar_region.png', bbox_inches='tight')
+    plt.savefig(savename+'_southern_polar_region.png', bbox_inches='tight')
+
+
+def workaround_gridlines(src_proj, axes, pole):
+    from numpy import linspace, zeros
+    # Workaround for plotting lines of constant latitude/longitude as gridlines
+    # labels not supported for this projection.
+    if pole == 'north':
+        lats = linspace(60, 90, num=31, endpoint=True)
+    elif pole == 'south':
+        lats = linspace(-90, -59, num=31, endpoint=True)
+    else:
+        print('Wrong input pole')
+        exit()
+    lons = linspace(0, 360, num=360, endpoint=False)
+
+    yn = zeros(len(lats))
+    lona = lons + yn.reshape(len(lats), 1)
+
+    cs2 = axes.contour(lons, lats, lona, 10, transform=src_proj, colors='grey', linestyles='solid',
+                       levels=arange(0, 450, 90), linewidths=2)
+    axes.clabel(cs2, fontsize=10, inline=True, fmt='%1.0f', inline_spacing=30)
+
+    yt = zeros(len(lons))
+    lata = lats.reshape(len(lats), 1) + yt
+    cs = axes.contour(lons, lats, lata, 10, transform=src_proj, colors='grey', linestyles='solid', levels=2,
+                      linewidths=2)
+    axes.clabel(cs, fontsize=10, inline=True, fmt='%1.0f', inline_spacing=20)

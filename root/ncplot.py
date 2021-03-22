@@ -2,7 +2,7 @@
 from packages.displays import *
 from os import listdir
 
-from numpy import mean, abs, min, max, zeros, where, concatenate, flip, logspace, arange
+from numpy import mean, min, max, zeros, logspace, arange, linspace
 
 from sys import argv
 
@@ -10,12 +10,11 @@ from sys import argv
 def plot_simu_3D(filename, data_target, name_target, view_mode=None):
     unit_target = data_target.units
 
+    data_target, local_time = extract_at_a_local_time(filename=filename, data=data_target)
+
     print('Correction value...')
     if data_target.ndim == 4:
-        if name_target == 'satuco2':
-            data_target = correction_value(data_target[:, :, :, :], 'inf', threshold=1)
-        else:
-            data_target = correction_value(data_target[:, :, :, :], 'inf', threshold=1e-13)
+        data_target = correction_value(data_target[:, :, :, :], 'inf', threshold=1e-13)
     elif data_target.ndim == 3:
         data_target = correction_value(data_target[:, :, :], 'inf', threshold=1e-13)
 
@@ -35,9 +34,10 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
         print('     6: layer ice thickness (fig: thickness-lat)')
         print('     7: polar cloud distribution to compare with Fig.8 of Neumann+2003 (fig: #clouds-lat)')
         print('     8: cloud evolution with satuco2/temperature/radius (fig: alt-lat, gif)')
-        print('     9: mmr structure in winter polar regions at 60°N/S (fig. alt-ls)')
+        print('     9: mmr structure in winter polar regions at 60°N/S (fig: alt-ls)')
+        print('    10: Density column evolution in polar region, polar projection (fig: lon-lat)')
         if name_target in ['h2o_ice', 'q01']:
-            print('     10: h2o_ice profile with co2_ice presence (fig: alt-ls)')
+            print('     11: h2o_ice profile with co2_ice presence (fig: alt-ls)')
         print('')
         if view_mode is None:
             view_mode = int(input('Select number:'))
@@ -60,12 +60,12 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
             if view_mode == 2:
                 display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed,
                                          unit='kg/m$^2$', norm=LogNorm(), levels=logspace(-13, 2, 16),
-                                         observation=True, latitude_selected=None,
-                                         title='Zonal mean column density of {} between {:.1e} and {:.1e} {}'.
-                                         format(name_target, zmin, zmax, altitude_unit),
+                                         observation=True, latitude_selected=None, localtime_selected=local_time,
+                                         title=f'Zonal mean column density of {name_target} between {zmin:.1e} and '
+                                               f'{zmax:.1e} {altitude_unit}, {local_time} h',
                                          TES=None, PFS=None, MVALS=None, layer=None,
-                                         savename='zonal_mean_density_column_{}_{:.1e}_{:.1e}_{}'.
-                                         format(name_target, zmin, zmax, altitude_unit))
+                                         savename=f'zonal_mean_density_column_{name_target}_{zmin:.1e}_{zmax:.1e}_'
+                                                  f'{altitude_unit}_{local_time}h')
 
             else:
                 display_co2_ice_MOLA(filename, data_processed)
@@ -158,6 +158,14 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
                                                     savename='co2_ice_zonal_mean_60NS')
 
         if view_mode == 10:
+            print('Processing data:')
+            data_processed, time, latitude = co2ice_density_column_evolution(filename=filename, data=data_target)
+
+            print('Display:')
+            display_co2_ice_density_column_evolution_polar_region(filename=filename, data=data_processed, time=time,
+                                                                  latitude=latitude)
+
+        if view_mode == 11:
             print('Processing data:')
             data_target, data_co2_ice, latitude_selected = h2o_ice_alt_ls_with_co2_ice(filename, data_target)
 
@@ -253,7 +261,7 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
                 vars_zonal_mean_in_time_co2ice_exists(filename, data_target, name_target, density=False)
 
             print('Display:')
-            display_1fig_profiles(filename, list_data, latitude_selected, xmin=1e-3, xmax=2000,
+            display_vars_1fig_profiles(filename, list_data, latitude_selected, xmin=1e-2, xmax=2000,
                                   xlabel='radius of ice particle (µm)',
                                   xscale='log', yscale='log',
                                   second_var=None, xmin2=None, xmax2=None, xlabel2=None, xscale2=None,
@@ -374,7 +382,7 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
 
         if view_mode == 4:
             print('Processing data:')
-            data_icelayer, data_icelayer_std = satuco2_thickness_atm_layer(filename, data_target)
+            data_icelayer, data_icelayer_std = satuco2_hu2012_fig9(filename, data_target)
 
             print('Display:')
             display_satuco2_thickness_atm_layer(data_icelayer, data_icelayer_std,
@@ -418,32 +426,32 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
         print('')
 
         if view_mode == 1:
-            data_processed, data_localtime = temp_gg2011_fig6(filename=filename, data=data_target)
+            print('Processing data:')
+            data_processed, data_localtime, data_surface = temp_gg2011_fig6(filename=filename, data=data_target)
 
-            display_vars_altitude_localtime(filename, data_processed, data_localtime,
-                                            title='Temperature - Tcond CO$_2$', unit='K',
-                                            savename='difftemperature_altitude_localtime')
+            print('Display:')
+            display_temp_gg2011_fig6(data_processed, data_localtime, data_surface)
 
         if view_mode == 2:
-            data_processed = temp_gg2011_fig7(filename=filename, data=data_target)
+            print('Processing data:')
+            data_processed, data_altitude = temp_gg2011_fig7(filename=filename, data=data_target)
 
-            display_vars_altitude_latitude(filename=filename, data=data_processed, unit='K',
-                                           title='Temperature - Tcond CO$_2$',
-                                           savename='difftemperature_zonalmean_altitude_latitude_ls_0-30')
+            print('Display:')
+            display_temp_gg2011_fig7(filename=filename, data=data_processed, data_altitude=data_altitude)
 
         if view_mode == 3:
             print('Processing data:')
-            data_zonal_mean, data_thermal_tides = temp_gg2011_fig8(filename=filename, data=data_target)
+            data_zonal_mean, data_thermal_tides, data_altitude = temp_gg2011_fig8(filename=filename, data=data_target)
 
             print('Display:')
-            display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides)
+            display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides, data_altitude)
 
         if view_mode == 4:
-            data_processed = temp_gg2011_fig9(filename=filename, data=data_target)
+            print('Processing data:')
+            data_processed, data_altitude = temp_gg2011_fig9(filename=filename, data=data_target)
 
-            display_vars_altitude_longitude(filename=filename, data=data_processed, unit='K',
-                                            title='Temperature -Tcond CO$_2$',
-                                            savename='difftemperature_altitude_longitude_ls_0-30_LT_16H_lat_0N')
+            print('Display:')
+            display_temp_gg2011_fig9(filename=filename, data=data_processed, data_altitude=data_altitude)
 
         if view_mode == 5:
             print('Parameters:')
@@ -504,7 +512,9 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
     elif name_target in ['co2ice']:
         print('What do you wanna do?')
         print('     1: cumulative masses in polar cap region, to compare with fig.10 of Hu+2012 (fig: g-ls)')
+        print('     2: Polar plot every 15° ls mean, lat=60°-90° (fig: lat-ls)')
         print('')
+
         if view_mode is None:
             view_mode = int(input('Select number:'))
         if view_mode == 1:
@@ -516,15 +526,21 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
 
         if view_mode == 2:
             print('Processing data:')
+            data_mean, time_bin = co2ice_time_mean(filename=filename, data=data_target, duration=15,
+                                                   localtime=local_time)
 
             print('Display:')
-            display_vars_polar_projection(filename=filename, data=data_target)
-
+            display_vars_polar_projection_multiplot(filename=filename, data=data_mean, time=time_bin,
+                                                    localtime=local_time, levels=linspace(0, 1e13, 100), norm=None,
+                                                    cmap='inferno',
+                                                    unit='kg', savename=f'co2ice_15ls_mean_{local_time}h')
 
     elif name_target in ['emis']:
         print('What do you wanna do?')
         print('     1: zonal mean (fig: ls-lat)')
-        print('     2: Polar plot every 15° ls mean, lat=60°-90° (fig: lat-ls)')
+        print('     2: Polar plot every 15° ls mean, lat=60°-90° (fig: lon-lat)')
+        print('        201: display for direct comparison with figs. 11  and 12 [Gary-Bicas2020], (fig: lon-lat)')
+        print('     3: Polar plot time mean during winter [Gary-Bicas2020, fig. 13] (fig: lon-lat)')
         print('')
         if view_mode is None:
             view_mode = int(input('Select number:'))
@@ -541,21 +557,37 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
                             title='Zonal mean of {}'.format(name_target),
                             savename='{}_zonal_mean'.format(name_target))
 
-        if view_mode == 2:
+        if view_mode == 2 or view_mode == 201:
             print('Processing data:')
             data_mean, time_bin = vars_time_mean(filename=filename, data=data_target, duration=15)
 
             print('Display:')
-            print(min(data_mean))
-            display_vars_polar_projection_multiplot(filename=filename, data=data_mean, time=time_bin,
-                                                    levels=[0.5, 0.6, 0.7, 0.8, 0.9, 1.0], cmap='inferno', unit=unit_target,
-                                                    savename='emis_15ls_mean_')
+            if view_mode == 2:
+                display_vars_polar_projection_multiplot(filename=filename, data=data_mean, time=time_bin,
+                                                        levels=linspace(0.55, 1., 100), cmap='inferno',
+                                                        unit='',
+                                                        savename='emis_15ls_mean_')
+            if view_mode == 201:
+                display_emis_polar_projection_garybicas2020_figs11_12(filename=filename, data=data_mean, time=time_bin,
+                                                                      levels=linspace(0.55, 1., 100), cmap='inferno',
+                                                                      unit='',
+                                                                      savename='emis_15ls_mean_')
 
+        if view_mode == 3:
+            print('Processing data:')
+            data_mean_np, data_mean_sp = emis_polar_winter_gg2020_fig13(filename=filename, data=data_target)
+
+            print('Display:')
+            display_vars_polar_projection(filename=filename, data_np=data_mean_np, data_sp=data_mean_sp,
+                                          levels=linspace(0.55, 1., 100), unit='', cmap='inferno',
+                                          suptitle='Surface emissivity mean in time during polar winter',
+                                          savename='emis_time_mean_gary-bicas2020')
 
     elif name_target in ['fluxtop_lw', 'fluxtop_sw', 'fluxsurf_lw', 'fluxsurf_sw']:
         print('What do you wanna do?')
         print('     1: zonal mean (fig: ls-lat)')
-
+        print('     2: Polar plot every 15° ls mean, lat=60°-90° (fig: lat-ls)')
+        print('')
         if view_mode is None:
             view_mode = int(input('Select number:'))
 
@@ -570,7 +602,16 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
                                      title='Zonal mean of {}'.format(name_target),
                                      TES=None, PFS=None, MVALS=None, layer=None,
                                      savename='{}_zonal_mean'.format(name_target))
+        if view_mode == 2:
+            print('Processing data:')
+            data_mean, time_bin = vars_time_mean(filename=filename, data=data_target, duration=15)
 
+            print('Display:')
+            print(max(data_mean))
+            display_vars_polar_projection_multiplot(filename=filename, data=data_mean, time=time_bin,
+                                                    levels=arange(0, 450, 25), cmap='inferno',
+                                                    unit=unit_target,
+                                                    savename=f'{name_target}_15ls_mean_')
 
     elif name_target in ['tau1mic']:
         print('What do you wanna do?')
@@ -731,14 +772,14 @@ def plot_simu_1D(filename, data_target, name_target, view_mode=None):
 
 
 def main():
+    ifile = None
+    itarget = None
+    iview_mode = None
     if len(argv) > 2:
         ifile = int(argv[1])
         itarget = argv[2]
-        iview_mode = int(argv[3])
-    else:
-        ifile = None
-        itarget = None
-        iview_mode = None
+        if len(argv) == 4:
+            iview_mode = int(argv[3])
 
     files = listdir('.')
 
