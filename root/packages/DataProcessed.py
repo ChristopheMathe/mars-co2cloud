@@ -964,7 +964,7 @@ def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, density=Fal
         filenames = list([f'{data_name}_mean_{latitude_selected[0]:.0f}N_{latitude_selected[-1]:.0f}N_0-360Ls'])
         list_time_selected = list([data_time[0], data_time[-1]])
     else:
-        directory_output = f'{data_name}_mean_radius_{latitude_selected[0]:.0f}N_{latitude_selected[-1]:.0f}N_png'
+        directory_output = f'{data_name}_mean_radius_{latitude_selected[0]:.0f}N_{latitude_selected[-1]:.0f}N'
         try:
             mkdir(directory_output)
         except:
@@ -972,9 +972,9 @@ def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, density=Fal
 
         timestep = float(input(f'Select the time step range ({data_time.units}): '))
         nb_step = int(data_time[-1] / timestep) + 1
-        print('nb_step: {}'.format(nb_step))
+        print(f'nb_step: {nb_step}')
         if data_time[-1] % timestep != 0:
-            print('data_time[-1]%timestep = {}'.format(data_time[-1] % timestep))
+            print(f'data_time[-1]%timestep = {data_time[-1] % timestep}')
 
         list_data = list([])
         filenames = list([])
@@ -986,7 +986,7 @@ def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, density=Fal
             data_co2_ice_sliced_lat_ls, time_selected = slice_data(data_co2_ice_sliced_lat, dimension_data=data_time[:],
                                                                    value=[i * timestep, (i + 1) * timestep])
 
-            print('\t \t selected: {} {}'.format(time_selected[0], time_selected[-1]))
+            print(f'\t\tselected: {time_selected[0]:.0f} {time_selected[-1]:.0f}')
             list_time_selected.append([time_selected[0], time_selected[-1]])
             # Mask data where co2ice is inferior to 1e-13, so where co2ice exists
             data_final = ma.masked_where(data_co2_ice_sliced_lat_ls < 1e-13, data_sliced_lat_ls)

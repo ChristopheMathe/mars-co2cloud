@@ -1615,7 +1615,12 @@ def display_vars_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xl
                                savename='profiles', title_option=None):
     from numpy import arange
 
-    time_unit = 'sols'
+    data_time = getdata(filename, target='Time')
+
+    if data_time.units == 'degrees':
+        time_unit = u'° Ls'
+    else:
+        time_unit = 'sols'
 
     data_altitude = getdata(filename, target='altitude')
     if data_altitude.units == 'm':
@@ -1652,14 +1657,13 @@ def display_vars_1fig_profiles(filename, data, latitude_selected, xmin, xmax, xl
             for j in range(second_var[0].shape[1]):
                 ax2.plot(second_var[i][:, j], data_altitude[:], ls='--')
         ax.set_xlim(xmin, xmax)
-        # ax.set_ylim(1e-3, data_altitude[-1])
         if altitude_name == 'Pressure':
             ax.invert_yaxis()
         ax.legend(loc='best')
         ax.set_xlabel(xlabel)
         ax.set_ylabel(altitude_name + ' (' + units + ')')
         if title_option is not None:
-            ax.set_title(title + ', and {:.0f} - {:.0f} {}'.format(title_option[i][0], title_option[i][1], time_unit))
+            ax.set_title(f'{title}, and {title_option[i][0]:.0f} - {title_option[i][1]:.0f} {time_unit}')
         fig.savefig(s + '.png', bbox_inches='tight')
         plt.close(fig)
 
