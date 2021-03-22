@@ -944,7 +944,7 @@ def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, density=Fal
     # select the time range
     data_time = getdata(filename=filename, target='Time')
     print('')
-    print('Time range: {} - {}'.format(data_time[0], data_time[-1]))
+    print(f'Time range: {data_time[0]:.2f} - {data_time[-1]:.2f} {data_time.units}')
     breakdown = input('Do you want compute mean radius over all the time (Y/n)?')
 
     if breakdown.lower() in ['y', 'yes']:
@@ -961,18 +961,16 @@ def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, density=Fal
 
         data_final = mean(mean(data_final, axis=3), axis=0) * 1e6  # zonal mean and temporal mean, and m to µm
         list_data = list([data_final])
-        filenames = list(['{}_mean_{:.0f}N_{:.0f}N_0-360Ls'.format(data_name, latitude_selected[0],
-                                                                   latitude_selected[-1])])
+        filenames = list([f'{data_name}_mean_{latitude_selected[0]:.0f}N_{latitude_selected[-1]:.0f}N_0-360Ls'])
         list_time_selected = list([data_time[0], data_time[-1]])
     else:
-        directory_output = '{}_mean_radius_{:.0f}N_{:.0f}N_png'.format(data_name, latitude_selected[0],
-                                                                       latitude_selected[-1])
+        directory_output = f'{data_name}_mean_radius_{latitude_selected[0]:.0f}N_{latitude_selected[-1]:.0f}N_png'
         try:
             mkdir(directory_output)
         except:
             pass
 
-        timestep = float(input('Select the time step range: '))
+        timestep = float(input(f'Select the time step range ({data_time.units}): '))
         nb_step = int(data_time[-1] / timestep) + 1
         print('nb_step: {}'.format(nb_step))
         if data_time[-1] % timestep != 0:
