@@ -532,17 +532,17 @@ def satuco2_hu2012_fig9(filename, data):
         print('The netCDF file did not zrecasted above the local surface')
         exit()
 
-    data_north, latitude_selected = slice_data(data, dimension_data=data_latitude, value=[50, 90])
-    data_south, latitude_selected = slice_data(data, dimension_data=data_latitude, value=[-50, -90])
+    data_north, latitude_selected = slice_data(data, dimension_data=data_latitude, value=[60, 90])
+    data_south, latitude_selected = slice_data(data, dimension_data=data_latitude, value=[-60, -90])
     del data
 
     # Bin time in 5° Ls
     data_time = getdata(filename=filename, target='Time')
     if data_time.shape[0] % 60 == 0:
-        print('5°Ls binning: {} - {}'.format(data_time[0], data_time[60]))
+        print(f'5°Ls binning: {data_time[0]} - {data_time[60]}')
         nb_bin = int(data_time.shape[0] / 60) + 1
     else:
-        print('5°Ls binning: from {} to {}'.format(data_time[0], data_time[-1]))
+        print(f'5°Ls binning: from {data_time[0]} to {data_time[-1]}')
         nb_bin = 72
 
     data_icelayer = zeros((2, nb_bin))
@@ -590,11 +590,8 @@ def satuco2_hu2012_fig9(filename, data):
         tmp_south = correction_value(tmp_south, 'inf', threshold=0)
 
         if tmp_north.size != 0:
-            print(tmp_north)
             data_icelayer[0, bin] = mean(tmp_north)
             data_icelayer_std[0, bin] = std(tmp_north)
-            print(data_icelayer[0, bin], data_icelayer_std[0, bin])
-            print('---------')
         else:
             data_icelayer[0, bin] = 0
             data_icelayer_std[0, bin] = 0
