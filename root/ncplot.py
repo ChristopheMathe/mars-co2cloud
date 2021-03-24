@@ -599,10 +599,11 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
             print('Display:')
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=zonal_mean, unit=unit_target,
                                      norm=None, levels=arange(0, 160, 20), observation=False,
-                                     latitude_selected=layer_selected,
-                                     title='Zonal mean of {}'.format(name_target),
+                                     latitude_selected=layer_selected,  localtime_selected=local_time,
+                                     title=f'Zonal mean of {name_target}',
                                      TES=None, PFS=None, MVALS=None, layer=None,
-                                     savename='{}_zonal_mean'.format(name_target))
+                                     savename=f'{name_target}_zonal_mean')
+
         if view_mode == 2:
             print('Processing data:')
             data_mean, time_bin = vars_time_mean(filename=filename, data=data_target, duration=15)

@@ -1438,7 +1438,7 @@ def display_vars_altitude_ls(filename, data_1, data_2, levels, title, savename, 
 
 
 def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, observation=False, latitude_selected=None,
-                             localtime_selected=None,title=None, TES=None, PFS=None, MVALS=None, layer=None,
+                             localtime_selected=None, title=None, TES=None, PFS=None, MVALS=None, layer=None,
                              savename='test'):
     nsubplot = 1
     if TES:
