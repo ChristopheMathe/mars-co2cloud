@@ -99,7 +99,7 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
                 filename, data_target, normalization='True')
 
             print('Display:')
-            display_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
+            display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
                                                          latitude_north, latitude_south,
                                                          savename='distribution_polar_clouds')
 

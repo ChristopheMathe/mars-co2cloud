@@ -296,43 +296,17 @@ def display_co2_ice_MOLA(filename, data):
     plt.savefig('DARI_co2_ice_density_column_MOLA.png', bbox_inches='tight')
     plt.show()
 
-
 def display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
                                                          north_latitude, south_latitude, savename):
-    data_time = getdata(filename, target='Time')
-    data_altitude = getdata(filename, target='altitude')
-    data_latitude = getdata(filename, target='latitude')
-    data_zareoid = getdata(filename, target='zareoid')
-    data_zareoid = correction_value(data_zareoid[:, :, :, :], operator='inf', threshold=1e-13)
-    data_zareoid_north, tmp = slice_data(data_zareoid, dimension_data=data_latitude, value=[north_latitude[0],
-                                                                                            north_latitude[-1]])
-    data_zareoid_south, tmp = slice_data(data_zareoid, dimension_data=data_latitude, value=[south_latitude[0],
-                                                                                            south_latitude[-1]])
-    data_zareoid_north, tmp = slice_data(data_zareoid_north, dimension_data=data_time, value=[104, 360])
-    data_zareoid_south, tmp = slice_data(data_zareoid_south, dimension_data=data_time, value=[104, 360])
-    del data_zareoid
 
-    # Add altitude lines at 0, 10, 15, 20 km
-    lines_altitude = [0, 1e4, 1.5e4, 2e4]
+    data_altitude = getdata(filename=filename, target='altitude')
 
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11), sharey=True)
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11))
     pc = ax[0].contourf(north_latitude, data_altitude[:], distribution_north.T, cmap='Greys')
-    for i in lines_altitude:
-        data_line = get_mean_index_alti(data_zareoid_north, i, dimension='latitude')
-        ax[0].plot(north_latitude, data_altitude[data_line], '--', color='red')
-        ax[0].text(north_latitude[0], data_altitude[data_line[0]], '{:.0f} km'.format(i / 1e3),
-                   verticalalignment='bottom', horizontalalignment='right', color='red', fontsize=10)
+    ax[0].set_ylim(0, 20000)
 
     ax[1].contourf(south_latitude, data_altitude[:], distribution_south.T, cmap='Greys')
-    for i in lines_altitude:
-        data_line = get_mean_index_alti(data_zareoid_south, i, dimension='latitude')
-        ax[1].plot(south_latitude, data_altitude[data_line], '--', color='red')
-        ax[1].text(south_latitude[0], data_altitude[data_line[0]], '{:.0f} km'.format(i / 1e3),
-                   verticalalignment='bottom', horizontalalignment='right', color='red', fontsize=10)
-
-    ax[0].set_ylim(data_altitude[0], 1)
-    ax[0].set_yscale('log')
-    #    ax[0].invert_yaxis()
+    ax[1].set_ylim(0, 20000)
 
     plt.draw()
     p0 = ax[0].get_position().get_points().flatten()
@@ -340,8 +314,8 @@ def display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_
     cbar = plt.colorbar(pc, cax=ax_cbar, orientation='horizontal')
     cbar.ax.set_title('count')
 
-    fig.text(0.02, 0.5, '{} ({})'.format('Pressure', data_altitude.units), ha='center', va='center',
-             rotation='vertical', fontsize=14)
+    fig.text(0.02, 0.5, f'{data_altitude.name} ({data_altitude.units})', ha='center', va='center', rotation='vertical',
+             fontsize=14)
     fig.text(0.5, 0.06, 'Latitude (°N)', ha='center', va='center', fontsize=14)
 
     fig.savefig(savename + '.png', bbox_inches='tight')

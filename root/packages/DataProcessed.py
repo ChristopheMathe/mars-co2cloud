@@ -48,6 +48,12 @@ def co2ice_thickness_atm_layer(filename, data):
 
 
 def co2ice_polar_cloud_distribution(filename, data, normalization):
+    data_altitude = getdata(filename=filename, target='altitude')
+    if data_altitude.long_name != 'Altitude above areoid':
+        print('Data did not zrecasted above the aroid')
+        print(f'\tCurrent: {data_altitude.long_name}')
+        exit()
+
     # sliced data on latitude region
     data_latitude = getdata(filename, target='latitude')
     data_north, latitude_north = slice_data(data, dimension_data=data_latitude, value=[60, 90])
