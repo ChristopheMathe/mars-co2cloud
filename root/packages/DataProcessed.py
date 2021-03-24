@@ -246,8 +246,8 @@ def riceco2_topcloud_altitude(filename, data_target):
     #TODO: il faut que cela soit au-dessus de la surface local!
     data_altitude = getdata(filename, target='altitude')
 
-    if data_altitude.long_name != 'Above the local surface':
-        print('')
+    if data_altitude.long_name != 'Altitude above local surface':
+        print(f'{data_altitude.long_name}')
         exit()
 
     data_ccnNco2 = getdata(filename, target='ccnNco2')
