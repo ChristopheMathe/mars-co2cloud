@@ -427,10 +427,10 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
 
         if view_mode == 1:
             print('Processing data:')
-            data_processed, data_localtime, data_surface = temp_gg2011_fig6(filename=filename, data=data_target)
+            data_processed, data_localtime = temp_gg2011_fig6(filename=filename, data=data_target)
 
             print('Display:')
-            display_temp_gg2011_fig6(data_processed, data_localtime, data_surface)
+            display_temp_gg2011_fig6(filename=filename, data=data_processed, data_localtime=data_localtime)
 
         if view_mode == 2:
             print('Processing data:')

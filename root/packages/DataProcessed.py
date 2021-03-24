@@ -627,13 +627,13 @@ def temp_gg2011_fig6(filename, data):
         print(data_altitude.long_name)
         print('The netcdf did not zrecasted above the aeroid.')
         exit()
-    data_surface_local_tmp = data_altitude[:]
 
     # Check if we have a stats file with the local time
     data_local_time, idx, stats_file = check_local_time(data_time[:])
-    if not stats_file:
+    if not stats_file or 'stats5' not in filename:
         print('This file is not a stats file required to compare with GG2011')
         exit()
+
 
     # Slice data: lon = 0°, lat = 0° [Fig 6, GG2011]
     ## For temperature
@@ -663,7 +663,7 @@ def temp_gg2011_fig6(filename, data):
     del data, data_tmp
 
     print(f'T-Tcondco2: min = {min(data_p):.2f}, max = {max(data_p):.2f}')
-    return data_p, data_local_time, data_surface_local_tmp
+    return data_p, data_local_time
 
 
 def temp_gg2011_fig7(filename, data):

@@ -1138,14 +1138,15 @@ def display_satuco2_altitude_latitude(data, data_altitude, data_latitude):
     plt.show()
 
 
-def display_temp_gg2011_fig6(data, data_localtime, data_surface):
+def display_temp_gg2011_fig6(filename, data, data_localtime):
     from numpy import arange
 
+    data_altitude = getdata(filename=filename, target='altitude')
+
     cmap = colormap_idl_rainbow_plus_white()
-    data_surface = data_surface / 1e3
 
     fig = plt.figure(figsize=(8, 11))
-    pc = plt.contourf(data_localtime, data_surface, data.T, levels=arange(0, 125, 5), cmap=cmap)
+    pc = plt.contourf(data_localtime, data_altitude[:]/1e3, data.T, levels=arange(0, 125, 5), cmap=cmap)
     plt.ylim(0, 120)
 
     cbar = fig.colorbar(pc, orientation="vertical")
