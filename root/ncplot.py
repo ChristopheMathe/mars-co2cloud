@@ -441,10 +441,10 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
 
         if view_mode == 3:
             print('Processing data:')
-            data_zonal_mean, data_thermal_tides, data_altitude = temp_gg2011_fig8(filename=filename, data=data_target)
+            data_zonal_mean, data_thermal_tides = temp_gg2011_fig8(filename=filename, data=data_target)
 
             print('Display:')
-            display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides, data_altitude)
+            display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides)
 
         if view_mode == 4:
             print('Processing data:')

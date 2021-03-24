@@ -1180,10 +1180,11 @@ def display_temp_gg2011_fig7(filename, data, data_altitude):
     return
 
 
-def display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides, data_altitude):
+def display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides):
     data_latitude = getdata(filename=filename, target='latitude')
+    data_altitude = getdata(filename=filename, target='altitude')[:]
 
-    fig, ax = plt.subplots(nrows=2, figsize=(11, 8))
+    fig, ax = plt.subplots(nrows=2, figsize=(8, 11))
 
     cmap = colormap_idl_rainbow_plus_white()
     # Zonal mean at 16 H local time

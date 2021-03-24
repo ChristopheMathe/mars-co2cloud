@@ -25,7 +25,7 @@ def check_local_time(data_time, selected_time=None):
         data_local_time = data_time
         stats_file = True
     else:
-        data_local_time = unique(round(data_time[:]*24%24, 0))
+        data_local_time = unique(round(data_time[:] * 24 % 24, 0))
         if 0 in data_local_time and 24 in data_local_time:
             data_local_time = delete(data_local_time, -1)
         stats_file = False
@@ -144,12 +144,13 @@ def compute_column_density(filename, data):
     if data_altitude.units in ['m', 'km']:
         for alt in range(data.shape[1] - 1):
             data_column[:, alt, :, :] = data[:, alt, :, :] * \
-                                        (data_pressure[:, alt, :, :] - data_pressure[:, alt+1, :, :]) / 3.711  # g
+                                        (data_pressure[:, alt, :, :] - data_pressure[:, alt + 1, :, :]) / 3.711  # g
         data_column[:, -1, :, :] = data[:, -1, :, :] * data_pressure[:, -1, :, :] / 3.711
     else:
         for alt in range(data.shape[1] - 1):
             data_column[:, alt, :, :] = data[:, alt, :, :] * \
-                                        (data_altitude[idx_z_min+alt] - data_altitude[idx_z_min+alt+1]) / 3.711  # g
+                                        (data_altitude[idx_z_min + alt] - data_altitude[
+                                            idx_z_min + alt + 1]) / 3.711  # g
         data_column[:, -1, :, :] = data[:, -1, :, :] * data_altitude[idx_z_min + alt + 1] / 3.711
 
     data_column = correction_value(data_column, 'inf', threshold=1e-13)
@@ -177,7 +178,6 @@ def extract_at_a_local_time(filename, data):
         data_processed = data
 
     return data_processed, local_time
-
 
 
 def extract_at_max_co2_ice(data, x, y, shape_big_data):
@@ -208,7 +208,7 @@ def extract_where_co2_ice(filename, data):
 
     # extract co2_ice data
     data_co2_ice = getdata(filename, target='co2_ice')
-    data_where_co2_ice = ma.masked_where(data_co2_ice[:,:,:,:] < 1e-13, data, nan)
+    data_where_co2_ice = ma.masked_where(data_co2_ice[:, :, :, :] < 1e-13, data, nan)
     del data_co2_ice
 
     return data_where_co2_ice
@@ -239,7 +239,7 @@ def gcm_aire():
 def gcm_surface_local(data_zaeroid):
     filename = '/home/mathe/Documents/owncloud/GCM/gcm_aire_phisinit.nc'
     data_phisinit = getdata(filename=filename, target='phisinit')
-    return data_zaeroid - data_phisinit[:, :]/3.711
+    return data_zaeroid - data_phisinit[:, :] / 3.711
 
 
 def get_extrema_in_alt_lon(data, extrema):
@@ -273,7 +273,7 @@ def get_nearest_clouds_observed(data_obs, dim, data_dim, value):
                 idx = abs(data_dim[:] - value).argmin()
             else:
                 idx = abs(data_dim[:] - value).argmin() + 1
-            latitude_range = data_dim[idx-1:idx+1]
+            latitude_range = data_dim[idx - 1:idx + 1]
         elif len(value) == 2:
             idx1 = (abs(data_dim[:] - value[0])).argmin()
             idx2 = (abs(data_dim[:] - value[1])).argmin()
@@ -292,20 +292,20 @@ def get_nearest_clouds_observed(data_obs, dim, data_dim, value):
 
         # Cas pour les latitudes sud
         if (latitude_range[0] < 0) and (latitude_range[-1] < 0):
-            mask = (data_obs[:,1] <= latitude_range[0]) & (data_obs[:,1] >= latitude_range[-1])
+            mask = (data_obs[:, 1] <= latitude_range[0]) & (data_obs[:, 1] >= latitude_range[-1])
         # Cas pour les latitudes nord
         elif (latitude_range[0] > 0) and (latitude_range[-1] > 0):
-            mask = (data_obs[:,1] >= latitude_range[0]) & (data_obs[:,1] <= latitude_range[-1])
+            mask = (data_obs[:, 1] >= latitude_range[0]) & (data_obs[:, 1] <= latitude_range[-1])
         # Cas pour un mélange des deux
         else:
             if latitude_range[0] > latitude_range[-1]:
                 tmp = latitude_range[0]
                 latitude_range[0] = latitude_range[-1]
                 latitude_range[-1] = tmp
-            mask = (data_obs[:,1] >= latitude_range[0]) & (data_obs[:,1] <= latitude_range[-1])
+            mask = (data_obs[:, 1] >= latitude_range[0]) & (data_obs[:, 1] <= latitude_range[-1])
 
-        data_ls = data_obs[:,0][mask]
-        data_latitude = data_obs[:,1][mask]
+        data_ls = data_obs[:, 0][mask]
+        data_latitude = data_obs[:, 1][mask]
 
     return data_ls, data_latitude
 
@@ -403,7 +403,7 @@ def slice_data(data, dimension_data, value):
     idx, idx1, idx2, idx_dim = None, None, None, None
 
     # Select the dimension where the slice will be done
-    #TODO: check if 2 dim have the same length ....
+    # TODO: check if 2 dim have the same length ....
     for i in range(data.ndim):
         if data.shape[i] == dimension_data.shape[0]:
             idx_dim = dimension_data.shape[0]
@@ -528,8 +528,6 @@ def tcondco2(data_pressure=None, data_temperature=None, data_rho=None):
         T_sat = B / (A - log10((data_pressure + 1e-13) / 10 ** 5)) - C
     elif (data_temperature is not None) and (data_rho is not None):
         # Equation from Washburn (1948) enfin tcond.. in G-G2011
-        T_sat = -3148. / (log(0.01*data_temperature*data_rho*R) - 23.102)  # rho en kg/m3
+        T_sat = -3148. / (log(0.01 * data_temperature * data_rho * R) - 23.102)  # rho en kg/m3
 
     return T_sat
-
-

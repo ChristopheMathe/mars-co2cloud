@@ -717,14 +717,13 @@ def temp_gg2011_fig8(filename, data):
         print(data_altitude.long_name)
         print('The netcdf did not zrecasted above the aeroid.')
         exit()
-    data_surface_local = data_altitude[:]
 
     # Check local time available and slice data at 0, 12, 16 H
-    data_local_time, idx_0 = check_local_time(data_time=data_time[:], selected_time=0)
+    data_local_time, idx_0, statsfile = check_local_time(data_time=data_time[:], selected_time=0)
     data_zonal_mean_0h = data_zonal_mean[idx_0::len(data_local_time), :, :]
-    data_local_time, idx_12 = check_local_time(data_time=data_time[:], selected_time=12)
+    data_local_time, idx_12, statsfile = check_local_time(data_time=data_time[:], selected_time=12)
     data_zonal_mean_12h = data_zonal_mean[idx_12::len(data_local_time), :, :]
-    data_local_time, idx_16 = check_local_time(data_time=data_time[:], selected_time=16)
+    data_local_time, idx_16, statsfile = check_local_time(data_time=data_time[:], selected_time=16)
     data_zonal_mean_16h = data_zonal_mean[idx_16::len(data_local_time), :, :]
 
     # Mean
@@ -735,7 +734,7 @@ def temp_gg2011_fig8(filename, data):
     # 12h - 00h
     data_thermal_tide = data_zonal_mean_12h - data_zonal_mean_0h
 
-    return data_zonal_mean_16h, data_thermal_tide, data_surface_local
+    return data_zonal_mean_16h, data_thermal_tide
 
 
 def temp_gg2011_fig9(filename, data):
