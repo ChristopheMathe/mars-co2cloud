@@ -1449,10 +1449,15 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
     cmap = 'coolwarm'
 
     data_time = getdata(filename, target='Time')
+
     if localtime_selected is not None:
         data_local_time, idx, statsfile = check_local_time(data_time=data_time[:], selected_time=localtime_selected)
         data_time = data_time[idx::len(data_local_time)]
-    ndx, axis_ls = get_ls_index(data_time)
+    ndx, axis_ls, lslin = get_ls_index(data_time)
+
+    if lslin:
+        data, data_time = linearize_ls(filename, data)
+        ndx, axis_ls, lslin = get_ls_index(data_time)
 
     data_altitude = getdata(filename, target='altitude')
 
@@ -1575,8 +1580,8 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
         cbar = plt.colorbar(ctf, cax=cbaxes, orientation="horizontal")
         cbar.ax.set_title(unit)
     else:
-        ax.set_xticks(ticks=axis_ls)
-        ax.set_xlim(axis_ls[0], axis_ls[-1])
+        ax.set_xticks(ticks=ndx)
+        ax.set_xticklabels(axis_ls)
         ax.set_xlabel('Solar longitude (°)')
         ax.set_ylabel('Latitude (°N)')
         cbar = plt.colorbar(ctf)

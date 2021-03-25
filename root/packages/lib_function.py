@@ -317,10 +317,12 @@ def get_ls_index(data_time):
     if max(data_time) > 361:
         # ls = 0, 90, 180, 270, 360
         idx = searchsorted(data_time[:], [0, 193.47, 371.99, 514.76, 669])
+        lslin = True
     else:
         idx = searchsorted(data_time[:], axis_ls)
+        lslin = False
 
-    return idx, axis_ls
+    return idx, axis_ls, lslin
 
 
 def get_mean_index_alti(data_altitude, value, dimension):
@@ -364,16 +366,28 @@ def get_mean_index_alti(data_altitude, value, dimension):
     return mean_idx
 
 
-def linearize_ls(data, dim_time, dim_latitude, interp_time):
+def linearize_ls(filename, data, idx_lt=None):
     from numpy import arange
     from scipy.interpolate import interp2d
 
-    # interpolation to get linear Ls
-    print('In linearize_ls')
-    f = interp2d(x=arange(dim_time), y=arange(dim_latitude), z=data, kind='linear')
+    # get ls
+    try:
+        data_ls = getdata(filename=filename, target='Ls')
+    except:
+        data_ls = getdata('../concat_Ls.nc', target='Ls')
 
-    data = f(interp_time, arange(dim_latitude))
-    return data
+    if data_ls.shape[0] != data.shape[1]:
+        print(data_ls.shape[0]%data.shape[1])
+        if data_ls.shape[0]%data.shape[1] == 0 and idx_lt is not None:
+            data_ls = data_ls[idx_lt::12]
+            print('yes')
+
+    # interpolation to get linear Ls
+    f = interp2d(x=data_ls, y=arange(data.shape[0]), z=data, kind='linear')
+
+    interp_time = arange(361)
+    data = f(interp_time, arange(data.shape[0]))
+    return data, interp_time
 
 
 def linear_grid_ls(data):
