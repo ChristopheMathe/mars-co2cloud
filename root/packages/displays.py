@@ -1456,7 +1456,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
     ndx, axis_ls, lslin = get_ls_index(data_time)
 
     if lslin:
-        data, data_time = linearize_ls(filename, data)
+        data, data_time = linearize_ls(filename, data, idx)
         ndx, axis_ls, lslin = get_ls_index(data_time)
 
     data_altitude = getdata(filename, target='altitude')

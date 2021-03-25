@@ -375,12 +375,9 @@ def linearize_ls(filename, data, idx_lt=None):
         data_ls = getdata(filename=filename, target='Ls')
     except:
         data_ls = getdata('../concat_Ls.nc', target='Ls')
-
     if data_ls.shape[0] != data.shape[1]:
-        print(data_ls.shape[0]%data.shape[1])
-        if data_ls.shape[0]%data.shape[1] == 0 and idx_lt is not None:
+        if data_ls.shape[0] % data.shape[1] == 0 and idx_lt is not None:
             data_ls = data_ls[idx_lt::12]
-            print('yes')
 
     # interpolation to get linear Ls
     f = interp2d(x=data_ls, y=arange(data.shape[0]), z=data, kind='linear')
