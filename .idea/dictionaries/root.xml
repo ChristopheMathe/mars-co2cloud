@@ -13,6 +13,7 @@
       <w>loct</w>
       <w>mola</w>
       <w>mvals</w>
+      <w>nbin</w>
       <w>occigen</w>
       <w>radiatif</w>
       <w>riceco</w>
@@ -22,6 +23,9 @@
       <w>spicam</w>
       <w>tsurf</w>
       <w>tµphy</w>
+      <w>zaeroid</w>
+      <w>zrecast</w>
+      <w>zrecasted</w>
     </words>
   </dictionary>
 </component>

@@ -231,7 +231,7 @@ def extract_vars_max_along_lon(data, idx_lon=None):
     return data, idx_lon
 
 
-def gcm_aire():
+def gcm_area():
     filename = '/home/mathe/Documents/owncloud/GCM/gcm_aire_phisinit.nc'
     return getdata(filename=filename, target='aire')
 

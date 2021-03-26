@@ -222,7 +222,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
         if view_mode == 3:
             print('Processing data:')
-            top_cloud = riceco2_topcloud_altitude(filename, data_target)
+            top_cloud = riceco2_top_cloud_altitude(filename, data_target)
 
             print('Display:')
             display_riceco2_topcloud_altitude(filename, top_cloud)
