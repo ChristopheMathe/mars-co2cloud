@@ -8,7 +8,6 @@ from sys import argv
 
 
 def plot_simu_3D(filename, data_target, name_target, view_mode=None):
-    unit_target = data_target.units
 
     data_target, local_time = extract_at_a_local_time(filename=filename, data=data_target)
 
@@ -184,10 +183,9 @@ def plot_simu_3D(filename, data_target, name_target, view_mode=None):
         view_mode = int(input('Select number:'))
 
         if view_mode == 1:
-
-            filename_2 = getfilename(files)
-            data_target_2 = getdata(directory_store + filename_2, 'ccnNco2')
-            data_altitude = getdata(directory_store + filename_2, 'altitude')
+            filename_2 = getfilename(files=files, selection=ifile)
+            data_target_2 = getdata(filename_2, 'ccnNco2')
+            data_altitude = getdata(filename_2, 'altitude')
 
             print('Get max ccnNco2...')
             max_satu_day, idx_altitude_day, y_day = libf.get_extrema_in_alt_lon(data_target, extrema='max')

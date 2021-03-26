@@ -852,11 +852,17 @@ def vars_max_value_with_others(filename, data_target):
 
 def vars_time_mean(filename, data, duration, localtime=None):
     from math import ceil
+
     data_time = getdata(filename=filename, target='Time')
 
     if localtime is not None:
         data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=localtime)
-        data_time = data_time[idx::len(data_local_time)]
+        if data_time[-1] <= 360.: # Ensure we are in ls time coordinate
+            data_time = data_time[idx::len(data_local_time)]
+        else:
+            data_ls = getdata(filename='../concat_Ls.nc', target='Ls')
+            data_time = data_ls[idx::len(data_local_time)]
+
     nbin = ceil(data_time[-1] / duration)
     data_mean = zeros((nbin, data.shape[1], data.shape[2]))
     time_bin = arange(0, data_time[-1] + duration, duration)
