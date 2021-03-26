@@ -284,10 +284,7 @@ def riceco2_topcloud_altitude(filename, data_target):
     return top_cloud
 
 
-def riceco2_max_day_night(files, data):
-    filename_2 = getfilename(files)
-    data_target_2 = getdata(filename_2, 'riceco2')
-    data_altitude = getdata(filename_2, 'altitude')
+def riceco2_max_day_night(filename, data):
 
     print('Compute max in progress...')
     max_satu_day, idx_altitude_day, y_day = get_extrema_in_alt_lon(data, extrema='max')
@@ -1036,38 +1033,3 @@ def vars_select_profile(data_target):
     print('To be done')
     print('Select latitude, longitude, altitude, time to extract profile')
     print('Perform a list of extracted profile')
-
-
-def vars_max_value_day_night_with_altitude(files, directory_store, filename, variable_target, data):
-    print('Select the night file:')
-    filename_2 = getfilename(files)
-    data_2 = getdata(directory_store + filename_2, variable_target)
-
-    print('Day file is {}'.format(filename))
-    print('Night file is {}'.format(filename_2))
-    print('')
-
-    print('Correction value in progress...')
-    data_2 = correction_value(data_2[:, :, :, :])
-
-    data_altitude = getdata(directory_store + filename_2, 'altitude')
-
-    print('Get max of {}...'.format(variable_target))
-    max_day, idx_altitude_day, idx_longitude_day = get_extrema_in_alt_lon(data, extrema='max')
-    max_night, idx_altitude_night, idx_longitude_night = get_extrema_in_alt_lon(data_2, extrema='max')
-
-    max_alt_day = ones(idx_altitude_day.shape)
-    max_alt_night = ones(idx_altitude_night.shape)
-
-    for i in range(idx_altitude_night.shape[0]):
-        for j in range(idx_altitude_night.shape[1]):
-            max_alt_night[i, j] = data_altitude[idx_altitude_night[i, j]]
-            max_alt_day[i, j] = data_altitude[idx_altitude_day[i, j]]
-            if max_alt_day[i, j] == 0 and max_day[i, j] < 1e-13:
-                max_alt_day[i, j] = None
-                max_day[i, j] = None
-            if max_alt_night[i, j] == 0 and max_night[i, j] < 1e-13:
-                max_alt_night[i, j] = None
-                max_night[i, j] = None
-
-    return max_day, max_night, max_alt_day, max_alt_night
