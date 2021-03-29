@@ -1472,7 +1472,9 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
         if name_target == 'tsurf':
             data_time_tes = observation_tes(target='time', year=None)  # None == climatology
             data_latitude_tes = observation_tes(target='latitude', year=None)
-            data_tes = observation_tes(target='Tsurf_nit', year=None)  # (time, latitude, longitude), also Tsurf_day/Tsurf_nit
+
+            # (time, latitude, longitude), also Tsurf_day/Tsurf_nit
+            data_tes = observation_tes(target='Tsurf_nit', year=None)
             ax[i_subplot].set_title('TES climatology')
             idx1 = (abs(data_time_tes[:] - 360 * 2)).argmin()
             idx2 = (abs(data_time_tes[:] - 360 * 3)).argmin()
