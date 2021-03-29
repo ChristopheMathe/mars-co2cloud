@@ -62,9 +62,9 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
                                          observation=True, latitude_selected=None, localtime_selected=local_time,
                                          title=f'Zonal mean column density of {name_target} between {altitude_min:.1e}'
                                                f' and {altitude_max:.1e} {altitude_unit}, {local_time} h',
-                                         tes=None, pfs=None, mvals=None, layer=None,
+                                         tes=None, mvals=None, layer=None,
                                          save_name=f'zonal_mean_density_column_{name_target}_{altitude_min:.1e}_'
-                                                  f'{altitude_max:.1e}_{altitude_unit}_{local_time}h')
+                                                   f'{altitude_max:.1e}_{altitude_unit}_{local_time}h')
 
             else:
                 display_co2_ice_mola(filename, data_processed)
@@ -516,7 +516,6 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             if view_mode == 201:
                 display_emis_polar_projection_garybicas2020_figs11_12(filename=filename, data=data_mean, time=time_bin,
                                                                       levels=linspace(0.55, 1., 100), cmap='inferno',
-                                                                      unit='',
                                                                       save_name='emis_15ls_mean_')
 
         if view_mode == 3:
@@ -546,7 +545,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
                                      norm=None, levels=arange(0, 160, 20), observation=False,
                                      latitude_selected=layer_selected, localtime_selected=local_time,
                                      title=f'Zonal mean of {name_target}',
-                                     tes=None, pfs=None, mvals=None, layer=None,
+                                     tes=None, mvals=None, layer=None,
                                      save_name=f'{name_target}_zonal_mean')
 
         if view_mode == 2:
@@ -574,7 +573,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             print('Display:')
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed, unit=unit_target,
                                      norm=LogNorm(), levels=logspace(-13, -1, 13), observation=False,
-                                     latitude_selected=None, title=name_target, tes=None, pfs=None, mvals=None,
+                                     latitude_selected=None, title=name_target, tes=None, mvals=None,
                                      save_name='tau1mic_zonal_mean')
 
     elif name_target in ['tau']:
@@ -591,7 +590,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             print('Display:')
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed, unit=unit_target,
                                      norm=None, levels=arange(0, 1.1, 0.1), observation=False,
-                                     latitude_selected=None, title=name_target, tes=None, pfs=None, mvals=None,
+                                     latitude_selected=None, title=name_target, tes=None, mvals=None,
                                      save_name='tau_zonal_mean')
 
     elif name_target in ['tauTES']:
@@ -608,7 +607,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             print('Display:')
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed, unit=unit_target,
                                      norm=None, levels=[0, 0.5, 1., 3., 5., 7., 10.], observation=False,
-                                     latitude_selected=None, title=name_target, tes=None, pfs=None, mvals=None,
+                                     latitude_selected=None, title=name_target, tes=None, mvals=None,
                                      save_name='tauTES_zonal_mean')
 
     elif name_target in ['tsurf']:
@@ -626,7 +625,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             print('Display:')
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=zonal_mean, unit='K', norm=None,
                                      levels=arange(100, 375, 25), observation=False, latitude_selected=None,
-                                     title=None, tes=True, pfs=None, mvals=True, layer=None,
+                                     title=None, tes=True, mvals=True, layer=None,
                                      save_name='tsurf_zonal_mean')
 
         if view_mode == 2:
