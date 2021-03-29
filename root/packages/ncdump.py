@@ -75,27 +75,28 @@ def nc_extract(filename, nc_fid, verb=True):
     nc_size = [nc_fid.dimensions[x].size for x in nc_dims]
     nc_vars = [var for var in nc_fid.variables]  # list of nc variables
 
-    filler = '='
     max_width = 82
-    if len(filename) >= max_width:
-        max_width = len(filename) + 10
-
     if verb:
-        print(f'| {"":{filler} < {max_width}} |')
-        print(f'| {"NetCDF Global Attributes":<{max_width}}|')
-        print(f'| {"":{filler} < {max_width}} |')
-        print(f'| {"File name:":<{max_width}} |')
-        print(f'| {filename:{filler} < {max_width}} |')
-        for nc_attr in nc_attrs:
-            print(f'| {nc_attr: {filler} < {max_width}} |')
+        print(f'|{"":{"="}<{max_width}}|')
+        print(f'|{" NetCDF Global Attributes":<{max_width}}|')
+        print(f'|{"":{"="}<{max_width}}|')
+        print(f'|{" File name:":<{max_width}}|')
+        if len(filename) >= max_width:
+            n_line = ceil(len(filename)/(max_width))
+            for i in range(n_line):
+                print(f'|{" "+filename[i*(max_width-2):(i+1)*(max_width-2)]:<{max_width}}|')
+        else:
+            print(f'|{" "+filename:<{max_width}}|')
 
+        for nc_attr in nc_attrs:
+            print(f'|{nc_attr:{""}<{max_width}}|')
             width = len(nc_fid.getncattr(nc_attr)) - max_width - 1
             if width < 0:
-                print(f'|   {nc_fid.getncattr(nc_attr): {filler} < {max_width}} |')
+                print(f'|   {nc_fid.getncattr(nc_attr):{""}<{max_width}} |')
             else:
                 for i in range(ceil(width / max_width) + 1):
                     name = nc_fid.getncattr(nc_attr)[(max_width - 1) * i: (max_width - 1) * (1 + i)]
-                    print(f'|   {name: < {width}}|')
+                    print(f'|   {name:{""}<{width}}|')
 
         idx = array([], dtype=int)
         for i, value_i in enumerate(nc_dims):
@@ -106,13 +107,13 @@ def nc_extract(filename, nc_fid, verb=True):
             nc_size = delete(nc_size, idx)
         nc_dims = nc_dims[::-1]
         nc_size = nc_size[::-1]
-        print(f'| {"":{filler} < {max_width}} |')
-        print(f'| {"NetCDF  information": < {max_width}} |')
-        print(f'| {"":{filler} < {max_width}} |')
-        print(f'| {"Dimension"} | {nc_dims[0]} | {nc_dims[1]} | {nc_dims[2]} | {nc_dims[3]} |')
-        print(f'|-----------------------------+------+----------+----------+-----------|')
-        print(f'| {"Size"} | {nc_size[0]:<4d} | {nc_size[0]:<8d} | {nc_size[0]:<8d} | {nc_size[0]:<9d} |')
-        print(f'|=============================+======+==========+==========+===========|')
+        print(f'|{"":{"="}<{max_width}}|')
+        print(f'|{" NetCDF  information":<{max_width}}|')
+        print(f'|{"":{"="}<{max_width}}|')
+        print(f'|{" Dimension":{30}s} | {nc_dims[0]:<10s} | {nc_dims[1]:<10s} | {nc_dims[2]:<10s} | {nc_dims[3]:<10s}|')
+        print(f'|{"":{"-"}<{31}}+{"":{"-"}<{12}}+{"":{"-"}<{12}}+{"":{"-"}<{12}}+{"":{"-"}<{11}}|')
+        print(f'|{" Size":30s} | {nc_size[0]:<10d} | {nc_size[1]:<10d} | {nc_size[2]:<10d} | {nc_size[3]:<10d}|')
+        print(f'|{"":{"="}<{31}}+{"":{"="}<{12}}+{"":{"="}<{12}}+{"":{"="}<{12}}+{"":{"="}<{11}}|')
         test = [x for x in nc_vars if x not in nc_dims]
         if len(test) == 2:
             test.remove('controle')
@@ -121,10 +122,10 @@ def nc_extract(filename, nc_fid, verb=True):
             for var in test:
                 #  if var not in nc_dims: otherwise we duplicate information of nc_dims
                 a = isin(nc_size, nc_fid.variables[var].shape)
-                print(f'|{var:29}| {a[0]:<4} | {a[1]:<8} | {a[2]:<8} | {a[3]:<9} |')
+                print(f'|{var:30s} | {a[0]:<10d} | {a[1]:<10d} | {a[2]:<10d} | {a[3]:<10d}|')
                 if var is not test[-1]:
-                    print(f'|-----------------------------+------+----------+----------+-----------|')
-            print(f'| {"":{filler} < {max_width}} |')
+                    print(f'|{"":{"-"}<{31}}+{"":{"-"}<{12}}+{"":{"-"}<{12}}+{"":{"-"}<{12}}+{"":{"-"}<{11}}|')
+            print(f'|{"":{"="}<{max_width}}|')
             target = None
     else:
         target = None

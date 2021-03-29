@@ -1,5 +1,6 @@
 #!/bin/bash python3
 from packages.displays import *
+from packages.ncdump import *
 from os import listdir
 
 from numpy import mean, min, max, logspace, arange, linspace
