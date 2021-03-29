@@ -82,7 +82,7 @@ def nc_extract(filename, nc_fid, verb=True):
         print(f'|{"":{"="}<{max_width}}|')
         print(f'|{" File name:":<{max_width}}|')
         if len(filename) >= max_width:
-            n_line = ceil(len(filename)/(max_width))
+            n_line = ceil(len(filename)/max_width)
             for i in range(n_line):
                 print(f'|{" "+filename[i*(max_width-2):(i+1)*(max_width-2)]:<{max_width}}|')
         else:
