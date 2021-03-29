@@ -1,19 +1,18 @@
 from sys import exit
-from .ncdump import getdata, getfilename
+from .ncdump import getdata
 
 
 # correct very low values of co2/h2o mmr
 def correction_value(data, operator, threshold):
-    from numpy import ma, nan
+    from numpy import ma
 
     if operator == 'inf':
-        data = ma.masked_where(data <= threshold, data, None)
+        data = ma.masked_where(data <= threshold, data, False)
     elif operator == 'sup':
-        data = ma.masked_where(data >= threshold, data, None)
+        data = ma.masked_where(data >= threshold, data, False)
     elif operator == 'eq':
         data = ma.masked_values(data, threshold)
 
-    data.set_fill_value(1e-14)
     return data
 
 
@@ -76,10 +75,10 @@ def create_gif(filenames):
                 idx = np.append(idx, int(value))
         filenames = [filenames[i] for i in idx]
 
-        savename = input('Enter the gif name: ')
+        save_name = input('Enter the gif name: ')
         for filename in filenames:
             images.append(imageio.imread(filename))
-        imageio.mimsave(savename + '.gif', images, fps=1)
+        imageio.mimsave(f'{save_name}.gif', images, fps=1)
     else:
         pass
 
@@ -105,10 +104,7 @@ def compute_column_density(filename, data):
     data_altitude = getdata(filename, target='altitude')
 
     if data_altitude.units in ['m', 'km']:
-        try:
-            data_pressure = getdata(filename, target='pressure')
-        except:
-            data_pressure = getdata('concat_sols_vars_S.nc', target='pressure')
+        data_pressure = getdata(filename, target='pressure')
     else:
         data_pressure = data_altitude
 
@@ -116,19 +112,19 @@ def compute_column_density(filename, data):
 
     if altitude_limit.lower() == 'n':
         if data_altitude.units in ['m', 'km']:
-            print('Altitude range (km): {:.3f} {:.3f}'.format(data_altitude[0], data_altitude[-1]))
-            zmin = float(input('Start altitude (km): '))
-            zmax = float(input('End altitude (km): '))
+            print(f'Altitude range (km): {data_altitude[0]:.3f} {data_altitude[-1]:.3f}')
+            altitude_min = float(input('Start altitude (km): '))
+            altitude_max = float(input('End altitude (km): '))
         else:
-            print('Pressure range (Pa): {:.3e} {:.3e}'.format(data_altitude[0], data_altitude[-1]))
-            zmin = float(input('Start altitude (Pa): '))
-            zmax = float(input('End altitude (Pa): '))
+            print(f'Pressure range (Pa): {data_altitude[0]:.3e} {data_altitude[-1]:.3e}')
+            altitude_min = float(input('Start altitude (Pa): '))
+            altitude_max = float(input('End altitude (Pa): '))
     else:
-        zmin = data_altitude[0]
-        zmax = data_altitude[-1]
+        altitude_min = data_altitude[0]
+        altitude_max = data_altitude[-1]
 
-    idx_z_min = (abs(data_altitude[:] - zmin)).argmin()
-    idx_z_max = (abs(data_altitude[:] - zmax)).argmin()
+    idx_z_min = (abs(data_altitude[:] - altitude_min)).argmin()
+    idx_z_max = (abs(data_altitude[:] - altitude_max)).argmin()
 
     if idx_z_min > idx_z_max:
         tmp = idx_z_min
@@ -141,6 +137,7 @@ def compute_column_density(filename, data):
     shape_data = data.shape
     data_column = zeros(shape_data)
 
+    alt = 0
     if data_altitude.units in ['m', 'km']:
         for alt in range(data.shape[1] - 1):
             data_column[:, alt, :, :] = data[:, alt, :, :] * \
@@ -157,7 +154,7 @@ def compute_column_density(filename, data):
     data_column = sum(data_column, axis=1)
     data_column = correction_value(data_column, 'inf', threshold=1e-13)
 
-    return data_column, altitude_limit, zmin, zmax, data_altitude.units
+    return data_column, altitude_limit, altitude_min, altitude_max, data_altitude.units
 
 
 def extract_at_a_local_time(filename, data):
@@ -222,7 +219,7 @@ def extract_vars_max_along_lon(data, idx_lon=None):
         if data.ndim == 3:
             tmp, idx_lon = unravel_index(argmax(data.reshape(data.shape[0], -1), axis=1), data.shape[1:3])
         else:
-            print('Ndim is not equal to 3, you can do a mistake, have you slice the data for one latitude?')
+            print('Dimension is not equal to 3, you can do a mistake, have you slice the data for one latitude?')
 
     # Extract data at the longitude where max is observed, for each time ls
     data = [data[i, :, idx_lon[i]] for i in range(data.shape[0])]
@@ -243,19 +240,20 @@ def gcm_surface_local(data_zaeroid):
 
 
 def get_extrema_in_alt_lon(data, extrema):
-    from numpy import swapaxes, unravel_index, asarray, reshape, flip
+    from numpy import swapaxes, unravel_index, asarray, reshape
     # get max value along altitude and longitude
-    # max_mmr = amax(data_y, axis=(1,3)) # get the max mmr value in longitude/altitude
-    # axis : 0 = Time, 1 = altitude, 2 = latitude, 3 = longitude
+    # axis: 0 = Time, 1 = altitude, 2 = latitude, 3 = longitude
     print('In get_extrema')
-    B = swapaxes(data, 1, 2)
+    data_swap_axes = swapaxes(data, 1, 2)
+    max_idx = None
     if extrema == 'max':
-        max_idx = B.reshape((B.shape[0], B.shape[1], -1)).argmax(2)
+        max_idx = data_swap_axes.reshape((data_swap_axes.shape[0], data_swap_axes.shape[1], -1)).argmax(2)
     elif extrema == 'min':
-        max_idx = B.reshape((B.shape[0], B.shape[1], -1)).argmin(2)
+        max_idx = data_swap_axes.reshape((data_swap_axes.shape[0], data_swap_axes.shape[1], -1)).argmin(2)
 
-    x, y = unravel_index(max_idx, B[0, 0, :].shape)
-    data_max = [B[i, j, x[i, j], y[i, j]] for i in range(B.shape[0]) for j in range(B.shape[1])]
+    x, y = unravel_index(max_idx, data_swap_axes[0, 0, :].shape)
+    data_max = [data_swap_axes[i, j, x[i, j], y[i, j]] for i in range(data_swap_axes.shape[0]) for j in
+                range(data_swap_axes.shape[1])]
     data_max = asarray(data_max)
     data_max = reshape(data_max, (data.shape[0], data.shape[2]))
 
@@ -268,6 +266,7 @@ def get_nearest_clouds_observed(data_obs, dim, data_dim, value):
     if dim is 'latitude':
 
         # From the dimension, get the index(es) of the slice
+        latitude_range = None
         if (isinstance(value, float) is True) or (isinstance(value, int) is True):
             if value > 0:
                 idx = abs(data_dim[:] - value).argmin()
@@ -290,13 +289,13 @@ def get_nearest_clouds_observed(data_obs, dim, data_dim, value):
             print(value)
             exit()
 
-        # Cas pour les latitudes sud
+        # Case for southern latitudes
         if (latitude_range[0] < 0) and (latitude_range[-1] < 0):
             mask = (data_obs[:, 1] <= latitude_range[0]) & (data_obs[:, 1] >= latitude_range[-1])
-        # Cas pour les latitudes nord
+        # Case for northern latitudes
         elif (latitude_range[0] > 0) and (latitude_range[-1] > 0):
             mask = (data_obs[:, 1] >= latitude_range[0]) & (data_obs[:, 1] <= latitude_range[-1])
-        # Cas pour un mélange des deux
+        # Case for both hemisphere latitudes
         else:
             if latitude_range[0] > latitude_range[-1]:
                 tmp = latitude_range[0]
@@ -306,6 +305,11 @@ def get_nearest_clouds_observed(data_obs, dim, data_dim, value):
 
         data_ls = data_obs[:, 0][mask]
         data_latitude = data_obs[:, 1][mask]
+
+    else:
+        data_ls = None
+        data_latitude = None
+        print('You do not search the nearest cloud along latitude')
 
     return data_ls, data_latitude
 
@@ -317,15 +321,15 @@ def get_ls_index(data_time):
     if max(data_time) > 361:
         # ls = 0, 90, 180, 270, 360
         idx = searchsorted(data_time[:], [0, 193.47, 371.99, 514.76, 669])
-        lslin = True
+        ls_lin = True
     else:
         idx = searchsorted(data_time[:], axis_ls)
-        lslin = False
+        ls_lin = False
 
-    return idx, axis_ls, lslin
+    return idx, axis_ls, ls_lin
 
 
-def get_mean_index_alti(data_altitude, value, dimension):
+def get_mean_index_altitude(data_altitude, value, dimension):
     from numpy import abs, zeros, mean
 
     if dimension == 'time':
@@ -347,7 +351,6 @@ def get_mean_index_alti(data_altitude, value, dimension):
         mean_idx = zeros(data_altitude.shape[2], dtype=int)
         idx = zeros((data_altitude.shape[0]), dtype=int)
 
-        # trop long => passé en zonal mean!
         for latitude in range(data_altitude.shape[2]):
             for ls in range(data_altitude.shape[0]):
                 idx[ls] = (abs(data_altitude[ls, :, latitude] - value)).argmin()
@@ -360,21 +363,21 @@ def get_mean_index_alti(data_altitude, value, dimension):
         for longitude in range(data_altitude.shape[2]):
             for ls in range(data_altitude.shape[0]):
                 idx[ls] = (abs(data_altitude[ls, :, longitude] - value)).argmin()
-            mean_idx[ls] = mean(idx)
+            mean_idx[longitude] = mean(idx)
             idx[:] = 0
+    else:
+        print(f'Dimension {dimension} is not supported')
+        mean_idx = None
 
     return mean_idx
 
 
-def linearize_ls(filename, data, idx_lt=None):
+def linearize_ls(data, idx_lt=None):
     from numpy import arange
     from scipy.interpolate import interp2d
 
     # get ls
-    try:
-        data_ls = getdata(filename=filename, target='Ls')
-    except:
-        data_ls = getdata('../concat_Ls.nc', target='Ls')
+    data_ls = getdata('../concat_Ls.nc', target='Ls')
     if data_ls.shape[0] != data.shape[1]:
         if data_ls.shape[0] % data.shape[1] == 0 and idx_lt is not None:
             data_ls = data_ls[idx_lt::12]
@@ -398,13 +401,13 @@ def linear_grid_ls(data):
     return interp_time, axis_ls, ndx
 
 
-def rotate_data(*list_data, doflip):
+def rotate_data(*list_data, do_flip):
     from numpy import flip
     list_data = list(list_data)
 
     for i, value in enumerate(list_data):
         list_data[i] = list_data[i].T  # get Ls on x-axis
-        if doflip:
+        if do_flip:
             list_data[i] = flip(list_data[i], axis=0)  # reverse to get North pole on top of the fig
 
     return list_data
@@ -446,6 +449,7 @@ def slice_data(data, dimension_data, value):
     else:
         print('Error in value given, exceed 2 values')
         print(value)
+        selected_idx = None
         exit()
 
     if data.ndim == 1:
@@ -523,22 +527,28 @@ def slice_data(data, dimension_data, value):
             print('The dimension of data exceed dimension 4 !')
             exit()
 
+    else:
+        print(f'Data has {data.ndim} dimension!')
+        exit()
+
     return data, selected_idx
 
 
-def tcondco2(data_pressure=None, data_temperature=None, data_rho=None):
+def tcond_co2(data_pressure=None, data_temperature=None, data_rho=None):
     from numpy import log10, log
 
-    R = 8.31
+    cst_r = 8.31
 
     if data_pressure is not None:
-        A = 6.81228
-        B = 1301.679
-        C = -3.494
+        a = 6.81228
+        b = 1301.679
+        c = -3.494
 
-        T_sat = B / (A - log10((data_pressure + 1e-13) / 10 ** 5)) - C
+        t_sat = b / (a - log10((data_pressure + 1e-13) / 10 ** 5)) - c
     elif (data_temperature is not None) and (data_rho is not None):
-        # Equation from Washburn (1948) enfin tcond.. in G-G2011
-        T_sat = -3148. / (log(0.01 * data_temperature * data_rho * R) - 23.102)  # rho en kg/m3
+        # Equation from Washburn (1948) ; tcond in G-G2011
+        t_sat = -3148. / (log(0.01 * data_temperature * data_rho * cst_r) - 23.102)  # rho en kg/m3
+    else:
+        t_sat = None
 
-    return T_sat
+    return t_sat

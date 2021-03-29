@@ -216,7 +216,7 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data):
     zonal_mean_co2_ice = ma.masked_where(data_co2_ice < 1e-13, data_co2_ice)
     zonal_mean_co2_ice = mean(zonal_mean_co2_ice, axis=2)
 
-    zonal_mean, zonal_mean_co2_ice = rotate_data(zonal_mean, zonal_mean_co2_ice, doflip=False)
+    zonal_mean, zonal_mean_co2_ice = rotate_data(zonal_mean, zonal_mean_co2_ice, do_flip=False)
 
     del data, data_co2_ice
     return zonal_mean, zonal_mean_co2_ice, latitude_selected
@@ -236,7 +236,7 @@ def riceco2_zonal_mean_co2ice_exists(filename, data):
 
     zonal_mean = mean(data, axis=3)  # zonal mean
     zonal_mean = mean(zonal_mean, axis=1)  # altitude mean
-    zonal_mean = rotate_data(zonal_mean, doflip=True)
+    zonal_mean = rotate_data(zonal_mean, do_flip=True)
 
     zonal_mean = correction_value(zonal_mean[0], operator='inf', threshold=1e-13)
     zonal_mean = zonal_mean * 1e6  # m to µm
@@ -281,7 +281,7 @@ def riceco2_top_cloud_altitude(filename, data_target):
                     top_cloud[t, lat] = data_altitude[alt]
                     break
 
-    top_cloud = rotate_data(top_cloud, doflip=False)[0]
+    top_cloud = rotate_data(top_cloud, do_flip=False)[0]
     return top_cloud
 
 
@@ -428,7 +428,7 @@ def satuco2_zonal_mean_with_co2_ice(filename, data):
 
     data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, data_co2ice_south = \
         rotate_data(data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq,
-                    data_co2ice_south, doflip=False)
+                    data_co2ice_south, do_flip=False)
 
     return [data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq,
             data_co2ice_south, north_latitude_selected, eq_latitude_selected, south_latitude_selected, binned]
@@ -651,7 +651,7 @@ def temp_gg2011_fig6(filename, data):
     data_rho_tmp, latitude = slice_data(data=data_rho_tmp, dimension_data=data_latitude[:], value=0)
 
     # Compute condensation temperature of CO2
-    data_temp_cond_co2 = tcondco2(data_pressure=None, data_temperature=data_tmp, data_rho=data_rho_tmp)
+    data_temp_cond_co2 = tcond_co2(data_pressure=None, data_temperature=data_tmp, data_rho=data_rho_tmp)
 
     # Mean for each local time and subtract condensation temperature of CO2
     data_final = zeros((len(data_local_time), data_tmp.shape[1]))
@@ -693,7 +693,7 @@ def temp_gg2011_fig7(filename, data):
     data_rho = data_rho[idx, :, :, :]
 
     # Compute condensation temperature of CO2 from pressure, ensure that was zrecasted
-    data_temp_cond_co2 = tcondco2(data_pressure=None, data_temperature=data, data_rho=data_rho)
+    data_temp_cond_co2 = tcond_co2(data_pressure=None, data_temperature=data, data_rho=data_rho)
 
     # Mean for each local time and subtract condensation temperature of CO2
     data = mean(data, axis=2)
@@ -769,7 +769,7 @@ def temp_gg2011_fig9(filename, data):
     data_rho, latitude = slice_data(data=data_rho, dimension_data=data_latitude[:], value=0)
 
     # Compute condensation temperature of CO2 from pressure, ensure that was zrecasted
-    data_temp_cond_co2 = tcondco2(data_pressure=None, data_temperature=data, data_rho=data_rho)
+    data_temp_cond_co2 = tcond_co2(data_pressure=None, data_temperature=data, data_rho=data_rho)
 
     # Mean for each local time and subtract condensation temperature of CO2
     data_final = zeros(data.shape)
@@ -802,7 +802,7 @@ def temp_cold_pocket(filename, data):
         exit()
 
     zonal_mean = ma.masked_values(data, 0.)
-    data_temp_cond_co2 = tcondco2(data_pressure=data_altitude[:])
+    data_temp_cond_co2 = tcond_co2(data_pressure=data_altitude[:])
     delta_temp = zeros(zonal_mean.shape)
     for ls in range(zonal_mean.shape[0]):
         for lat in range(zonal_mean.shape[2]):
@@ -849,7 +849,7 @@ def vars_max_value_with_others(filename, data_target):
     print('Reshape data in progress...')
     max_mmr, max_temp, max_satu, max_radius, max_ccn_n, max_alt = rotate_data(max_mmr, max_temp, max_satu,
                                                                               max_radius, max_ccn_n, max_alt,
-                                                                              doflip=True)
+                                                                              do_flip=True)
 
     return max_mmr, max_temp, max_satu, max_radius, max_ccn_n, max_alt
 
@@ -896,9 +896,9 @@ def vars_zonal_mean(filename, data, layer=None, flip=None):
 
     zonal_mean = mean(data[:, :, :], axis=2)
     if flip is None:
-        zonal_mean = rotate_data(zonal_mean, doflip=True)[0]
+        zonal_mean = rotate_data(zonal_mean, do_flip=True)[0]
     else:
-        zonal_mean = rotate_data(zonal_mean, doflip=False)[0]
+        zonal_mean = rotate_data(zonal_mean, do_flip=False)[0]
     del data
 
     return zonal_mean, layer_selected
@@ -911,7 +911,7 @@ def vars_zonal_mean_column_density(filename, data_target):
     # compute zonal mean column density
     data_target = mean(data_target, axis=2)  # Ls function of lat
 
-    data_target = rotate_data(data_target, doflip=True)[0]
+    data_target = rotate_data(data_target, do_flip=True)[0]
 
     return data_target, altitude_limit, altitude_min, altitude_max, altitude_unit
 

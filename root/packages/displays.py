@@ -870,10 +870,10 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
             data_surface_local_sliced, tmp = slice_data(data_surface_local, dimension_data=data_latitude,
                                                         value=list_latitudes[i])
 
-            lines_altitudes_0km = get_mean_index_alti(data_surface_local_sliced, value=0, dimension='time')
-            lines_altitudes_10km = get_mean_index_alti(data_surface_local_sliced, value=1e4, dimension='time')
-            lines_altitudes_40km = get_mean_index_alti(data_surface_local_sliced, value=4e4, dimension='time')
-            lines_altitudes_80km = get_mean_index_alti(data_surface_local_sliced, value=8e4, dimension='time')
+            lines_altitudes_0km = get_mean_index_altitude(data_surface_local_sliced, value=0, dimension='time')
+            lines_altitudes_10km = get_mean_index_altitude(data_surface_local_sliced, value=1e4, dimension='time')
+            lines_altitudes_40km = get_mean_index_altitude(data_surface_local_sliced, value=4e4, dimension='time')
+            lines_altitudes_80km = get_mean_index_altitude(data_surface_local_sliced, value=8e4, dimension='time')
             del data_surface_local_sliced
 
             axe.plot(data_altitude[lines_altitudes_0km], '-', color='grey', linewidth=0.5)
@@ -986,10 +986,10 @@ def display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north
             data_surface_local_sliced, tmp = slice_data(data_surface_local_sliced, dimension_data=data_time,
                                                         value=list_time_range[i])
 
-            lines_altitudes_0km = get_mean_index_alti(data_surface_local_sliced, value=0, dimension='longitude')
-            lines_altitudes_10km = get_mean_index_alti(data_surface_local_sliced, value=1e4, dimension='longitude')
-            lines_altitudes_40km = get_mean_index_alti(data_surface_local_sliced, value=4e4, dimension='longitude')
-            lines_altitudes_80km = get_mean_index_alti(data_surface_local_sliced, value=8e4, dimension='longitude')
+            lines_altitudes_0km = get_mean_index_altitude(data_surface_local_sliced, value=0, dimension='longitude')
+            lines_altitudes_10km = get_mean_index_altitude(data_surface_local_sliced, value=1e4, dimension='longitude')
+            lines_altitudes_40km = get_mean_index_altitude(data_surface_local_sliced, value=4e4, dimension='longitude')
+            lines_altitudes_80km = get_mean_index_altitude(data_surface_local_sliced, value=8e4, dimension='longitude')
             del data_surface_local_sliced
 
             axe.plot(data_altitude[lines_altitudes_0km], '-', color='grey', linewidth=0.5)
@@ -1398,10 +1398,10 @@ def display_vars_altitude_ls(filename, data_1, data_2, levels, title, save_name,
             data_latitude = getdata(filename, target='latitude')
             data_zareoid, tmp = slice_data(data_zareoid, dimension_data=data_latitude, value=latitude_selected)
 
-        lines_altitudes_0km = get_mean_index_alti(data_altitude=data_zareoid, value=0, dimension='Time')
-        lines_altitudes_10km = get_mean_index_alti(data_altitude=data_zareoid, value=1e4, dimension='Time')
-        lines_altitudes_40km = get_mean_index_alti(data_altitude=data_zareoid, value=4e4, dimension='Time')
-        lines_altitudes_80km = get_mean_index_alti(data_altitude=data_zareoid, value=8e4, dimension='Time')
+        lines_altitudes_0km = get_mean_index_altitude(data_altitude=data_zareoid, value=0, dimension='Time')
+        lines_altitudes_10km = get_mean_index_altitude(data_altitude=data_zareoid, value=1e4, dimension='Time')
+        lines_altitudes_40km = get_mean_index_altitude(data_altitude=data_zareoid, value=4e4, dimension='Time')
+        lines_altitudes_80km = get_mean_index_altitude(data_altitude=data_zareoid, value=8e4, dimension='Time')
 
         axes.plot(data_altitude[lines_altitudes_0km], '--', color='grey')
         axes.plot(data_altitude[lines_altitudes_10km], '--', color='grey')
@@ -1445,11 +1445,11 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
         data_time = data_time[idx::len(data_local_time)]
     else:
         idx = None
-    ndx, axis_ls, ls_lin = get_ls_index(data_time)
+    ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
 
     if ls_lin:
-        data, data_time = linearize_ls(filename, data, idx)
-        ndx, axis_ls, ls_lin = get_ls_index(data_time)
+        data, data_time = linearize_ls(data=data, idx_lt=idx)
+        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
 
     data_altitude = getdata(filename, target='altitude')
 

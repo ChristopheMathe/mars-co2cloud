@@ -3,6 +3,7 @@
     <words>
       <w>actif</w>
       <w>aeroid</w>
+      <w>aire</w>
       <w>areoid</w>
       <w>argmin</w>
       <w>bicas</w>
@@ -22,6 +23,7 @@
       <w>mvals</w>
       <w>nbin</w>
       <w>occigen</w>
+      <w>phisinit</w>
       <w>radiatif</w>
       <w>riceco</w>
       <w>riceoc</w>
@@ -37,6 +39,7 @@
       <w>vals</w>
       <w>vmax</w>
       <w>vmin</w>
+      <w>washburn</w>
       <w>zaeroid</w>
       <w>zareoid</w>
       <w>zrecast</w>
