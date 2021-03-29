@@ -1,8 +1,8 @@
 from .ncdump import get_data
-from .lib_function import correction_value
 
-def MOLA():
-    '''
+
+def mola():
+    """
     dimensions:
         x = 361 ;
         y = 181 ;
@@ -19,13 +19,13 @@ def MOLA():
 
     // global attributes:
             :Title = "MOLA cloud top altitude above surface data (binned)" ;
-    '''
-    path ='/home/mathe/Documents/owncloud/GCM/MOLA_cloudaltis_1x1.nc'
+    """
+    path = '/home/mathe/Documents/owncloud/GCM/MOLA_cloudaltis_1x1.nc'
     mola_latitude = get_data(filename=path, target='Latitude')
     mola_ls = get_data(filename=path, target='Ls')
     mola_altitude = get_data(filename=path, target='Altitude')
-    mola_altitude = mola_altitude[:,:]
-    from numpy import max, min, ma, array, NaN, isnan, where
+    mola_altitude = mola_altitude[:, :]
+    from numpy import max, min
 
     for i in range(mola_altitude.shape[0]):
         for j in range(mola_altitude.shape[1]):
@@ -36,16 +36,17 @@ def MOLA():
 
     return mola_latitude, mola_ls, mola_altitude
 
+
 '''
 ========================================================================================================================
                                         TES OBSERVATIONS INFORMATION
 ========================================================================================================================
-avec TES.MappedClimatology.limb.MY(24-25-26-27).nc => on a accès à la température à 2h et 14h (ls, alt, lat, lon)
+- TES.MappedClimatology.limb.MY(24-25-26-27).nc => temperature at 2h and 14h (ls, alt, lat, lon)
         T_limb_day
         T_limb_nit
         altitude [Pa]
 
-avec TES.MappedClimatology.nadir.MY(24-25-26-27).nc => on a accès à :
+- TES.MappedClimatology.nadir.MY(24-25-26-27).nc:
         tau_dust(time, latitude, longitude)              ; "Dust optical depth at 1075 cm-1"
         tau_ice(time, latitude, longitude)               ; "Water ice optical depth at 825 cm-1"
         water_vapor(time, latitude, longitude)           ; "Water vapor column" ; "precip-microns"
@@ -56,7 +57,7 @@ avec TES.MappedClimatology.nadir.MY(24-25-26-27).nc => on a accès à :
         T_nadir_day(time, altitude, latitude, longitude) ; "Daytime (~2 pm) atmospheric temperature"
         T_nadir_nit(time, altitude, latitude, longitude) ; "Nighttime (~2 am) atmospheric temperature"
 
-avec TES.SeasonalClimatology.nc => on a accès à:
+- TES.SeasonalClimatology.nc:
         taudust(time, latitude, longitude) ; "Dust optical depth at 1075 cm-1 (scaled to a 610 Pa surface)"
         tauice(time, latitude, longitude) ; tauice:long_name = "Water ice optical depth at 825 cm-1" ;
         water(time, latitude, longitude) ; water:long_name = "Water vapor column" ; water:units = "precip-microns" ; 
@@ -67,24 +68,26 @@ avec TES.SeasonalClimatology.nc => on a accès à:
 '''
 
 
-def ObsTES(target, year=None):
+def observation_tes(target, year=None):
     directory_tes = '/home/mathe/Documents/owncloud/GCM/TES/'
 
+    data = None
     if year is not None:
-        filename = 'TES.MappedClimatology.limb.MY{:d}.nc'.format(year)
-        try:
+        filename = f'TES.MappedClimatology.limb.MY{year:d}.nc'
+        if target in ['T_limb_day', 'T_limb_nit']:
             data = get_data(directory_tes + filename, target=target)
-        except:
-            print('Wrong target for {} !'.format(filename))
+        else:
+            print(f'Wrong target for {filename}!')
             exit()
     else:
         filename = 'TES.SeasonalClimatology.nc'
-        try:
+        if target in ['taudust', 'tauice', 'water', 'Tsurf_day', 'T_50Pa_day', 'Tsurf_nit', 'T_50Pa_nit']:
             data = get_data(directory_tes + filename, target=target)
-        except:
+        else:
             print('Wrong target for TES.SeasonalClimatology.nc !')
             exit()
-    print('TES file is: {}'.format(directory_tes+filename))
+
+    print(f'TES file is: {directory_tes + filename}')
     return data
 
 
@@ -159,15 +162,15 @@ Variables and attributes
     7  dust:            FLOAT(1590000) = FLOAT(N_Meas)
          0  long_name: Retrieved dust opacity (column)
          1  short_name: tau_dust
-         2  notes: Coulmn dust optical depth at 1075 cm-1
+         2  notes: Column dust optical depth at 1075 cm-1
     8  dust_norm:       FLOAT(1590000) = FLOAT(N_Meas)
          0  long_name: Retrieved NORMALIZED dust opacity (column)
          1  short_name: tau_dust_norm
-         2  notes: Coulmn dust optical depth at 1075 cm-1, normalised to Psurf = 6.1 mbar
+         2  notes: Column dust optical depth at 1075 cm-1, normalised to Psurf = 6.1 mbar
     9  ice:             FLOAT(1590000) = FLOAT(N_Meas)
          0  long_name: Retrieved ice opacity (column)
          1  short_name: tau_ice
-         2  notes: Coulmn ice optical depth at 825 c
+         2  notes: Column ice optical depth at 825 c
     10  lat:             FLOAT(1590000) = FLOAT(N_Meas)
          0  long_name: Latitude
          1  short_name: Lat
@@ -229,20 +232,13 @@ Variables and attributes
 '''
 
 
-def PFS(target):
-    from numpy import arange
-
-    try:
-        data = get_data('/home/mathe/Documents/owncloud/GCM/PFS/PFS_dataset_20793/PFS_data/PFS_data.nc',
-                        target=target)
-    except:
-        print('Wrong target for PFS_data.nc !')
-        exit()
+def observation_pfs(target):
+    data = get_data('/home/mathe/Documents/owncloud/GCM/PFS/PFS_dataset_20793/PFS_data/PFS_data.nc', target=target)
 
     return data
 
 
-def mesoclouds_observed():
+def mesospheric_clouds_observed():
     from numpy import loadtxt
 
     directory = '/home/mathe/Documents/owncloud/GCM/observation_mesocloud/'
@@ -259,24 +255,24 @@ def mesoclouds_observed():
                  'Mesocloud_obs_THEMIS.txt']
 
     # column:  1 = ls, 2 = lat (°N), 3 = lon (°E)
-    data_CRISMlimb = loadtxt(directory + filenames[0], skiprows=1)
-    data_CRISMnadir = loadtxt(directory + filenames[1], skiprows=1)
-    data_OMEGA = loadtxt(directory + filenames[2], skiprows=1)
-    data_PFSeye = loadtxt(directory + filenames[3], skiprows=1)
-    data_PFSstats = loadtxt(directory + filenames[4], skiprows=1)
-    data_HRSC = loadtxt(directory + filenames[5], skiprows=1)
-    data_IUVS = loadtxt(directory + filenames[6], skiprows=1)
-    data_MAVENlimb = loadtxt(directory + filenames[7], skiprows=1)
-    data_SPICAM = loadtxt(directory + filenames[8], skiprows=1)
-    data_TESMOC = loadtxt(directory + filenames[9], skiprows=1)
-    data_THEMIS = loadtxt(directory + filenames[10], skiprows=1)
+    data_crism_limb = loadtxt(directory + filenames[0], skiprows=1)
+    data_crism_nadir = loadtxt(directory + filenames[1], skiprows=1)
+    data_omega = loadtxt(directory + filenames[2], skiprows=1)
+    data_pfs_eye = loadtxt(directory + filenames[3], skiprows=1)
+    data_pfs_stats = loadtxt(directory + filenames[4], skiprows=1)
+    data_hrsc = loadtxt(directory + filenames[5], skiprows=1)
+    data_iuvs = loadtxt(directory + filenames[6], skiprows=1)
+    data_maven_limb = loadtxt(directory + filenames[7], skiprows=1)
+    data_spicam = loadtxt(directory + filenames[8], skiprows=1)
+    data_tesmoc = loadtxt(directory + filenames[9], skiprows=1)
+    data_themis = loadtxt(directory + filenames[10], skiprows=1)
 
-    return data_CRISMlimb, data_CRISMnadir, data_OMEGA, data_PFSeye, data_PFSstats, data_HRSC, data_IUVS, \
-           data_MAVENlimb, data_SPICAM, data_TESMOC, data_THEMIS
+    return data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
+        data_maven_limb, data_spicam, data_tesmoc, data_themis
 
 
-def SimuMV(target, localtime):
-
+def simulation_mvals(target, localtime):
+    filename = None
     if target in ['tsurf', 'Time', 'latitude', 'longitude', 'altitude']:
         if localtime == 2:
             filename = '../simu_ref_cycle_eau_mvals/simu_ref_cycle_eau_mvals/concat_vars_3D_LT_2h_Ls.nc'
@@ -285,7 +281,6 @@ def SimuMV(target, localtime):
     elif target in ['temp']:
         filename = '../simu_ref_cycle_eau_mvals/simu_ref_cycle_eau_mvals/concat_vars_4D_P_LT_14h_Ls.nc'
 
-
-    print('\tFile name: {}'.format(filename))
+    print(f'\tFile name: {filename}')
 
     return get_data(filename=filename, target=target)

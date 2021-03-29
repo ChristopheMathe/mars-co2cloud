@@ -273,7 +273,7 @@ def display_co2_ice_mola(filename, data):
     from numpy import logspace
     data_time = get_data(filename=filename, target='Time')
     data_latitude = get_data(filename=filename, target='latitude')
-    mola_latitude, mola_ls, mola_altitude = MOLA()
+    mola_latitude, mola_ls, mola_altitude = mola()
     mola_altitude = correction_value(mola_altitude, operator='inf', threshold=0)
     mola_altitude = correction_value(mola_altitude, operator='sup', threshold=1e4)
 
@@ -801,7 +801,7 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
 
     # Get latitude range between value-1 et value+1
     data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesoclouds_observed()
+        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
 
     list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
                 data_maven_limb, data_spicam, data_tesmoc, data_themis]
@@ -932,7 +932,7 @@ def display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north
 
     # Get latitude range between value-1 et value+1
     data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesoclouds_observed()
+        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
 
     list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
                 data_maven_limb, data_spicam, data_tesmoc, data_themis]
@@ -1470,18 +1470,18 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
         # Extract TES data
         print('Takes TES data')
         if name_target == 'tsurf':
-            data_time_tes = ObsTES(target='time', year=None)  # None == climatology
-            data_latitude_tes = ObsTES(target='latitude', year=None)
-            data_tes = ObsTES(target='Tsurf_nit', year=None)  # (time, latitude, longitude), also Tsurf_day/Tsurf_nit
+            data_time_tes = observation_tes(target='time', year=None)  # None == climatology
+            data_latitude_tes = observation_tes(target='latitude', year=None)
+            data_tes = observation_tes(target='Tsurf_nit', year=None)  # (time, latitude, longitude), also Tsurf_day/Tsurf_nit
             ax[i_subplot].set_title('TES climatology')
             idx1 = (abs(data_time_tes[:] - 360 * 2)).argmin()
             idx2 = (abs(data_time_tes[:] - 360 * 3)).argmin()
             data_time_tes = data_time_tes[idx1:idx2] - 360 * 2
             data_tes, tmp = vars_zonal_mean(filename='', data=data_tes[idx1:idx2, :, :], layer=None, flip=True)
         elif name_target == 'temp':
-            data_time_tes = ObsTES(target='time', year=25)
-            data_latitude_tes = ObsTES(target='latitude', year=25)
-            data_altitude_tes = ObsTES(target='altitude', year=25)  # Pa
+            data_time_tes = observation_tes(target='time', year=25)
+            data_latitude_tes = observation_tes(target='latitude', year=25)
+            data_altitude_tes = observation_tes(target='altitude', year=25)  # Pa
             data_tes = tes(target='T_limb_day', year=25)
             year = 1
 
@@ -1501,8 +1501,8 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
             ax[i_subplot].set_title('TES Mars Year {:d} at {} {}'.format(24 + year, altitude_tes,
                                                                          data_altitude_tes.units))
         else:
-            data_time_tes = ObsTES(target='time', year=None)
-            data_latitude_tes = ObsTES(target='latitude', year=None)
+            data_time_tes = observation_tes(target='time', year=None)
+            data_latitude_tes = observation_tes(target='latitude', year=None)
             data_tes = None
             print('No case for TES, to be check!')
 
@@ -1512,10 +1512,10 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
     if mvals:
         # Extract mvals data
         print('Takes M. Vals data')
-        data_mvals = SimuMV(target=name_target, localtime=2)
-        data_time_mvals = SimuMV(target='Time', localtime=2)
-        data_latitude_mvals = SimuMV(target='latitude', localtime=2)
-        data_altitude_mvals = SimuMV(target='altitude', localtime=2)
+        data_mvals = simulation_mvals(target=name_target, localtime=2)
+        data_time_mvals = simulation_mvals(target='Time', localtime=2)
+        data_latitude_mvals = simulation_mvals(target='latitude', localtime=2)
+        data_altitude_mvals = simulation_mvals(target='altitude', localtime=2)
         if layer is not None:
             data_mvals = data_mvals[:, layer, :, :]
 
@@ -1555,7 +1555,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
     if observation:
         # Get latitude range between entre value-1 et value+1
         data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-            data_maven_limb, data_spicam, data_tesmoc, data_themis = mesoclouds_observed()
+            data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
 
         list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
                     data_maven_limb, data_spicam, data_tesmoc, data_themis]

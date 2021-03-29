@@ -7,38 +7,60 @@
       <w>areoid</w>
       <w>argmin</w>
       <w>bicas</w>
+      <w>boresight</w>
+      <w>cloudaltis</w>
       <w>cmap</w>
       <w>controle</w>
       <w>coolwarm</w>
       <w>crism</w>
+      <w>cspice</w>
       <w>difftemp</w>
       <w>emis</w>
       <w>fluxsurf</w>
       <w>fluxtop</w>
       <w>garybicas</w>
+      <w>giuranna</w>
       <w>hrsc</w>
+      <w>hsurf</w>
+      <w>iaps</w>
       <w>icelayer</w>
+      <w>inaf</w>
       <w>iuvs</w>
       <w>loct</w>
+      <w>mbar</w>
+      <w>mesocloud</w>
+      <w>mesospheric</w>
+      <w>mlimb</w>
+      <w>mnadir</w>
       <w>mola</w>
       <w>mvals</w>
       <w>nbin</w>
       <w>ncar's</w>
       <w>ncdump</w>
+      <w>nlimb</w>
       <w>occigen</w>
+      <w>otbit</w>
       <w>phisinit</w>
+      <w>precip</w>
+      <w>psurf</w>
       <w>radiatif</w>
       <w>riceco</w>
       <w>riceoc</w>
       <w>satuco</w>
+      <w>scet</w>
+      <w>seye</w>
       <w>simu</w>
       <w>spicam</w>
+      <w>sstats</w>
+      <w>taudust</w>
+      <w>tauice</w>
       <w>tcond</w>
       <w>tesmoc</w>
       <w>themis</w>
       <w>topcloud</w>
       <w>tsurf</w>
       <w>tµphy</w>
+      <w>unbinned</w>
       <w>vals</w>
       <w>vmax</w>
       <w>vmin</w>
