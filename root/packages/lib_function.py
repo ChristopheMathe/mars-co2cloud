@@ -1,5 +1,5 @@
 from sys import exit
-from .ncdump import getdata
+from .ncdump import get_data
 
 
 # correct very low values of co2/h2o mmr
@@ -101,10 +101,10 @@ def convert_sols_to_ls():
 def compute_column_density(filename, data):
     from numpy import zeros, sum
 
-    data_altitude = getdata(filename, target='altitude')
+    data_altitude = get_data(filename, target='altitude')
 
     if data_altitude.units in ['m', 'km']:
-        data_pressure = getdata(filename, target='pressure')
+        data_pressure = get_data(filename, target='pressure')
     else:
         data_pressure = data_altitude
 
@@ -158,7 +158,7 @@ def compute_column_density(filename, data):
 
 
 def extract_at_a_local_time(filename, data):
-    data_time = getdata(filename=filename, target='Time')
+    data_time = get_data(filename=filename, target='Time')
 
     data_local_time, idx, stats_file = check_local_time(data_time=data_time)
 
@@ -204,7 +204,7 @@ def extract_where_co2_ice(filename, data):
     from numpy import nan, ma
 
     # extract co2_ice data
-    data_co2_ice = getdata(filename, target='co2_ice')
+    data_co2_ice = get_data(filename, target='co2_ice')
     data_where_co2_ice = ma.masked_where(data_co2_ice[:, :, :, :] < 1e-13, data, nan)
     del data_co2_ice
 
@@ -230,12 +230,12 @@ def extract_vars_max_along_lon(data, idx_lon=None):
 
 def gcm_area():
     filename = '/home/mathe/Documents/owncloud/GCM/gcm_aire_phisinit.nc'
-    return getdata(filename=filename, target='aire')
+    return get_data(filename=filename, target='aire')
 
 
 def gcm_surface_local(data_zaeroid):
     filename = '/home/mathe/Documents/owncloud/GCM/gcm_aire_phisinit.nc'
-    data_phisinit = getdata(filename=filename, target='phisinit')
+    data_phisinit = get_data(filename=filename, target='phisinit')
     return data_zaeroid - data_phisinit[:, :] / 3.711
 
 
@@ -377,7 +377,7 @@ def linearize_ls(data, idx_lt=None):
     from scipy.interpolate import interp2d
 
     # get ls
-    data_ls = getdata('../concat_Ls.nc', target='Ls')
+    data_ls = get_data('../concat_Ls.nc', target='Ls')
     if data_ls.shape[0] != data.shape[1]:
         if data_ls.shape[0] % data.shape[1] == 0 and idx_lt is not None:
             data_ls = data_ls[idx_lt::12]

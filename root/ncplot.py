@@ -120,7 +120,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
                 filename_2 = getfilename(files)
                 filename_2 = path_2 + directory + filename_2
-                data_target_2 = getdata(filename_2, target=name_target)
+                data_target_2 = get_data(filename_2, target=name_target)
                 data_north_2, data_south_2 = temp_thermal_structure_polar_region(filename=filename_2,
                                                                                  data=data_target_2)
 
@@ -270,7 +270,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
                     files = listdir(path_2 + directory)
                 filename_2 = getfilename(files)
                 filename_2 = path_2 + directory + filename_2
-                data_target_2 = getdata(filename_2, target=name_target)
+                data_target_2 = get_data(filename_2, target=name_target)
                 data_north_2, data_south_2 = temp_thermal_structure_polar_region(filename=filename_2,
                                                                                  data=data_target_2)
 
@@ -339,7 +339,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
         if view_mode == 1:
             lat1 = float(input('Select the first latitude (°N): '))
             lat2 = float(input('Select the second latitude (°N): '))
-            data_latitude = getdata(filename, target='latitude')
+            data_latitude = get_data(filename, target='latitude')
             data_target, tmp = slice_data(data_target, dimension_data=data_latitude[:], value=[lat1, lat2])
 
             data_target = correction_value(data_target[:, :, :, :], operator='inf', threshold=1e-13)
@@ -426,7 +426,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
                 filename_2 = getfilename(files)
                 filename_2 = path_2 + directory_store + filename_2
-                data_target_2 = getdata(filename_2, target=name_target)
+                data_target_2 = get_data(filename_2, target=name_target)
                 data_north_2, data_south_2 = temp_thermal_structure_polar_region(filename=filename_2,
                                                                                  data=data_target_2)
 
@@ -712,7 +712,7 @@ def main():
     filename = getfilename(files, selection=arg_file)
     filename = directory_store + filename
 
-    data_target = getdata(filename, target=arg_target)
+    data_target = get_data(filename, target=arg_target)
     print(f'You have selected the variable: {data_target.name}')
 
     if data_target.ndim <= 2:

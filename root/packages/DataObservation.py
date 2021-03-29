@@ -1,4 +1,4 @@
-from .ncdump import getdata
+from .ncdump import get_data
 from .lib_function import correction_value
 
 def MOLA():
@@ -21,9 +21,9 @@ def MOLA():
             :Title = "MOLA cloud top altitude above surface data (binned)" ;
     '''
     path ='/home/mathe/Documents/owncloud/GCM/MOLA_cloudaltis_1x1.nc'
-    mola_latitude = getdata(filename=path, target='Latitude')
-    mola_ls = getdata(filename=path, target='Ls')
-    mola_altitude = getdata(filename=path, target='Altitude')
+    mola_latitude = get_data(filename=path, target='Latitude')
+    mola_ls = get_data(filename=path, target='Ls')
+    mola_altitude = get_data(filename=path, target='Altitude')
     mola_altitude = mola_altitude[:,:]
     from numpy import max, min, ma, array, NaN, isnan, where
 
@@ -73,14 +73,14 @@ def ObsTES(target, year=None):
     if year is not None:
         filename = 'TES.MappedClimatology.limb.MY{:d}.nc'.format(year)
         try:
-            data = getdata(directory_tes + filename, target=target)
+            data = get_data(directory_tes + filename, target=target)
         except:
             print('Wrong target for {} !'.format(filename))
             exit()
     else:
         filename = 'TES.SeasonalClimatology.nc'
         try:
-            data = getdata(directory_tes + filename, target=target)
+            data = get_data(directory_tes + filename, target=target)
         except:
             print('Wrong target for TES.SeasonalClimatology.nc !')
             exit()
@@ -233,8 +233,8 @@ def PFS(target):
     from numpy import arange
 
     try:
-        data = getdata('/home/mathe/Documents/owncloud/GCM/PFS/PFS_dataset_20793/PFS_data/PFS_data.nc',
-                       target=target)
+        data = get_data('/home/mathe/Documents/owncloud/GCM/PFS/PFS_dataset_20793/PFS_data/PFS_data.nc',
+                        target=target)
     except:
         print('Wrong target for PFS_data.nc !')
         exit()
@@ -288,4 +288,4 @@ def SimuMV(target, localtime):
 
     print('\tFile name: {}'.format(filename))
 
-    return getdata(filename=filename, target=target)
+    return get_data(filename=filename, target=target)
