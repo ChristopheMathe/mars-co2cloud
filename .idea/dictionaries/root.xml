@@ -4,12 +4,19 @@
       <w>actif</w>
       <w>aeroid</w>
       <w>areoid</w>
+      <w>argmin</w>
       <w>bicas</w>
+      <w>cmap</w>
+      <w>coolwarm</w>
+      <w>crism</w>
       <w>difftemp</w>
       <w>emis</w>
       <w>fluxsurf</w>
       <w>fluxtop</w>
+      <w>garybicas</w>
+      <w>hrsc</w>
       <w>icelayer</w>
+      <w>iuvs</w>
       <w>loct</w>
       <w>mola</w>
       <w>mvals</w>
@@ -21,9 +28,17 @@
       <w>satuco</w>
       <w>simu</w>
       <w>spicam</w>
+      <w>tcond</w>
+      <w>tesmoc</w>
+      <w>themis</w>
+      <w>topcloud</w>
       <w>tsurf</w>
       <w>tµphy</w>
+      <w>vals</w>
+      <w>vmax</w>
+      <w>vmin</w>
       <w>zaeroid</w>
+      <w>zareoid</w>
       <w>zrecast</w>
       <w>zrecasted</w>
     </words>
