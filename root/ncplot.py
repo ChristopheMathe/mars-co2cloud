@@ -28,17 +28,14 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
         print('     1: maximum in altitude and longitude, with others variables at these places (fig: lat-ls)')
         print('     2: zonal mean column density (fig: lat-ls)')
         print('       201: special features for DARI report (compare to MOLA obs)')
-        print('     3: ')
-        print('     4: ')
-        print('     5: ')
-        print('     6: layer ice thickness (fig: thickness-lat)')
-        print('     7: polar cloud distribution to compare with Fig.8 of Neumann+2003 (fig: #clouds-lat)')
-        print('     8: cloud evolution with satuco2/temperature/radius (fig: alt-lat, gif)')
-        print('     9: mmr structure in winter polar regions at 60°N/S (fig: alt-ls)')
-        print('    10: Density column evolution in polar region, polar projection (fig: lon-lat)')
-        if name_target in ['h2o_ice', 'q01']:
-            print('     11: h2o_ice profile with co2_ice presence (fig: alt-ls)')
+        print('     3: layer ice thickness (fig: thickness-lat)')
+        print('     4: polar cloud distribution to compare with Fig.8 of Neumann+2003 (fig: #clouds-lat)')
+        print('     5: cloud evolution with satuco2/temperature/radius (fig: alt-lat, gif)')
+        print('     6: mmr structure in winter polar regions at 60°N/S (fig: alt-ls)')
+        print('     7: Density column evolution in polar region, polar projection (fig: lon-lat)')
+        print('     8: h2o_ice profile with co2_ice presence (fig: alt-ls)')
         print('')
+
         if view_mode is None:
             view_mode = int(input('Select number:'))
 
@@ -70,14 +67,14 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             else:
                 display_co2_ice_mola(filename, data_processed)
 
-        elif view_mode == 6:
+        elif view_mode == 3:
             print('Processing data:')
             data_icelayer = co2ice_thickness_atm_layer(filename=filename, data=data_target)
 
             print('Display:')
             display_thickness_co2ice_atm_layer(data_icelayer)
 
-        elif view_mode == 7:
+        elif view_mode == 4:
             print('Processing data:')
             distribution_north, distribution_south, latitude_north, latitude_south = co2ice_polar_cloud_distribution(
                 filename, data_target, normalization='True')
@@ -87,7 +84,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
                                                                  latitude_north, latitude_south,
                                                                  save_name='distribution_polar_clouds')
 
-        elif view_mode == 8:
+        elif view_mode == 5:
             print('Processing data:')
             data_target, data_satuco2, data_temp, data_riceco2, idx_max, latitude_selected = co2ice_cloud_evolution(
                 filename, data_target)
@@ -103,11 +100,11 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             if make_gif.lower() == 'y':
                 create_gif(filenames)
 
-        elif view_mode == 9 or view_mode == 901:
+        elif view_mode == 6 or view_mode == 601:
             print('Processing data:')
             data_north, data_south = temp_thermal_structure_polar_region(filename=filename, data=data_target)
 
-            if view_mode == 901:
+            if view_mode == 601:
                 path_2 = '../occigen_test_64x48x32_1years_Tµphy_para_start_simu_ref_Margaux_co2clouds_Radiatif_actif/'
                 files = listdir(path_2)
                 directory = []
@@ -141,7 +138,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
                                                     unit=unit_target,
                                                     save_name='co2_ice_zonal_mean_60NS')
 
-        elif view_mode == 10:
+        elif view_mode == 7:
             print('Processing data:')
             data_processed, time, latitude = co2ice_density_column_evolution(filename=filename, data=data_target)
 
@@ -149,7 +146,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             display_co2_ice_density_column_evolution_polar_region(filename=filename, data=data_processed, time=time,
                                                                   latitude=latitude)
 
-        elif view_mode == 11:
+        elif view_mode == 8:
             print('Processing data:')
             data_target, data_co2_ice, latitude_selected = h2o_ice_alt_ls_with_co2_ice(filename, data_target)
 
