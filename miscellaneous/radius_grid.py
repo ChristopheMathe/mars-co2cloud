@@ -4,9 +4,9 @@ from numpy import exp, log, zeros, where
 
 
 def main():
-    rmax_cld = 5.e-6  # (m)
-    rmin_cld = 1.e-9  # (m)
-    rbmin_cld = 1.e-10  # (m)
+    rmax_cld = 5.e-6   # (m)
+    rmin_cld = 1.e-9   # (m)
+    rbmin_cld = 1.e-10 # (m)
     rbmax_cld = 2.e-4  # (m)
     nbinco2_cld = 100
 
@@ -28,9 +28,9 @@ def main():
 
     print('Bot bound | primary radius | Top bound')
     for i in range(nbinco2_cld):
-        print('{:.2e}  <    {:.2e}    < {:.2e}'.format(rb_cldco2[i], rad_cldco2[i], rb_cldco2[i+1]))
+        print(f'{rb_cldco2[i]:.2e} < {rad_cldco2[i]:.2e} < {rb_cldco2[i+1]:.2e}')
 
-    print('{:d} points are below 100 nm radius (54 with rmax=5µm and 100 nbin).'.format(where(rad_cldco2 < 100e-9)[0].shape[0]))
+    print(f'{where(rad_cldco2 < 100e-9)[0].shape[0])):d} points are below 100 nm radius (54 with rmax=5µm and 100 nbin).')
 
 
 if '__main__' == __name__:
