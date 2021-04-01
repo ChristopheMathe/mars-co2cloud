@@ -14,19 +14,18 @@ As to date, you can plot the following figures:
 #### 1.1.1 The CO<sub>2</sub> ice mass mixing ratio (vars=co2_ice)
 This variable is a 4-D field.
 
-view_mode | axis-x / axis-y | information  | requirement
-:-        | :-              | :-           | :-
-1         | ls / latitude   |   To delete! | 
-2         | ls / latitude   | display the zonal mean
-201       |                 | special display for DARI report (compare to MOLA obs)
-3         | xxx             | xxxx
-4         | xxxx            | xxx
-5         | xxx             | xxx
-6         | thickness / latitude | layer ice thickness in polar region
-7         | latitude / #clouds | polar cloud distribution to compare with Fig.8 of Neumann+2003
-8         | latitude / altitude | cloud evolution with satuco2/temperature/radius | satuco2, temp, riceco2
-9         | ls / altitude | mmr structure in winter polar regions at 60°N/S
-10        | longitude / latitude | Density column evolution in polar region, polar projection
+view_mode | axis-x | axis-y | information  | requirement
+:-        | :-     | :-     | :-           | :-
+1         | ls     | latitude   |   To delete! | 
+2         | ls     | latitude   | display the zonal mean
+201       |        |            | special display for DARI report (compare to MOLA obs)
+3         | thickness | latitude | layer ice thickness in polar region
+4         | latitude | #clouds | polar cloud distribution to compare with Fig.8 of Neumann+2003
+5         | latitude | altitude | cloud evolution with satuco2/temperature/radius | satuco2, temp, riceco2
+6         | ls | altitude | mmr structure in winter polar regions at 60°N/S
+7         | longitude | latitude | Density column evolution in polar region, polar projection
+8         | ls | atitude  | TODO: h2o_ice profile with co2_ice presence | h2o_ice
+
 
 
 #### 1.1.2. The CO<sub>2</sub> saturation
