@@ -1,48 +1,11 @@
 #!/bin/bash python3
+from .packages.lib_function import *
+from .packages.ncdump import *
 from netCDF4 import Dataset
 from matplotlib.colors import DivergingNorm, LinearSegmentedColormap
 from numpy.ma import masked_inside
 from pylab import *
 import matplotlib.pyplot as plt
-
-
-def correction_value(data, threshold):
-    from numpy import ma
-
-    data = ma.masked_where(data <= threshold, data)
-
-    return data
-
-
-def getfilename(files):
-    if any(".nc" in s for s in files):
-        list_files = sorted([file for file in files if '.nc' in file])
-        if len(list_files) > 1:
-            print(f'Netcdf files available: (0) {list_files[0]}')
-            for i, value_i in enumerate(list_files[1:]):
-                print(f'                        ({i + 1}) {value_i}')
-            filename = int(input("Select the file number at 14h: "))
-            filename = list_files[filename]
-            print('')
-        else:
-            filename = list_files[0]
-    else:
-        print('There is no Netcdf file in this directory !')
-        filename = ''
-        exit()
-    return filename
-
-
-def rotate_data(*list_data, do_flip):
-    from numpy import flip
-    list_data = list(list_data)
-
-    for i, value in enumerate(list_data):
-        list_data[i] = list_data[i].T  # get Ls on x-axis
-        if do_flip:
-            list_data[i] = flip(list_data[i], axis=0)  # reverse to get North pole on top of the fig
-
-    return list_data
 
 
 def extract_data(data):
@@ -61,7 +24,7 @@ def extract_data(data):
     data_co2ice = data.variables['co2ice'][:, :, :]
 
     # correct data
-    data_h2o_ice_s = correction_value(data_h2o_ice_s, threshold=1e-13)
+    data_h2o_ice_s = correction_value(data=data_h2o_ice_s, operator='inf', threshold=1e-13)
     data_icetot = correction_value(data_icetot, threshold=1e-13)
     data_tau_tes = correction_value(data_tau_tes, threshold=1e-13)
     data_mtot = correction_value(data_mtot, threshold=1e-13)
