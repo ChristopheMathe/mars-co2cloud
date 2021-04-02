@@ -1,8 +1,6 @@
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm, TwoSlopeNorm
 from .DataObservation import *
 from .DataProcessed import *
-from matplotlib import cm
 
 
 def colormap_idl_rainbow_plus_white():
@@ -270,7 +268,9 @@ def colormap_idl_rainbow_plus_white():
 
 
 def display_co2_ice_mola(filename, data):
+    from matplotlib.colors import LogNorm
     from numpy import logspace
+
     data_time = get_data(filename=filename, target='Time')
     data_latitude = get_data(filename=filename, target='latitude')
     mola_latitude, mola_ls, mola_altitude = mola()
@@ -331,13 +331,10 @@ def display_co2_ice_cloud_evolution_latitude(filename, data, data_satuco2, data_
     data_latitude = get_data(filename, target='latitude')
     data_latitude, latitude_selected = slice_data(data_latitude, dimension_data=data_latitude,
                                                   value=[latitude_selected[0], latitude_selected[-1]])
-    print(data_latitude[:].shape, data.shape)
     data = data[x_time, :, :]
     data_satuco2 = data_satuco2[x_time, :, :]
     data_temp = data_temp[x_time, :, :]
     data_riceco2 = data_riceco2[x_time, :, :]
-
-    #    ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
 
     fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(8, 11))
     fig.subplots_adjust(wspace=0.4)
@@ -388,24 +385,20 @@ def display_co2_ice_cloud_evolution_latitude(filename, data, data_satuco2, data_
     return save_name
 
 
-def display_co2_ice_max_longitude_altitude(name, data_latitude, max_mmr, max_alt, max_temp, max_satu, max_radius,
-                                           max_ccn_n, axis_ls, ndx, unit):
+def display_co2_ice_max_longitude_altitude(filename, name, max_mmr, max_alt, max_temp, max_satu, max_radius,
+                                           max_ccn_n, unit):
     from matplotlib.colors import LogNorm, DivergingNorm
     from numpy import arange, int_, logspace
 
-    print('----------------------------')
-    print('Enter in display_max_lon_alt')
+    data_latitude = get_data(filename=filename, target='latitude')
 
     # PLOT
     fig, ax = plt.subplots(nrows=6, ncols=1, figsize=(11, 30))
 
     # plot 1
-    ax[0].set_title('Max ' + name + ' in altitude/longitude')
+    ax[0].set_title(f'Max {name} in altitude/longitude')
     pc = ax[0].contourf(max_mmr, norm=LogNorm(), levels=logspace(-10, 1, 12), cmap='warm')
     ax[0].set_facecolor('white')
-    ax[0].set_yticks(ticks=arange(0, len(data_latitude), 6))
-    ax[0].set_yticklabels(labels=data_latitude[::6])
-    ax[0].set_xticks(ticks=ndx)
     ax[0].set_xticklabels(labels='')
     cbar = plt.colorbar(pc, ax=ax[0])
     cbar.ax.set_title(unit)
@@ -415,9 +408,6 @@ def display_co2_ice_max_longitude_altitude(name, data_latitude, max_mmr, max_alt
     ax[1].set_title('Altitude at co2_ice mmr max')
     pc2 = ax[1].contourf(max_alt, cmap='warm')
     ax[1].set_facecolor('white')
-    ax[1].set_yticks(ticks=arange(0, len(data_latitude), 6))
-    ax[1].set_yticklabels(labels=data_latitude[::6])
-    ax[1].set_xticks(ticks=ndx)
     ax[1].set_xticklabels(labels='')
     ax[1].set_ylabel('Latitude (°N)')
     cbar2 = plt.colorbar(pc2, ax=ax[1])
@@ -427,9 +417,6 @@ def display_co2_ice_max_longitude_altitude(name, data_latitude, max_mmr, max_alt
     ax[2].set_title('Temperature at co2_ice mmr max')
     pc3 = ax[2].contourf(max_temp, cmap='warm')
     ax[2].set_facecolor('white')
-    ax[2].set_yticks(ticks=arange(0, len(data_latitude), 6))
-    ax[2].set_yticklabels(labels=data_latitude[::6])
-    ax[2].set_xticks(ticks=ndx)
     ax[2].set_xticklabels(labels='')
     ax[2].set_ylabel('Latitude (°N)')
     cbar3 = plt.colorbar(pc3, ax=ax[2])
@@ -440,9 +427,6 @@ def display_co2_ice_max_longitude_altitude(name, data_latitude, max_mmr, max_alt
     ax[3].set_title('Saturation at co2_ice mmr max')
     pc4 = ax[3].contourf(max_satu, cmap='warm', norm=divnorm, levels=arange(0, 5))
     ax[3].set_facecolor('white')
-    ax[3].set_yticks(ticks=arange(0, len(data_latitude), 6))
-    ax[3].set_yticklabels(labels=data_latitude[::6])
-    ax[3].set_xticks(ticks=ndx)
     ax[3].set_xticklabels(labels='')
     ax[3].set_ylabel('Latitude (°N)')
     cbar4 = plt.colorbar(pc4, ax=ax[3])
@@ -464,16 +448,12 @@ def display_co2_ice_max_longitude_altitude(name, data_latitude, max_mmr, max_alt
     ax[5].set_title('CCN number at co2_ice mmr max')
     pc3 = ax[5].contourf(max_ccn_n, norm=DivergingNorm(vmin=0, vcenter=1), levels=arange(0, 5), cmap='warm')
     ax[5].set_facecolor('white')
-    ax[5].set_yticks(ticks=arange(0, len(data_latitude), 6))
-    ax[5].set_yticklabels(labels=data_latitude[::6])
-    ax[5].set_xticks(ticks=ndx)
-    ax[5].set_xticklabels(labels=int_(axis_ls))
     ax[5].set_xlabel('Solar Longitude (°)')
     ax[5].set_ylabel('Latitude (°N)')
     cbar3 = plt.colorbar(pc3, ax=ax[5])
     cbar3.ax.set_title('nb/kg')
 
-    fig.savefig('max_' + name + '_in_altitude_longitude.png', bbox_inches='tight')
+    fig.savefig(f'max_{name}_in_altitude_longitude.png', bbox_inches='tight')
 
     plt.show()
 

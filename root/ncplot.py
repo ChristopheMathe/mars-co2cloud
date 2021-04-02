@@ -41,9 +41,9 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
                 vars_max_value_with_others(filename=filename, data_target=data_target)
 
             print('Display:')
-            display_co2_ice_max_longitude_altitude(name=name_target, max_mmr=max_mmr, max_alt=max_alt,
-                                                   max_temp=max_temp, max_satu=max_satu, max_radius=max_radius,
-                                                   max_ccn_n=max_ccn_n, unit='kg/kg')
+            display_co2_ice_max_longitude_altitude(filename=filename, name=name_target, max_mmr=max_mmr,
+                                                   max_alt=max_alt, max_temp=max_temp, max_satu=max_satu,
+                                                   max_radius=max_radius, max_ccn_n=max_ccn_n, unit='kg/kg')
 
         elif view_mode == 2 or view_mode == 201:
             print('Processing data:')
