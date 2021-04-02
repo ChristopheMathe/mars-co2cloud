@@ -45,7 +45,6 @@ def get_data(filename, target=None):
 def nc_extract(filename, nc_fid, verb=True):
     """
     ncdump outputs dimensions, variables and their attribute information.
-    The information is similar to that of NCAR's ncdump utility.
     ncdump requires a valid instance of Dataset.
 
     Parameters
