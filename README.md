@@ -15,8 +15,9 @@ You can find more details about this script, and especially about figures you ca
 ### 1.3 extract_profile.py
 
 
-## 2. spicam_cloud
+## 2. Spicam_cloud
 This directory contains the main python script 'stats.py', analysing SPICAM data to find cold pockets and their characteristics.
 
 Cold pockets are defined when the temperature environment of the Mars atmosphere is below the condensation temperature of the carbon dioxide.
 
+## 3. Miscallenaous
