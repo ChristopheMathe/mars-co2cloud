@@ -21,7 +21,6 @@ view_mode | axis-x    | axis-y   | information                                  
 1         | ls        | latitude | maximum in altitude and longitude, with others variables at these places | 
 2         | ls        | latitude | display the zonal mean                                                   |
 201       |           |          | special display for DARI report (compare to MOLA obs)                    |
-3         | thickness | latitude | layer ice thickness in polar region                                      |
 4         | latitude  | #clouds  | polar cloud distribution to compare with Fig.8 of Neumann+2003           |
 5         | latitude  | altitude | cloud evolution with satuco2/temperature/radius                          | satuco2, temp, riceco2
 6         | ls        | altitude | mmr structure in winter polar regions at 60°N/S                          |
