@@ -4,71 +4,30 @@ from .packages.ncdump import *
 from netCDF4 import Dataset
 from matplotlib.colors import DivergingNorm, LinearSegmentedColormap
 from numpy.ma import masked_inside
+from os import listdir
 from pylab import *
 import matplotlib.pyplot as plt
 
 
-def extract_data(data):
-    data_time = data.variables['Time'][:]
-    data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=None)
-    comparison = data_local_time == [7., 19.]
-    if not comparison.all():
-        print('Not localtime at 14h!')
-        exit()
-    data_h2o_ice_s = data.variables['h2o_ice_s'][:, :, :]
-    data_icetot = data.variables['icetot'][:, :, :]
-    data_tau_tes = data.variables['tauTES'][:, :, :]
-    data_mtot = data.variables['mtot'][:, :, :]
-    data_ps = data.variables['ps'][:, :, :]
-    data_tsurf = data.variables['tsurf'][:, :, :]
-    data_co2ice = data.variables['co2ice'][:, :, :]
+class NonLinearColormap(LinearSegmentedColormap):
+    """A nonlinear colormap"""
+    name_cmap = 'jet'
 
-    # correct data
-    data_h2o_ice_s = correction_value(data=data_h2o_ice_s, operator='inf', threshold=1e-13)
-    data_icetot = correction_value(data_icetot, threshold=1e-13)
-    data_tau_tes = correction_value(data_tau_tes, threshold=1e-13)
-    data_mtot = correction_value(data_mtot, threshold=1e-13)
-    data_ps = correction_value(data_ps, threshold=1e-13)
-    data_tsurf = correction_value(data_tsurf, threshold=1e-13)
-    data_co2ice = correction_value(data_co2ice, threshold=1e-13)
+    def __init__(self, cmap, levels, name_cmap, segment_data):
+        """
+        """
+        super().__init__(name_cmap, segment_data)
+        self.cmap = cmap
+        self.name = name_cmap
+        self.monochrome = self.cmap.monochrome
+        self.levels = asarray(levels, dtype='float64')
+        self._x = self.levels - self.levels.min
+        self._x /= self._x.max()
+        self._y = linspace(0, 1, len(self.levels))
 
-    # compute zonal mean
-    data_h2o_ice_s = mean(data_h2o_ice_s, axis=2)
-    data_icetot = mean(data_icetot, axis=2)
-    data_tau_tes = mean(data_tau_tes, axis=2)
-    data_mtot = mean(data_mtot, axis=2)
-    data_ps = mean(data_ps, axis=2)
-    data_tsurf = mean(data_tsurf, axis=2)
-    data_co2ice = mean(data_co2ice, axis=2)
-
-    # rotate data
-    data_h2o_ice_s, data_icetot, data_tau_tes, data_mtot, data_ps, data_tsurf, data_co2ice = rotate_data(
-        data_h2o_ice_s, data_icetot, data_tau_tes, data_mtot, data_ps, data_tsurf, data_co2ice, do_flip=True)
-    return data_h2o_ice_s, data_icetot, data_tau_tes, data_mtot, data_ps, data_tsurf, data_co2ice
-
-
-def check_local_time(data_time, selected_time=None):
-    from numpy import unique, round, delete, arange
-
-    # Deals with stats file
-    if all(data_time == arange(2., 26., 2.)):
-        data_local_time = data_time
-        stats_file = True
-    else:
-        data_local_time = unique(round(data_time[:] * 24 % 24, 0))
-        if 0 in data_local_time and 24 in data_local_time:
-            data_local_time = delete(data_local_time, -1)
-        stats_file = False
-
-    print(f'Local time available: {data_local_time}')
-
-    if selected_time is not None:
-        idx = (abs(data_local_time[:] - selected_time)).argmin()
-        print(f'\tSelected: {data_local_time[idx]}')
-    else:
-        idx = None
-
-    return data_local_time, idx, stats_file
+    def __call__(self, xi, alpha=1.0, **kw):
+        yi = interp(xi, self._x, self._y)
+        return self.cmap(yi, alpha)
 
 
 def compute_error(data_ref, data):
@@ -85,7 +44,43 @@ def compute_error(data_ref, data):
     return delta
 
 
+def extract_data(data):
+    data_time = data.variables['Time'][:]
+    data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=14)
+    data_h2o_ice_s = data.variables['h2o_ice_s'][idx::len(data_local_time), :, :]
+    data_icetot = data.variables['icetot'][idx::len(data_local_time), :, :]
+    data_tau_tes = data.variables['tauTES'][idx::len(data_local_time), :, :]
+    data_mtot = data.variables['mtot'][idx::len(data_local_time), :, :]
+    data_ps = data.variables['ps'][idx::len(data_local_time), :, :]
+    data_tsurf = data.variables['tsurf'][idx::len(data_local_time), :, :]
+    data_co2ice = data.variables['co2ice'][idx::len(data_local_time), :, :]
+
+    # correct data
+    data_h2o_ice_s = correction_value(data=data_h2o_ice_s, operator='inf', threshold=1e-13)
+    data_icetot = correction_value(data=data_icetot, operator='inf', threshold=1e-13)
+    data_tau_tes = correction_value(data=data_tau_tes, operator='inf', threshold=1e-13)
+    data_mtot = correction_value(data=data_mtot, operator='inf', threshold=1e-13)
+    data_ps = correction_value(data=data_ps, operator='inf', threshold=1e-13)
+    data_tsurf = correction_value(data=data_tsurf, operator='inf', threshold=1e-13)
+    data_co2ice = correction_value(data=data_co2ice, operator='inf', threshold=1e-13)
+
+    # compute zonal mean
+    data_h2o_ice_s = mean(data_h2o_ice_s, axis=2)
+    data_icetot = mean(data_icetot, axis=2)
+    data_tau_tes = mean(data_tau_tes, axis=2)
+    data_mtot = mean(data_mtot, axis=2)
+    data_ps = mean(data_ps, axis=2)
+    data_tsurf = mean(data_tsurf, axis=2)
+    data_co2ice = mean(data_co2ice, axis=2)
+
+    # rotate data
+    data_h2o_ice_s, data_icetot, data_tau_tes, data_mtot, data_ps, data_tsurf, data_co2ice = rotate_data(
+        data_h2o_ice_s, data_icetot, data_tau_tes, data_mtot, data_ps, data_tsurf, data_co2ice, do_flip=True)
+    return data_h2o_ice_s, data_icetot, data_tau_tes, data_mtot, data_ps, data_tsurf, data_co2ice
+
+
 def plot_figure(data_ref, data, delta, levels, sup_title, unit, fmt, ndx, data_latitude, save_name):
+
     fig, ax = plt.subplots(nrows=1, ncols=3, sharey='col', figsize=(11, 8))
     fig.subplots_adjust(hspace=0, wspace=0, bottom=0.2)
     fig.suptitle(sup_title)
@@ -134,43 +129,7 @@ def plot_figure(data_ref, data, delta, levels, sup_title, unit, fmt, ndx, data_l
     plt.close(fig)
 
 
-def get_ls_index(data_time):
-    from numpy import array, searchsorted, max
-
-    axis_ls = array([0, 90, 180, 270, 360])
-    if max(data_time) > 361:
-        # ls = 0, 90, 180, 270, 360
-        idx = searchsorted(data_time[:], [0, 193.47, 371.99, 514.76, 669])
-    else:
-        idx = searchsorted(data_time[:], axis_ls)
-
-    return idx, axis_ls
-
-
-class NonLinearColormap(LinearSegmentedColormap):
-    """A nonlinear colormap"""
-    name = 'jet'
-
-    def __init__(self, cmap, levels, name, segment_data):
-        """
-        """
-        super().__init__(name, segment_data)
-        self.cmap = cmap
-        self.name = name
-        self.monochrome = self.cmap.monochrome
-        self.levels = asarray(levels, dtype='float64')
-        self._x = self.levels - self.levels.min
-        self._x /= self._x.max()
-        self._y = linspace(0, 1, len(self.levels))
-
-    def __call__(self, xi, alpha=1.0, **kw):
-        yi = interp(xi, self._x, self._y)
-        return self.cmap(yi, alpha)
-
-
 def main():
-    from numpy import min, max
-    from os import listdir
     # Data from Margaux Vals
     data_ref = Dataset('../simu_ref_cycle_eau_mvals/simu_ref_cycle_eau_mvals/concat_vars_3D_LT_14h_Ls.nc', "r",
                        format="NETCDF4")
@@ -270,10 +229,10 @@ def main():
 
     cmap_lin = get_cmap('jet')
     levels1 = [0, 0.025, 0.05, 0.075, 0.10, 0.15, 0.20, 0.75, 2.0, 4.0]
-    cmap_non_lin1 = NonLinearColormap(cmap=cmap_lin, levels=levels1, name='jet', segment_data=100)
+    cmap_non_lin1 = NonLinearColormap(cmap=cmap_lin, levels=levels1, name_cmap='jet', segment_data=100)
 
     levels2 = [0, 5, 15, 30, 50, 70, 90, 130]
-    cmap_non_lin2 = NonLinearColormap(cmap=cmap_lin, levels=levels2, name='jet', segment_data=100)
+    cmap_non_lin2 = NonLinearColormap(cmap=cmap_lin, levels=levels2, name_cmap='jet', segment_data=100)
 
     idx1 = abs(data_tes_time[:] - 360).argmin()
     idx2 = abs(data_tes_time[:] - 720).argmin()
@@ -381,15 +340,15 @@ def main():
     zonal_mean = zeros((max_martian_year, 360, data_pfs_latitude.shape[0]))
 
     for j in range(martian_year.shape[0] - 1):
-        print('{}%'.format(j / martian_year.shape[0] * 100))
+        print(f'{j / martian_year.shape[0] * 100}%')
         idx1 = abs(data_pfs_time[:] - martian_year[j]).argmin()
         idx2 = abs(data_pfs_time[:] - martian_year[j + 1]).argmin()
         one_year_time = data_pfs_time[idx1:idx2 + 1] - 360 * j
         print('\t', one_year_time[0], one_year_time[-1])
         one_year_data = data_pfs_tauice[idx1:idx2 + 1, :, :]
-        one_year_data = correction_value(one_year_data, threshold=1e-13)
+        one_year_data = correction_value(data=one_year_data, operator='inf', threshold=1e-13)
         one_year_data = mean(one_year_data, axis=2)
-        one_year_data = correction_value(one_year_data, threshold=1e-13)
+        one_year_data = correction_value(data=one_year_data, operator='inf', threshold=1e-13)
         for i in range(359):
             mask = masked_inside(one_year_time, i, i + 1)
             if mask.mask.any():
@@ -402,7 +361,7 @@ def main():
             del mask
         del one_year_time, one_year_data
 
-    zonal_mean = correction_value(zonal_mean, threshold=1e-13)
+    zonal_mean = correction_value(data=zonal_mean, operator='inf', threshold=1e-13)
     zonal_mean_final = mean(zonal_mean, axis=0)
 
     # FIRST PLOTS: TAU-TES
