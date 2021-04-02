@@ -1,6 +1,6 @@
 #!/bin/bash python3
-from .packages.displays import *
-from .packages.ncdump import *
+from packages.displays import *
+from packages.ncdump import *
 from os import listdir
 from numpy import mean, logspace, arange, linspace
 from sys import argv

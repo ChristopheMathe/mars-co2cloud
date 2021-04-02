@@ -388,7 +388,7 @@ def display_co2_ice_cloud_evolution_latitude(filename, data, data_satuco2, data_
 def display_co2_ice_max_longitude_altitude(filename, name, max_mmr, max_alt, max_temp, max_satu, max_radius,
                                            max_ccn_n, unit):
     from matplotlib.colors import LogNorm, DivergingNorm
-    from numpy import arange, int_, logspace
+    from numpy import arange, logspace
 
     data_latitude = get_data(filename=filename, target='latitude')
 
@@ -438,7 +438,6 @@ def display_co2_ice_max_longitude_altitude(filename, name, max_mmr, max_alt, max
     ax[4].set_facecolor('white')
     ax[4].set_yticks(ticks=arange(0, len(data_latitude), 6))
     ax[4].set_yticklabels(labels=data_latitude[::6])
-    ax[4].set_xticks(ticks=ndx)
     ax[4].set_xticklabels(labels='')
     ax[4].set_ylabel('Latitude (°N)')
     cbar5 = plt.colorbar(pc5, ax=ax[4])
@@ -461,6 +460,8 @@ def display_co2_ice_max_longitude_altitude(filename, name, max_mmr, max_alt, max
 def display_co2_ice_density_column_evolution_polar_region(filename, data, time, latitude):
     from numpy import logspace
     from math import floor
+    from matplotlib import cm
+    from matplotlib.colors import LogNorm
     import cartopy.crs as crs
 
     data_longitude = get_data(filename=filename, target='longitude')
@@ -1015,6 +1016,7 @@ def display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north
 def display_satuco2_zonal_mean_day_night(data_satuco2_day, data_satuco2_night, data_co2ice_day, data_co2ice_night,
                                          data_altitude, ndx, axis_ls, title, save_name):
     from numpy import array, round
+    from matplotlib.colors import TwoSlopeNorm
 
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11))
     fig.suptitle(title)
@@ -1279,6 +1281,7 @@ def display_vars_altitude_latitude(filename, data, unit, title, save_name):
 
 def display_vars_altitude_localtime(filename, data, data_localtime, title, unit, save_name):
     from numpy import arange, zeros
+    from matplotlib.colors import TwoSlopeNorm
 
     data_altitude = get_data(filename=filename, target='altitude')
 
@@ -1306,6 +1309,7 @@ def display_vars_altitude_localtime(filename, data, data_localtime, title, unit,
 
 def display_vars_altitude_longitude(filename, data, unit, title, save_name):
     from numpy import zeros, arange
+    from matplotlib.colors import TwoSlopeNorm
 
     data_altitude = get_data(filename=filename, target='altitude')
     data_longitude = get_data(filename=filename, target='longitude')
@@ -1335,6 +1339,7 @@ def display_vars_altitude_longitude(filename, data, unit, title, save_name):
 
 def display_vars_altitude_ls(filename, data_1, data_2, levels, title, save_name, latitude_selected=None):
     from numpy import round
+    from matplotlib.colors import LogNorm
 
     data_altitude = get_data(filename, target='altitude')
     ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
@@ -1727,6 +1732,7 @@ def display_vars_polar_projection(filename, data_np, data_sp, levels, unit, cmap
 def display_vars_polar_projection_multi_plot(filename, data, time, localtime, levels, norm, cmap, unit, save_name):
     import cartopy.crs as crs
     from numpy import unique, ma
+    from matplotlib import cm
 
     if isinstance(data, ma.MaskedArray):
         array_mask = True
