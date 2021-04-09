@@ -7,7 +7,7 @@ def getfilename(files, selection=None):
     if any(".nc" in s for s in files):
         list_files = sorted([x for x in files if '.nc' in x])
         if len(list_files) > 1:
-            print(f'Netcdf files available: (0) {list_files[0]}')
+            print(f'Netcdf files available: \t(0) {list_files[0]}')
             for i, value_i in enumerate(list_files[1:]):
                 print(f'\t\t\t\t({i + 1}) {value_i}')
             if selection is None:
