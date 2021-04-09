@@ -1,6 +1,6 @@
 #!/bin/bash python3
-from .packages.lib_function import *
-from .packages.ncdump import *
+from packages.lib_function import *
+from packages.ncdump import *
 from netCDF4 import Dataset
 from matplotlib.colors import DivergingNorm, LinearSegmentedColormap
 from numpy.ma import masked_inside
