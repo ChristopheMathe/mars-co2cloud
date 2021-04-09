@@ -21,7 +21,7 @@ class NonLinearColormap(LinearSegmentedColormap):
         self.name = name_cmap
         self.monochrome = self.cmap.monochrome
         self.levels = asarray(levels, dtype='float64')
-        self._x = self.levels - self.levels.min
+        self._x = self.levels - self.levels.min()
         self._x /= self._x.max()
         self._y = linspace(0, 1, len(self.levels))
 
@@ -44,16 +44,25 @@ def compute_error(data_ref, data):
     return delta
 
 
-def extract_data(data):
-    data_time = data.variables['Time'][:]
-    data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=14)
-    data_h2o_ice_s = data.variables['h2o_ice_s'][idx::len(data_local_time), :, :]
-    data_icetot = data.variables['icetot'][idx::len(data_local_time), :, :]
-    data_tau_tes = data.variables['tauTES'][idx::len(data_local_time), :, :]
-    data_mtot = data.variables['mtot'][idx::len(data_local_time), :, :]
-    data_ps = data.variables['ps'][idx::len(data_local_time), :, :]
-    data_tsurf = data.variables['tsurf'][idx::len(data_local_time), :, :]
-    data_co2ice = data.variables['co2ice'][idx::len(data_local_time), :, :]
+def extract_data(data, mvals):
+    if mvals is True:
+        data_h2o_ice_s = data.variables['h2o_ice_s'][:, :, :]
+        data_icetot = data.variables['icetot'][:, :, :]
+        data_tau_tes = data.variables['tauTES'][:, :, :]
+        data_mtot = data.variables['mtot'][:, :, :]
+        data_ps = data.variables['ps'][:, :, :]
+        data_tsurf = data.variables['tsurf'][:, :, :]
+        data_co2ice = data.variables['co2ice'][:, :, :]
+    else:
+        data_time = data.variables['Time'][:]
+        data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=14)
+        data_h2o_ice_s = data.variables['h2o_ice_s'][idx::len(data_local_time), :, :]
+        data_icetot = data.variables['icetot'][idx::len(data_local_time), :, :]
+        data_tau_tes = data.variables['tauTES'][idx::len(data_local_time), :, :]
+        data_mtot = data.variables['mtot'][idx::len(data_local_time), :, :]
+        data_ps = data.variables['ps'][idx::len(data_local_time), :, :]
+        data_tsurf = data.variables['tsurf'][idx::len(data_local_time), :, :]
+        data_co2ice = data.variables['co2ice'][idx::len(data_local_time), :, :]
 
     # correct data
     data_h2o_ice_s = correction_value(data=data_h2o_ice_s, operator='inf', threshold=1e-13)
@@ -130,11 +139,14 @@ def plot_figure(data_ref, data, delta, levels, sup_title, unit, fmt, ndx, data_l
 
 
 def main():
+    from numpy import min, max
+
     # Data from Margaux Vals
     data_ref = Dataset('../simu_ref_cycle_eau_mvals/simu_ref_cycle_eau_mvals/concat_vars_3D_LT_14h_Ls.nc', "r",
                        format="NETCDF4")
     data_ref_h2o_ice_s, data_ref_icetot, data_ref_tau_tes, data_ref_mtot, data_ref_ps, data_ref_tsurf, data_ref_co2ice \
-        = extract_data(data_ref)
+        = extract_data(data_ref, mvals=True)
+    data_time_mvals = data_ref.variables['Time']
 
     # My data
     files = listdir('.')
@@ -153,13 +165,16 @@ def main():
     filename = getfilename(files)
     filename = directory_store + filename
     data_3d = Dataset(filename, "r", format="NETCDF4")
-    data_h2o_ice_s, data_icetot, data_tau_tes, data_mtot, data_ps, data_tsurf, data_co2ice = extract_data(data_3d)
+    data_h2o_ice_s, data_icetot, data_tau_tes, data_mtot, data_ps, data_tsurf, data_co2ice = extract_data(data_3d,
+                                                                                                          mvals=False)
 
     # Get ndx and axis_ls
     data_latitude = data_3d.variables['latitude']
     data_latitude = data_latitude[::-1]
     data_time = data_3d.variables['Time']
-    ndx, axis_ls = get_ls_index(data_time)
+    data_localtime, idx, stats = check_local_time(data_time, selected_time=14)
+    data_time = data_time[idx::len(data_localtime)]
+    ndx, axis_ls, ls_lin = get_ls_index(data_time)
 
     # Compute the difference between Margaux and me
     delta_h2o_ice_s = compute_error(data_ref_h2o_ice_s, data_h2o_ice_s)
@@ -171,43 +186,43 @@ def main():
     delta_co2ice = compute_error(data_ref_co2ice, data_co2ice)
 
     # Plot: tsurf
-    print('tsurf: min = {:.0e}, max = {:.0e}'.format(min(data_tsurf), max(data_tsurf)))
+    print(f'tsurf: min = {min(data_tsurf):.0e}, max = {max(data_tsurf):.0e}')
     plot_figure(data_ref_tsurf, data_tsurf, delta_tsurf, levels=arange(140, 270, 10),
                 sup_title='Zonal mean of surface temperature', unit='K', fmt='%.2f', ndx=ndx,
                 data_latitude=data_latitude, save_name='check_water_cycle_relative_error_tsurf')
 
     # Plot: ps
-    print('ps: min = {:.0e}, max = {:.0e}'.format(min(data_ps), max(data_ps)))
+    print(f'ps: min = {min(data_ps):.0e}, max = {max(data_ps):.0e}')
     plot_figure(data_ref_ps, data_ps, delta_ps, levels=arange(300, 1200, 100),
                 sup_title='Zonal mean of surface pressure', unit='Pa', fmt='%d', ndx=ndx, data_latitude=data_latitude,
                 save_name='check_water_cycle_relative_error_ps')
 
     # Plot: mtot
-    print('mtot: min = {:.0e}, max = {:.0e}'.format(min(data_mtot), max(data_mtot)))
+    print(f'mtot: min = {min(data_mtot):.0e}, max = {max(data_mtot):.0e}')
     plot_figure(data_ref_mtot, data_mtot, delta_mtot, levels=None,
                 sup_title='Zonal mean of total atmospheric mass', unit='kg/m$^2$', fmt='%.1e', ndx=ndx,
                 data_latitude=data_latitude, save_name='check_water_cycle_relative_error_mtot')
 
     # Plot: icetot
-    print('icetot: min = {:.0e}, max = {:.0e}'.format(min(data_icetot), max(data_icetot)))
+    print(f'icetot: min = {min(data_icetot):.0e}, max = {max(data_icetot):.0e}')
     plot_figure(data_ref_icetot, data_icetot, delta_icetot, levels=linspace(0, 0.05, 10),
                 sup_title='Zonal mean of total water ice mass', unit='kg/m$^2$', fmt='%.1e', ndx=ndx,
                 data_latitude=data_latitude, save_name='check_water_cycle_relative_error_icetot')
 
     # Plot: h2o_ice_s
-    print('h2o_ice_s: min = {:.0e}, max = {:.0e}'.format(min(data_h2o_ice_s), max(data_h2o_ice_s)))
+    print(f'h2o_ice_s: min = {min(data_h2o_ice_s):.0e}, max = {max(data_h2o_ice_s):.0e}')
     plot_figure(data_ref_h2o_ice_s, data_h2o_ice_s, delta_h2o_ice_s, levels=arange(0, 9, 1),
                 sup_title='Zonal mean of surface water ice', unit='kg/m$^2$', fmt='%d', ndx=ndx,
                 data_latitude=data_latitude, save_name='check_water_cycle_relative_error_h2o_ice_s')
 
     # Plot: tauTES
-    print('tauTES: min = {:.0e}, max = {:.0e}'.format(min(data_tau_tes), max(data_tau_tes)))
+    print(f'tauTES: min = {min(data_tau_tes):.0e}, max = {max(data_tau_tes):.0e}')
     plot_figure(data_ref_tau_tes, data_tau_tes, delta_tau_tes, levels=arange(0, 7, 1),
                 sup_title='Zonal mean of opacity at 825 cm$^{-1}$', unit='', fmt='%.d', ndx=ndx,
                 data_latitude=data_latitude, save_name='check_water_cycle_relative_error_tauTES')
 
     # Plot: co2ice
-    print('co2ice: min = {:.0e}, max = {:.0e}'.format(min(data_co2ice), max(data_co2ice)))
+    print(f'co2ice: min = {min(data_co2ice):.0e}, max = {max(data_co2ice):.0e}')
     plot_figure(data_ref_co2ice, data_co2ice, delta_co2ice, levels=None, sup_title='CO$_2$ ice at the surface',
                 unit='kg/m$^2$', fmt='%.1e', ndx=ndx, data_latitude=data_latitude,
                 save_name='check_water_cycle_relative_error_co2ice')
@@ -247,7 +262,7 @@ def main():
     cbar.set_label('Cloud opacity at 825 cm$^{-1}$')
 
     ax[1].set_title('M. VALS')
-    ax[1].contourf(data_time[:], data_latitude[:], data_ref_tau_tes, levels=levels1, cmap=cmap_non_lin1)
+    ax[1].contourf(data_time_mvals[:], data_latitude[:], data_ref_tau_tes, levels=levels1, cmap=cmap_non_lin1)
 
     ax[2].set_title('Our')
     ax[2].contourf(data_time[:], data_latitude[:], data_tau_tes, levels=levels1, cmap=cmap_non_lin1)
@@ -286,8 +301,8 @@ def main():
     ax[0].clabel(ctr, inline=1, fontsize=10, fmt='%d')
 
     ax[1].set_title('M. VALS')
-    ax[1].contourf(data_time[:], data_latitude[:], data_ref_mtot * 1e3, levels=levels2, cmap=cmap_non_lin2)
-    ctr1 = ax[1].contour(data_time[:], data_latitude[:], data_ref_mtot * 1e3, levels=levels2, colors='white',
+    ax[1].contourf(data_time_mvals[:], data_latitude[:], data_ref_mtot * 1e3, levels=levels2, cmap=cmap_non_lin2)
+    ctr1 = ax[1].contour(data_time_mvals[:], data_latitude[:], data_ref_mtot * 1e3, levels=levels2, colors='white',
                          linewidths=1)
     ax[1].clabel(ctr1, inline=1, fontsize=10, fmt='%d')
 
@@ -373,7 +388,7 @@ def main():
     cbar.set_label('Cloud opacity at 825 cm$^{-1}$')
 
     ax[1].set_title('M. VALS')
-    ax[1].contourf(data_time[:], data_latitude[:], data_ref_tau_tes, levels=levels1, cmap=cmap_non_lin1)
+    ax[1].contourf(data_time_mvals[:], data_latitude[:], data_ref_tau_tes, levels=levels1, cmap=cmap_non_lin1)
 
     ax[2].set_title('Our')
     ax[2].contourf(data_time[:], data_latitude[:], data_tau_tes, levels=levels1, cmap=cmap_non_lin1)
