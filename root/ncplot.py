@@ -533,12 +533,18 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             zonal_mean, layer_selected = vars_zonal_mean(filename=filename, data=data_target, layer=None)
 
             print('Display:')
+            if name_target == 'fluxtop_lw':
+                levels = arange(0, 420, 20)
+            elif name_target == 'fluxsurf_lw':
+                levels = arange(0, 180, 20)
+            else:
+                levels = arange(0, 180, 20)
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=zonal_mean, unit='W.m$^{-2}$',
-                                     norm=None, levels=arange(0, 160, 20), observation=False,
+                                     norm=None, levels=levels, observation=False,
                                      latitude_selected=layer_selected, localtime_selected=local_time,
-                                     title=f'Zonal mean of {name_target}',
+                                     title=f'Zonal mean of {name_target}, at {local_time}h',
                                      tes=None, mvals=None, layer=None,
-                                     save_name=f'{name_target}_zonal_mean')
+                                     save_name=f'{name_target}_zonal_mean_{local_time}h')
 
         if view_mode == 2:
             print('Processing data:')
