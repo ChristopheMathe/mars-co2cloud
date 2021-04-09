@@ -545,20 +545,24 @@ def satuco2_time_mean_with_co2_ice(filename, data):
             south_latitude_selected, binned]
 
 
-def satuco2_hu2012_fig9(filename, data):
-    data_latitude = get_data(filename, target='latitude')
+def satuco2_hu2012_fig9(filename, data, local_time):
+    data_latitude = get_data(filename=filename, target='latitude')
     data_altitude = get_data(filename=filename, target='altitude')
 
     if data_altitude.long_name != 'Altitude above local surface':
         print('The netCDF file did not zrecasted above the local surface')
         exit()
 
-    data_north, latitude_selected = slice_data(data, dimension_data=data_latitude, value=[60, 90])
-    data_south, latitude_selected = slice_data(data, dimension_data=data_latitude, value=[-60, -90])
+    data_north, latitude_selected = slice_data(data=data, dimension_data=data_latitude, value=[60, 90])
+    data_south, latitude_selected = slice_data(data=data, dimension_data=data_latitude, value=[-60, -90])
     del data
 
     # Bin time in 5° Ls
     data_time = get_data(filename=filename, target='Time')
+    if data_time.units != 'deg':
+        data_local_time, idx, sats = check_local_time(data_time=data_time, selected_time=local_time)
+        data_time = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_time = data_time[idx::len(data_local_time)]
     if data_time.shape[0] % 60 == 0:
         print(f'5°Ls binning: {data_time[0]} - {data_time[60]}')
         nb_bin = int(data_time.shape[0] / 60) + 1

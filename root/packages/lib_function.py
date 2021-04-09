@@ -33,7 +33,7 @@ def check_local_time(data_time, selected_time=None):
 
     if selected_time is not None:
         idx = (abs(data_local_time[:] - selected_time)).argmin()
-        print(f'\tSelected: {data_local_time [idx]}')
+        print(f'\tSelected: {data_local_time[idx]}')
     else:
         test = input('Do you want extract at a local time (y/N)? ')
         if test.lower() == 'y':
@@ -41,6 +41,7 @@ def check_local_time(data_time, selected_time=None):
             idx = (abs(data_local_time[:] - selected_time)).argmin()
         else:
             idx = None
+            data_local_time = [0]  # ! otherwise it takes we have data[0::len(data_local_time)] !
 
     return data_local_time, idx, stats_file
 

@@ -314,7 +314,8 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
         if view_mode == 4:
             print('Processing data:')
-            data_ice_layer, data_ice_layer_std = satuco2_hu2012_fig9(filename, data_target)
+            data_ice_layer, data_ice_layer_std = satuco2_hu2012_fig9(filename=filename, data=data_target,
+                                                                     local_time=local_time)
 
             print('Display:')
             display_satuco2_thickness_atm_layer(data_ice_layer, data_ice_layer_std,
