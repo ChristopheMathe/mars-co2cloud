@@ -9,7 +9,7 @@ from sys import exit
 def co2ice_thickness_atm_layer(filename, data):
     data_altitude = get_data(filename=filename, target='altitude')
     if data_altitude.units in ['Pa']:
-        data_altitude = get_data(filename=filename, target='zaeroid')
+        data_altitude = get_data(filename=filename, target='zareoid')
 
     data_latitude = get_data(filename=filename, target='latitude')
     data_north = slice_data(data, dimension_data=data_latitude[:], value=[60, 90])
@@ -148,7 +148,7 @@ def co2ice_time_mean(filename, data, duration, localtime):
     return data, time
 
 
-def co2ice_density_column_evolution(filename, data):
+def co2ice_density_column_evolution(filename, data, localtime):
     from math import floor
 
     # Show the evolution of density column at winter polar region
@@ -159,9 +159,10 @@ def co2ice_density_column_evolution(filename, data):
         exit()
 
     # Slice in time:
-    print(f'Select the time range in sols from {floor(data_time[0])} to {int(data_time[-1])}')
+    print(f'Select the time range in sols ({floor(data_time[0])} : {int(data_time[-1])})')
     time_begin = float(input('Start time: '))
     time_end = float(input('End time: '))
+    data_time, localtime = extract_at_a_local_time(filename=filename, data=data_time, local_time=localtime)
     data, time_range = slice_data(data=data, dimension_data=data_time, value=[time_begin, time_end])
 
     # Slice data in polar region:
@@ -178,7 +179,6 @@ def co2ice_density_column_evolution(filename, data):
     data, altitude_limit, altitude_min, altitude_max, altitude_unit = compute_column_density(filename=filename,
                                                                                              data=data)
 
-    print(data[0, :, :].filled())
     return data, time_range, latitude
 
 

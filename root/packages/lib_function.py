@@ -29,11 +29,11 @@ def check_local_time(data_time, selected_time=None):
             data_local_time = delete(data_local_time, -1)
         stats_file = False
 
-    print('Local time available: {}'.format(data_local_time))
+    print(f'Local time available: {data_local_time}')
 
     if selected_time is not None:
         idx = (abs(data_local_time[:] - selected_time)).argmin()
-        print('\tSelected: {}'.format(data_local_time[idx]))
+        print(f'\tSelected: {data_local_time [idx]}')
     else:
         test = input('Do you want extract at a local time (y/N)? ')
         if test.lower() == 'y':
@@ -157,10 +157,10 @@ def compute_column_density(filename, data):
     return data_column, altitude_limit, altitude_min, altitude_max, data_altitude.units
 
 
-def extract_at_a_local_time(filename, data):
+def extract_at_a_local_time(filename, data, local_time=None):
     data_time = get_data(filename=filename, target='Time')
 
-    data_local_time, idx, stats_file = check_local_time(data_time=data_time)
+    data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
 
     if idx is not None:
         local_time = data_local_time[idx]

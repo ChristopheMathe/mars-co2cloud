@@ -494,7 +494,8 @@ def display_co2_ice_density_column_evolution_polar_region(filename, data, time, 
                                facecolor='white')
         ax.set_title(title + f', sols {floor(time[i]):.0f} LT {time[i] * 24 % 24:.0f}')
         ax.set_facecolor('white')
-        ctf = ax.contourf(data_longitude[:], latitude, data[i, :, :].filled(), norm=norm, levels=levels,
+        print(data[i, :, :])
+        ctf = ax.contourf(data_longitude[:], latitude, data[i, :, :], norm=norm, levels=levels,
                           transform=plate_carree,
                           cmap=cmap)
         workaround_gridlines(plate_carree, axes=ax, pole=pole)

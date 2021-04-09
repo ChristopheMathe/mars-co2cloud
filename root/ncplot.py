@@ -7,7 +7,7 @@ from sys import argv
 
 
 def plot_sim_3d(filename, data_target, name_target, view_mode=None):
-    data_target, local_time = extract_at_a_local_time(filename=filename, data=data_target)
+    data_target, local_time = extract_at_a_local_time(filename=filename, data=data_target, local_time=None)
 
     print('Correction value...')
     if data_target.ndim == 4:
@@ -130,7 +130,8 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
         elif view_mode == 7:
             print('Processing data:')
-            data_processed, time, latitude = co2ice_density_column_evolution(filename=filename, data=data_target)
+            data_processed, time, latitude = co2ice_density_column_evolution(filename=filename, data=data_target,
+                                                                             localtime=local_time)
 
             print('Display:')
             display_co2_ice_density_column_evolution_polar_region(filename=filename, data=data_processed, time=time,
