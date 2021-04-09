@@ -212,10 +212,10 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
         if view_mode == 3:
             print('Processing data:')
-            top_cloud = riceco2_top_cloud_altitude(filename=filename, data_target=data_target)
+            top_cloud = riceco2_top_cloud_altitude(filename=filename, data_target=data_target, local_time=local_time)
 
             print('Display:')
-            display_riceco2_topcloud_altitude(filename=filename, top_cloud=top_cloud)
+            display_riceco2_top_cloud_altitude(filename=filename, top_cloud=top_cloud, local_time=local_time)
 
         if view_mode == 4:
             print('Processing data:')

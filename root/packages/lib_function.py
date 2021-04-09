@@ -377,7 +377,7 @@ def linearize_ls(data, idx_lt=None):
     from scipy.interpolate import interp2d
 
     # get ls
-    data_ls = get_data('../concat_Ls.nc', target='Ls')
+    data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
     if data_ls.shape[0] != data.shape[1]:
         if data_ls.shape[0] % data.shape[1] == 0 and idx_lt is not None:
             data_ls = data_ls[idx_lt::12]

@@ -494,7 +494,6 @@ def display_co2_ice_density_column_evolution_polar_region(filename, data, time, 
                                facecolor='white')
         ax.set_title(title + f', sols {floor(time[i]):.0f} LT {time[i] * 24 % 24:.0f}')
         ax.set_facecolor('white')
-        print(data[i, :, :])
         ctf = ax.contourf(data_longitude[:], latitude, data[i, :, :], norm=norm, levels=levels,
                           transform=plate_carree,
                           cmap=cmap)
@@ -637,16 +636,16 @@ def display_riceco2_global_mean(filename, list_data):
     plt.show()
 
 
-def display_riceco2_topcloud_altitude(filename, top_cloud):
-    top_cloud = correction_value(data=top_cloud, operator='inf', threshold=0)
-
+def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None):
     data_latitude = get_data(filename=filename, target='latitude')
     data_time = get_data(filename=filename, target='Time')
+    data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
+    top_cloud, interp_time = linearize_ls(data=top_cloud, idx_lt=idx)
+    top_cloud = correction_value(data=top_cloud, operator='inf', threshold=0)
 
-    plt.figure(figsize=(8, 11))
+    plt.figure(figsize=(8, 8))
     plt.title('Zonal mean of top cloud altitude')
-    print(max(top_cloud / 1e3))
-    cb = plt.contourf(data_time[:], data_latitude[:], top_cloud / 1e3, cmap='cool')
+    cb = plt.contourf(interp_time[:], data_latitude[:], top_cloud / 1e3, cmap='cool')
     ax = plt.gca()
     ax.set_facecolor('white')
 
@@ -655,7 +654,7 @@ def display_riceco2_topcloud_altitude(filename, top_cloud):
 
     plt.xlabel('Solar Longitude (°)')
     plt.ylabel('Latitude (°N)')
-    plt.savefig('topcloud_altitude_comparable_to_mola.png', bbox_inches='tight')
+    plt.savefig(f'top_cloud_altitude_comparable_to_mola_{local_time}h.png', bbox_inches='tight')
     plt.show()
 
 

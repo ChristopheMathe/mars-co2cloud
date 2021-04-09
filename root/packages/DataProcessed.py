@@ -244,7 +244,7 @@ def riceco2_zonal_mean_co2ice_exists(filename, data):
     return zonal_mean, latitude_selected
 
 
-def riceco2_top_cloud_altitude(filename, data_target):
+def riceco2_top_cloud_altitude(filename, data_target, local_time):
     data_altitude = get_data(filename, target='altitude')
 
     if data_altitude.long_name != 'Altitude above local surface':
@@ -253,6 +253,9 @@ def riceco2_top_cloud_altitude(filename, data_target):
 
     data_ccn_nco2 = get_data(filename, target='ccnNco2')
     data_rho = get_data(filename, target='rho')
+
+    data_ccn_nco2, local_time = extract_at_a_local_time(filename=filename, data=data_ccn_nco2, local_time=local_time)
+    data_rho, local_time = extract_at_a_local_time(filename=filename, data=data_rho, local_time=local_time)
 
     data_ccn_nco2 = correction_value(data_ccn_nco2[:, :, :, :], operator='inf', threshold=1e-13)
     data_rho = correction_value(data_rho[:, :, :, :], operator='inf', threshold=1e-13)
