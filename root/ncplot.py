@@ -497,7 +497,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
         if view_mode == 2 or view_mode == 201:
             print('Processing data:')
-            data_mean, time_bin = vars_time_mean(filename=filename, data=data_target, duration=15)
+            data_mean, time_bin = vars_time_mean(filename=filename, data=data_target, duration=15, localtime=local_time)
 
             print('Display:')
             if view_mode == 2:
@@ -513,7 +513,8 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
         if view_mode == 3:
             print('Processing data:')
-            data_mean_np, data_mean_sp = emis_polar_winter_gg2020_fig13(filename=filename, data=data_target)
+            data_mean_np, data_mean_sp = emis_polar_winter_gg2020_fig13(filename=filename, data=data_target,
+                                                                        local_time=local_time)
 
             print('Display:')
             display_vars_polar_projection(filename=filename, data_np=data_mean_np, data_sp=data_mean_sp,

@@ -182,9 +182,14 @@ def co2ice_density_column_evolution(filename, data, localtime):
     return data, time_range, latitude
 
 
-def emis_polar_winter_gg2020_fig13(filename, data):
+def emis_polar_winter_gg2020_fig13(filename, data, local_time):
     # Slice in time
     data_time = get_data(filename=filename, target='Time')
+    if data_time.units != 'deg':
+        data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=local_time)
+        data_time = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_time = data_time[idx::len(data_local_time)]
+
     #       NP: 180°-360°
     data_np, time = slice_data(data=data, dimension_data=data_time, value=[180, 360])
 
