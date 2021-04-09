@@ -1754,9 +1754,10 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, le
     data_np, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[60, 90])
     latitude_sp, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[-90, -60])
     data_sp, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[-90, -60])
+
     if array_mask:
-        data_np[data_np.mask] = -1
-        data_sp[data_sp.mask] = -1
+        data_np[data_np.mask] = 0
+        data_sp[data_sp.mask] = 0
 
     cmap = cm.get_cmap(cmap)
     cmap.set_under('w')
@@ -1773,7 +1774,6 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, le
     for i, axes in enumerate(ax.reshape(-1)):
         if i < 24:
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°')
-            print(unique(data_np[i, :, :]).shape[0])
             if array_mask and unique(data_np[i, :, :]).shape[0] != 1:
                 # Need at least 1 row filled with values
                 ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], levels=levels, norm=norm,
@@ -1791,7 +1791,7 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, le
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
     fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
     fig.tight_layout()
-    plt.savefig(f'{save_name }_northern_polar_region_{localtime}h.png', bbox_inches='tight')
+    plt.savefig(f'{save_name}_northern_polar_region_{localtime}h.png', bbox_inches='tight')
 
     # South polar region
     orthographic = crs.Orthographic(central_longitude=0, central_latitude=-90, globe=False)
@@ -1799,12 +1799,11 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, le
     orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
     fig, ax = plt.subplots(nrows=5, ncols=5, subplot_kw={'projection': orthographic}, figsize=(20, 20))
-    fig.suptitle('South polar region ({})'.format(unit), fontsize=20)
+    fig.suptitle(f'South polar region ({unit})', fontsize=20)
 
     for i, axes in enumerate(ax.reshape(-1)):
         if i < 24:
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°')
-            print(unique(data_sp[i, :, :]).shape[0])
             if array_mask and unique(data_sp[i, :, :]).shape[0] != 1:
                 ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], levels=levels, norm=norm,
                                     transform=plate_carree, cmap=cmap, extend='max')
