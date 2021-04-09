@@ -1415,6 +1415,7 @@ def display_vars_altitude_ls(filename, data_1, data_2, levels, title, save_name,
 def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, observation=False, latitude_selected=None,
                              localtime_selected=None, title=None, tes=None, mvals=None, layer=None,
                              save_name='test'):
+    from matplotlib.colors import LogNorm
     n_subplot = 1
     if tes:
         n_subplot += 1
@@ -1422,6 +1423,10 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
         n_subplot += 1
 
     cmap = 'coolwarm'
+    if norm == 'log':
+        norm = LogNorm()
+    else:
+        norm = None
 
     data_time = get_data(filename, target='Time')
 
