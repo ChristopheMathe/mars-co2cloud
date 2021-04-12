@@ -506,11 +506,11 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
                                                          localtime=local_time,
                                                          levels=linspace(0.55, 1., 100), norm=None, cmap='inferno',
                                                          unit='',
-                                                         save_name='emis_15ls_mean')
+                                                         save_name=f'emis_15ls_mean_{local_time}h')
             if view_mode == 201:
                 display_emis_polar_projection_garybicas2020_figs11_12(filename=filename, data=data_mean, time=time_bin,
                                                                       levels=linspace(0.55, 1., 100), cmap='inferno',
-                                                                      save_name='emis_15ls_mean_')
+                                                                      save_name=f'emis_15ls_mean_{local_time}h')
 
         if view_mode == 3:
             print('Processing data:')
@@ -521,7 +521,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             display_vars_polar_projection(filename=filename, data_np=data_mean_np, data_sp=data_mean_sp,
                                           levels=linspace(0.55, 1., 100), unit='', cmap='inferno',
                                           sup_title='Surface emissivity mean in time during polar winter',
-                                          save_name='emis_time_mean_gary-bicas2020')
+                                          save_name=f'emis_time_mean_gary-bicas2020_{local_time}h')
 
     elif name_target in ['fluxtop_lw', 'fluxtop_sw', 'fluxsurf_lw', 'fluxsurf_sw']:
         print('What do you wanna do?')
