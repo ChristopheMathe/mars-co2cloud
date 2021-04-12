@@ -373,15 +373,9 @@ def get_mean_index_altitude(data_altitude, value, dimension):
     return mean_idx
 
 
-def linearize_ls(data, idx_lt=None):
+def linearize_ls(data, data_ls):
     from numpy import arange
     from scipy.interpolate import interp2d
-
-    # get ls
-    data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
-    if data_ls.shape[0] != data.shape[1]:
-        if data_ls.shape[0] % data.shape[1] == 0 and idx_lt is not None:
-            data_ls = data_ls[idx_lt::12]
 
     # interpolation to get linear Ls
     f = interp2d(x=data_ls, y=arange(data.shape[0]), z=data, kind='linear')

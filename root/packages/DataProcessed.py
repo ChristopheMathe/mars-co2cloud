@@ -896,6 +896,7 @@ def vars_time_mean(filename, data, duration, localtime=None):
 
 
 def vars_zonal_mean(filename, data, layer=None, flip=None):
+
     if layer is not None:
         if filename != '':
             data_altitude = get_data(filename=filename, target='altitude')

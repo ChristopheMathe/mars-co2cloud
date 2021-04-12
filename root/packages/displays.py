@@ -1416,6 +1416,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
                              localtime_selected=None, title=None, tes=None, mvals=None, layer=None,
                              save_name='test'):
     from matplotlib.colors import LogNorm
+
     n_subplot = 1
     if tes:
         n_subplot += 1
@@ -1428,18 +1429,17 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
     else:
         norm = None
 
-    data_time = get_data(filename, target='Time')
+    data_time = get_data(filename=filename, target='Time')
+    data_local_time, idx, stats_file = check_local_time(data_time=data_time[:], selected_time=localtime_selected)
 
-    if localtime_selected is not None:
-        data_local_time, idx, stats_file = check_local_time(data_time=data_time[:], selected_time=localtime_selected)
-        data_time = data_time[idx::len(data_local_time)]
+    if data_time.units != 'deg':
+        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_time = data_ls[idx::len(data_local_time)]
     else:
-        idx = None
-    ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+        data_time = data_time[idx::len(data_local_time)]
 
-    if ls_lin:
-        data, data_time = linearize_ls(data=data, idx_lt=idx)
-        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+    data, data_time = linearize_ls(data=data, data_ls=data_time)
+    ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
 
     data_altitude = get_data(filename, target='altitude')
 
