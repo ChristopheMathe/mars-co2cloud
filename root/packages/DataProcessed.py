@@ -231,11 +231,14 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data):
     return zonal_mean, zonal_mean_co2_ice, latitude_selected
 
 
-def riceco2_zonal_mean_co2ice_exists(filename, data):
-    data_latitude = get_data(filename, target='latitude')
+def riceco2_zonal_mean_co2ice_exists(filename, data, local_time):
+    data_latitude = get_data(filename=filename, target='latitude')
+    data_time = get_data(filename=filename, target='Time')
 
     # extract co2_ice data
-    data_co2_ice = get_data(filename, target='co2_ice')
+    data_co2_ice = get_data(filename=filename, target='co2_ice')
+    data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
+    data_co2_ice = data_co2_ice[idx::len(data_local_time), :, :, :]
 
     data_slice_lat, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[-15, 15])
     data_co2_ice_slice_lat, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:],

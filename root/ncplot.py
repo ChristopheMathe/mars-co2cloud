@@ -228,14 +228,16 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
         if view_mode == 5:
             print('Processing data:')
-            data, latitude_selected = riceco2_zonal_mean_co2ice_exists(filename, data_target)
+            data, latitude_selected = riceco2_zonal_mean_co2ice_exists(filename=filename, data=data_target,
+                                                                       local_time=local_time)
 
             print('Display:')
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=data, unit='µm', norm='log',
                                      levels=logspace(-2, 2, 5), observation=True, latitude_selected=latitude_selected,
-                                     localtime_selected=local_time, title='Zonal mean of mean radius of co2 ice',
+                                     localtime_selected=local_time,
+                                     title=f'Zonal mean of mean radius of co2 ice, at {local_time}h',
                                      tes=None, mvals=None, layer=None,
-                                     save_name='riceco2_zonal_mean_altitude_mean_equatorial_region')
+                                     save_name=f'riceco2_zonal_mean_altitude_mean_equatorial_region_{local_time}h')
 
         if view_mode == 6:
             print('Processing data:')
@@ -294,7 +296,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
         if view_mode == 1:
             print('Processing data:')
             data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, \
-                data_co2ice_south, latitude_north, latitude_eq, latitude_south, binned = \
+            data_co2ice_south, latitude_north, latitude_eq, latitude_south, binned = \
                 satuco2_zonal_mean_with_co2_ice(filename=filename, data=data_target)
 
             print('Display:')
@@ -308,7 +310,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
         if view_mode == 3:
             print('Processing data:')
             data_satuco2_north, data_satuco2_south, data_co2ice_north, data_co2ice_south, latitude_north, \
-                latitude_south, binned = satuco2_time_mean_with_co2_ice(filename, data_target)
+            latitude_south, binned = satuco2_time_mean_with_co2_ice(filename, data_target)
 
             print('Display:')
             display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north, data_satuco2_south,
@@ -322,7 +324,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
             print('Display:')
             display_satuco2_thickness_atm_layer(data_ice_layer, data_ice_layer_std,
-                                                save_name='satuco2_thickness_polar_region.png')
+                                                save_name=f'satuco2_thickness_polar_region_{local_time}h.png')
 
     elif name_target in ['saturation']:
         print('What do you wanna do?')
@@ -511,8 +513,9 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=zonal_mean, unit='', norm=None,
                                      levels=[0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], observation=False,
                                      latitude_selected=layer_selected, localtime_selected=local_time,
-                                     title=f'Zonal mean of {name_target}', tes=None, mvals=None, layer=None,
-                                     save_name=f'{name_target}_zonal_mean')
+                                     title=f'Zonal mean of {name_target}, at {local_time}h', tes=None, mvals=None,
+                                     layer=None,
+                                     save_name=f'{name_target}_zonal_mean_{local_time}h')
 
         if view_mode == 2 or view_mode == 201:
             print('Processing data:')
@@ -611,8 +614,8 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed, unit='',
                                      norm=None, levels=arange(0, 1.1, 0.1), observation=False,
                                      latitude_selected=None, localtime_selected=local_time,
-                                     title=name_target, tes=None, mvals=None,
-                                     save_name=f'tau_zonal_mean_{local_time}')
+                                     title=f'Zonal mean of {name_target}, at {local_time}h', tes=None, mvals=None,
+                                     save_name=f'tau_zonal_mean_{local_time}h')
 
     elif name_target in ['tauTES']:
         print('What do you wanna do?')
@@ -743,5 +746,12 @@ def main():
 
 
 if '__main__' == __name__:
+    import gc
     main()
+    # free memory
+    a = globals().keys()
+    b = [x for x in a if x[:2] != '__']
+    for i, value in enumerate(b):
+        del value
+        gc.collect()
     exit()
