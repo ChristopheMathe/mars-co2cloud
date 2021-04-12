@@ -161,7 +161,9 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
         if view_mode == 1:
             print('Processing data:')
             list_data, list_filename, latitude_selected, list_time_selected, list_tau = \
-                vars_zonal_mean_in_time_co2ice_exists(filename, data_target, name_target, density=True)
+                vars_zonal_mean_in_time_co2ice_exists(filename=filename, data=data_target, data_name=name_target,
+                                                      local_time=local_time,
+                                                      density=True)
 
             print('Display:')
             display_vars_1fig_profiles(filename, list_data, latitude_selected, x_min=1e0, x_max=1e10,
@@ -192,7 +194,8 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
         if view_mode == 1:
             print('Processing data:')
             list_data, list_filename, latitude_selected, time_selected, list_tau = \
-                vars_zonal_mean_in_time_co2ice_exists(filename, data_target, name_target, density=False)
+                vars_zonal_mean_in_time_co2ice_exists(filename=filename, data=data_target, data_name=name_target,
+                                                      local_time=local_time, density=False)
 
             print('Display:')
             display_vars_1fig_profiles(filename, list_data, latitude_selected, x_min=1e-2, x_max=2000,
@@ -724,3 +727,4 @@ def main():
 
 if '__main__' == __name__:
     main()
+    exit()

@@ -955,9 +955,18 @@ def vars_zonal_mean_where_co2ice_exists(filename, data, polar_region):
     return list_data
 
 
-def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, density=False):
+def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, local_time, density=False):
     lat1 = int(input('\t Latitude range 1 (°N): '))
     lat2 = int(input('\t Latitude range 2 (°N): '))
+
+    data_time = get_data(filename=filename, target='Time')
+    if data_time.units != 'deg':
+        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=local_time)
+        data_time = data_ls[idx::len(data_local_time)]
+    else:
+        idx = None
+        data_local_time = None
 
     # extract co2_ice data
     data_co2_ice = get_data(filename, target='co2_ice')
@@ -978,10 +987,16 @@ def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, density=Fal
         data_tau_sliced_lat = 0
     del data, data_co2_ice
 
+    # extract at local time
+    if local_time:
+        data_co2_ice_sliced_lat = data_co2_ice_sliced_lat[idx::len(data_local_time), :, :, :]
+        if density:
+            data_rho_sliced_lat = data_rho_sliced_lat[idx::len(data_local_time), :, :, :]
+            data_tau_sliced_lat = data_tau_sliced_lat[idx::len(data_local_time), :, :, :]
+
     # select the time range
-    data_time = get_data(filename=filename, target='Time')
     print('')
-    print(f'Time range: {data_time[0]:.2f} - {data_time[-1]:.2f} {data_time.units}')
+    print(f'Time range: {data_time[0]:.2f} - {data_time[-1]:.2f} (°)')
     breakdown = input('Do you want compute mean radius over all the time (Y/n)?')
 
     list_tau = None
@@ -1008,7 +1023,7 @@ def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, density=Fal
         except not directory_output:
             pass
 
-        time_step = float(input(f'Select the time step range ({data_time.units}): '))
+        time_step = float(input(f'Select the time step range (°): '))
         nb_step = int(data_time[-1] / time_step) + 1
         print(f'nb_step: {nb_step}')
         if data_time[-1] % time_step != 0:
