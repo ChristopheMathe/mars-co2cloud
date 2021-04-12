@@ -114,8 +114,12 @@ def nc_extract(filename, nc_fid, verb=True):
         print(f'|{" Size":30s} | {nc_size[0]:<10d} | {nc_size[1]:<10d} | {nc_size[2]:<10d} | {nc_size[3]:<10d}|')
         print(f'|{"":{"="}<{31}}+{"":{"="}<{12}}+{"":{"="}<{12}}+{"":{"="}<{12}}+{"":{"="}<{11}}|')
         test = [x for x in nc_vars if x not in nc_dims]
+        test.remove('controle')
+        test.remove('aps')
+        test.remove('bps')
+        if 'phisinit' in test:
+            test.remove('phisinit')
         if len(test) == 2:
-            test.remove('controle')
             target = test[0]
         else:
             for var in test:
