@@ -48,7 +48,7 @@ def co2ice_thickness_atm_layer(filename, data):
     return data_icelayer
 
 
-def co2ice_polar_cloud_distribution(filename, data, normalization):
+def co2ice_polar_cloud_distribution(filename, data, normalization, local_time):
     data_altitude = get_data(filename=filename, target='altitude')
     if data_altitude.long_name != 'Altitude above areoid':
         print('Data did not zrecasted above the areoid')
@@ -63,6 +63,10 @@ def co2ice_polar_cloud_distribution(filename, data, normalization):
 
     # sliced data between 104 - 360°Ls time to compare with Fig8 of Neumann et al. 2003
     data_time = get_data(filename, target='Time')
+    if data_time.units != 'deg':
+        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=local_time)
+        data_time = data_ls[idx::len(data_local_time)]
     data_north, time_selected = slice_data(data_north, dimension_data=data_time, value=[104, 360])
     data_south, time_selected = slice_data(data_south, dimension_data=data_time, value=[104, 360])
 

@@ -67,7 +67,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
         elif view_mode == 4:
             print('Processing data:')
             distribution_north, distribution_south, latitude_north, latitude_south = co2ice_polar_cloud_distribution(
-                filename, data_target, normalization='True')
+                filename, data_target, normalization='True', local_time=local_time)
 
             print('Display:')
             display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
