@@ -493,7 +493,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             display_vars_polar_projection_multi_plot(filename=filename, data=data_mean, time=time_bin,
                                                      localtime=local_time, levels=linspace(0, 1e13, 100), norm=None,
                                                      cmap='inferno',
-                                                     unit='kg', save_name=f'co2ice_15ls_mean_{local_time}h')
+                                                     unit='kg', save_name=f'co2ice_15ls_mean_')
 
     elif name_target in ['emis']:
         print('What do you wanna do?')
