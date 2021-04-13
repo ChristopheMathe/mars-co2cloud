@@ -285,7 +285,7 @@ def riceco2_top_cloud_altitude(filename, data_target, local_time):
     del [data_target, data_ccn_nco2, data_rho]
 
     data_latitude = get_data(filename=filename, target='latitude')
-    a = (abs(data_latitude[:] - 60)).argmin() + 1
+    a = (abs(data_latitude[:] - 40)).argmin() + 1
     polar_latitude = concatenate((arange(a), arange(nb_lat - a, nb_lat)))
 
     top_cloud = zeros((nb_time, nb_lat))
