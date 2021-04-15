@@ -1232,9 +1232,30 @@ def display_temp_structure_polar_region(filename, data_north, data_south, norm, 
     return
 
 
-def display_temp_cold_pocket_spicam(filename, data):
-    print(filename, data)
-    print('To be done.')
+def display_temp_cold_pocket_spicam(filename, data, local_time, title, save_name):
+    from matplotlib.colors import DivergingNorm
+
+    data_altitude = get_data(filename, target='altitude')
+
+    data_time = get_data(filename, target='Time')
+    if data_time.units != 'deg':
+        data_time = get_data(filename='../concat_Ls.nc', target='Ls')
+
+    data_time, local_time = extract_at_a_local_time(filename=filename, data=data_time, local_time=local_time)
+
+    data, interp_time = linearize_ls(data=data, data_ls=data_time)
+
+    fig, axes = plt.subplot(figsize=(11, 8), projection='polar')
+    axes.set_title(title)
+    axes.polar(interp_time,)
+
+    axes.set_xlabel('Solar longitude (°)')
+    axes.set_ylabel(f'Pressure ({data_altitude.units})')
+    axes.set_yscale('log')
+    axes.invert_yaxis()
+
+    fig.savefig(f'{save_name}.png')
+    fig.show()
     return
 
 

@@ -814,22 +814,31 @@ def temp_thermal_structure_polar_region(filename, data):
     return data_north, data_south
 
 
-def temp_cold_pocket(filename, data):
+def temp_cold_pocket(filename, data, local_time):
     data_altitude = get_data(filename=filename, target='altitude')
     if data_altitude.units != 'Pa':
-        print('Stop ! File did not zrecasted')
+        print('Stop ! File did not zrecasted in Pressure')
         exit()
 
+    data_rho = get_data(filename=filename, target='rho')
+    data_rho, local_time = extract_at_a_local_time(filename=filename, data=data_rho, local_time=local_time)
+    data_rho = correction_value(data=data_rho, operator='inf', threshold=1e-13)
+
+    data_temp_cond_co2 = tcond_co2(data_pressure=None, data_temperature=data, data_rho=data_rho)
+
     zonal_mean = ma.masked_values(data, 0.)
-    data_temp_cond_co2 = tcond_co2(data_pressure=data_altitude[:])
+
     delta_temp = zeros(zonal_mean.shape)
     for ls in range(zonal_mean.shape[0]):
         for lat in range(zonal_mean.shape[2]):
             for lon in range(zonal_mean.shape[3]):
-                delta_temp[ls, :, lat, lon] = zonal_mean[ls, :, lat, lon] - data_temp_cond_co2[:]
+                delta_temp[ls, :, lat, lon] = zonal_mean[ls, :, lat, lon] - data_temp_cond_co2[ls, :, lat, lon]
     delta_temp = ma.masked_values(delta_temp, 0.)
-    print('Cold pocket?', delta_temp[where(delta_temp < 0)])
-    print(min(delta_temp), max(delta_temp))
+
+    # TODO: compter le numbre de cold pockets au-dessus de la tropopause, pour toutes les longitudes
+    print('Cold pocket?', len(delta_temp[where(delta_temp < 0)]))
+    print(f'min = {min(delta_temp)}, max = {max(delta_temp)}')
+
     return
 
 
@@ -877,7 +886,6 @@ def vars_time_mean(filename, data, duration, localtime=None):
     from math import ceil
 
     data_time = get_data(filename=filename, target='Time')
-
     if localtime is not None:
         data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=localtime)
         if data_time[-1] <= 360.:  # Ensure we are in ls time coordinate
@@ -892,7 +900,6 @@ def vars_time_mean(filename, data, duration, localtime=None):
 
     for i in range(nbin):
         data_sliced, time = slice_data(data=data, dimension_data=data_time[:], value=[duration * i, duration * (i + 1)])
-        print(f'{time[0]:.2f} - {time[-1]:.2f}')
         data_mean[i, :, :] = mean(data_sliced, axis=0)
 
     return data_mean, time_bin

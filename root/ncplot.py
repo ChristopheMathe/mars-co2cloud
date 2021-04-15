@@ -393,7 +393,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
         if view_mode == 5:
             print('Parameters:')
-            layer = int(input('\t layer (from 1 to {}): '.format(data_target.shape[1]))) - 1
+            layer = int(input(f'\t layer (from 1 to {data_target.shape[1]}): ')) - 1
 
             print('Processing data:')
             data_processed, layer_selected = vars_zonal_mean(filename, data_target, layer=layer)
@@ -444,9 +444,14 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
                                                     save_name='temp_zonal_mean_60NS')
 
         if view_mode == 7:
-            data_zonal_mean = temp_cold_pocket(filename=filename, data=data_target)
-            print('Need to be done')  # TODO
-            print(data_zonal_mean)
+            print('Processing data:')
+            data_zonal_mean = temp_cold_pocket(filename=filename, data=data_target, local_time=local_time)
+
+            print('Display:')
+            display_temp_cold_pocket_spicam(filename=filename, data=data_zonal_mean, local_time=local_time,
+                                            title=f'T - Tcondco2, mean between 15°S and 15°N, zonal mean, '
+                                                  f'at {local_time}h',
+                                            save_name=f'temp_delta_equator_zonal_mean_at_{local_time}h')
 
     # ================================================================================================================ #
 
@@ -493,7 +498,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             display_vars_polar_projection_multi_plot(filename=filename, data=data_mean, time=time_bin,
                                                      localtime=local_time, levels=linspace(0, 1e13, 100), norm=None,
                                                      cmap='inferno',
-                                                     unit='kg', save_name=f'co2ice_15ls_mean_')
+                                                     unit='kg', save_name=f'co2ice_15ls_mean')
 
     elif name_target in ['emis']:
         print('What do you wanna do?')
