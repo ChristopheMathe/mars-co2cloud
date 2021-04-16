@@ -1444,6 +1444,8 @@ def display_vars_latitude_longitude(filename, data, unit, norm, levels, title, s
     data_longitude = get_data(filename=filename, target='longitude')
     data_latitude = get_data(filename=filename, target='latitude')
 
+    data_surface_local = gcm_surface_local()
+
     plate_carree = crs.PlateCarree(central_longitude=0)
 
     # PLOT
@@ -1452,7 +1454,7 @@ def display_vars_latitude_longitude(filename, data, unit, norm, levels, title, s
     ax1.set_title(title, fontsize=20)
     ctf = ax1.contourf(data_longitude[:], data_latitude[:], data, levels=levels, norm=norm, transform=plate_carree,
                        cmap='plasma')
-
+    ax1.contour(data_longitude[:], data_latitude[:], data_surface_local, transform=plate_carree)
     ax1.set_xticks(data_longitude[::8])
     ax1.set_yticks(data_latitude[::4])
     ax1.set_xlabel('Longitude (°E)')

@@ -234,10 +234,16 @@ def gcm_area():
     return get_data(filename=filename, target='aire')
 
 
-def gcm_surface_local(data_zaeroid):
+def gcm_surface_local(data_zaeroid=None):
     filename = '/home/mathe/Documents/owncloud/GCM/gcm_aire_phisinit.nc'
     data_phisinit = get_data(filename=filename, target='phisinit')
-    return data_zaeroid - data_phisinit[:, :] / 3.711
+
+    if data_zaeroid is None:
+       data_surface_local = data_phisinit[:, :] / 3.711
+    else:
+        data_surface_local = data_zaeroid - data_phisinit[:, :] / 3.711
+
+    return data_surface_local
 
 
 def get_extrema_in_alt_lon(data, extrema):
@@ -420,8 +426,8 @@ def slice_data(data, dimension_data, value):
     # Ensure we know what we do
     if idx_dim is None:
         print('Issue with the data and dimension')
-        print('data.shape: {}'.format(data.shape))
-        print('dimension.shape: {}'.format(dimension_data.shape))
+        print(f'data.shape: {data.shape}')
+        print(f'dimension.shape: {dimension_data.shape}')
         exit()
 
     # From the dimension, get the index(es) of the slice
