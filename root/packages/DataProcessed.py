@@ -112,7 +112,7 @@ def co2ice_cloud_evolution(filename, data):
     data_riceco2 = data_riceco2[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
 
     data_time = get_data(filename, target='Time')
-    print('the maximum is at :' + str(data_time[idx_max[0]] * 24 % 24) + 'h local time.')
+    print(f'the maximum is at: {data_time[idx_max[0]] * 24 % 24}h local time.')
 
     return data, data_satuco2, data_temp, data_riceco2, idx_max, latitude_selected
 
@@ -184,6 +184,37 @@ def co2ice_density_column_evolution(filename, data, localtime):
                                                                                              data=data)
 
     return data, time_range, latitude
+
+
+def co2ice_coverage(filename, data):
+    data_latitude = get_data(filename=filename, target='latitude')
+    data_longitude = get_data(filename=filename, target='longitude')
+
+    ntime = data.shape[0]
+    nlat = data_latitude.shape[0]
+    nlon = data_longitude.shape[0]
+
+    data_altitude = get_data(filename=filename, target='altitude')
+    idx_10pa = (abs(data_altitude[:] - 10)).argmin()
+
+    data_co2ice_coverage = zeros((nlat, nlon))
+    data_co2ice_coverage_meso = zeros((nlat, nlon))
+
+    for lat in range(nlat):
+        for lon in range(nlon):
+            for ls in range(ntime):  # time
+                if any(data[ls, :, lat, lon] > 1e-13):  # There at least one cell with co2_ice
+                    data_co2ice_coverage[lat, lon] += 1
+                    if any(data[ls, idx_10pa:, lat, lon] > 1e-13):  # There at least one cell with co2_ice in mesosphere
+                        data_co2ice_coverage_meso[lat, lon] = 1
+
+    data_co2ice_coverage = correction_value(data=data_co2ice_coverage, operator='eq', threshold=0)
+    data_co2ice_coverage_meso = correction_value(data=data_co2ice_coverage_meso, operator='eq', threshold=0)
+
+    #  Normalization
+    data_co2ice_coverage = (data_co2ice_coverage/ntime) * 100
+    print(min(data_co2ice_coverage_meso), max(data_co2ice_coverage_meso))
+    return data_co2ice_coverage, data_co2ice_coverage_meso
 
 
 def emis_polar_winter_gg2020_fig13(filename, data, local_time):

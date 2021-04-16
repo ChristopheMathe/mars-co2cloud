@@ -25,6 +25,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
         print('     1: maximum in altitude and longitude, with others variables at these places (fig: lat-ls)')
         print('     2: zonal mean column density (fig: lat-ls)')
         print('       201: special features for DARI report (compare to MOLA obs)')
+        print('     3: co2_ice coverage (fig: lat-lon)')
         print('     4: polar cloud distribution to compare with Fig.8 of Neumann+2003 (fig: #clouds-lat)')
         print('     5: cloud evolution with satuco2/temperature/radius (fig: alt-lat, gif)')
         print('     6: mmr structure in winter polar regions at 60°N/S (fig: alt-ls)')
@@ -63,6 +64,17 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
             else:
                 display_co2_ice_mola(filename, data_processed)
+
+        elif view_mode == 3:
+            print('Processing data:')
+            data_processed, data_co2ice_coverage_meso = co2ice_coverage(filename=filename, data=data_target)
+
+            print('Display:')
+            display_vars_latitude_longitude(filename=filename, data=data_processed,
+                                            unit='%', norm=None, levels=arange(0, 75, 5),
+                                            title=f'Percentage coverage of atmospheric co2_ice along 1 years,'
+                                                  f'at {local_time}h local time',
+                                            save_name=f'co2_ice_coverage_{local_time}h')
 
         elif view_mode == 4:
             print('Processing data:')
@@ -116,14 +128,14 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
                 display_temp_structure_polar_region(filename=filename,
                                                     data_north=data_north - data_north_2,
                                                     data_south=data_south - data_south_2,
-                                                    norm=LogNorm(),
+                                                    norm='log',
                                                     levels=None,
                                                     unit='kg/kg',
                                                     save_name='diff_co2_ice_zonal_mean_60NS_' + directory[:-1])
             else:
                 print('Display:')
                 display_temp_structure_polar_region(filename=filename, data_north=data_north, data_south=data_south,
-                                                    norm=LogNorm(),
+                                                    norm='log',
                                                     levels=logspace(-13, 0, 14),
                                                     unit='kg/kg',
                                                     save_name='co2_ice_zonal_mean_60NS')
@@ -752,6 +764,7 @@ def main():
 
 if '__main__' == __name__:
     import gc
+
     main()
     # free memory
     a = globals().keys()

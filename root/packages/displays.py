@@ -1247,6 +1247,7 @@ def display_temp_cold_pocket_spicam(filename, data, local_time, title, save_name
 
     fig, axes = plt.subplot(figsize=(11, 8), projection='polar')
     axes.set_title(title)
+    # TODO: not finished !
     axes.polar(interp_time,)
 
     axes.set_xlabel('Solar longitude (°)')
@@ -1431,6 +1432,37 @@ def display_vars_altitude_ls(filename, data_1, data_2, levels, title, save_name,
     axes.set_title(title)
     fig.savefig(save_name + '.png', bbox_inches='tight')
     fig.show()
+
+
+def display_vars_latitude_longitude(filename, data, unit, norm, levels, title, save_name):
+    from cartopy import crs
+    from matplotlib.colors import LogNorm
+
+    if norm == 'log':
+        norm = LogNorm()
+
+    data_longitude = get_data(filename=filename, target='longitude')
+    data_latitude = get_data(filename=filename, target='latitude')
+
+    plate_carree = crs.PlateCarree(central_longitude=0)
+
+    # PLOT
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(24, 11))
+    ax1 = plt.subplot(111, projection=plate_carree)
+    ax1.set_title(title, fontsize=20)
+    ctf = ax1.contourf(data_longitude[:], data_latitude[:], data, levels=levels, norm=norm, transform=plate_carree,
+                       cmap='plasma')
+
+    ax1.set_xticks(data_longitude[::8])
+    ax1.set_yticks(data_latitude[::4])
+    ax1.set_xlabel('Longitude (°E)')
+    ax1.set_ylabel('Latitude (°N)')
+    cbar = fig.colorbar(ctf)
+    cbar.ax.set_title(unit)
+    ax1.grid()
+
+    plt.savefig(f'{save_name}.png', bbox_inches='tight')
+    return
 
 
 def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, observation=False, latitude_selected=None,
