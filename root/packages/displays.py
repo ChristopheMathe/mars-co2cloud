@@ -1621,14 +1621,14 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
 
     if name_target == 'temp':
         if i_subplot == 0:
-            ax.set_title(title)
+            ax.set_title(title, fontsize=18)
         else:
-            ax[i_subplot].set_title(f'My work at {data_altitude[::-1][layer]:.2e} {data_altitude.units}')
+            ax[i_subplot].set_title(f'My work at {data_altitude[::-1][layer]:.2e} {data_altitude.units}', fontsize=18)
     else:
         if i_subplot == 0:
-            ax.set_title(title)
+            ax.set_title(title, fontsize=18)
         else:
-            ax[i_subplot].set_title('My work')
+            ax[i_subplot].set_title('My work', fontsize=18)
 
     if observation:
         # Get latitude range between entre value-1 et value+1
@@ -1656,12 +1656,14 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         cbar.ax.set_title(unit)
     else:
         ax.set_xticks(ticks=ndx)
-        ax.set_xticklabels(axis_ls)
-        ax.set_xlabel('Solar longitude (°)')
-        ax.set_ylabel('Latitude (°N)')
+        ax.set_xticklabels(axis_ls, fontsize=18)
+        ax.set_yticks(ticks=data_latitude[::4])
+        ax.set_yticklabels(labels=data_latitude[::4], fontsize=18)
+        ax.set_xlabel('Solar longitude (°)', fontsize=18)
+        ax.set_ylabel('Latitude (°N)', fontsize=18)
         cbar = plt.colorbar(ctf)
-        cbar.ax.set_title(unit)
-
+        cbar.ax.set_title(unit, fontsize=18)
+        cbar.ax.tick_params(labelsize=18)
     plt.savefig(save_name + '.png', bbox_inches='tight')
     return
 
