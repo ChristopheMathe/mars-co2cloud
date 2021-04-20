@@ -55,7 +55,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             print('Display:')
             if view_mode == 2:
                 display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed,
-                                         unit='kg/m$^2$', norm='log', levels=logspace(-13, 2, 16),
+                                         unit='kg/m$^2$', norm='log', vmin=1e-13, vmax=10,
                                          observation=True, latitude_selected=None, localtime_selected=local_time,
                                          title=f'Zonal mean column density of {name_target} between {altitude_min:.1e}'
                                                f' and {altitude_max:.1e} {altitude_unit}, {local_time} h',

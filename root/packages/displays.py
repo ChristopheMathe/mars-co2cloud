@@ -814,7 +814,7 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
 
     # Get latitude range between value-1 et value+1
     data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
+    data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
 
     list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
                 data_maven_limb, data_spicam, data_tesmoc, data_themis]
@@ -945,7 +945,7 @@ def display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north
 
     # Get latitude range between value-1 et value+1
     data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
+    data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
 
     list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
                 data_maven_limb, data_spicam, data_tesmoc, data_themis]
@@ -1280,7 +1280,7 @@ def display_temp_cold_pocket_spicam(filename, data, local_time, title, save_name
     fig, axes = plt.subplot(figsize=(11, 8), projection='polar')
     axes.set_title(title)
     # TODO: not finished !
-    axes.polar(interp_time,)
+    axes.polar(interp_time, )
 
     axes.set_xlabel('Solar longitude (°)')
     axes.set_ylabel(f'Pressure ({data_altitude.units})')
@@ -1499,9 +1499,9 @@ def display_vars_latitude_longitude(filename, data, unit, norm, levels, title, s
     return
 
 
-def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, observation=False, latitude_selected=None,
-                             localtime_selected=None, title=None, tes=None, mvals=None, layer=None,
-                             save_name='test'):
+def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax, observation=False,
+                             latitude_selected=None, localtime_selected=None, title=None, tes=None, mvals=None,
+                             layer=None, save_name='test'):
     from matplotlib.colors import LogNorm
 
     n_subplot = 1
@@ -1512,7 +1512,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
 
     cmap = 'coolwarm'
     if norm == 'log':
-        norm = LogNorm()
+        norm = LogNorm(vmin=vmin, vmax=vmax)
     else:
         norm = None
 
@@ -1577,15 +1577,14 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
                 altitude_tes = data_altitude_tes[idx]
 
             data_tes, tmp = vars_zonal_mean('', data_tes[:, :, :], layer=None)
-            ax[i_subplot].set_title('TES Mars Year {:d} at {} {}'.format(24 + year, altitude_tes,
-                                                                         data_altitude_tes.units))
+            ax[i_subplot].set_title(f'TES Mars Year {24 + year:d} at {altitude_tes} {data_altitude_tes.units}')
         else:
             data_time_tes = observation_tes(target='time', year=None)
             data_latitude_tes = observation_tes(target='latitude', year=None)
             data_tes = None
             print('No case for TES, to be check!')
 
-        ax[i_subplot].contourf(data_time_tes[:], data_latitude_tes[:], data_tes, levels=levels, cmap=cmap)
+        ax[i_subplot].pcolormesh(data_time_tes[:], data_latitude_tes[:], data_tes, shading='auto', cmap=cmap)
         i_subplot += 1
 
     if mvals:
@@ -1611,20 +1610,20 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
         else:
             ax[i_subplot].set_title('M. VALS')
 
-        ax[i_subplot].contourf(data_time_mvals[:], data_latitude_mvals[:], data_mvals, levels=levels, cmap=cmap)
+        ax[i_subplot].pcolormesh(data_time_mvals[:], data_latitude_mvals[:], data_mvals, shading='auto', cmap=cmap)
         i_subplot += 1
 
     if i_subplot == 0:
-        ctf = ax.contourf(data_time[:], data_latitude[:], data, norm=norm, levels=levels, cmap=cmap, zorder=10)
+        ctf = ax.pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='auto', zorder=10)
     else:
-        ctf = ax[i_subplot].contourf(data_time[:], data_latitude[:], data, norm=norm, levels=levels, cmap=cmap,
-                                     zorder=10)
+        ctf = ax[i_subplot].pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='auto',
+                                       zorder=10)
 
     if name_target == 'temp':
         if i_subplot == 0:
             ax.set_title(title)
         else:
-            ax[i_subplot].set_title('My work at {:.2e} {}'.format(data_altitude[::-1][layer], data_altitude.units))
+            ax[i_subplot].set_title(f'My work at {data_altitude[::-1][layer]:.2e} {data_altitude.units}')
     else:
         if i_subplot == 0:
             ax.set_title(title)
@@ -1634,7 +1633,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, levels, ob
     if observation:
         # Get latitude range between entre value-1 et value+1
         data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-            data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
+        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
 
         list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
                     data_maven_limb, data_spicam, data_tesmoc, data_themis]
