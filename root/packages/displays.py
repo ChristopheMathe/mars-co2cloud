@@ -538,6 +538,8 @@ def display_co2_ice_localtime_ls(filename, data):
     ax.set_ylabel('Local time (h)')
     ax.set_xticks(ndx)
     ax.set_xticklabels(axis_ls)
+    ax.set_yticks(data_local_time)
+    ax.set_yticklabels(data_local_time)
     plt.savefig('co2_ice_zonal_mean_density_column_localtime_evolution_0N.png', bbox_inches='tight')
     return
 
