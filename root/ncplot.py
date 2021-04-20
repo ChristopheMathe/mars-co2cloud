@@ -31,6 +31,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
         print('     6: mmr structure in winter polar regions at 60°N/S (fig: alt-ls)')
         print('     7: Density column evolution in polar region, polar projection (fig: lon-lat)')
         print('     8: h2o_ice profile with co2_ice presence (fig: alt-ls)')
+        print('     9: localtime co2_ice colmn dnesity')
         print('')
 
         if view_mode is None:
@@ -159,6 +160,13 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
                                            f' {latitude_selected:d} °N',
                                      save_name=f'h2o_ice_zonal_mean_with_co2_ice_{latitude_selected:d}N',
                                      latitude_selected=latitude_selected)
+
+        elif view_mode == 9:
+            print('Processing data:')
+            data_processed = co2ice_cloud_localtime_along_ls(filename=filename, data=data_target)
+
+            print('Display:')
+            display_co2_ice_localtime_ls(filename=filename, data=data_processed)
 
         else:
             print('Wrong value')

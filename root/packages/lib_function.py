@@ -124,32 +124,39 @@ def compute_column_density(filename, data):
         altitude_min = data_altitude[0]
         altitude_max = data_altitude[-1]
 
-    idx_z_min = (abs(data_altitude[:] - altitude_min)).argmin()
-    idx_z_max = (abs(data_altitude[:] - altitude_max)).argmin()
-
-    if idx_z_min > idx_z_max:
-        tmp = idx_z_min
-        idx_z_min = idx_z_max
-        idx_z_max = tmp + 1
-    else:
-        idx_z_max += 1
-    data = data[:, idx_z_min:idx_z_max, :, :]
+    data, altitude_idx = slice_data(data=data, dimension_data=data_altitude, value=[altitude_min, altitude_max])
 
     shape_data = data.shape
     data_column = zeros(shape_data)
 
     alt = 0
-    if data_altitude.units in ['m', 'km']:
-        for alt in range(data.shape[1] - 1):
-            data_column[:, alt, :, :] = data[:, alt, :, :] * \
-                                        (data_pressure[:, alt, :, :] - data_pressure[:, alt + 1, :, :]) / 3.711  # g
-        data_column[:, -1, :, :] = data[:, -1, :, :] * data_pressure[:, -1, :, :] / 3.711
+    if data.ndim == 4:
+        if data_altitude.units in ['m', 'km']:
+            for alt in range(data.shape[1] - 1):
+                data_column[:, alt, :, :] = data[:, alt, :, :] * \
+                                            (data_pressure[:, alt, :, :] - data_pressure[:, alt + 1, :, :]) / 3.711  # g
+            data_column[:, -1, :, :] = data[:, -1, :, :] * data_pressure[:, -1, :, :] / 3.711
+        else:
+            for alt in range(data.shape[1] - 1):
+                data_column[:, alt, :, :] = data[:, alt, :, :] * \
+                                            (data_altitude[altitude_idx[0] + alt] - data_altitude[
+                                                altitude_idx[0] + alt + 1]) / 3.711  # g
+            data_column[:, -1, :, :] = data[:, -1, :, :] * data_altitude[altitude_idx[0] + alt + 1] / 3.711
+    elif data.ndim == 3:
+        if data_altitude.units in ['m', 'km']:
+            for alt in range(data.shape[1] - 1):
+                data_column[:, alt, :] = data[:, alt, :] * \
+                                            (data_pressure[:, alt, :] - data_pressure[:, alt + 1, :]) / 3.711  # g
+            data_column[:, -1, :] = data[:, -1, :] * data_pressure[:, -1, :] / 3.711
+        else:
+            for alt in range(data.shape[1] - 1):
+                data_column[:, alt, :] = data[:, alt, :] * \
+                                            (data_altitude[altitude_idx[0] + alt] - data_altitude[
+                                                altitude_idx[0] + alt + 1]) / 3.711  # g
+            data_column[:, -1, :] = data[:, -1, :] * data_altitude[altitude_idx[0] + alt + 1] / 3.711
     else:
-        for alt in range(data.shape[1] - 1):
-            data_column[:, alt, :, :] = data[:, alt, :, :] * \
-                                        (data_altitude[idx_z_min + alt] - data_altitude[
-                                            idx_z_min + alt + 1]) / 3.711  # g
-        data_column[:, -1, :, :] = data[:, -1, :, :] * data_altitude[idx_z_min + alt + 1] / 3.711
+        print(f'Data has {data.ndim} dimension, need 3 or 4!')
+        exit()
 
     data_column = correction_value(data_column, 'inf', threshold=1e-13)
     data_column = sum(data_column, axis=1)
@@ -386,7 +393,7 @@ def linearize_ls(data, data_ls):
     # interpolation to get linear Ls
     f = interp2d(x=data_ls, y=arange(data.shape[0]), z=data, kind='linear')
 
-    interp_time = arange(361)
+    interp_time = arange(360)
     data = f(interp_time, arange(data.shape[0]))
     return data, interp_time
 
@@ -445,7 +452,7 @@ def slice_data(data, dimension_data, value):
             idx2 = tmp + 1
         else:
             idx2 += 1
-        selected_idx = dimension_data[idx1:idx2]
+        selected_idx = [idx1, idx2]
 
     else:
         print('Error in value given, exceed 2 values')

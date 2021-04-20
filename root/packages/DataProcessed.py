@@ -1,5 +1,5 @@
 from numpy import mean, abs, min, max, zeros, where, concatenate, arange, unravel_index, argmax, array, \
-    count_nonzero, std, append, asarray, power, ma
+    count_nonzero, std, append, asarray, power, ma, reshape
 from .lib_function import *
 from .ncdump import get_data
 from os import mkdir
@@ -115,6 +115,27 @@ def co2ice_cloud_evolution(filename, data):
     print(f'the maximum is at: {data_time[idx_max[0]] * 24 % 24}h local time.')
 
     return data, data_satuco2, data_temp, data_riceco2, idx_max, latitude_selected
+
+
+def co2ice_cloud_localtime_along_ls(filename, data):
+    data_latitude = get_data(filename=filename, target='latitude')
+    data, latitude = slice_data(data=data, dimension_data=data_latitude[:], value=0)
+
+    data, altitude_limit, altitude_min, altitude_max, altitude_units = compute_column_density(filename=filename,
+                                                                                              data=data)
+
+    data = mean(data, axis=1)
+
+    # Reshape every localtime for one year!
+    if data.shape[0] % 12 != 0:
+        nb_sol = 0
+        print('Stop, there is no 12 localtime')
+        exit()
+    else:
+        nb_sol = int(data.shape[0]/12)  # if there is 12 local time!
+    data = reshape(data, (nb_sol, 12)).T
+
+    return data
 
 
 def co2ice_cumulative_masses_polar_cap(filename, data):

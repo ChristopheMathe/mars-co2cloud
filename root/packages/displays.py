@@ -510,6 +510,38 @@ def display_co2_ice_density_column_evolution_polar_region(filename, data, time, 
     return
 
 
+def display_co2_ice_localtime_ls(filename, data):
+    from matplotlib.colors import LogNorm
+
+    data_time = get_data(filename=filename, target='Time')
+    data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=0)
+
+    if data_time.units != 'deg':
+        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_time = data_ls[idx::len(data_local_time)]
+    else:
+        data_time = data_time[idx::len(data_local_time)]
+
+    data, data_time = linearize_ls(data=data, data_ls=data_time)
+
+    data = correction_value(data=data, operator='inf', threshold=1e-13)
+    data[data.mask] = 0
+    ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+
+    fig, ax = plt.subplots()
+    ctf = ax.pcolormesh(data_time[:], data_local_time[:], data, norm=LogNorm(vmin=1e-13, vmax=1e-9),
+                        cmap="viridis")
+    fig.colorbar(ctf, label='kg.m-2')
+    ax.set_facecolor('white')
+
+    ax.set_xlabel('Solar longitude (°)')
+    ax.set_ylabel('Local time (h)')
+    ax.set_xticks(ndx)
+    ax.set_xticklabels(axis_ls)
+    plt.savefig('co2_ice_zonal_mean_density_column_localtime_evolution_0N.png', bbox_inches='tight')
+    return
+
+
 def display_emis_polar_projection_garybicas2020_figs11_12(filename, data, time, levels, cmap, save_name):
     import cartopy.crs as crs
     from numpy import ndarray
@@ -885,7 +917,7 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     fig.colorbar(cb, cax=cbar_ax)
 
-    fig.text(0.02, 0.5, '{} ({})'.format(altitude_name, altitude_unit), ha='center', va='center', rotation='vertical',
+    fig.text(0.02, 0.5, f'{altitude_name} ({altitude_unit})', ha='center', va='center', rotation='vertical',
              fontsize=14)
     fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
 
@@ -1001,7 +1033,7 @@ def display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     fig.colorbar(cb, cax=cbar_ax)
 
-    fig.text(0.02, 0.5, '{} ({})'.format(altitude_name, altitude_unit), ha='center', va='center', rotation='vertical',
+    fig.text(0.02, 0.5, f'{altitude_name} ({altitude_unit})', ha='center', va='center', rotation='vertical',
              fontsize=14)
     fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
 
