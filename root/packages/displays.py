@@ -1501,7 +1501,7 @@ def display_vars_latitude_longitude(filename, data, unit, norm, vmin, vmax, titl
 def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax, observation=False,
                              latitude_selected=None, localtime_selected=None, title=None, tes=None, mvals=None,
                              layer=None, save_name='test'):
-    from matplotlib.colors import LogNorm
+    from matplotlib.colors import LogNorm, Normalize
 
     n_subplot = 1
     if tes:
@@ -1513,7 +1513,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
     else:
-        norm = None
+        norm = Normalize(vmin=vmin, vmax=vmax)
 
     data_time = get_data(filename=filename, target='Time')
     data_local_time, idx, stats_file = check_local_time(data_time=data_time[:], selected_time=localtime_selected)
