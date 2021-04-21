@@ -1468,33 +1468,30 @@ def display_vars_altitude_ls(filename, data_1, data_2, levels, title, save_name,
     fig.show()
 
 
-def display_vars_latitude_longitude(filename, data, unit, norm, levels, title, save_name):
-    from cartopy import crs
-    from matplotlib.colors import LogNorm
+def display_vars_latitude_longitude(filename, data, unit, norm, vmin, vmax, title, save_name):
+    from matplotlib.colors import LogNorm, Normalize
 
     if norm == 'log':
-        norm = LogNorm()
-
+        norm = LogNorm(vmin=vmin, vmax=vmax)
+    else:
+        norm = Normalize(vmin=vmin, vmax=vmax)
     data_longitude = get_data(filename=filename, target='longitude')
     data_latitude = get_data(filename=filename, target='latitude')
 
-    data_surface_local = gcm_surface_local()
-
-    plate_carree = crs.PlateCarree(central_longitude=0)
-
     # PLOT
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(24, 11))
-    ax1 = plt.subplot(111, projection=plate_carree)
-    ax1.set_title(title, fontsize=20)
-    ctf = ax1.contourf(data_longitude[:], data_latitude[:], data, levels=levels, norm=norm, transform=plate_carree,
-                       cmap='plasma')
-    ax1.contour(data_longitude[:], data_latitude[:], data_surface_local, transform=plate_carree)
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(16, 8))
+    ax1 = plt.subplot(111)
+    ax1.set_title(title, fontsize=18)
+    ctf = ax1.pcolormesh(data_longitude[:], data_latitude[:], data, norm=norm, cmap='plasma', shading='auto')
     ax1.set_xticks(data_longitude[::8])
+    ax1.set_xticklabels(data_longitude[::8], fontsize=18)
     ax1.set_yticks(data_latitude[::4])
-    ax1.set_xlabel('Longitude (°E)')
-    ax1.set_ylabel('Latitude (°N)')
+    ax1.set_yticklabels(data_latitude[::4], fontsize=18)
+    ax1.set_xlabel('Longitude (°E)', fontsize=18)
+    ax1.set_ylabel('Latitude (°N)', fontsize=18)
     cbar = fig.colorbar(ctf)
-    cbar.ax.set_title(unit)
+    cbar.ax.set_title(unit, fontsize=18)
+    cbar.ax.tick_params(labelsize=18)
     ax1.grid()
 
     plt.savefig(f'{save_name}.png', bbox_inches='tight')

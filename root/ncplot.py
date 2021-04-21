@@ -73,8 +73,8 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
             print('Display:')
             display_vars_latitude_longitude(filename=filename, data=data_processed,
-                                            unit='%', norm=None, levels=arange(0, 75, 5),
-                                            title=f'Percentage coverage of atmospheric co2_ice along 1 years,'
+                                            unit='%', norm=None, vmin=0, vmax=70,
+                                            title=f'Percentage of Martian year with presence of CO2 clouds, '
                                                   f'at {local_time}h local time',
                                             save_name=f'co2_ice_coverage_{local_time}h')
 
