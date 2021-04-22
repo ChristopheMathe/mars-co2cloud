@@ -670,6 +670,29 @@ def display_riceco2_global_mean(filename, list_data):
     plt.show()
 
 
+def display_riceco2_local_time_evolution(filename, data, local_time, latitude):
+    from matplotlib.cm import get_cmap
+    data_altitude = get_data(filename=filename, target='altitude')
+
+    cmap = get_cmap('hsv')
+    fig, ax = plt.subplots(figsize=(11, 11))
+    ax.set_yscale('log')
+    ax.set_ylim(1e3, 1e-3)
+    ax.set_xlim(1e-9, 1e-4)
+    ax.set_xscale('log')
+    for i in range(data.shape[1]):
+        ax.plot(data[:, i], data_altitude[:], color=cmap(((i+6) % data.shape[1])/data.shape[1]), label=local_time[i])
+
+    ax.legend(loc=0)
+    ax.set_title(f'Radius of CO2 ice particles at {latitude}N, zonal mean')
+    ax.set_ylabel(f'Altitude ({data_altitude.units})', fontsize=18)
+    ax.set_xlabel('Radius particle (µm)', fontsize=18)
+    ax.tick_params(axis='both', which='major', labelsize=18)
+
+    plt.savefig(f'riceco2_localtime_evolution_{latitude}N.png', bbox_inches='tight')
+    return
+
+
 def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None):
     data_latitude = get_data(filename=filename, target='latitude')
     data_time = get_data(filename=filename, target='Time')

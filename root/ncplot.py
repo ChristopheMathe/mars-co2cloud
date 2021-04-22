@@ -212,6 +212,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
         print('     5: zonal mean of mean radius where co2_ice exists in the 15°N-15°S (fig: lat-ls)')
         print('     6: mean radius profile along year, with global mean radius (fig: alt-ls + alt+µm)')
         print('     7: radius structure ')
+        print('     8: radius local time evolution at 0°N (fig: alt-µm)')
         print('')
         if view_mode is None:
             view_mode = int(input('Select number:'))
@@ -308,6 +309,14 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
                                                     levels=None,
                                                     unit='µm',
                                                     save_name='riceco2_zonal_mean_60NS')
+
+        if view_mode == 8:
+            print('Processing data:')
+            data_processed, latitude = riceco2_local_time_evolution(filename=filename, data=data_target)
+
+            print('Display:')
+            display_riceco2_local_time_evolution(filename=filename, data=data_processed, local_time=local_time,
+                                                 latitude=latitude)
 
     elif name_target in ['satuco2']:
         print('What do you wanna do?')

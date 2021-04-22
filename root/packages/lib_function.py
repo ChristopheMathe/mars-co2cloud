@@ -31,7 +31,7 @@ def check_local_time(data_time, selected_time=None):
 
     print(f'Local time available: {data_local_time}')
 
-    if selected_time is not None:
+    if selected_time:
         idx = (abs(data_local_time[:] - selected_time)).argmin()
         print(f'\tSelected: {data_local_time[idx]}')
     else:
@@ -41,7 +41,7 @@ def check_local_time(data_time, selected_time=None):
             idx = (abs(data_local_time[:] - selected_time)).argmin()
         else:
             idx = None
-            data_local_time = [0]  # ! otherwise it takes we have data[0::len(data_local_time)] !
+            data_local_time = data_local_time[:]
 
     return data_local_time, idx, stats_file
 
@@ -170,7 +170,7 @@ def extract_at_a_local_time(filename, data, local_time=None):
 
     data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
 
-    if idx is not None:
+    if idx:
         local_time = data_local_time[idx]
         if data.ndim == 4:
             data_processed = data[idx::len(data_local_time), :, :, :]
@@ -179,7 +179,7 @@ def extract_at_a_local_time(filename, data, local_time=None):
         else:
             data_processed = data[idx::len(data_local_time)]
     else:
-        local_time = None
+        local_time = data_local_time
         data_processed = data
 
     return data_processed, local_time

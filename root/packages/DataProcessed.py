@@ -244,7 +244,8 @@ def emis_polar_winter_gg2020_fig13(filename, data, local_time):
     if data_time.units != 'deg':
         data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=local_time)
         data_time = get_data(filename='../concat_Ls.nc', target='Ls')
-        data_time = data_time[idx::len(data_local_time)]
+        if idx:
+            data_time = data_time[idx::len(data_local_time)]
 
     #       NP: 180°-360°
     data_np, time = slice_data(data=data, dimension_data=data_time, value=[180, 360])
@@ -283,29 +284,58 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data):
     return zonal_mean, zonal_mean_co2_ice, latitude_selected
 
 
-def riceco2_zonal_mean_co2ice_exists(filename, data, local_time):
+def riceco2_local_time_evolution(filename, data):
+    data = extract_where_co2_ice(filename=filename, data=data)
+
     data_latitude = get_data(filename=filename, target='latitude')
+    data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=80)
+
+    data = mean(data, axis=2)  # zonal mean
+
+    # Reshape every localtime for one year!
+    if data.shape[0] % 12 != 0:
+        nb_sol = 0
+        print('Stop, there is no 12 localtime')
+        exit()
+    else:
+        nb_sol = int(data.shape[0]/12)  # if there is 12 local time!
+    data = reshape(data, (nb_sol, 12, data.shape[1])).T
+    data = mean(data, axis=2)
+
+    return data, latitudes
+
+
+def riceco2_max_day_night(filename, data):
+    data_altitude = get_data(filename=filename, target='altitude')
+
     data_time = get_data(filename=filename, target='Time')
+    data_local_time, idx_2, stats = check_local_time(data_time=data_time, selected_time=2)
+    data_local_time, idx_14, stats = check_local_time(data_time=data_time, selected_time=14)
 
-    # extract co2_ice data
-    data_co2_ice = get_data(filename=filename, target='co2_ice')
-    data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
-    data_co2_ice = data_co2_ice[idx::len(data_local_time), :, :, :]
+    if idx_2:
+        data_day = data[idx_2::len(data_local_time), :, :, :]
+    if idx_14:
+        data_night = data[idx_14::len(data_local_time), :, :, :]
 
-    data_slice_lat, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[-15, 15])
-    data_co2_ice_slice_lat, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:],
-                                                           value=[-15, 15])
+    print('Compute max in progress...')
+    max_satu_day, idx_altitude_day, y_day = get_extrema_in_alt_lon(data=data_day, extrema='max')
+    max_satu_night, idx_altitude_night, y_night = get_extrema_in_alt_lon(data=data_night, extrema='max')
 
-    data = ma.masked_where(data_co2_ice_slice_lat < 1e-13, data_slice_lat)
+    max_alt_day = zeros(idx_altitude_day.shape)
+    max_alt_night = zeros(idx_altitude_night.shape)
+    for i in range(idx_altitude_night.shape[0]):
+        for j in range(idx_altitude_night.shape[1]):
+            max_alt_night[i, j] = data_altitude[idx_altitude_night[i, j]]
+            max_alt_day[i, j] = data_altitude[idx_altitude_day[i, j]]
+            if max_satu_day[i, j] == 0:
+                max_alt_day[i, j] = None
+                max_satu_day[i, j] = None
 
-    zonal_mean = mean(data, axis=3)  # zonal mean
-    zonal_mean = mean(zonal_mean, axis=1)  # altitude mean
-    zonal_mean = rotate_data(zonal_mean, do_flip=True)
+            if max_satu_night[i, j] == 0:
+                max_alt_night[i, j] = None
+                max_satu_night[i, j] = None
 
-    zonal_mean = correction_value(zonal_mean[0], operator='inf', threshold=1e-13)
-    zonal_mean = zonal_mean * 1e6  # m to µm
-
-    return zonal_mean, latitude_selected
+    return
 
 
 def riceco2_top_cloud_altitude(filename, data_target, local_time):
@@ -352,35 +382,30 @@ def riceco2_top_cloud_altitude(filename, data_target, local_time):
     return top_cloud
 
 
-def riceco2_max_day_night(filename, data):
-    data_altitude = get_data(filename=filename, target='altitude')
-
+def riceco2_zonal_mean_co2ice_exists(filename, data, local_time):
+    data_latitude = get_data(filename=filename, target='latitude')
     data_time = get_data(filename=filename, target='Time')
-    data_local_time, idx_2, stats = check_local_time(data_time=data_time, selected_time=2)
-    data_local_time, idx_14, stats = check_local_time(data_time=data_time, selected_time=14)
 
-    data_day = data[idx_2::len(data_local_time), :, :, :]
-    data_night = data[idx_14::len(data_local_time), :, :, :]
+    # extract co2_ice data
+    data_co2_ice = get_data(filename=filename, target='co2_ice')
+    data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
+    if idx:
+        data_co2_ice = data_co2_ice[idx::len(data_local_time), :, :, :]
 
-    print('Compute max in progress...')
-    max_satu_day, idx_altitude_day, y_day = get_extrema_in_alt_lon(data=data_day, extrema='max')
-    max_satu_night, idx_altitude_night, y_night = get_extrema_in_alt_lon(data=data_night, extrema='max')
+    data_slice_lat, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[-15, 15])
+    data_co2_ice_slice_lat, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:],
+                                                           value=[-15, 15])
 
-    max_alt_day = zeros(idx_altitude_day.shape)
-    max_alt_night = zeros(idx_altitude_night.shape)
-    for i in range(idx_altitude_night.shape[0]):
-        for j in range(idx_altitude_night.shape[1]):
-            max_alt_night[i, j] = data_altitude[idx_altitude_night[i, j]]
-            max_alt_day[i, j] = data_altitude[idx_altitude_day[i, j]]
-            if max_satu_day[i, j] == 0:
-                max_alt_day[i, j] = None
-                max_satu_day[i, j] = None
+    data = ma.masked_where(data_co2_ice_slice_lat < 1e-13, data_slice_lat)
 
-            if max_satu_night[i, j] == 0:
-                max_alt_night[i, j] = None
-                max_satu_night[i, j] = None
+    zonal_mean = mean(data, axis=3)  # zonal mean
+    zonal_mean = mean(zonal_mean, axis=1)  # altitude mean
+    zonal_mean = rotate_data(zonal_mean, do_flip=True)
 
-    return
+    zonal_mean = correction_value(zonal_mean[0], operator='inf', threshold=1e-13)
+    zonal_mean = zonal_mean * 1e6  # m to µm
+
+    return zonal_mean, latitude_selected
 
 
 def satuco2_zonal_mean_with_co2_ice(filename, data):
@@ -621,7 +646,8 @@ def satuco2_hu2012_fig9(filename, data, local_time):
     if data_time.units != 'deg':
         data_local_time, idx, sats = check_local_time(data_time=data_time, selected_time=local_time)
         data_time = get_data(filename='../concat_Ls.nc', target='Ls')
-        data_time = data_time[idx::len(data_local_time)]
+        if idx:
+            data_time = data_time[idx::len(data_local_time)]
     if data_time.shape[0] % 60 == 0:
         print(f'5°Ls binning: {data_time[0]} - {data_time[60]}')
         nb_bin = int(data_time.shape[0] / 60) + 1
@@ -792,7 +818,7 @@ def temp_gg2011_fig8(filename, data):
     # Check the kind of zrecast have been performed : above areoid (A) must be performed
     if data_altitude.long_name != 'Altitude above areoid':
         print(data_altitude.long_name)
-        print('The netcdf did not zrecasted above the aeroid.')
+        print('The netcdf did not zrecasted above the areoid.')
         exit()
 
     # Check local time available and slice data at 0, 12, 16 H
