@@ -31,7 +31,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
         print('     6: mmr structure in winter polar regions at 60°N/S (fig: alt-ls)')
         print('     7: Density column evolution in polar region, polar projection (fig: lon-lat)')
         print('     8: h2o_ice profile with co2_ice presence (fig: alt-ls)')
-        print('     9: localtime co2_ice colmn dnesity')
+        print('     9: localtime co2_ice column density')
         print('')
 
         if view_mode is None:
@@ -54,8 +54,12 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
 
             print('Display:')
             if view_mode == 2:
+                if name_target == 'co2_ice':
+                    vmin, vmax = 1e-13, 10
+                else:
+                    vmin, vmax = 1e-7, 1e-1
                 display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed,
-                                         unit='kg/m$^2$', norm='log', vmin=1e-13, vmax=10,
+                                         unit='kg/m$^2$', norm='log', vmin=vmin, vmax=vmax,
                                          observation=True, latitude_selected=None, localtime_selected=local_time,
                                          title=f'Zonal mean column density of {name_target}\n between'
                                                f' {altitude_min:.1e}'

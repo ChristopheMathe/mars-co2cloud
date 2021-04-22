@@ -1509,7 +1509,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     if mvals:
         n_subplot += 1
 
-    cmap = 'coolwarm'
+    cmap = 'inferno'  # 'coolwarm'
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
     else:
