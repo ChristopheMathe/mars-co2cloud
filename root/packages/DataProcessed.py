@@ -1,7 +1,7 @@
 from numpy import mean, abs, min, max, zeros, where, concatenate, arange, unravel_index, argmax, array, \
     count_nonzero, std, append, asarray, power, ma, reshape
 from .lib_function import *
-from .ncdump import get_data
+from .ncdump import get_data, getfilename
 from os import mkdir
 from sys import exit
 
@@ -266,17 +266,22 @@ def emis_polar_winter_gg2020_fig13(filename, data, local_time):
     return data_mean_np, data_mean_sp
 
 
-def h2o_ice_alt_ls_with_co2_ice(filename, data):
+def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
     data_latitude = get_data(filename=filename, target='latitude')
+    data, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=0)
 
-    data, latitude_selected = slice_data(data, dimension_data=data_latitude, value=20)
+    try:
+        data_co2_ice = get_data(filename=filename, target='co2_ice')
+    except:
+        filename_co2 = getfilename(files=files, selection=None)
+        data_co2_ice = get_data(filename=directory+filename_co2, target='co2_ice')
+    data_co2_ice, tmp = extract_at_a_local_time(filename=filename, data=data_co2_ice, local_time=local_time)
+    data_co2_ice, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:], value=0)
+    data_co2_ice = correction_value(data_co2_ice, operator='inf', threshold=1e-13)
+
+    # zonal mean
     zonal_mean = mean(data, axis=2)  # zonal mean
-
-    data_co2_ice = get_data(filename=filename, target='co2_ice')
-    data_co2_ice, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude, value=20)
-
-    zonal_mean_co2_ice = ma.masked_where(data_co2_ice < 1e-13, data_co2_ice)
-    zonal_mean_co2_ice = mean(zonal_mean_co2_ice, axis=2)
+    zonal_mean_co2_ice = mean(data_co2_ice, axis=2)
 
     zonal_mean, zonal_mean_co2_ice = rotate_data(zonal_mean, zonal_mean_co2_ice, do_flip=False)
 

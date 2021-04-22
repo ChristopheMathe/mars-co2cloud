@@ -6,7 +6,7 @@ from numpy import mean, logspace, arange, linspace
 from sys import argv
 
 
-def plot_sim_3d(filename, data_target, name_target, view_mode=None):
+def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=None):
     data_target, local_time = extract_at_a_local_time(filename=filename, data=data_target, local_time=None)
 
     print('Correction value...')
@@ -155,16 +155,20 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
             display_co2_ice_density_column_evolution_polar_region(filename=filename, data=data_processed, time=time,
                                                                   latitude=latitude)
 
-        elif view_mode == 8:
+        elif view_mode == 8 and name_target == 'h2o_ice':
             print('Processing data:')
-            data_target, data_co2_ice, latitude_selected = h2o_ice_alt_ls_with_co2_ice(filename, data_target)
+            data_target, data_co2_ice, latitude_selected = h2o_ice_alt_ls_with_co2_ice(filename=filename,
+                                                                                       data=data_target,
+                                                                                       local_time=local_time,
+                                                                                       files=files,
+                                                                                       directory=directory)
 
             print('Display:')
-            display_vars_altitude_ls(filename, data_target, data_co2_ice, levels=logspace(-13, 2, 16),
-                                     title=f'Zonal mean of H2O ice mmr and CO2 ice mmr (black), at'
-                                           f' {latitude_selected:d} °N',
-                                     save_name=f'h2o_ice_zonal_mean_with_co2_ice_{latitude_selected:d}N',
-                                     latitude_selected=latitude_selected)
+            display_vars_altitude_ls(filename, data_target, data_co2_ice, local_time=local_time,
+                                     title=f'Zonal mean of H2O ice mmr and\n CO2 ice mmr (black), at'
+                                           f' {int(latitude_selected)} °N ({local_time}h)',
+                                     save_name=f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected)}N_'
+                                               f'{local_time}h')
 
         elif view_mode == 9:
             print('Processing data:')
@@ -764,6 +768,7 @@ def main():
     arg_file = None
     arg_target = None
     arg_view_mode = None
+
     if len(argv) > 2:
         arg_file = int(argv[1])
         arg_target = argv[2]
@@ -791,7 +796,8 @@ def main():
     if data_target.ndim <= 2:
         plot_sim_1d(data_target=data_target, name_target=data_target.name, view_mode=arg_view_mode)
     else:
-        plot_sim_3d(filename=filename, data_target=data_target, name_target=data_target.name, view_mode=arg_view_mode)
+        plot_sim_3d(filename=filename, data_target=data_target, name_target=data_target.name,
+                    view_mode=arg_view_mode, directory=directory_store, files=files)
 
     return
 

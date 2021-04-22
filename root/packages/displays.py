@@ -1429,12 +1429,13 @@ def display_vars_altitude_longitude(filename, data, unit, norm, vmin, vcenter, v
     return
 
 
-def display_vars_altitude_ls(filename, data_1, data_2, levels, title, save_name, latitude_selected=None):
+def display_vars_altitude_ls(filename, data_1, data_2, local_time, title, save_name):
     from numpy import round
     from matplotlib.colors import LogNorm
 
+    norm = LogNorm(vmin=1e-13, vmax=1e-3)
+
     data_altitude = get_data(filename, target='altitude')
-    ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
 
     if data_altitude.units == 'm':
         units = 'km'
@@ -1448,60 +1449,30 @@ def display_vars_altitude_ls(filename, data_1, data_2, levels, title, save_name,
         altitude_name = 'Pressure'
 
     data_time = get_data(filename, target='Time')
+    if data_time.units != 'deg':
+        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
+        data_time = data_ls[idx::len(data_local_time)]
 
-    fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(11, 8))
+    fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(11, 11))
+    cb = axes.pcolormesh(data_time[:], data_altitude[:], data_1, norm=norm, cmap='plasma', shading='auto')
+    axes.pcolormesh(data_time[:], data_altitude[:], data_2, norm=norm, cmap='binary', shading='auto')
 
-    cb = axes.contourf(data_time[:] * 12, data_altitude[:], data_1, norm=LogNorm(vmin=1e-13, vmax=1e2), levels=levels,
-                       cmap='coolwarm')
-    axes.contour(data_time[:] * 12, data_altitude[:], data_2, norm=LogNorm(vmin=1e-13, vmax=1e2), levels=levels,
-                 colors='black')
-
-    cbar = plt.colorbar(cb, ax=axes)
-    cbar.ax.set_title('kg/kg')
-
-    axes.set_xlabel('Solar longitude (°)')
-
-    axes.set_yticks(ticks=ticks_altitude)
-    axes.set_ylabel(altitude_name + ' (' + units + ')')
-
-    data_zareoid = None
     if units == 'Pa':
-        try:
-            data_zareoid = get_data(filename, target='zareoid')
-        except data_zareoid is None:
-            print('Zareoid is missing!')
-            exit()
-        if latitude_selected is not None:
-            data_latitude = get_data(filename, target='latitude')
-            data_zareoid, tmp = slice_data(data_zareoid, dimension_data=data_latitude, value=latitude_selected)
-
-        lines_altitudes_0km = get_mean_index_altitude(data_altitude=data_zareoid, value=0, dimension='Time')
-        lines_altitudes_10km = get_mean_index_altitude(data_altitude=data_zareoid, value=1e4, dimension='Time')
-        lines_altitudes_40km = get_mean_index_altitude(data_altitude=data_zareoid, value=4e4, dimension='Time')
-        lines_altitudes_80km = get_mean_index_altitude(data_altitude=data_zareoid, value=8e4, dimension='Time')
-
-        axes.plot(data_altitude[lines_altitudes_0km], '--', color='grey')
-        axes.plot(data_altitude[lines_altitudes_10km], '--', color='grey')
-        axes.plot(data_altitude[lines_altitudes_40km], '--', color='grey')
-        axes.plot(data_altitude[lines_altitudes_80km], '--', color='grey')
-
-        axes.text(data_time[-1] * 12 + 1, data_altitude[lines_altitudes_0km[0]], '0 km', verticalalignment='bottom',
-                  horizontalalignment='right', color='grey', fontsize=14)
-        axes.text(data_time[-1] * 12 + 1, data_altitude[lines_altitudes_10km[0]], '10 km', verticalalignment='bottom',
-                  horizontalalignment='right', color='grey', fontsize=14)
-        axes.text(data_time[-1] * 12 + 1, data_altitude[lines_altitudes_40km[0]], '40 km', verticalalignment='bottom',
-                  horizontalalignment='right', color='grey', fontsize=14)
-        axes.text(data_time[-1] * 12 + 1, data_altitude[lines_altitudes_80km[0]], '80 km', verticalalignment='bottom',
-                  horizontalalignment='right', color='grey', fontsize=14)
-
         axes.set_yscale('log')
         axes.invert_yaxis()
     else:
-        axes.set_yticklabels(labels=round(data_altitude[ticks_altitude], 0))
+        axes.set_yticklabels(labels=round(data_altitude[:], 0))
 
-    axes.set_title(title)
-    fig.savefig(save_name + '.png', bbox_inches='tight')
-    fig.show()
+    cbar = plt.colorbar(cb, ax=axes)
+    cbar.ax.set_title('kg/kg', fontsize=18)
+
+    axes.set_title(title, fontsize=18)
+    axes.set_xlabel('Solar longitude (°)', fontsize=18)
+    axes.set_ylabel(f'{altitude_name} ({units})', fontsize=18)
+    axes.tick_params(axis='both', which='major', labelsize=18)
+    fig.savefig(f'{save_name}.png', bbox_inches='tight')
+    return
 
 
 def display_vars_latitude_longitude(filename, data, unit, norm, vmin, vmax, title, save_name):

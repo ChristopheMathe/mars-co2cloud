@@ -31,7 +31,7 @@ def check_local_time(data_time, selected_time=None):
 
     print(f'Local time available: {data_local_time}')
 
-    if selected_time:
+    if selected_time is not None:
         idx = (abs(data_local_time[:] - selected_time)).argmin()
         print(f'\tSelected: {data_local_time[idx]}')
     else:
@@ -170,7 +170,7 @@ def extract_at_a_local_time(filename, data, local_time=None):
 
     data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
 
-    if idx:
+    if idx >= 0:
         local_time = data_local_time[idx]
         if data.ndim == 4:
             data_processed = data[idx::len(data_local_time), :, :, :]
@@ -346,7 +346,7 @@ def get_ls_index(data_time):
 def get_mean_index_altitude(data_altitude, value, dimension):
     from numpy import abs, zeros, mean
 
-    if dimension == 'time':
+    if dimension == 'Time':
         mean_idx = zeros(data_altitude.shape[0], dtype=int)
         idx = zeros(data_altitude.shape[2], dtype=int)
 
