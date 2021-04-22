@@ -854,6 +854,14 @@ def temp_gg2011_fig9(filename, data):
     return data_final, data_surface_local
 
 
+def temp_stationary_wave(filename, data):
+    data_latitude = get_data(filename=filename, target='latitude')
+    data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=0)
+
+    data = mean(data, axis=0)
+    return data
+
+
 def temp_thermal_structure_polar_region(filename, data):
     data_latitude = get_data(filename=filename, target='latitude')
 
@@ -938,7 +946,7 @@ def vars_time_mean(filename, data, duration, localtime=None):
     from math import ceil
 
     data_time = get_data(filename=filename, target='Time')
-    if localtime is not None:
+    if localtime:
         data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=localtime)
         if data_time[-1] <= 360.:  # Ensure we are in ls time coordinate
             data_time = data_time[idx::len(data_local_time)]
@@ -946,13 +954,18 @@ def vars_time_mean(filename, data, duration, localtime=None):
             data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
             data_time = data_ls[idx::len(data_local_time)]
 
-    nbin = ceil(data_time[-1] / duration)
-    data_mean = zeros((nbin, data.shape[1], data.shape[2]))
-    time_bin = arange(0, data_time[-1] + duration, duration)
+    if duration:
+        nbin = ceil(data_time[-1] / duration)
+        data_mean = zeros((nbin, data.shape[1], data.shape[2]))
+        time_bin = arange(0, data_time[-1] + duration, duration)
 
-    for i in range(nbin):
-        data_sliced, time = slice_data(data=data, dimension_data=data_time[:], value=[duration * i, duration * (i + 1)])
-        data_mean[i, :, :] = mean(data_sliced, axis=0)
+        for i in range(nbin):
+            data_sliced, time = slice_data(data=data, dimension_data=data_time[:],
+                                           value=[duration * i, duration * (i + 1)])
+            data_mean[i, :, :] = mean(data_sliced, axis=0)
+    else:
+        data_mean = mean(data, axis=0)
+        time_bin = None
 
     return data_mean, time_bin
 

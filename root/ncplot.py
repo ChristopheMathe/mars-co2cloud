@@ -384,6 +384,7 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
         print('     6: Thermal structure in winter polar regions at 60°N/S (fig. alt-ls)')
         print('     \t 601: compare with another run')
         print('     7: dT zonal mean and altitude of cold pocket, compared to SPICAM data')
+        print('     8: stationary wave, years mean at 0°N (fig: alt-lon)')
         print('')
 
         if view_mode is None:
@@ -478,6 +479,16 @@ def plot_sim_3d(filename, data_target, name_target, view_mode=None):
                                             title=f'T - Tcondco2, mean between 15°S and 15°N, zonal mean, '
                                                   f'at {local_time}h',
                                             save_name=f'temp_delta_equator_zonal_mean_at_{local_time}h')
+
+        if view_mode == 8:
+            print('Processing data:')
+            data_processed = temp_stationary_wave(filename=filename, data=data_target)
+
+            print('Display:')
+            display_vars_altitude_longitude(filename=filename, data=data_processed, unit='K', norm='linear', vmin=100,
+                                            vcenter=None, vmax=250,
+                                            title=f'Temperature at 0°N, averaged over 1 year ({local_time}h) ',
+                                            save_name=f'temp_altitude_longitude_0N_{local_time}h')
 
     # ================================================================================================================ #
 

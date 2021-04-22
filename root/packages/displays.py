@@ -1363,34 +1363,47 @@ def display_vars_altitude_localtime(filename, data, data_localtime, title, unit,
     plt.show()
 
 
-def display_vars_altitude_longitude(filename, data, unit, title, save_name):
-    from numpy import zeros, arange
-    from matplotlib.colors import TwoSlopeNorm
+def display_vars_altitude_longitude(filename, data, unit, norm, vmin, vcenter, vmax, title, save_name):
+    from matplotlib.colors import TwoSlopeNorm, Normalize, LogNorm
 
     data_altitude = get_data(filename=filename, target='altitude')
     data_longitude = get_data(filename=filename, target='longitude')
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 11))
-    if unit == '':
-        scale = zeros(5)
-        scale[1] = 1
-        scale[2:] = 10 ** arange(1, 4)
-        pc = ax.contourf(data_longitude[:], data_altitude[:], data,
-                         norm=TwoSlopeNorm(vmin=0, vcenter=1.0, vmax=1000), levels=scale,
-                         cmap='seismic', extend='max')
+    if data_altitude.units == 'Pa':
+        yscale = 'log'
     else:
-        ax.set_yscale('log')
-        ax.invert_yaxis()
-        pc = ax.contourf(data_longitude[:], data_altitude[:], data, cmap='hot')
+        yscale = 'linear'
+
+    if norm == 'div':
+        norm = TwoSlopeNorm(vmin=vmin, vcenter=vcenter, vmax=vmax)
+        cmap = 'coolwarm'
+    elif norm == 'log':
+        norm = LogNorm(vmin=vmin, vmax=vmax)
+        cmap = 'inferno'
+    else:
+        norm = Normalize(vmin=vmin, vmax=vmax)
+        cmap = 'inferno'
+
+    # PLOT
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(11, 11))
+    pc = ax.pcolormesh(data_longitude[:], data_altitude[:], data, norm=norm, cmap=cmap, shading='auto')
 
     cbar = fig.colorbar(pc, orientation="vertical")
-    cbar.ax.set_title(unit)
+    cbar.ax.set_title(unit, fontsize=18)
+    cbar.ax.tick_params(labelsize=18)
 
-    plt.title(title)
-    plt.xlabel('Longitude (°E)')
-    plt.ylabel(f'{data_altitude.name} ({data_altitude.units})')
-    plt.savefig(save_name + '.png', bbox_inches='tight')
-    plt.show()
+    ax.set_yscale(yscale)
+    if data_altitude.units == 'Pa':
+        ax.invert_yaxis()
+    ax.set_xticks(data_longitude[::8])
+    ax.set_xticklabels(labels=data_longitude[::8], fontsize=18)
+    ax.tick_params(axis='both', which='major', labelsize=18)
+
+    ax.set_title(title, fontsize=18)
+    ax.set_xlabel('Longitude (°E)', fontsize=18)
+    ax.set_ylabel(f'Altitude ({data_altitude.units})', fontsize=18)
+    plt.savefig(f'{save_name}.png', bbox_inches='tight')
+    return
 
 
 def display_vars_altitude_ls(filename, data_1, data_2, levels, title, save_name, latitude_selected=None):
