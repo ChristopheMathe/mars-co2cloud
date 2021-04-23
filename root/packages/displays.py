@@ -725,25 +725,45 @@ def display_riceco2_max_local_time_evolution(filename, data_max_radius, data_max
 
 
 def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None):
+    from matplotlib.colors import Normalize
+
+    norm = Normalize(vmin=0, vmax=10)
     data_latitude = get_data(filename=filename, target='latitude')
     data_time = get_data(filename=filename, target='Time')
-    data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
-    top_cloud, interp_time = linearize_ls(data=top_cloud, idx_lt=idx)
+
+    if data_time.units != 'deg':
+        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
+        data_time = data_ls[idx::len(data_local_time)]
+
+    top_cloud, interp_time = linearize_ls(data=top_cloud, data_ls=data_time)
+
     top_cloud = correction_value(data=top_cloud, operator='inf', threshold=0)
 
-    plt.figure(figsize=(8, 8))
-    plt.title('Zonal mean of top cloud altitude')
-    cb = plt.contourf(interp_time[:], data_latitude[:], top_cloud / 1e3, cmap='cool')
-    ax = plt.gca()
+    cmap = colormap_idl_rainbow_plus_white()
+    cmap.set_over("grey")
+    idx, axis_ls, ls_lin = get_ls_index(interp_time)
+    print(idx)
+    print(axis_ls)
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(11, 8))
+    cb = ax.pcolormesh(interp_time[:], data_latitude[:], top_cloud, norm=norm, cmap=cmap)
     ax.set_facecolor('white')
+    ax.set_xticks(interp_time[idx])
+    ax.set_xticklabels(axis_ls)
+    ax.set_yticks(data_latitude[::8])
+    ax.set_yticklabels(data_latitude[::8])
 
-    cbar = plt.colorbar(cb)
-    cbar.ax.set_title('km')
+    cbar = plt.colorbar(cb, extend='max')
+    cbar.ax.set_title('km', fontsize=18)
+    cbar.ax.tick_params(labelsize=18)
 
-    plt.xlabel('Solar Longitude (°)')
-    plt.ylabel('Latitude (°N)')
+    ax.tick_params(axis='both', which='major', labelsize=18)
+    ax.set_title(f'Zonal mean of top cloud altitude ({local_time}h)', fontsize=18)
+    ax.set_xlabel('Solar Longitude (°)', fontsize=18)
+    ax.set_ylabel('Latitude (°N)', fontsize=18)
     plt.savefig(f'top_cloud_altitude_comparable_to_mola_{local_time}h.png', bbox_inches='tight')
     plt.show()
+    return
 
 
 def display_satuco2_thickness_atm_layer(data, data_std, save_name):

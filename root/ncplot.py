@@ -333,7 +333,6 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                      data_max_alt=data_max_alt, local_time=local_time,
                                                      latitude=latitude)
 
-
     elif name_target in ['satuco2']:
         print('What do you wanna do?')
         print('     1: zonal mean of saturation, for 3 latitudes, with co2ice mmr (fig: alt-ls)')
@@ -625,7 +624,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
             print('Display:')
             if name_target == 'fluxtop_lw':
-                vmax = 400
+                vmax = 100
             elif name_target == 'fluxsurf_lw':
                 vmax = 160
             else:
@@ -663,7 +662,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed, unit='',
                                      norm='log', vmin=1e-13, vmax=1e-1, observation=False,
                                      latitude_selected=None, localtime_selected=local_time,
-                                     title=name_target, tes=None, mvals=None,
+                                     title=f'Zonal mean of {name_target} ({local_time}h)', tes=None, mvals=None,
                                      save_name=f'tau1mic_zonal_mean_{local_time}h')
 
     elif name_target in ['tau']:

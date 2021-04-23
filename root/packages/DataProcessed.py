@@ -418,7 +418,7 @@ def riceco2_top_cloud_altitude(filename, data_target, local_time):
                 if n_part[t, alt, lat] >= n_reflect[t, alt, lat] and alt > 1:
                     top_cloud[t, lat] = data_altitude[alt]
                     break
-
+    top_cloud = top_cloud / 1e3
     top_cloud = rotate_data(top_cloud, do_flip=False)[0]
     return top_cloud
 
