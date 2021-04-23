@@ -310,6 +310,42 @@ def riceco2_local_time_evolution(filename, data):
     return data, latitudes
 
 
+def riceco2_max_local_time_evolution(filename, data):
+    data = extract_where_co2_ice(filename=filename, data=data)
+
+    data_latitude = get_data(filename=filename, target='latitude')
+    data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=0)
+
+    data = mean(data, axis=2)  # zonal mean
+
+    # Reshape every localtime for one year!
+    if data.shape[0] % 12 != 0:
+        nb_sol = 0
+        print('Stop, there is no 12 localtime')
+        exit()
+    else:
+        nb_sol = int(data.shape[0]/12)  # if there is 12 local time!
+
+    data = reshape(data, (nb_sol, 12, data.shape[1])).T
+    data = mean(data, axis=2) # mean over the year
+
+    data_max_radius = zeros(data.shape[1])
+    data_max_alt = zeros(data.shape[1])
+    data_altitude = get_data(filename=filename, target='altitude')
+    for lt in range(data.shape[1]):
+        data_max_radius[lt] = max(data[:, lt])
+        data_max_alt[lt] = int(argmax(data[:, lt]))
+        if data_max_alt[lt] == 0:
+            data_max_alt[lt] = -99999
+        else:
+            data_max_alt[lt] = data_altitude[data_max_alt[lt]]
+    print(data_max_alt[lt])
+    data_max_radius = correction_value(data=data_max_radius, operator='eq', threshold=0)
+    data_max_alt = correction_value(data=data_max_alt, operator='inf', threshold=0)
+    print(data_max_alt)
+    return data_max_radius, data_max_alt, latitudes
+
+
 def riceco2_max_day_night(filename, data):
     data_altitude = get_data(filename=filename, target='altitude')
 

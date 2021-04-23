@@ -169,15 +169,15 @@ def extract_at_a_local_time(filename, data, local_time=None):
     data_time = get_data(filename=filename, target='Time')
 
     data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
-
-    if idx >= 0:
-        local_time = data_local_time[idx]
-        if data.ndim == 4:
-            data_processed = data[idx::len(data_local_time), :, :, :]
-        elif data.ndim == 3:
-            data_processed = data[idx::len(data_local_time), :, :]
-        else:
-            data_processed = data[idx::len(data_local_time)]
+    if idx:
+        if idx >= 0:
+            local_time = data_local_time[idx]
+            if data.ndim == 4:
+                data_processed = data[idx::len(data_local_time), :, :, :]
+            elif data.ndim == 3:
+                data_processed = data[idx::len(data_local_time), :, :]
+            else:
+                data_processed = data[idx::len(data_local_time)]
     else:
         local_time = data_local_time
         data_processed = data

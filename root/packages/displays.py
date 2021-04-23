@@ -693,6 +693,37 @@ def display_riceco2_local_time_evolution(filename, data, local_time, latitude):
     return
 
 
+def display_riceco2_max_local_time_evolution(filename, data_max_radius, data_max_alt, local_time, latitude):
+
+    data_altitude = get_data(filename=filename, target='altitude')
+
+    fig, ax = plt.subplots(figsize=(11, 11))
+    ax.plot(local_time, data_max_radius, color='black', linestyle='-')
+    ax.set_yscale('log')
+    ax.set_ylim(1e-9, 1e-4)
+
+    ax2 = ax.twinx()
+    ax2.plot(local_time, data_max_alt, color='red', linestyle='--')
+    ax2.set_yscale('log')
+    ax2.set_ylim(1e3, 1e-3)
+
+    ax.set_title(f'Max radius of CO2 ice particles at {latitude}N\n with the location of the max (red)', fontsize=18)
+    ax.set_ylabel(f'Radius particle (µm)', fontsize=18)
+    ax.tick_params(axis='both', which='major', labelsize=18)
+
+    ax2.yaxis.set_label_position("right")
+    ax2.yaxis.tick_right()
+    ax2.set_ylabel(f'Altitude ({data_altitude.units})', fontsize=18, color='red')
+    ax2.tick_params(axis='both', which='major', labelsize=18)
+    ax2.tick_params(axis='y', colors='red')
+
+    ax.set_xlabel('Local time (h)', fontsize=18)
+    ax.set_xticks(local_time)
+    ax.set_xticklabels(local_time, fontsize=18)
+    plt.savefig(f'riceco2_max_localtime_evolution_{latitude}N.png', bbox_inches='tight')
+    return
+
+
 def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None):
     data_latitude = get_data(filename=filename, target='latitude')
     data_time = get_data(filename=filename, target='Time')

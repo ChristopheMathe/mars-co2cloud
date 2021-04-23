@@ -217,6 +217,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('     6: mean radius profile along year, with global mean radius (fig: alt-ls + alt+µm)')
         print('     7: radius structure ')
         print('     8: radius local time evolution at 0°N (fig: alt-µm)')
+        print('     9: max radius local time evolution at 0°N (fig: µm-lt)')
         print('')
         if view_mode is None:
             view_mode = int(input('Select number:'))
@@ -322,6 +323,17 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             display_riceco2_local_time_evolution(filename=filename, data=data_processed, local_time=local_time,
                                                  latitude=latitude)
 
+        if view_mode == 9:
+            print('Processing data:')
+            data_max_radius, data_max_alt, latitude = riceco2_max_local_time_evolution(filename=filename,
+                                                                                       data=data_target)
+
+            print('Display:')
+            display_riceco2_max_local_time_evolution(filename=filename, data_max_radius=data_max_radius,
+                                                     data_max_alt=data_max_alt, local_time=local_time,
+                                                     latitude=latitude)
+
+
     elif name_target in ['satuco2']:
         print('What do you wanna do?')
         print('     1: zonal mean of saturation, for 3 latitudes, with co2ice mmr (fig: alt-ls)')
@@ -335,7 +347,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         if view_mode == 1:
             print('Processing data:')
             data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, \
-                data_co2ice_south, latitude_north, latitude_eq, latitude_south, binned = \
+            data_co2ice_south, latitude_north, latitude_eq, latitude_south, binned = \
                 satuco2_zonal_mean_with_co2_ice(filename=filename, data=data_target)
 
             print('Display:')
@@ -349,7 +361,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         if view_mode == 3:
             print('Processing data:')
             data_satuco2_north, data_satuco2_south, data_co2ice_north, data_co2ice_south, latitude_north, \
-                latitude_south, binned = satuco2_time_mean_with_co2_ice(filename, data_target)
+            latitude_south, binned = satuco2_time_mean_with_co2_ice(filename, data_target)
 
             print('Display:')
             display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north, data_satuco2_south,
