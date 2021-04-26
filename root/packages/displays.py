@@ -743,8 +743,7 @@ def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None):
     cmap = colormap_idl_rainbow_plus_white()
     cmap.set_over("grey")
     idx, axis_ls, ls_lin = get_ls_index(interp_time)
-    print(idx)
-    print(axis_ls)
+
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(11, 8))
     cb = ax.pcolormesh(interp_time[:], data_latitude[:], top_cloud, norm=norm, cmap=cmap)
     ax.set_facecolor('white')
@@ -772,7 +771,7 @@ def display_satuco2_thickness_atm_layer(data, data_std, save_name):
 
     # data from Fig 9 in Hu et al., 2012
 
-    north_pole = array(([0.5, 0.95, 1.4],
+    north_pole_my28 = array(([0.5, 0.95, 1.4],
                         [0.6, 0.91, 1.3],
                         [0.9, 1.1, 1.38],
                         [0.2, 0.7, 1.15],
@@ -807,7 +806,36 @@ def display_satuco2_thickness_atm_layer(data, data_std, save_name):
                         [0.71, 1.10, 1.47],
                         )) * 5 / 1.1  # 1.1 cm pour 5 km
 
-    south_pole = array(([0.63, 0.98, 1.30],
+    north_pole_my29 = array(([0.6, 1.1, 1.5],
+                             [0.7, 1.3, 1.83],
+                             [0.6, 1.5, 2.25],
+                             [0.9, 1.4, 2.0],
+                             [1, 1.35, 1.75],
+                             [0.8, 1.4, 2.1],
+                             [1.0, 1.5, 2.21],
+                             [1.1, 1.6, 2.4],
+                             [0.8, 1.5, 2.2],
+                             [1.1, 1.95, 2.9],
+                             [1.4, 2.3, 3.4],
+                             [1.3, 2.15, 3.23],
+                             [1.2, 2.35, 3.5],
+                             [1.3, 2.5, 3.8],
+                             [1.2, 2.6, 3.83],
+                             [1.31, 2.7, 4.1],
+                             [1.25, 2.7, 4.1],
+                             [1.2, 2.5, 3.8],
+                             [1.2, 2.4, 3.6],
+                             [1.2, 2.45, 3.75],
+                             [1.1, 2.4, 3.7],
+                             [1, 2.25, 3.35],
+                             [0.9, 2, 3.1],
+                             [1, 2, 3],
+                             [1.05, 2.05, 3.05],
+                             [0.95, 1.95, 2.95],
+                             [0.8, 1.8, 2.8],
+                             )) * 5 / 1.1
+
+    south_pole_my29 = array(([0.63, 0.98, 1.30],
                         [0.9, 1.42, 1.99],
                         [1.3, 1.95, 2.60],
                         [1.43, 2.20, 2.89],
@@ -844,39 +872,45 @@ def display_satuco2_thickness_atm_layer(data, data_std, save_name):
                         [0.12, 0.22, 0.32],
                         )) * 5 / 0.95  # 0.95 cm pour 5 km
 
-    north_pole_ls = 192.5 + arange(33) * 5
-    south_pole_ls = 12.5 + arange(35) * 5
+    north_pole_ls_my28 = 192.5 + arange(33) * 5
+    north_pole_ls_my29 = 197.5 + arange(27) * 5
+    south_pole_ls_my29 = 12.5 + arange(35) * 5
 
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11))
-
-    ax[0].set_title('North pole above 60°N')
+    print(data.shape[1], data.shape, data_std.shape, north_pole_ls_my29.shape, north_pole_my29)
+    ax[0].set_title('North pole above 60°N', fontsize=18)
     ax[0].errorbar(arange(data.shape[1]) * 5, data[0, :] / 1e3,
                    yerr=data_std[0, :] / 1e3,
                    ls=' ', marker='+', color='blue', label='GCM')  # 72 points binned in 5°
-    ax[0].errorbar(north_pole_ls, north_pole[:, 1],
-                   yerr=[north_pole[:, 2] - north_pole[:, 1], north_pole[:, 1] - north_pole[:, 0]], color='black',
-                   ls=' ', marker='+', label='MCS MY28')
+    ax[0].errorbar(north_pole_ls_my29, north_pole_my29[:, 1],
+                   yerr=[north_pole_my29[:, 2] - north_pole_my29[:, 1], north_pole_my29[:, 1] - north_pole_my29[:, 0]],
+                   color='black',
+                   ls=' ', marker='+', label='MCS MY29')
     ax[0].set_xticks(ticks=arange(0, 405, 45))
-    ax[0].set_xticklabels(labels=arange(0, 405, 45))
-    ax[0].legend(loc='best')
+    ax[0].set_xticklabels(labels=arange(0, 405, 45), fontsize=18)
+    ax[0].tick_params(axis='both', which='major', labelsize=18)
+    ax[0].legend(loc=2)
 
-    ax[1].set_title('South pole above 60°S')
+    ax[1].set_title('South pole above 60°S', fontsize=18)
     ax[1].errorbar(arange(data.shape[1]) * 5, data[1, :] / 1e3,
                    yerr=data_std[1, :] / 1e3,
                    ls=' ', marker='+', color='blue', label='GCM')
-    ax[1].errorbar(south_pole_ls, south_pole[:, 1],
-                   yerr=[south_pole[:, 2] - south_pole[:, 1], south_pole[:, 1] - south_pole[:, 0]], color='black',
+    ax[1].errorbar(south_pole_ls_my29, south_pole_my29[:, 1],
+                   yerr=[south_pole_my29[:, 2] - south_pole_my29[:, 1], south_pole_my29[:, 1] - south_pole_my29[:, 0]],
+                   color='black',
                    ls=' ', marker='+', label='MCS MY29')
 
     ax[1].set_xticks(ticks=arange(0, 405, 45))
-    ax[1].set_xticklabels(labels=arange(0, 405, 45))
+    ax[1].set_xticklabels(labels=arange(0, 405, 45), fontsize=18)
     ax[1].legend(loc='best')
+    ax[1].tick_params(axis='both', which='major', labelsize=18)
 
-    fig.text(0.06, 0.5, 'Thickness (km)', ha='center', va='center', rotation='vertical', fontsize=14)
-    fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
+    fig.text(0.06, 0.5, 'Thickness (km)', ha='center', va='center', rotation='vertical', fontsize=18)
+    fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=18)
 
     plt.savefig(save_name, bbox_inches='tight')
     plt.show()
+    return
 
 
 def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_satuco2_eq, data_satuco2_south,

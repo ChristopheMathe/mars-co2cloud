@@ -686,15 +686,17 @@ def satuco2_hu2012_fig9(filename, data, local_time):
     data_time = get_data(filename=filename, target='Time')
     if data_time.units != 'deg':
         data_local_time, idx, sats = check_local_time(data_time=data_time, selected_time=local_time)
-        data_time = get_data(filename='../concat_Ls.nc', target='Ls')
-        if idx:
-            data_time = data_time[idx::len(data_local_time)]
+        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
+        if idx is not None:
+            data_time = data_ls[idx::len(data_local_time)]
+
     if data_time.shape[0] % 60 == 0:
         print(f'5°Ls binning: {data_time[0]} - {data_time[60]}')
         nb_bin = int(data_time.shape[0] / 60) + 1
     else:
         print(f'5°Ls binning: from {data_time[0]} to {data_time[-1]}')
         nb_bin = 72
+        print(data_time.shape, data_time[-1]/nb_bin, nb_bin*5)
 
     data_icelayer = zeros((2, nb_bin))
     data_icelayer_std = zeros((2, nb_bin))
@@ -704,7 +706,7 @@ def satuco2_hu2012_fig9(filename, data, local_time):
                                                       value=[BIN * 5, (BIN + 1) * 5])
         data_binned_south, time_selected = slice_data(data_south, dimension_data=data_time[:],
                                                       value=[BIN * 5, (BIN + 1) * 5])
-        print(f'Time: {time_selected[0]:.0f} / {time_selected[-1]:.0f}°Ls')
+        print(f'Time: {data_time[time_selected[0]]:.0f} / {data_time[time_selected[-1]]:.0f}°Ls')
         tmp_north = array([])
         tmp_south = array([])
 
