@@ -528,19 +528,23 @@ def display_co2_ice_localtime_ls(filename, data):
     data[data.mask] = 0
     ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
 
-    fig, ax = plt.subplots()
-    ctf = ax.pcolormesh(data_time[:], data_local_time[:], data, norm=LogNorm(vmin=1e-13, vmax=1e-9),
-                        cmap="viridis")
-    fig.colorbar(ctf, label='kg.m-2')
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(11, 11))
+    ctf = ax.pcolormesh(data_time[:], data_local_time[:], data, norm=LogNorm(vmin=1e-4, vmax=1),
+                        cmap="viridis", shading='auto')
+    cbar = fig.colorbar(ctf)
+    cbar.ax.set_title('kg.m$^{-2}$', fontsize=18)
+    cbar.ax.tick_params(labelsize=18)
+
     ax.set_facecolor('white')
 
-    ax.set_xlabel('Solar longitude (°)')
-    ax.set_ylabel('Local time (h)')
+    ax.set_title('CO2 ice density column at 0°N', fontsize=18)
+    ax.set_xlabel('Solar longitude (°)', fontsize=18)
+    ax.set_ylabel('Local time (h)', fontsize=18)
     ax.set_xticks(ndx)
-    ax.set_xticklabels(axis_ls)
+    ax.set_xticklabels(axis_ls, fontsize=18)
     ax.set_yticks(data_local_time)
-    ax.set_yticklabels(data_local_time)
-    plt.savefig('co2_ice_zonal_mean_density_column_localtime_evolution_0N.png', bbox_inches='tight')
+    ax.set_yticklabels(data_local_time, fontsize=18)
+    plt.savefig('h2o_ice_zonal_mean_density_column_localtime_evolution_0N.png', bbox_inches='tight')
     return
 
 
