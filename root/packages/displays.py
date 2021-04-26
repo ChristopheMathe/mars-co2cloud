@@ -1491,10 +1491,10 @@ def display_vars_altitude_longitude(filename, data, unit, norm, vmin, vcenter, v
         cmap = 'coolwarm'
     elif norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
-        cmap = 'inferno'
+        cmap = 'plasma'
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
-        cmap = 'inferno'
+        cmap = 'plasma'
 
     # PLOT
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(11, 11))

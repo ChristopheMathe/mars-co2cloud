@@ -456,9 +456,9 @@ def satuco2_zonal_mean_with_co2_ice(filename, data):
     eq = 0
     south = -80
     print('Latitude selected:')
-    print('\tNorth =   {}°N'.format(north))
-    print('\tEquator = {}°N'.format(eq))
-    print('\tSouth =   {}°S'.format(abs(south)))
+    print(f'\tNorth =   {north}°N')
+    print(f'\tEquator = {eq}°N')
+    print(f'\tSouth =   {south}°S')
 
     # Slice data for the three latitudes
     data_satuco2_north, north_latitude_selected = slice_data(data, dimension_data=data_latitude, value=north)
@@ -522,7 +522,7 @@ def satuco2_zonal_mean_with_co2_ice(filename, data):
                 data_co2ice_south_binned[i, :] = mean(data_co2ice_south[idx_ls_1:idx_ls_2, :], axis=0)
         else:
             if data_time.shape[0] % 60 == 0:
-                print('Test 5°Ls binning: {} - {}'.format(data_time[0], data_time[60]))
+                print(f'Test 5°Ls binning: {data_time[0]} - {data_time[60]}')
             else:
                 print('The data will not be binned in 5°Ls, need to work here')
 
@@ -573,8 +573,8 @@ def satuco2_time_mean_with_co2_ice(filename, data):
     north = 80
     south = -80
     print('Latitude selected:')
-    print('\tNorth = {}°N'.format(north))
-    print('\tSouth = {}°S'.format(abs(south)))
+    print(f'\tNorth = {north}°N')
+    print(f'\tSouth = {abs(south)}°S')
 
     # Slice data for the three latitudes
     data_satuco2_north, north_latitude_selected = slice_data(data, dimension_data=data_latitude, value=north)
@@ -584,8 +584,8 @@ def satuco2_time_mean_with_co2_ice(filename, data):
     north_winter = [270, 300]
     south_winter = [0, 30]
     print('Time selected:')
-    print('\tNorth = {}°Ls'.format(north_winter))
-    print('\tSouth = {}°Ls'.format(abs(south_winter)))
+    print(f'\tNorth = {north_winter}°Ls')
+    print(f'\tSouth = {south_winter}°Ls')
 
     # Slice data in time
     data_satuco2_north, north_winter_time = slice_data(data_satuco2_north, dimension_data=data_time, value=north_winter)
@@ -637,7 +637,7 @@ def satuco2_time_mean_with_co2_ice(filename, data):
                 data_co2ice_south_binned[i, :] = mean(data_co2ice_south[idx_ls_1:idx_ls_2, :], axis=0)
         else:
             if data_time.shape[0] % 60 == 0:
-                print('Test 5°Ls binning: {} - {}'.format(data_time[0], data_time[60]))
+                print(f'Test 5°Ls binning: {data_time[0]} - {data_time[60]}')
             else:
                 print('The data will not be binned in 5°Ls, need to work here')
 
@@ -761,6 +761,15 @@ def satuco2_hu2012_fig9(filename, data, local_time):
     return data_icelayer, data_icelayer_std
 
 
+def satuco2_altitude_longitude(filename, data):
+    data_latitude = get_data(filename=filename, target='latitude')
+    data, latitude = slice_data(data=data, dimension_data=data_latitude[:], value=0)
+
+    data = mean(data, axis=0)
+    data = correction_value(data=data, operator='inf', threshold=0.9)
+    return data
+
+
 def temp_gg2011_fig6(filename, data):
     # GG2011 worked with stats file
     data_latitude = get_data(filename=filename, target='latitude')
@@ -846,7 +855,7 @@ def temp_gg2011_fig7(filename, data):
 
     del data
 
-    print('T - T(condensation): min = {:.2f}, max = {:.2f}'.format(min(data_final), max(data_final)))
+    print(f'T - T(condensation): min = {min(data_final):.2f}, max = {max(data_final):.2f}')
     return data_final, data_surface_local
 
 

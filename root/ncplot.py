@@ -339,6 +339,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('     2: [TBD] saturation in localtime (fig: lt-alt')
         print('     3: saturation with co2ice mmr in polar regions, [0:30]°ls SP, [270-300]°ls NP (fig: alt-lon)')
         print('     4: Thickness atmosphere layer in polar regions, to compare with Fig.9 of Hu2019 (fig: thick-ls)')
+        print('     5: Saturation at 0°N along longitude (fig: alt-lon)')
         print('')
         if view_mode is None:
             view_mode = int(input('Select number:'))
@@ -346,7 +347,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         if view_mode == 1:
             print('Processing data:')
             data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, \
-            data_co2ice_south, latitude_north, latitude_eq, latitude_south, binned = \
+                data_co2ice_south, latitude_north, latitude_eq, latitude_south, binned = \
                 satuco2_zonal_mean_with_co2_ice(filename=filename, data=data_target)
 
             print('Display:')
@@ -375,6 +376,16 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print('Display:')
             display_satuco2_thickness_atm_layer(data_ice_layer, data_ice_layer_std,
                                                 save_name=f'satuco2_thickness_polar_region_{local_time}h.png')
+
+        if view_mode == 5:
+            print('Processing data:')
+            data_processed = satuco2_altitude_longitude(filename=filename, data=data_target)
+
+            print('Display:')
+            display_vars_altitude_longitude(filename=filename, data=data_processed, unit='', norm='log', vmin=1,
+                                            vcenter=1, vmax=1000,
+                                            title=f'Saturation of CO2 at 0°N, mean over the year ({local_time}h)',
+                                            save_name=f'satuco2_altitude_longitude_0N_{local_time}h')
 
     elif name_target in ['saturation']:
         print('What do you wanna do?')
