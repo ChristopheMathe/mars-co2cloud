@@ -919,16 +919,39 @@ def temp_gg2011_fig9(filename, data):
 
     del data
 
-    print('T - T(condensation): min = {:.2f}, max = {:.2f}'.format(min(data_final), max(data_final)))
+    print(f'T - T(condensation): min = {min(data_final):.2f}, max = {max(data_final):.2f}')
     return data_final, data_surface_local
 
 
-def temp_stationary_wave(filename, data):
+def temp_stationary_wave(filename, data, local_time):
     data_latitude = get_data(filename=filename, target='latitude')
     data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=0)
 
+    test = input('Do you want performed T-Tcondco2(y/N)?')
+    if test.lower() == 'y':
+        diff_temp = True
+        data_rho = get_data(filename=filename, target='rho')
+        if local_time is not None:
+            data_rho, local_time = extract_at_a_local_time(filename=filename, data=data_rho, local_time=local_time)
+        data_rho, latitudes = slice_data(data=data_rho, dimension_data=data_latitude[:], value=0)
+
+        # Compute condensation temperature of CO2 from pressure, ensure that was zrecasted
+        data_temp_cond_co2 = tcond_co2(data_pressure=None, data_temperature=data, data_rho=data_rho)
+        data_temp_cond_co2 = mean(data_temp_cond_co2, axis=0)
+    else:
+        diff_temp = False
+
+    # average over the year at the same localtime
     data = mean(data, axis=0)
-    return data
+
+    if diff_temp:
+        # subtract condensation temperature of CO2
+        data_final = zeros(data.shape)
+        for lon in range(data_final.shape[1]):
+            data_final[:, lon] = data[:, lon] - data_temp_cond_co2[:, lon]
+        data_final = ma.masked_values(data_final, 0.)
+
+    return data_final, diff_temp
 
 
 def temp_thermal_structure_polar_region(filename, data):

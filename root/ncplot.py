@@ -506,13 +506,21 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
         if view_mode == 8:
             print('Processing data:')
-            data_processed = temp_stationary_wave(filename=filename, data=data_target)
+            data_processed, diff_temp = temp_stationary_wave(filename=filename, data=data_target, local_time=local_time)
 
             print('Display:')
-            display_vars_altitude_longitude(filename=filename, data=data_processed, unit='K', norm='linear', vmin=100,
-                                            vcenter=None, vmax=250,
-                                            title=f'Temperature at 0°N, averaged over 1 year ({local_time}h) ',
-                                            save_name=f'temp_altitude_longitude_0N_{local_time}h')
+            if diff_temp:
+                vmin = 0
+                vmax = 120
+                title = f'T - Tcondco2 at 0°N, averaged over 1 year ({local_time}h) '
+                save_name = f'temp_tcondco2_altitude_longitude_0N_{local_time}h'
+            else:
+                vmin = 100
+                vmax = 250
+                title = f'Temperature at 0°N, averaged over 1 year ({local_time}h) '
+                save_name = f'temp_altitude_longitude_0N_{local_time}h'
+            display_vars_altitude_longitude(filename=filename, data=data_processed, unit='K', norm='linear', vmin=vmin,
+                                            vcenter=None, vmax=vmax, title=title, save_name=save_name)
 
     # ================================================================================================================ #
 
