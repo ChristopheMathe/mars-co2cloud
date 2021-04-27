@@ -682,18 +682,19 @@ def display_riceco2_local_time_evolution(filename, data, local_time, latitude):
     fig, ax = plt.subplots(figsize=(11, 11))
     ax.set_yscale('log')
     ax.set_ylim(1e3, 1e-3)
-    ax.set_xlim(1e-9, 1e-4)
+    ax.set_xlim(1e-1, 1e3)
     ax.set_xscale('log')
     for i in range(data.shape[1]):
-        ax.plot(data[:, i], data_altitude[:], color=cmap(((i+6) % data.shape[1])/data.shape[1]), label=local_time[i])
+        ax.plot(data[:, i], data_altitude[:], color=cmap(((i+6) % data.shape[1])/data.shape[1]),
+                label=f'{local_time[i]:2.0f} h')
 
     ax.legend(loc=0)
-    ax.set_title(f'Radius of CO2 ice particles at {latitude}N, zonal mean')
+    ax.set_title(f'Radius of CO$_2$ ice particles at {latitude:.0f}°N, zonal mean', fontsize=18)
     ax.set_ylabel(f'Altitude ({data_altitude.units})', fontsize=18)
     ax.set_xlabel('Radius particle (µm)', fontsize=18)
     ax.tick_params(axis='both', which='major', labelsize=18)
 
-    plt.savefig(f'riceco2_localtime_evolution_{latitude}N.png', bbox_inches='tight')
+    plt.savefig(f'riceco2_localtime_evolution_{latitude:.0f}N.png', bbox_inches='tight')
     return
 
 
@@ -1609,7 +1610,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     if mvals:
         n_subplot += 1
 
-    cmap = 'inferno'  # 'coolwarm'
+    cmap = 'coolwarm'# 'inferno'  # 'coolwarm'
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
     else:

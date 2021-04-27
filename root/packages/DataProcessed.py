@@ -289,11 +289,11 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
     return zonal_mean, zonal_mean_co2_ice, latitude_selected
 
 
-def riceco2_local_time_evolution(filename, data):
+def riceco2_local_time_evolution(filename, data, latitude):
     data = extract_where_co2_ice(filename=filename, data=data)
 
     data_latitude = get_data(filename=filename, target='latitude')
-    data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=80)
+    data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=latitude)
 
     data = mean(data, axis=2)  # zonal mean
 
@@ -305,7 +305,7 @@ def riceco2_local_time_evolution(filename, data):
     else:
         nb_sol = int(data.shape[0]/12)  # if there is 12 local time!
     data = reshape(data, (nb_sol, 12, data.shape[1])).T
-    data = mean(data, axis=2)
+    data = mean(data, axis=2) * 1e6  # m to µm
 
     return data, latitudes
 
