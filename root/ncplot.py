@@ -2,7 +2,7 @@
 from packages.displays import *
 from packages.ncdump import *
 from os import listdir
-from numpy import mean, logspace, arange, linspace
+from numpy import mean, logspace, arange, linspace, min, max
 from sys import argv
 
 
@@ -420,6 +420,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('     \t 601: compare with another run')
         print('     7: dT zonal mean and altitude of cold pocket, compared to SPICAM data')
         print('     8: stationary wave, years mean at 0°N (fig: alt-lon)')
+        print('     9: stationary wave, at 0°N and -45°E (fig: alt-ls)')
         print('')
 
         if view_mode is None:
@@ -533,6 +534,18 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             display_vars_altitude_longitude(filename=filename, data=data_processed, unit='K', norm='linear', vmin=vmin,
                                             vcenter=None, vmax=vmax, title=title, save_name=save_name)
 
+        if view_mode == 9:
+            print('Processing data:')
+            data_processed = vars_extract_at_grid_point(filename=filename, data=data_target, latitude=0, longitude=-45)
+
+            print('Display:')
+            vmin = 80
+            vmax = 200
+            print(min(data_processed), max(data_processed))
+            title = f'Temperature at [0°N, -45°E] ({local_time}h) '
+            save_name = f'temp_altitude_ls_0N_-45E_{local_time}h'
+            display_vars_altitude_ls(filename=filename, data_1=data_processed,  local_time=local_time,
+                                     norm='linear', unit='K', vmin=vmin, vmax=vmax, title=title, save_name=save_name)
     # ================================================================================================================ #
 
     # 3-Dimension variable

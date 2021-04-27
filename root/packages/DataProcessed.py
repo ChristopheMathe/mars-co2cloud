@@ -1003,10 +1003,20 @@ def temp_cold_pocket(filename, data, local_time):
     return
 
 
+def vars_extract_at_grid_point(filename, data, latitude, longitude):
+    data_latitude = get_data(filename=filename, target='latitude')
+    data_longitude = get_data(filename=filename, target='longitude')
+
+    data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=latitude)
+    data, longitudes = slice_data(data=data, dimension_data=data_longitude[:], value=longitude)
+
+    return data.T
+
+
 def vars_max_value_with_others(filename, data_target):
     shape_data_target = data_target.shape
 
-    print('Get max value of {} in progress...'.format(data_target.name))
+    print(f'Get max value of {data_target.name} in progress...')
     max_mmr, x, y = get_extrema_in_alt_lon(data_target, extrema='max')
     del data_target
     print('Extract other variable at co2_ice max value:')

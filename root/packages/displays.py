@@ -1518,11 +1518,14 @@ def display_vars_altitude_longitude(filename, data, unit, norm, vmin, vcenter, v
     return
 
 
-def display_vars_altitude_ls(filename, data_1, data_2, local_time, title, save_name):
+def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, vmin, vmax, title, save_name, data_2=None):
     from numpy import round
-    from matplotlib.colors import LogNorm
+    from matplotlib.colors import LogNorm, Normalize
 
-    norm = LogNorm(vmin=1e-13, vmax=1e-3)
+    if norm == 'log':
+        norm = LogNorm(vmin=vmin, vmax=vmax)
+    else:
+        norm = Normalize(vmin=vmin, vmax=vmax)
 
     data_altitude = get_data(filename, target='altitude')
 
@@ -1545,16 +1548,17 @@ def display_vars_altitude_ls(filename, data_1, data_2, local_time, title, save_n
 
     fig, axes = plt.subplots(nrows=1, ncols=1, figsize=(11, 11))
     cb = axes.pcolormesh(data_time[:], data_altitude[:], data_1, norm=norm, cmap='plasma', shading='auto')
-    axes.pcolormesh(data_time[:], data_altitude[:], data_2, norm=norm, cmap='binary', shading='auto')
+    if data_2 is not None:
+        axes.pcolormesh(data_time[:], data_altitude[:], data_2, norm=norm, cmap='binary', shading='auto')
 
     if units == 'Pa':
         axes.set_yscale('log')
         axes.invert_yaxis()
     else:
-        axes.set_yticklabels(labels=round(data_altitude[:], 0))
+        axes.set_yticklabels(labels=round(data_altitude[:], 0), fontsize=18)
 
-    cbar = plt.colorbar(cb, ax=axes)
-    cbar.ax.set_title('kg/kg', fontsize=18)
+    cbar = plt.colorbar(cb, ax=axes, extend='max')
+    cbar.ax.set_title(unit, fontsize=18)
 
     axes.set_title(title, fontsize=18)
     axes.set_xlabel('Solar longitude (°)', fontsize=18)
