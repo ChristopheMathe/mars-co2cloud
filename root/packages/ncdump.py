@@ -32,14 +32,15 @@ def get_data(filename, target=None):
 
     data = Dataset(filename, "r", format="NETCDF4")
     if target is None:
-        tmp, tmp, tmp, tmp, variable_target = nc_extract(filename, data, verb=True)
+        tmp, tmp, tmp, list_var, variable_target = nc_extract(filename, data, verb=True)
         if variable_target is None:
             variable_target = input('Select the variable: ')  # TODO check if variable exists
     else:
+        list_var = None
         variable_target = target
 
     data_target = data.variables[variable_target]
-    return data_target
+    return data_target, list_var
 
 
 def nc_extract(filename, nc_fid, verb=True):

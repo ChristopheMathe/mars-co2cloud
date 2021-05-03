@@ -8,6 +8,8 @@ def correction_value(data, operator, threshold):
 
     if operator == 'inf':
         data = ma.masked_where(data <= threshold, data, False)
+    elif operator == 'inf_strict':
+        data = ma.masked_where(data < threshold, data, False)
     elif operator == 'sup':
         data = ma.masked_where(data >= threshold, data, False)
     elif operator == 'eq':
@@ -102,10 +104,10 @@ def convert_sols_to_ls():
 def compute_column_density(filename, data):
     from numpy import zeros, sum
 
-    data_altitude = get_data(filename, target='altitude')
+    data_altitude, list_var = get_data(filename, target='altitude')
 
     if data_altitude.units in ['m', 'km']:
-        data_pressure = get_data(filename, target='pressure')
+        data_pressure, list_var = get_data(filename, target='pressure')
     else:
         data_pressure = data_altitude
 
@@ -166,7 +168,7 @@ def compute_column_density(filename, data):
 
 
 def extract_at_a_local_time(filename, data, local_time=None):
-    data_time = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=filename, target='Time')
 
     data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
 
@@ -212,7 +214,7 @@ def extract_where_co2_ice(filename, data):
     from numpy import nan, ma
 
     # extract co2_ice data
-    data_co2_ice = get_data(filename, target='co2_ice')
+    data_co2_ice, list_var = get_data(filename, target='co2_ice')
     data_where_co2_ice = ma.masked_where(data_co2_ice[:, :, :, :] < 1e-13, data, nan)
     del data_co2_ice
 
@@ -238,17 +240,18 @@ def extract_vars_max_along_lon(data, idx_lon=None):
 
 def gcm_area():
     filename = '/home/mathe/Documents/owncloud/GCM/gcm_aire_phisinit.nc'
-    return get_data(filename=filename, target='aire')
+    data_aire,  list_var = get_data(filename=filename, target='aire')
+    return data_aire
 
 
-def gcm_surface_local(data_zaeroid=None):
+def gcm_surface_local(data_zareoid=None):
     filename = '/home/mathe/Documents/owncloud/GCM/gcm_aire_phisinit.nc'
-    data_phisinit = get_data(filename=filename, target='phisinit')
+    data_phisinit, list_var = get_data(filename=filename, target='phisinit')
 
-    if data_zaeroid is None:
-       data_surface_local = data_phisinit[:, :] / 3.711
+    if data_zareoid is None:
+        data_surface_local = data_phisinit[:, :] / 3.711
     else:
-        data_surface_local = data_zaeroid - data_phisinit[:, :] / 3.711
+        data_surface_local = data_zareoid - data_phisinit[:, :] / 3.711
 
     return data_surface_local
 
@@ -447,13 +450,16 @@ def slice_data(data, dimension_data, value):
     elif len(value) == 2:
         idx1 = (abs(dimension_data[:] - value[0])).argmin()
         idx2 = (abs(dimension_data[:] - value[1])).argmin()
-
         if idx1 > idx2:
             tmp = idx1
             idx1 = idx2
             idx2 = tmp + 1
         else:
             idx2 += 1
+
+        if idx2 == dimension_data.shape[0]:  # Deals with boundaries
+            idx2 -= 1
+
         selected_idx = [idx1, idx2]
 
     else:

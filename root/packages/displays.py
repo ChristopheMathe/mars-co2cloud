@@ -271,8 +271,8 @@ def display_co2_ice_mola(filename, data):
     from matplotlib.colors import LogNorm
     from numpy import logspace
 
-    data_time = get_data(filename=filename, target='Time')
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_time, list_var = get_data(filename=filename, target='Time')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
     mola_latitude, mola_ls, mola_altitude = mola()
     mola_altitude = correction_value(mola_altitude, operator='inf', threshold=0)
     mola_altitude = correction_value(mola_altitude, operator='sup', threshold=1e4)
@@ -298,24 +298,34 @@ def display_co2_ice_mola(filename, data):
 
 def display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
                                                          north_latitude, south_latitude, save_name):
-    data_altitude = get_data(filename=filename, target='altitude')
+    from matplotlib.colors import Normalize, LogNorm
+
+    # norm = Normalize(vmin=0, vmax=1)
+    norm = LogNorm(vmin=1e-13, vmax=1e-3)
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
 
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11))
-    pc = ax[0].contourf(north_latitude, data_altitude[:], distribution_north.T, cmap='Greys')
-    ax[0].set_ylim(0, 20000)
+    pc = ax[0].pcolormesh(north_latitude, data_altitude[:] / 1e3, distribution_north, norm=norm, cmap='Greys',
+                          shading='auto')
+    #    ax[0].set_ylim(0, 20000)
+    ax[0].set_ylim(0, 100)
 
-    ax[1].contourf(south_latitude, data_altitude[:], distribution_south.T, cmap='Greys')
-    ax[1].set_ylim(0, 20000)
+    ax[1].pcolormesh(south_latitude, data_altitude[:] / 1e3, distribution_south, norm=norm, cmap='Greys',
+                     shading='auto')
+    #    ax[1].set_ylim(0, 20000)
+    ax[1].set_ylim(0, 100)
 
     plt.draw()
     p0 = ax[0].get_position().get_points().flatten()
     ax_cbar = fig.add_axes([p0[0], 0.95, p0[2] - p0[0], 0.025])  # left, bottom, width, height
     cbar = plt.colorbar(pc, cax=ax_cbar, orientation='horizontal')
-    cbar.ax.set_title('count')
+    #    cbar.ax.set_title('count')
+    cbar.ax.set_title('kg/kg', fontsize=18)
 
-    fig.text(0.02, 0.5, f'{data_altitude.name} ({data_altitude.units})', ha='center', va='center', rotation='vertical',
-             fontsize=14)
-    fig.text(0.5, 0.06, 'Latitude (°N)', ha='center', va='center', fontsize=14)
+    fig.text(0.02, 0.5, f'{data_altitude.name} above areoid (k{data_altitude.units})', ha='center', va='center',
+             rotation='vertical',
+             fontsize=18)
+    fig.text(0.5, 0.06, 'Latitude (°N)', ha='center', va='center', fontsize=18)
 
     fig.savefig(save_name + '.png', bbox_inches='tight')
     plt.show()
@@ -326,9 +336,9 @@ def display_co2_ice_cloud_evolution_latitude(filename, data, data_satuco2, data_
     from numpy import arange, round, logspace, concatenate, array
     from matplotlib.colors import DivergingNorm, LogNorm
 
-    data_time = get_data(filename, target='Time')
-    data_altitude = get_data(filename, target='altitude')
-    data_latitude = get_data(filename, target='latitude')
+    data_time, list_var = get_data(filename, target='Time')
+    data_altitude, list_var = get_data(filename, target='altitude')
+    data_latitude, list_var = get_data(filename, target='latitude')
     data_latitude, latitude_selected = slice_data(data_latitude, dimension_data=data_latitude,
                                                   value=[latitude_selected[0], latitude_selected[-1]])
     data = data[x_time, :, :]
@@ -390,7 +400,7 @@ def display_co2_ice_max_longitude_altitude(filename, name, max_mmr, max_alt, max
     from matplotlib.colors import LogNorm, DivergingNorm
     from numpy import arange, logspace
 
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
 
     # PLOT
     fig, ax = plt.subplots(nrows=6, ncols=1, figsize=(11, 30))
@@ -464,7 +474,7 @@ def display_co2_ice_density_column_evolution_polar_region(filename, data, time, 
     from matplotlib.colors import LogNorm
     import cartopy.crs as crs
 
-    data_longitude = get_data(filename=filename, target='longitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
 
     plate_carree = crs.PlateCarree(central_longitude=0)
 
@@ -510,41 +520,46 @@ def display_co2_ice_density_column_evolution_polar_region(filename, data, time, 
     return
 
 
-def display_co2_ice_localtime_ls(filename, data):
-    from matplotlib.colors import LogNorm
+def display_co2_ice_localtime_ls(filename, data, title, unit, norm, vmin, vmax, save_name):
+    from matplotlib.colors import LogNorm, Normalize
 
-    data_time = get_data(filename=filename, target='Time')
+    if norm == 'log':
+        norm = LogNorm(vmin=vmin, vmax=vmax)
+    else:
+        norm = Normalize(vmin=vmin, vmax=vmax)
+
+    data_time, list_var = get_data(filename=filename, target='Time')
     data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=0)
 
     if data_time.units != 'deg':
-        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
         data_time = data_ls[idx::len(data_local_time)]
     else:
         data_time = data_time[idx::len(data_local_time)]
 
     data, data_time = linearize_ls(data=data, data_ls=data_time)
 
-    data = correction_value(data=data, operator='inf', threshold=1e-13)
-    data[data.mask] = 0
-    ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+    # if satuco2 !
+    # data = correction_value(data=data, operator='inf_strict', threshold=1)
+    # data[data.mask] = None
 
+    ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(11, 11))
-    ctf = ax.pcolormesh(data_time[:], data_local_time[:], data, norm=LogNorm(vmin=1e-4, vmax=1),
-                        cmap="viridis", shading='auto')
+    ctf = ax.pcolormesh(data_time[:], data_local_time[:], data, norm=norm, cmap="viridis", shading='auto')
     cbar = fig.colorbar(ctf)
-    cbar.ax.set_title('kg.m$^{-2}$', fontsize=18)
+    cbar.ax.set_title(unit, fontsize=18)
     cbar.ax.tick_params(labelsize=18)
 
     ax.set_facecolor('white')
 
-    ax.set_title('CO2 ice density column at 0°N', fontsize=18)
+    ax.set_title(title, fontsize=18)
     ax.set_xlabel('Solar longitude (°)', fontsize=18)
     ax.set_ylabel('Local time (h)', fontsize=18)
     ax.set_xticks(ndx)
     ax.set_xticklabels(axis_ls, fontsize=18)
     ax.set_yticks(data_local_time)
     ax.set_yticklabels(data_local_time, fontsize=18)
-    plt.savefig('h2o_ice_zonal_mean_density_column_localtime_evolution_0N.png', bbox_inches='tight')
+    plt.savefig(f'{save_name}.png', bbox_inches='tight')
     return
 
 
@@ -559,8 +574,8 @@ def display_emis_polar_projection_garybicas2020_figs11_12(filename, data, time, 
 
     plate_carree = crs.PlateCarree(central_longitude=0)
 
-    data_longitude = get_data(filename=filename, target='longitude')
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
 
     # Slice data in polar regions
     latitude_np, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[60, 90])
@@ -636,8 +651,8 @@ def display_riceco2_global_mean(filename, list_data):
     list_data[0] = mean(list_data[0], axis=2)
     list_data[1] = mean(list_data[1], axis=2)
 
-    data_altitude = get_data(filename=filename, target='altitude')
-    data_time = get_data(filename, target='Time')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_time, list_var = get_data(filename, target='Time')
 
     fig, ax = plt.subplots(nrows=2, ncols=2, sharey='col', figsize=(8, 11))
     fig.subplots_adjust(wspace=0, hspace=0)
@@ -676,16 +691,16 @@ def display_riceco2_global_mean(filename, list_data):
 
 def display_riceco2_local_time_evolution(filename, data, local_time, latitude):
     from matplotlib.cm import get_cmap
-    data_altitude = get_data(filename=filename, target='altitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
 
     cmap = get_cmap('hsv')
     fig, ax = plt.subplots(figsize=(11, 11))
     ax.set_yscale('log')
     ax.set_ylim(1e3, 1e-3)
-    ax.set_xlim(1e-1, 1e3)
+    ax.set_xlim(1e-3, 1e2)
     ax.set_xscale('log')
     for i in range(data.shape[1]):
-        ax.plot(data[:, i], data_altitude[:], color=cmap(((i+6) % data.shape[1])/data.shape[1]),
+        ax.plot(data[:, i], data_altitude[:], color=cmap(((i + 6) % data.shape[1]) / data.shape[1]),
                 label=f'{local_time[i]:2.0f} h')
 
     ax.legend(loc=0)
@@ -698,21 +713,25 @@ def display_riceco2_local_time_evolution(filename, data, local_time, latitude):
     return
 
 
-def display_riceco2_max_local_time_evolution(filename, data_max_radius, data_max_alt, local_time, latitude):
-
-    data_altitude = get_data(filename=filename, target='altitude')
+def display_riceco2_max_local_time_evolution(filename, data_max_radius, data_max_alt, data_min_radius, data_min_alt,
+                                             data_mean_radius, data_mean_alt, local_time, latitude):
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
 
     fig, ax = plt.subplots(figsize=(11, 11))
-    ax.plot(local_time, data_max_radius, color='black', linestyle='-')
+
+    ax.plot(local_time, data_mean_radius, color='black', linestyle='-', label='mean')
+    ax.fill_between(local_time, data_min_radius, data_max_radius, color='black', alpha=0.3)
     ax.set_yscale('log')
-    ax.set_ylim(1e-9, 1e-4)
+    ax.set_ylim(1e-3, 1e2)
 
     ax2 = ax.twinx()
-    ax2.plot(local_time, data_max_alt, color='red', linestyle='--')
+    ax2.plot(local_time, data_mean_alt, color='red', linestyle='-', label='alt-mean')
+    ax2.fill_between(local_time, data_min_alt, data_max_alt, color='red', alpha=0.3)
+
     ax2.set_yscale('log')
     ax2.set_ylim(1e3, 1e-3)
 
-    ax.set_title(f'Max radius of CO2 ice particles at {latitude}N\n with the location of the max (red)', fontsize=18)
+    ax.set_title(f'Radius of CO2 ice particles at {latitude}N\n with their location (red)', fontsize=18)
     ax.set_ylabel(f'Radius particle (µm)', fontsize=18)
     ax.tick_params(axis='both', which='major', labelsize=18)
 
@@ -733,11 +752,11 @@ def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None):
     from matplotlib.colors import Normalize
 
     norm = Normalize(vmin=0, vmax=10)
-    data_latitude = get_data(filename=filename, target='latitude')
-    data_time = get_data(filename=filename, target='Time')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_time, list_var = get_data(filename=filename, target='Time')
 
     if data_time.units != 'deg':
-        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
         data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
         data_time = data_ls[idx::len(data_local_time)]
 
@@ -762,10 +781,15 @@ def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None):
     cbar.ax.tick_params(labelsize=18)
 
     ax.tick_params(axis='both', which='major', labelsize=18)
-    ax.set_title(f'Zonal mean of top cloud altitude ({local_time}h)', fontsize=18)
+    ax.set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=18)
     ax.set_xlabel('Solar Longitude (°)', fontsize=18)
     ax.set_ylabel('Latitude (°N)', fontsize=18)
-    plt.savefig(f'top_cloud_altitude_comparable_to_mola_{local_time}h.png', bbox_inches='tight')
+    if len(local_time) == 1:
+        ax.set_title(f'Zonal mean of top cloud altitude, at {local_time:0.f}h', fontsize=18)
+        plt.savefig(f'top_cloud_altitude_comparable_to_mola_{local_time:0.f}h.png', bbox_inches='tight')
+    else:
+        ax.set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=18)
+        plt.savefig(f'top_cloud_altitude_comparable_to_mola_diurnal_mean.png', bbox_inches='tight')
     plt.show()
     return
 
@@ -777,39 +801,39 @@ def display_satuco2_thickness_atm_layer(data, data_std, save_name):
     # data from Fig 9 in Hu et al., 2012
 
     north_pole_my28 = array(([0.5, 0.95, 1.4],
-                        [0.6, 0.91, 1.3],
-                        [0.9, 1.1, 1.38],
-                        [0.2, 0.7, 1.15],
-                        [0.46, 1.01, 1.58],
-                        [0.45, 0.98, 1.50],
-                        [0.52, 1.18, 1.79],
-                        [0.63, 1.19, 1.63],
-                        [0.63, 1.36, 2.07],
-                        [0.59, 1.31, 2.06],
-                        [0.75, 1.59, 2.4],
-                        [0.82, 1.85, 2.85],
-                        [0.42, 0.9, 1.3],
-                        [1.2, 2.89, 4.5],
-                        [1.52, 3.12, 4.7],
-                        [0.85, 2.22, 3.63],
-                        [0.52, 0.88, 1.20],
-                        [0.7, 0.99, 1.28],
-                        [0.8, 1.2, 1.6],
-                        [0.82, 1.19, 1.50],
-                        [0.86, 1.19, 1.46],
-                        [0.7, 1.12, 1.59],
-                        [0.65, 1.48, 2.28],
-                        [0.73, 1.77, 2.78],
-                        [0.89, 2.08, 3.25],
-                        [1., 2.21, 3.45],
-                        [1.09, 2.41, 3.76],
-                        [1.04, 2.29, 3.5],
-                        [1.08, 2.15, 3.21],
-                        [1.20, 2.30, 3.40],
-                        [1.18, 2.23, 3.30],
-                        [0.81, 1.38, 1.90],
-                        [0.71, 1.10, 1.47],
-                        )) * 5 / 1.1  # 1.1 cm pour 5 km
+                             [0.6, 0.91, 1.3],
+                             [0.9, 1.1, 1.38],
+                             [0.2, 0.7, 1.15],
+                             [0.46, 1.01, 1.58],
+                             [0.45, 0.98, 1.50],
+                             [0.52, 1.18, 1.79],
+                             [0.63, 1.19, 1.63],
+                             [0.63, 1.36, 2.07],
+                             [0.59, 1.31, 2.06],
+                             [0.75, 1.59, 2.4],
+                             [0.82, 1.85, 2.85],
+                             [0.42, 0.9, 1.3],
+                             [1.2, 2.89, 4.5],
+                             [1.52, 3.12, 4.7],
+                             [0.85, 2.22, 3.63],
+                             [0.52, 0.88, 1.20],
+                             [0.7, 0.99, 1.28],
+                             [0.8, 1.2, 1.6],
+                             [0.82, 1.19, 1.50],
+                             [0.86, 1.19, 1.46],
+                             [0.7, 1.12, 1.59],
+                             [0.65, 1.48, 2.28],
+                             [0.73, 1.77, 2.78],
+                             [0.89, 2.08, 3.25],
+                             [1., 2.21, 3.45],
+                             [1.09, 2.41, 3.76],
+                             [1.04, 2.29, 3.5],
+                             [1.08, 2.15, 3.21],
+                             [1.20, 2.30, 3.40],
+                             [1.18, 2.23, 3.30],
+                             [0.81, 1.38, 1.90],
+                             [0.71, 1.10, 1.47],
+                             )) * 5 / 1.1  # 1.1 cm pour 5 km
 
     north_pole_my29 = array(([0.6, 1.1, 1.5],
                              [0.7, 1.3, 1.83],
@@ -841,48 +865,47 @@ def display_satuco2_thickness_atm_layer(data, data_std, save_name):
                              )) * 5 / 1.1
 
     south_pole_my29 = array(([0.63, 0.98, 1.30],
-                        [0.9, 1.42, 1.99],
-                        [1.3, 1.95, 2.60],
-                        [1.43, 2.20, 2.89],
-                        [1.51, 2.40, 3.25],
-                        [1.40, 2.35, 3.28],
-                        [1.49, 2.40, 3.32],
-                        [1.52, 2.58, 3.60],
-                        [1.69, 2.70, 3.72],
-                        [1.68, 2.70, 3.75],
-                        [2.10, 3.40, 4.70],
-                        [2.23, 3.56, 4.85],
-                        [2.18, 3.47, 4.72],
-                        [2.49, 3.76, 5.05],
-                        [2.40, 3.70, 5.00],
-                        [2.30, 3.55, 4.82],
-                        [2.30, 3.53, 4.80],
-                        [2.21, 3.50, 4.73],
-                        [2.10, 3.30, 4.50],
-                        [1.81, 2.95, 4.08],
-                        [2.08, 3.23, 4.39],
-                        [2.19, 3.35, 4.51],
-                        [2.23, 3.39, 4.51],
-                        [2.22, 3.38, 4.50],
-                        [2.15, 3.28, 4.29],
-                        [2.00, 3.08, 4.13],
-                        [1.18, 2.89, 3.88],
-                        [1.92, 2.94, 3.94],
-                        [2.30, 3.32, 4.36],
-                        [1.28, 2.11, 2.94],
-                        [1.21, 2.10, 2.95],
-                        [0.92, 1.70, 2.49],
-                        [0.77, 1.50, 2.22],
-                        [0.18, 0.68, 1.12],
-                        [0.12, 0.22, 0.32],
-                        )) * 5 / 0.95  # 0.95 cm pour 5 km
+                             [0.9, 1.42, 1.99],
+                             [1.3, 1.95, 2.60],
+                             [1.43, 2.20, 2.89],
+                             [1.51, 2.40, 3.25],
+                             [1.40, 2.35, 3.28],
+                             [1.49, 2.40, 3.32],
+                             [1.52, 2.58, 3.60],
+                             [1.69, 2.70, 3.72],
+                             [1.68, 2.70, 3.75],
+                             [2.10, 3.40, 4.70],
+                             [2.23, 3.56, 4.85],
+                             [2.18, 3.47, 4.72],
+                             [2.49, 3.76, 5.05],
+                             [2.40, 3.70, 5.00],
+                             [2.30, 3.55, 4.82],
+                             [2.30, 3.53, 4.80],
+                             [2.21, 3.50, 4.73],
+                             [2.10, 3.30, 4.50],
+                             [1.81, 2.95, 4.08],
+                             [2.08, 3.23, 4.39],
+                             [2.19, 3.35, 4.51],
+                             [2.23, 3.39, 4.51],
+                             [2.22, 3.38, 4.50],
+                             [2.15, 3.28, 4.29],
+                             [2.00, 3.08, 4.13],
+                             [1.18, 2.89, 3.88],
+                             [1.92, 2.94, 3.94],
+                             [2.30, 3.32, 4.36],
+                             [1.28, 2.11, 2.94],
+                             [1.21, 2.10, 2.95],
+                             [0.92, 1.70, 2.49],
+                             [0.77, 1.50, 2.22],
+                             [0.18, 0.68, 1.12],
+                             [0.12, 0.22, 0.32],
+                             )) * 5 / 0.95  # 0.95 cm pour 5 km
 
     north_pole_ls_my28 = 192.5 + arange(33) * 5
     north_pole_ls_my29 = 197.5 + arange(27) * 5
     south_pole_ls_my29 = 12.5 + arange(35) * 5
 
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11))
-    print(data.shape[1], data.shape, data_std.shape, north_pole_ls_my29.shape, north_pole_my29)
     ax[0].set_title('North pole above 60°N', fontsize=18)
     ax[0].errorbar(arange(data.shape[1]) * 5, data[0, :] / 1e3,
                    yerr=data_std[0, :] / 1e3,
@@ -910,6 +933,8 @@ def display_satuco2_thickness_atm_layer(data, data_std, save_name):
     ax[1].legend(loc='best')
     ax[1].tick_params(axis='both', which='major', labelsize=18)
 
+    ax[0].set_ylim(0, 35)
+    ax[1].set_ylim(0, 35)
     fig.text(0.06, 0.5, 'Thickness (km)', ha='center', va='center', rotation='vertical', fontsize=18)
     fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=18)
 
@@ -924,17 +949,17 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
     from numpy import array, round, ones
 
     # Info latitude
-    data_latitude = get_data(filename, target='latitude')
+    data_latitude, list_var = get_data(filename, target='latitude')
     list_latitudes = [latitude_north, latitude_eq, latitude_south]
 
     # Get latitude range between value-1 et value+1
     data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-    data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
+        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
 
     list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
                 data_maven_limb, data_spicam, data_tesmoc, data_themis]
 
-    data_altitude = get_data(filename, target='altitude')
+    data_altitude, list_var = get_data(filename, target='altitude')
     data_zareoid = None
     altitude_unit = None
     altitude_name = None
@@ -952,10 +977,10 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
     elif data_altitude.units == 'Pa':
         altitude_unit = data_altitude.units
         altitude_name = 'Pressure'
-        data_zareoid = get_data(filename, target='zareoid')
+        data_zareoid, list_var = get_data(filename, target='zareoid')
         data_surface_local = gcm_surface_local(data_zareoid[:, :, :, :])
 
-    data_time = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=filename, target='Time')
     if binned.lower() == 'y' and data_zareoid is not None:
         data_time = data_time[::60]  # 5°Ls binned
         data_zareoid = data_zareoid[::12, :, :, :]
@@ -1049,23 +1074,23 @@ def display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north
     from numpy import array, round, ones
 
     # Info latitude
-    data_latitude = get_data(filename, target='latitude')
+    data_latitude, list_var = get_data(filename, target='latitude')
     list_latitudes = [latitude_north, latitude_south]
 
-    data_time = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=filename, target='Time')
     list_time_range = array(([270, 300], [0, 30]))
 
     # Info longitude
-    data_longitude = get_data(filename, target='longitude')
+    data_longitude, list_var = get_data(filename, target='longitude')
 
     # Get latitude range between value-1 et value+1
     data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-    data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
+        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
 
     list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
                 data_maven_limb, data_spicam, data_tesmoc, data_themis]
 
-    data_altitude = get_data(filename, target='altitude')
+    data_altitude, list_var = get_data(filename, target='altitude')
     data_surface_local = None
     ticks_altitude = None
     if data_altitude.units == 'm':
@@ -1080,7 +1105,7 @@ def display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north
     else:
         altitude_unit = data_altitude.units
         altitude_name = 'Pressure'
-        data_zareoid = get_data(filename, target='zareoid')
+        data_zareoid, list_var = get_data(filename, target='zareoid')
         data_surface_local = gcm_surface_local(data_zareoid[:, :, :, :])
 
     norm_satu = None  # TwoSlopeNorm(vmin=0, vcenter=1.0, vmax=100)
@@ -1257,7 +1282,7 @@ def display_satuco2_altitude_latitude(data, data_altitude, data_latitude):
 def display_temp_gg2011_fig6(filename, data, data_localtime):
     from numpy import arange
 
-    data_altitude = get_data(filename=filename, target='altitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
 
     cmap = colormap_idl_rainbow_plus_white()
 
@@ -1276,7 +1301,7 @@ def display_temp_gg2011_fig6(filename, data, data_localtime):
 
 
 def display_temp_gg2011_fig7(filename, data, data_altitude):
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
 
     cmap = colormap_idl_rainbow_plus_white()
 
@@ -1298,8 +1323,8 @@ def display_temp_gg2011_fig7(filename, data, data_altitude):
 
 
 def display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides):
-    data_latitude = get_data(filename=filename, target='latitude')
-    data_altitude = get_data(filename=filename, target='altitude')[:]
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')[:]
 
     fig, ax = plt.subplots(nrows=2, figsize=(8, 11))
 
@@ -1328,7 +1353,7 @@ def display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides):
 
 
 def display_temp_gg2011_fig9(filename, data, data_altitude):
-    data_longitude = get_data(filename=filename, target='longitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
 
     cmap = colormap_idl_rainbow_plus_white()
 
@@ -1350,8 +1375,8 @@ def display_temp_gg2011_fig9(filename, data, data_altitude):
 def display_temp_structure_polar_region(filename, data_north, data_south, norm, levels, unit, save_name):
     cmap = 'coolwarm'
 
-    data_altitude = get_data(filename=filename, target='altitude')
-    data_time = get_data(filename=filename, target='Time')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_time, list_var = get_data(filename=filename, target='Time')
 
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(8, 11))
 
@@ -1380,13 +1405,11 @@ def display_temp_structure_polar_region(filename, data_north, data_south, norm, 
 
 
 def display_temp_cold_pocket_spicam(filename, data, local_time, title, save_name):
-    from matplotlib.colors import DivergingNorm
+    data_altitude, list_var = get_data(filename, target='altitude')
 
-    data_altitude = get_data(filename, target='altitude')
-
-    data_time = get_data(filename, target='Time')
+    data_time, list_var = get_data(filename, target='Time')
     if data_time.units != 'deg':
-        data_time = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_time, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
 
     data_time, local_time = extract_at_a_local_time(filename=filename, data=data_time, local_time=local_time)
 
@@ -1423,8 +1446,8 @@ def display_vars_altitude_variable(data, data_latitude, data_pressure, title):
 
 
 def display_vars_altitude_latitude(filename, data, unit, title, save_name):
-    data_altitude = get_data(filename=filename, target='altitude')
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
 
     if unit == 'pr.µm':
         data = data * 1e3  # convert kg/m2 to pr.µm
@@ -1452,7 +1475,7 @@ def display_vars_altitude_localtime(filename, data, data_localtime, title, unit,
     from numpy import arange, zeros
     from matplotlib.colors import TwoSlopeNorm
 
-    data_altitude = get_data(filename=filename, target='altitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
 
     fig = plt.figure(figsize=(8, 11))
     if unit == '':
@@ -1479,8 +1502,8 @@ def display_vars_altitude_localtime(filename, data, data_localtime, title, unit,
 def display_vars_altitude_longitude(filename, data, unit, norm, vmin, vcenter, vmax, title, save_name):
     from matplotlib.colors import TwoSlopeNorm, Normalize, LogNorm
 
-    data_altitude = get_data(filename=filename, target='altitude')
-    data_longitude = get_data(filename=filename, target='longitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
 
     if data_altitude.units == 'Pa':
         yscale = 'log'
@@ -1528,7 +1551,7 @@ def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, vmin, vma
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
 
-    data_altitude = get_data(filename, target='altitude')
+    data_altitude, list_var = get_data(filename, target='altitude')
 
     if data_altitude.units == 'm':
         units = 'km'
@@ -1541,9 +1564,9 @@ def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, vmin, vma
         units = data_altitude.units
         altitude_name = 'Pressure'
 
-    data_time = get_data(filename, target='Time')
+    data_time, list_var = get_data(filename, target='Time')
     if data_time.units != 'deg':
-        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
         data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
         data_time = data_ls[idx::len(data_local_time)]
 
@@ -1558,7 +1581,7 @@ def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, vmin, vma
     else:
         axes.set_yticklabels(labels=round(data_altitude[:], 0), fontsize=18)
 
-    cbar = plt.colorbar(cb, ax=axes, extend='max')
+    cbar = plt.colorbar(cb, ax=axes)
     cbar.ax.set_title(unit, fontsize=18)
 
     axes.set_title(title, fontsize=18)
@@ -1576,8 +1599,8 @@ def display_vars_latitude_longitude(filename, data, unit, norm, vmin, vmax, titl
         norm = LogNorm(vmin=vmin, vmax=vmax)
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
-    data_longitude = get_data(filename=filename, target='longitude')
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
 
     # PLOT
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(16, 8))
@@ -1610,17 +1633,17 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     if mvals:
         n_subplot += 1
 
-    cmap = 'coolwarm'# 'inferno'  # 'coolwarm'
+    cmap = 'inferno'  # 'coolwarm'
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
 
-    data_time = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=filename, target='Time')
     data_local_time, idx, stats_file = check_local_time(data_time=data_time[:], selected_time=localtime_selected)
 
     if data_time.units != 'deg':
-        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
         data_time = data_ls[idx::len(data_local_time)]
     else:
         data_time = data_time[idx::len(data_local_time)]
@@ -1628,9 +1651,9 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     data, data_time = linearize_ls(data=data, data_ls=data_time)
     ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
 
-    data_altitude = get_data(filename, target='altitude')
+    data_altitude, list_var = get_data(filename, target='altitude')
 
-    data_latitude = get_data(filename, target='latitude')
+    data_latitude, list_var = get_data(filename, target='latitude')
     if latitude_selected is not None:
         data_latitude, latitude_selected = slice_data(data_latitude, dimension_data=data_latitude,
                                                       value=[latitude_selected[0], latitude_selected[-1]])
@@ -1733,7 +1756,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     if observation:
         # Get latitude range between entre value-1 et value+1
         data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
+            data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
 
         list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
                     data_maven_limb, data_spicam, data_tesmoc, data_themis]
@@ -1768,19 +1791,71 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     return
 
 
+def display_vars_localtime_longitude(filename, data, norm, vmin, vmax, unit, title, save_name):
+    from matplotlib.colors import Normalize, LogNorm
+
+    if norm == 'log':
+        norm = LogNorm(vmin=vmin, vmax=vmax)
+    else:
+        norm = Normalize(vmin=vmin, vmax=vmax)
+
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
+    data_time, list_var = get_data(filename=filename, target='Time')
+    data_local_time, tmp, tmp = check_local_time(data_time=data_time[:], selected_time=None)
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(11, 11))
+
+    pcm = ax.pcolormesh(data_longitude[:], data_local_time[:], data, norm=norm, cmap='plasma', shading='auto')
+    cbar = fig.colorbar(pcm)
+    cbar.ax.set_title(unit, fontsize=18)
+    ax.set_title(title, fontsize=18)
+    ax.set_yticks(data_local_time[:])
+    ax.set_yticklabels(data_local_time[:], fontsize=18)
+    ax.tick_params(axis='both', which='major', labelsize=18)
+    ax.set_ylabel('Local time (h)', fontsize=18)
+    ax.set_xlabel('Longitude (°E)', fontsize=18)
+    fig.savefig(f'{save_name}.png', bbox_inches='tight')
+    return
+
+
+def display_vars_ls_longitude(filename, data, norm, vmin, vmax, local_time, unit, title, save_name):
+    from matplotlib.colors import Normalize, LogNorm
+
+    if norm == 'log':
+        norm = LogNorm(vmin=vmin, vmax=vmax)
+    else:
+        norm = Normalize(vmin=vmin, vmax=vmax)
+
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
+    data_time, list_var = get_data(filename=filename, target='Time')
+    data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
+    data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+    data_time = data_ls[idx::len(data_local_time)]
+
+    data, interp_time = linearize_ls(data=data, data_ls=data_time)
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(11, 11))
+
+    pcm = ax.pcolormesh(data_longitude[:], interp_time[:], data.T, norm=norm, cmap='plasma', shading='auto')
+    cbar = fig.colorbar(pcm)
+    cbar.ax.set_title(unit, fontsize=18)
+    ax.set_title(title, fontsize=18)
+    ax.set_yticks(interp_time[::45])
+    ax.set_yticklabels(interp_time[::45], fontsize=18)
+    ax.tick_params(axis='both', which='major', labelsize=18)
+    ax.set_ylabel('Solar longitude (°)', fontsize=18)
+    ax.set_xlabel('Longitude (°E)', fontsize=18)
+    fig.savefig(f'{save_name}.png', bbox_inches='tight')
+
+    return
+
+
 def display_vars_1fig_profiles(filename, data, latitude_selected, x_min, x_max, x_label, x_scale='linear',
                                y_scale='linear', second_var=None, x_min2=None, x_max2=None, x_label2=None,
                                x_scale2=None, title='', save_name='profiles', title_option=None):
     from numpy import arange
 
-    data_time = get_data(filename, target='Time')
-
-    if data_time.units == 'degrees':
-        time_unit = u'° Ls'
-    else:
-        time_unit = 'sols'
-
-    data_altitude = get_data(filename, target='altitude')
+    data_altitude, list_var = get_data(filename, target='altitude')
     if data_altitude.units == 'm':
         units = 'km'
         altitude_name = 'Altitude'
@@ -1793,7 +1868,6 @@ def display_vars_1fig_profiles(filename, data, latitude_selected, x_min, x_max, 
     else:
         units = data_altitude.units
         altitude_name = 'Pressure'
-
     for i, d, s in zip(arange(len(save_name)), data, save_name):
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 11))
         # plot variable 1
@@ -1801,7 +1875,7 @@ def display_vars_1fig_profiles(filename, data, latitude_selected, x_min, x_max, 
             for j in range(d.shape[1]):
                 ax.set_xscale(x_scale)
                 ax.set_yscale(y_scale)
-                ax.plot(d[:, j], data_altitude[:], label='%.2f°N' % (latitude_selected[j]))
+                ax.plot(d[:, j], data_altitude[:], label=f'{latitude_selected[j]:.2f}°N')
         else:
             ax.set_xscale(x_scale)
             ax.set_yscale(y_scale)
@@ -1821,8 +1895,8 @@ def display_vars_1fig_profiles(filename, data, latitude_selected, x_min, x_max, 
         ax.set_xlabel(x_label)
         ax.set_ylabel(altitude_name + ' (' + units + ')')
         if title_option is not None:
-            ax.set_title(f'{title}, and {title_option[i][0]:.0f} - {title_option[i][1]:.0f} {time_unit}')
-        fig.savefig(s + '.png', bbox_inches='tight')
+            ax.set_title(f'{title}, and {title_option[i]}')
+        fig.savefig(f'{s}.png', bbox_inches='tight')
         plt.close(fig)
 
     create_gif(save_name)
@@ -1830,7 +1904,7 @@ def display_vars_1fig_profiles(filename, data, latitude_selected, x_min, x_max, 
 
 
 def display_vars_2fig_profile(filename, data1, data2):
-    data_time = get_data(filename, target='Time')
+    data_time, list_var = get_data(filename, target='Time')
 
     fig, ax = plt.subplots(nrows=2, ncols=1, sharex='row', sharey='col', figsize=(11, 11))
 
@@ -1849,8 +1923,8 @@ def display_vars_2fig_profile(filename, data1, data2):
 def display_vars_4figs_polar_projection(filename, data_riceco2):
     from cartopy import crs
 
-    longitudes = get_data(filename, target='longitude')
-    latitudes = get_data(filename, target='latitude')
+    longitudes, list_var = get_data(filename, target='longitude')
+    latitudes, list_var = get_data(filename, target='latitude')
 
     plt.figure(figsize=(3, 3))
     ax1 = plt.subplot(1, 1, 1, projection=crs.Orthographic())
@@ -1859,7 +1933,7 @@ def display_vars_4figs_polar_projection(filename, data_riceco2):
 
 
 def display_vars_stats_zonal_mean(filename, data):
-    data_latitude = get_data(filename, target='latitude')
+    data_latitude, list_var = get_data(filename, target='latitude')
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 11))
     ax.set_title('Zonal mean of surface emissivity at 14h')
@@ -1876,8 +1950,8 @@ def display_vars_stats_zonal_mean(filename, data):
 def display_vars_polar_projection(filename, data_np, data_sp, levels, unit, cmap, sup_title, save_name):
     import cartopy.crs as crs
 
-    data_longitude = get_data(filename=filename, target='longitude')
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
 
     latitude_np, tmp = slice_data(data=data_latitude, dimension_data=data_latitude, value=[60, 90])
     latitude_sp, tmp = slice_data(data=data_latitude, dimension_data=data_latitude, value=[-60, -90])
@@ -1934,8 +2008,8 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, le
 
     plate_carree = crs.PlateCarree(central_longitude=0)
 
-    data_longitude = get_data(filename=filename, target='longitude')
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
 
     # Slice data in polar regions
     latitude_np, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[60, 90])

@@ -1,21 +1,21 @@
-from numpy import mean, abs, min, max, zeros, where, concatenate, arange, unravel_index, argmax, array, \
+from numpy import mean, abs, min, max, zeros, where, concatenate, arange, unravel_index, argmin, argmax, array, \
     count_nonzero, std, append, asarray, power, ma, reshape
 from .lib_function import *
 from .ncdump import get_data, getfilename
-from os import mkdir
+from os import mkdir, path
 from sys import exit
 
 
 def co2ice_thickness_atm_layer(filename, data):
-    data_altitude = get_data(filename=filename, target='altitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
     if data_altitude.units in ['Pa']:
-        data_altitude = get_data(filename=filename, target='zareoid')
+        data_altitude, list_var = get_data(filename=filename, target='zareoid')
 
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
     data_north = slice_data(data, dimension_data=data_latitude[:], value=[60, 90])
     data_south = slice_data(data, dimension_data=data_latitude[:], value=[-60, -90])
 
-    data_time = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=filename, target='Time')
     # bin ls to 5°
     if max(data_time[:]) < 360:
         ls_bin = arange(0, 365, 5)
@@ -49,24 +49,29 @@ def co2ice_thickness_atm_layer(filename, data):
 
 
 def co2ice_polar_cloud_distribution(filename, data, normalization, local_time):
-    data_altitude = get_data(filename=filename, target='altitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
     if data_altitude.long_name != 'Altitude above areoid':
         print('Data did not zrecasted above the areoid')
         print(f'\tCurrent: {data_altitude.long_name}')
         exit()
 
     # sliced data on latitude region
-    data_latitude = get_data(filename, target='latitude')
+    data_latitude, list_var = get_data(filename, target='latitude')
     data_north, latitude_north = slice_data(data, dimension_data=data_latitude, value=[60, 90])
     data_south, latitude_south = slice_data(data, dimension_data=data_latitude, value=[-60, -90])
     del data
 
+    latitude_north = data_latitude[latitude_north[0]: latitude_north[1]]
+    latitude_south = data_latitude[latitude_south[0]: latitude_south[1]]
     # sliced data between 104 - 360°Ls time to compare with Fig8 of Neumann et al. 2003
-    data_time = get_data(filename, target='Time')
+    data_time, list_var = get_data(filename, target='Time')
     if data_time.units != 'deg':
-        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
-        data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=local_time)
-        data_time = data_ls[idx::len(data_local_time)]
+        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        if len(local_time) == 1:
+            data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=local_time)
+            data_time = data_ls[idx::len(data_local_time)]
+        else:
+            data_time = data_ls[:]
     data_north, time_selected = slice_data(data_north, dimension_data=data_time, value=[104, 360])
     data_south, time_selected = slice_data(data_south, dimension_data=data_time, value=[104, 360])
 
@@ -87,7 +92,7 @@ def co2ice_polar_cloud_distribution(filename, data, normalization, local_time):
 
 
 def co2ice_cloud_evolution(filename, data):
-    data_latitude = get_data(filename, target='latitude')
+    data_latitude, list_var = get_data(filename, target='latitude')
 
     print('Select the latitude region (°N):')
     lat_1 = float(input('   latitude 1: '))
@@ -99,26 +104,26 @@ def co2ice_cloud_evolution(filename, data):
     idx_max = asarray(idx_max)
     data = data[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
 
-    data_satuco2 = get_data(filename, 'satuco2')
+    data_satuco2, list_var = get_data(filename, 'satuco2')
     data_satuco2, latitude_selected = slice_data(data_satuco2, dimension_data=data_latitude[:], value=[lat_1, lat_2])
     data_satuco2 = data_satuco2[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
 
-    data_temp = get_data(filename, 'temp')
+    data_temp, list_var = get_data(filename, 'temp')
     data_temp, latitude_selected = slice_data(data_temp, dimension_data=data_latitude[:], value=[lat_1, lat_2])
     data_temp = data_temp[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
 
-    data_riceco2 = get_data(filename, 'riceco2')
+    data_riceco2, list_var = get_data(filename, 'riceco2')
     data_riceco2, latitude_selected = slice_data(data_riceco2, dimension_data=data_latitude[:], value=[lat_1, lat_2])
     data_riceco2 = data_riceco2[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
 
-    data_time = get_data(filename, target='Time')
+    data_time, list_var = get_data(filename, target='Time')
     print(f'the maximum is at: {data_time[idx_max[0]] * 24 % 24}h local time.')
 
     return data, data_satuco2, data_temp, data_riceco2, idx_max, latitude_selected
 
 
 def co2ice_cloud_localtime_along_ls(filename, data):
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
     data, latitude = slice_data(data=data, dimension_data=data_latitude[:], value=0)
 
     data, altitude_limit, altitude_min, altitude_max, altitude_units = compute_column_density(filename=filename,
@@ -132,7 +137,7 @@ def co2ice_cloud_localtime_along_ls(filename, data):
         print('Stop, there is no 12 localtime')
         exit()
     else:
-        nb_sol = int(data.shape[0]/12)  # if there is 12 local time!
+        nb_sol = int(data.shape[0] / 12)  # if there is 12 local time!
     data = reshape(data, (nb_sol, 12)).T
 
     return data
@@ -142,7 +147,7 @@ def co2ice_cumulative_masses_polar_cap(filename, data):
     from numpy import sum
 
     # TODO: improved by getting polar cap
-    data_latitude = get_data(filename, target='latitude')
+    data_latitude, list_var = get_data(filename, target='latitude')
     data_north, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[60, 90])
     data_south, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[-60, -90])
     del data
@@ -177,7 +182,7 @@ def co2ice_density_column_evolution(filename, data, localtime):
     from math import floor
 
     # Show the evolution of density column at winter polar region
-    data_time = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=filename, target='Time')
     if data_time.units == 'degrees':
         print('The netcdf file is in ls !')
         print(f'Time[0] = {data_time[0]}, Time[-1] = {data_time[-1]}')
@@ -191,7 +196,7 @@ def co2ice_density_column_evolution(filename, data, localtime):
     data, time_range = slice_data(data=data, dimension_data=data_time, value=[time_begin, time_end])
 
     # Slice data in polar region:
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
     pole = input('Select the polar region (N/S):')
     if pole.lower() == 'n':
         data, latitude = slice_data(data=data, dimension_data=data_latitude, value=[60, 90])
@@ -208,14 +213,14 @@ def co2ice_density_column_evolution(filename, data, localtime):
 
 
 def co2ice_coverage(filename, data):
-    data_latitude = get_data(filename=filename, target='latitude')
-    data_longitude = get_data(filename=filename, target='longitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
 
     ntime = data.shape[0]
     nlat = data_latitude.shape[0]
     nlon = data_longitude.shape[0]
 
-    data_altitude = get_data(filename=filename, target='altitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
     idx_10pa = (abs(data_altitude[:] - 10)).argmin()
 
     data_co2ice_coverage = zeros((nlat, nlon))
@@ -233,17 +238,17 @@ def co2ice_coverage(filename, data):
     data_co2ice_coverage_meso = correction_value(data=data_co2ice_coverage_meso, operator='eq', threshold=0)
 
     #  Normalization
-    data_co2ice_coverage = (data_co2ice_coverage/ntime) * 100
+    data_co2ice_coverage = (data_co2ice_coverage / ntime) * 100
     print(min(data_co2ice_coverage_meso), max(data_co2ice_coverage_meso))
     return data_co2ice_coverage, data_co2ice_coverage_meso
 
 
 def emis_polar_winter_gg2020_fig13(filename, data, local_time):
     # Slice in time
-    data_time = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=filename, target='Time')
     if data_time.units != 'deg':
         data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=local_time)
-        data_time = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_time, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
         if idx:
             data_time = data_time[idx::len(data_local_time)]
 
@@ -254,7 +259,7 @@ def emis_polar_winter_gg2020_fig13(filename, data, local_time):
     data_sp, time = slice_data(data=data, dimension_data=data_time, value=[0, 180])
 
     # Slice in latitude > 60°
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
 
     data_np, latitude = slice_data(data=data_np, dimension_data=data_latitude[:], value=[60, 90])
     data_sp, latitude = slice_data(data=data_sp, dimension_data=data_latitude[:], value=[-60, -90])
@@ -267,21 +272,27 @@ def emis_polar_winter_gg2020_fig13(filename, data, local_time):
 
 
 def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
-    data_latitude = get_data(filename=filename, target='latitude')
-    data, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=0)
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=80)
 
-    try:
-        data_co2_ice = get_data(filename=filename, target='co2_ice')
-    except:
+    if 'co2_ice' in list_var:
+        data_co2_ice, list_var = get_data(filename=filename, target='co2_ice')
+    else:
         filename_co2 = getfilename(files=files, selection=None)
-        data_co2_ice = get_data(filename=directory+filename_co2, target='co2_ice')
-    data_co2_ice, tmp = extract_at_a_local_time(filename=filename, data=data_co2_ice, local_time=local_time)
-    data_co2_ice, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:], value=0)
+        data_co2_ice, list_var = get_data(filename=directory + filename_co2, target='co2_ice')
+
+    if len(local_time) == 1:
+        data_co2_ice, tmp = extract_at_a_local_time(filename=filename, data=data_co2_ice, local_time=local_time)
+
+    data_co2_ice, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:], value=-80)
     data_co2_ice = correction_value(data_co2_ice, operator='inf', threshold=1e-13)
 
     # zonal mean
     zonal_mean = mean(data, axis=2)  # zonal mean
     zonal_mean_co2_ice = mean(data_co2_ice, axis=2)
+    zonal_mean = mean(zonal_mean.reshape((669, 12, zonal_mean.shape[1])), axis=1)  # => sols, lon
+    zonal_mean_co2_ice = mean(zonal_mean_co2_ice.reshape((669, 12, zonal_mean_co2_ice.shape[1])), axis=1)  # => sols,
+    # lon
 
     zonal_mean, zonal_mean_co2_ice = rotate_data(zonal_mean, zonal_mean_co2_ice, do_flip=False)
 
@@ -292,7 +303,7 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
 def riceco2_local_time_evolution(filename, data, latitude):
     data = extract_where_co2_ice(filename=filename, data=data)
 
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
     data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=latitude)
 
     data = mean(data, axis=2)  # zonal mean
@@ -303,17 +314,16 @@ def riceco2_local_time_evolution(filename, data, latitude):
         print('Stop, there is no 12 localtime')
         exit()
     else:
-        nb_sol = int(data.shape[0]/12)  # if there is 12 local time!
+        nb_sol = int(data.shape[0] / 12)  # if there is 12 local time!
     data = reshape(data, (nb_sol, 12, data.shape[1])).T
     data = mean(data, axis=2) * 1e6  # m to µm
-
     return data, latitudes
 
 
 def riceco2_max_local_time_evolution(filename, data):
     data = extract_where_co2_ice(filename=filename, data=data)
 
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
     data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=0)
 
     data = mean(data, axis=2)  # zonal mean
@@ -324,39 +334,68 @@ def riceco2_max_local_time_evolution(filename, data):
         print('Stop, there is no 12 localtime')
         exit()
     else:
-        nb_sol = int(data.shape[0]/12)  # if there is 12 local time!
+        nb_sol = int(data.shape[0] / 12)  # if there is 12 local time!
 
     data = reshape(data, (nb_sol, 12, data.shape[1])).T
-    data = mean(data, axis=2) # mean over the year
+    data = mean(data, axis=2)  # mean over the year
 
     data_max_radius = zeros(data.shape[1])
     data_max_alt = zeros(data.shape[1])
-    data_altitude = get_data(filename=filename, target='altitude')
+    data_min_radius = zeros(data.shape[1])
+    data_min_alt = zeros(data.shape[1])
+    data_mean_radius = zeros(data.shape[1])
+    data_mean_alt = zeros(data.shape[1])
+
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+
     for lt in range(data.shape[1]):
         data_max_radius[lt] = max(data[:, lt])
         data_max_alt[lt] = int(argmax(data[:, lt]))
+
+        data_min_radius[lt] = min(data[:, lt])
+        data_min_alt[lt] = int(argmin(data[:, lt]))
+        data_mean_radius[lt] = mean(data[:, lt])
+        data_mean_alt[lt] = int(mean(data_max_alt[lt] + data_min_alt[lt]) / 2.)
+
         if data_max_alt[lt] == 0:
             data_max_alt[lt] = -99999
         else:
             data_max_alt[lt] = data_altitude[data_max_alt[lt]]
-    print(data_max_alt[lt])
+
+        if data_min_alt[lt] == 0:
+            data_min_alt[lt] = -99999
+        else:
+            data_min_alt[lt] = data_altitude[data_min_alt[lt]]
+
+        if data_mean_alt[lt] == 0:
+            data_mean_alt[lt] = -99999
+        else:
+            data_mean_alt[lt] = data_altitude[data_mean_alt[lt]]
+
     data_max_radius = correction_value(data=data_max_radius, operator='eq', threshold=0)
     data_max_alt = correction_value(data=data_max_alt, operator='inf', threshold=0)
-    print(data_max_alt)
-    return data_max_radius, data_max_alt, latitudes
+
+    data_min_radius = correction_value(data=data_min_radius, operator='eq', threshold=0)
+    data_min_alt = correction_value(data=data_min_alt, operator='inf', threshold=0)
+
+    data_mean_radius = correction_value(data=data_mean_radius, operator='eq', threshold=0)
+    data_mean_alt = correction_value(data=data_mean_alt, operator='inf', threshold=0)
+
+    data_min_radius = data_min_radius * 1e6
+    data_mean_radius = data_mean_radius * 1e6
+    data_max_radius = data_max_radius * 1e6
+    return data_max_radius, data_max_alt, data_min_radius, data_min_alt, data_mean_radius, data_mean_alt, latitudes
 
 
 def riceco2_max_day_night(filename, data):
-    data_altitude = get_data(filename=filename, target='altitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
 
-    data_time = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=filename, target='Time')
     data_local_time, idx_2, stats = check_local_time(data_time=data_time, selected_time=2)
     data_local_time, idx_14, stats = check_local_time(data_time=data_time, selected_time=14)
 
-    if idx_2:
-        data_day = data[idx_2::len(data_local_time), :, :, :]
-    if idx_14:
-        data_night = data[idx_14::len(data_local_time), :, :, :]
+    data_day = data[idx_2::len(data_local_time), :, :, :]
+    data_night = data[idx_14::len(data_local_time), :, :, :]
 
     print('Compute max in progress...')
     max_satu_day, idx_altitude_day, y_day = get_extrema_in_alt_lon(data=data_day, extrema='max')
@@ -380,17 +419,14 @@ def riceco2_max_day_night(filename, data):
 
 
 def riceco2_top_cloud_altitude(filename, data_target, local_time):
-    data_altitude = get_data(filename, target='altitude')
+    data_altitude, list_var = get_data(filename, target='altitude')
 
     if data_altitude.long_name != 'Altitude above local surface':
         print(f'{data_altitude.long_name}')
         exit()
 
-    data_ccn_nco2 = get_data(filename, target='ccnNco2')
-    data_rho = get_data(filename, target='rho')
-
-    data_ccn_nco2, local_time = extract_at_a_local_time(filename=filename, data=data_ccn_nco2, local_time=local_time)
-    data_rho, local_time = extract_at_a_local_time(filename=filename, data=data_rho, local_time=local_time)
+    data_ccn_nco2, list_var = get_data(filename, target='ccnNco2')
+    data_rho, list_var = get_data(filename, target='rho')
 
     data_ccn_nco2 = correction_value(data_ccn_nco2[:, :, :, :], operator='inf', threshold=1e-13)
     data_rho = correction_value(data_rho[:, :, :, :], operator='inf', threshold=1e-13)
@@ -399,9 +435,18 @@ def riceco2_top_cloud_altitude(filename, data_target, local_time):
     data_ccn_nco2 = mean(data_ccn_nco2[:, :, :, :], axis=3)
     data_rho = mean(data_rho[:, :, :, :], axis=3)
 
+    if len(local_time) == 1:
+        data_ccn_nco2, local_time = extract_at_a_local_time(filename=filename, data=data_ccn_nco2,
+                                                            local_time=local_time)
+        data_rho, local_time = extract_at_a_local_time(filename=filename, data=data_rho, local_time=local_time)
+    else:
+        # diurnal mean: data (8028 => 669,12)
+        data_target = mean(data_target.reshape((669, 12, 32, 49)), axis=1)
+        data_ccn_nco2 = mean(data_ccn_nco2.reshape((669, 12, 32, 49)), axis=1)
+        data_rho = mean(data_rho.reshape((669, 12, 32, 49)), axis=1)
+
     n_reflect = 2e-8 * power(data_target * 1e6, -2)  # valid latitude range > 60°
     n_part = data_rho * data_ccn_nco2
-
     nb_time = data_target.shape[0]
     nb_alt = data_target.shape[1]
     nb_lat = data_target.shape[2]
@@ -420,15 +465,16 @@ def riceco2_top_cloud_altitude(filename, data_target, local_time):
                     break
     top_cloud = top_cloud / 1e3
     top_cloud = rotate_data(top_cloud, do_flip=False)[0]
+    print(f'Max top altitude is {max(top_cloud)} km.')
     return top_cloud
 
 
 def riceco2_zonal_mean_co2ice_exists(filename, data, local_time):
-    data_latitude = get_data(filename=filename, target='latitude')
-    data_time = get_data(filename=filename, target='Time')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_time, list_var = get_data(filename=filename, target='Time')
 
     # extract co2_ice data
-    data_co2_ice = get_data(filename=filename, target='co2_ice')
+    data_co2_ice, list_var = get_data(filename=filename, target='co2_ice')
     data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
     if idx:
         data_co2_ice = data_co2_ice[idx::len(data_local_time), :, :, :]
@@ -450,7 +496,7 @@ def riceco2_zonal_mean_co2ice_exists(filename, data, local_time):
 
 
 def satuco2_zonal_mean_with_co2_ice(filename, data):
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
     # Select the three latitudes
     north = 80
     eq = 0
@@ -473,7 +519,7 @@ def satuco2_zonal_mean_with_co2_ice(filename, data):
     del data
 
     # Get co2 ice mmr
-    data_co2ice = get_data(filename, target='co2_ice')
+    data_co2ice, list_var = get_data(filename, target='co2_ice')
     data_co2ice = correction_value(data_co2ice[:, :, :, :], operator='inf', threshold=1e-13)
 
     # Slice co2 ice mmr at these 3 latitudes
@@ -498,7 +544,7 @@ def satuco2_zonal_mean_with_co2_ice(filename, data):
 
     if binned.lower() == 'y':
         # Bin time in 5° Ls
-        data_time = get_data(filename=filename, target='Time')
+        data_time, list_var = get_data(filename=filename, target='Time')
         if max(data_time) > 360:
             time_grid_ls = convert_sols_to_ls()
             nb_bin = time_grid_ls.shape[0]
@@ -568,7 +614,7 @@ def satuco2_zonal_mean_with_co2_ice(filename, data):
 
 
 def satuco2_time_mean_with_co2_ice(filename, data):
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
     # Select the three latitudes
     north = 80
     south = -80
@@ -580,7 +626,7 @@ def satuco2_time_mean_with_co2_ice(filename, data):
     data_satuco2_north, north_latitude_selected = slice_data(data, dimension_data=data_latitude, value=north)
     data_satuco2_south, south_latitude_selected = slice_data(data, dimension_data=data_latitude, value=south)
 
-    data_time = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=filename, target='Time')
     north_winter = [270, 300]
     south_winter = [0, 30]
     print('Time selected:')
@@ -598,7 +644,7 @@ def satuco2_time_mean_with_co2_ice(filename, data):
     del data
 
     # Get co2 ice mmr
-    data_co2ice = get_data(filename, target='co2_ice')
+    data_co2ice, list_var = get_data(filename, target='co2_ice')
     data_co2ice = correction_value(data_co2ice[:, :, :, :], operator='inf', threshold=1e-13)
 
     # Slice co2 ice mmr at these 3 latitudes
@@ -617,7 +663,7 @@ def satuco2_time_mean_with_co2_ice(filename, data):
     binned = input('Do you want bin data (Y/n)? ')
     if binned.lower() == 'y':
         # Bin time in 5° Ls
-        data_time = get_data(filename=filename, target='Time')
+        data_time, list_var = get_data(filename=filename, target='Time')
         if max(data_time) > 360:
             time_grid_ls = convert_sols_to_ls()
             nb_bin = time_grid_ls.shape[0]
@@ -671,8 +717,8 @@ def satuco2_time_mean_with_co2_ice(filename, data):
 
 
 def satuco2_hu2012_fig9(filename, data, local_time):
-    data_latitude = get_data(filename=filename, target='latitude')
-    data_altitude = get_data(filename=filename, target='altitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
 
     if data_altitude.long_name != 'Altitude above local surface':
         print('The netCDF file did not zrecasted above the local surface')
@@ -683,12 +729,15 @@ def satuco2_hu2012_fig9(filename, data, local_time):
     del data
 
     # Bin time in 5° Ls
-    data_time = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=filename, target='Time')
     if data_time.units != 'deg':
-        data_local_time, idx, sats = check_local_time(data_time=data_time, selected_time=local_time)
-        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
-        if idx is not None:
-            data_time = data_ls[idx::len(data_local_time)]
+        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        if len(local_time) == 1:
+            data_local_time, idx, sats = check_local_time(data_time=data_time, selected_time=local_time)
+            if idx is not None:
+                data_time = data_ls[idx::len(data_local_time)]
+        else:
+            data_time = data_ls
 
     if data_time.shape[0] % 60 == 0:
         print(f'5°Ls binning: {data_time[0]} - {data_time[60]}')
@@ -696,7 +745,7 @@ def satuco2_hu2012_fig9(filename, data, local_time):
     else:
         print(f'5°Ls binning: from {data_time[0]} to {data_time[-1]}')
         nb_bin = 72
-        print(data_time.shape, data_time[-1]/nb_bin, nb_bin*5)
+        print(data_time.shape, data_time[-1] / nb_bin, nb_bin * 5)
 
     data_icelayer = zeros((2, nb_bin))
     data_icelayer_std = zeros((2, nb_bin))
@@ -762,7 +811,7 @@ def satuco2_hu2012_fig9(filename, data, local_time):
 
 
 def satuco2_altitude_longitude(filename, data):
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
     data, latitude = slice_data(data=data, dimension_data=data_latitude[:], value=0)
 
     data = mean(data, axis=0)
@@ -772,11 +821,11 @@ def satuco2_altitude_longitude(filename, data):
 
 def temp_gg2011_fig6(filename, data):
     # GG2011 worked with stats file
-    data_latitude = get_data(filename=filename, target='latitude')
-    data_longitude = get_data(filename=filename, target='longitude')
-    data_time = get_data(filename=filename, target='Time')
-    data_altitude = get_data(filename=filename, target='altitude')
-    data_rho = get_data(filename=filename, target='rho')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
+    data_time, list_var = get_data(filename=filename, target='Time')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_rho, list_var = get_data(filename=filename, target='rho')
 
     # Check the kind of zrecast have been performed : above areoid (A) must be performed
     if data_altitude.long_name != 'Altitude above areoid':
@@ -822,9 +871,9 @@ def temp_gg2011_fig6(filename, data):
 
 
 def temp_gg2011_fig7(filename, data):
-    data_time = get_data(filename=filename, target='Time')
-    data_altitude = get_data(filename=filename, target='altitude')
-    data_rho = get_data(filename=filename, target='rho')
+    data_time, list_var = get_data(filename=filename, target='Time')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_rho, list_var = get_data(filename=filename, target='rho')
 
     # Check the kind of zrecast have been performed : above areoid (A) must be performed
     if data_altitude.long_name != 'Altitude above areoid':
@@ -860,8 +909,8 @@ def temp_gg2011_fig7(filename, data):
 
 
 def temp_gg2011_fig8(filename, data):
-    data_time = get_data(filename=filename, target='Time')
-    data_altitude = get_data(filename=filename, target='altitude')
+    data_time, list_var = get_data(filename=filename, target='Time')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
 
     # Slice data: Ls=0-30°
     data, ls = slice_data(data=data, dimension_data=data_time[:], value=[0, 30])
@@ -893,10 +942,10 @@ def temp_gg2011_fig8(filename, data):
 
 
 def temp_gg2011_fig9(filename, data):
-    data_time = get_data(filename=filename, target='Time')
-    data_latitude = get_data(filename=filename, target='latitude')
-    data_altitude = get_data(filename=filename, target='altitude')
-    data_rho = get_data(filename=filename, target='rho')
+    data_time, list_var = get_data(filename=filename, target='Time')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_rho, list_var = get_data(filename=filename, target='rho')
 
     # Check the kind of zrecast have been performed : above areoid (A) must be performed
     if data_altitude.long_name != 'Altitude above areoid':
@@ -933,13 +982,13 @@ def temp_gg2011_fig9(filename, data):
 
 
 def temp_stationary_wave(filename, data, local_time):
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
     data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=0)
 
     test = input('Do you want performed T-Tcondco2(y/N)?')
     if test.lower() == 'y':
         diff_temp = True
-        data_rho = get_data(filename=filename, target='rho')
+        data_rho, list_var = get_data(filename=filename, target='rho')
         if local_time is not None:
             data_rho, local_time = extract_at_a_local_time(filename=filename, data=data_rho, local_time=local_time)
         data_rho, latitudes = slice_data(data=data_rho, dimension_data=data_latitude[:], value=0)
@@ -948,6 +997,7 @@ def temp_stationary_wave(filename, data, local_time):
         data_temp_cond_co2 = tcond_co2(data_pressure=None, data_temperature=data, data_rho=data_rho)
         data_temp_cond_co2 = mean(data_temp_cond_co2, axis=0)
     else:
+        data_temp_cond_co2 = 0
         diff_temp = False
 
     # average over the year at the same localtime
@@ -959,12 +1009,14 @@ def temp_stationary_wave(filename, data, local_time):
         for lon in range(data_final.shape[1]):
             data_final[:, lon] = data[:, lon] - data_temp_cond_co2[:, lon]
         data_final = ma.masked_values(data_final, 0.)
+    else:
+        data_final = data
 
     return data_final, diff_temp
 
 
 def temp_thermal_structure_polar_region(filename, data):
-    data_latitude = get_data(filename=filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
 
     data_north, latitude_north = slice_data(data=data, dimension_data=data_latitude[:], value=60)
     data_south, latitude_south = slice_data(data=data, dimension_data=data_latitude[:], value=-60)
@@ -976,12 +1028,12 @@ def temp_thermal_structure_polar_region(filename, data):
 
 
 def temp_cold_pocket(filename, data, local_time):
-    data_altitude = get_data(filename=filename, target='altitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
     if data_altitude.units != 'Pa':
         print('Stop ! File did not zrecasted in Pressure')
         exit()
 
-    data_rho = get_data(filename=filename, target='rho')
+    data_rho, list_var = get_data(filename=filename, target='rho')
     data_rho, local_time = extract_at_a_local_time(filename=filename, data=data_rho, local_time=local_time)
     data_rho = correction_value(data=data_rho, operator='inf', threshold=1e-13)
 
@@ -1004,8 +1056,8 @@ def temp_cold_pocket(filename, data, local_time):
 
 
 def vars_extract_at_grid_point(filename, data, latitude, longitude):
-    data_latitude = get_data(filename=filename, target='latitude')
-    data_longitude = get_data(filename=filename, target='longitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
 
     data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=latitude)
     data, longitudes = slice_data(data=data, dimension_data=data_longitude[:], value=longitude)
@@ -1022,27 +1074,27 @@ def vars_max_value_with_others(filename, data_target):
     print('Extract other variable at co2_ice max value:')
 
     print(' (1) Temperature')
-    data_temperature = get_data(filename, target='temp')[:, :, :, :]
+    data_temperature, list_var = get_data(filename, target='temp')[:, :, :, :]
     max_temp = extract_at_max_co2_ice(data_temperature, x, y, shape_data_target)
     del data_temperature
 
     print(' (2) Saturation')
-    data_satuco2 = get_data(filename, target='satuco2')[:, :, :, :]
+    data_satuco2, list_var = get_data(filename, target='satuco2')[:, :, :, :]
     max_satu = extract_at_max_co2_ice(data_satuco2, x, y, shape_data_target)
     del data_satuco2
 
     print(' (3) CCN radius')
-    data_riceco2 = get_data(filename, target='riceco2')[:, :, :, :]
+    data_riceco2, list_var = get_data(filename, target='riceco2')[:, :, :, :]
     max_radius = extract_at_max_co2_ice(data_riceco2, x, y, shape_data_target)
     del data_riceco2
 
     print(' (4) CCN number')
-    data_ccn_nco2 = get_data(filename, target='ccnNco2')[:, :, :, :]
+    data_ccn_nco2, list_var = get_data(filename, target='ccnNco2')[:, :, :, :]
     max_ccn_n = extract_at_max_co2_ice(data_ccn_nco2, x, y, shape_data_target)
     del data_ccn_nco2
 
     print(' (5) Altitude')
-    data_altitude = get_data(filename, target='altitude')
+    data_altitude, list_var = get_data(filename, target='altitude')
     max_alt = extract_at_max_co2_ice(data_altitude, x, y, shape_data_target)
 
     print('Reshape data in progress...')
@@ -1056,13 +1108,13 @@ def vars_max_value_with_others(filename, data_target):
 def vars_time_mean(filename, data, duration, localtime=None):
     from math import ceil
 
-    data_time = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=filename, target='Time')
     if localtime:
         data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=localtime)
         if data_time[-1] <= 360.:  # Ensure we are in ls time coordinate
             data_time = data_time[idx::len(data_local_time)]
         else:
-            data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
+            data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
             data_time = data_ls[idx::len(data_local_time)]
 
     if duration:
@@ -1082,10 +1134,9 @@ def vars_time_mean(filename, data, duration, localtime=None):
 
 
 def vars_zonal_mean(filename, data, layer=None, flip=None):
-
     if layer is not None:
         if filename != '':
-            data_altitude = get_data(filename=filename, target='altitude')
+            data_altitude, list_var = get_data(filename=filename, target='altitude')
             if data_altitude.units in ['Pa']:
                 data_altitude = data_altitude[::-1]  # in pressure coordinate, the direction is reversed
                 data = data[:, ::-1, :, :]
@@ -1107,16 +1158,19 @@ def vars_zonal_mean(filename, data, layer=None, flip=None):
     return zonal_mean, layer_selected
 
 
-def vars_zonal_mean_column_density(filename, data_target):
-    data_target, altitude_limit, altitude_min, altitude_max, altitude_unit = compute_column_density(filename=filename,
-                                                                                                    data=data_target)
+def vars_zonal_mean_column_density(filename, data):
+    # diurnal mean
+    #    data = mean(data.reshape(669, 12, data.shape[1], data.shape[2], data.shape[3]), axis=1)  # => sols, lon
+
+    data, altitude_limit, altitude_min, altitude_max, altitude_unit = compute_column_density(filename=filename,
+                                                                                             data=data)
 
     # compute zonal mean column density
-    data_target = mean(data_target, axis=2)  # Ls function of lat
+    data = mean(data, axis=2)  # Ls function of lat
 
-    data_target = rotate_data(data_target, do_flip=True)[0]
+    data = rotate_data(data, do_flip=True)[0]
 
-    return data_target, altitude_limit, altitude_min, altitude_max, altitude_unit
+    return data, altitude_limit, altitude_min, altitude_max, altitude_unit
 
 
 def vars_zonal_mean_where_co2ice_exists(filename, data, polar_region):
@@ -1124,7 +1178,7 @@ def vars_zonal_mean_where_co2ice_exists(filename, data, polar_region):
 
     if polar_region:
         # Slice data in north and south polar regions
-        data_latitude = get_data(filename=filename, target='latitude')
+        data_latitude, list_var = get_data(filename=filename, target='latitude')
         data_where_co2_ice_np, north_latitude = slice_data(data=data_where_co2_ice, dimension_data=data_latitude[:],
                                                            value=[45, 90])
         data_where_co2_ice_sp, south_latitude = slice_data(data=data_where_co2_ice, dimension_data=data_latitude[:],
@@ -1142,121 +1196,126 @@ def vars_zonal_mean_where_co2ice_exists(filename, data, polar_region):
     return list_data
 
 
-def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, local_time, density=False):
+def vars_zonal_mean_in_time_co2ice_exists(filename, data, data_name, local_time):
     lat1 = int(input('\t Latitude range 1 (°N): '))
     lat2 = int(input('\t Latitude range 2 (°N): '))
 
-    data_time = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=filename, target='Time')
     if data_time.units != 'deg':
-        data_ls = get_data(filename='../concat_Ls.nc', target='Ls')
-        data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=local_time)
-        data_time = data_ls[idx::len(data_local_time)]
+        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        if local_time is not None:
+            data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=local_time)
+            data_time = data_ls[idx::len(data_local_time)]
+        else:
+            idx = None
+            data_local_time = None
+            data_time = data_ls
     else:
         idx = None
         data_local_time = None
 
     # extract co2_ice data
-    data_co2_ice = get_data(filename, target='co2_ice')
+    data_co2_ice, list_var = get_data(filename, target='co2_ice')
 
     # select the latitude range
-    data_latitude = get_data(filename, target='latitude')
-    data_sliced_lat, latitude_selected = slice_data(data[:, :, :, :], data_latitude, value=[lat1, lat2])
-    data_co2_ice_sliced_lat, latitude_selected = slice_data(data_co2_ice[:, :, :, :], data_latitude,
-                                                            value=[lat1, lat2])
-    if density:
-        data_rho = get_data(filename, target='rho')
-        data_rho_sliced_lat, latitude_selected = slice_data(data_rho[:, :, :, :], data_latitude, value=[lat1, lat2])
-        data_tau = get_data(filename, target='Tau3D1mic')
-        data_tau_sliced_lat, latitude_selected = slice_data(data_tau[:, :, :, :], data_latitude, value=[lat1, lat2])
-        del data_rho, data_tau
-    else:
-        data_rho_sliced_lat = 0
-        data_tau_sliced_lat = 0
+    data_latitude, list_var = get_data(filename, target='latitude')
+    data_sliced_lat, idx_latitude = slice_data(data[:, :, :, :], data_latitude, value=[lat1, lat2])
+    data_co2_ice_sliced_lat, idx_latitude = slice_data(data_co2_ice[:, :, :, :], data_latitude,
+                                                       value=[lat1, lat2])
+    latitude_selected = data_latitude[idx_latitude[0]:idx_latitude[1]]
     del data, data_co2_ice
 
     # extract at local time
-    if local_time:
+    if local_time is not None:
         data_co2_ice_sliced_lat = data_co2_ice_sliced_lat[idx::len(data_local_time), :, :, :]
-        if density:
-            data_rho_sliced_lat = data_rho_sliced_lat[idx::len(data_local_time), :, :, :]
-            data_tau_sliced_lat = data_tau_sliced_lat[idx::len(data_local_time), :, :, :]
 
     # select the time range
     print('')
     print(f'Time range: {data_time[0]:.2f} - {data_time[-1]:.2f} (°)')
     breakdown = input('Do you want compute mean radius over all the time (Y/n)?')
 
-    list_tau = None
     if breakdown.lower() in ['y', 'yes']:
         # Mask data where co2ice is inferior to 1e-13, so where co2ice exists
         data_final = ma.masked_where(data_co2_ice_sliced_lat < 1e-13, data_sliced_lat)
-        if density:
-            data_rho_final = ma.masked_where(data_co2_ice_sliced_lat < 1e-13, data_rho_sliced_lat)
-            data_final = data_final * data_rho_final
-            data_tau_final = ma.masked_where(data_co2_ice_sliced_lat < 1e-13, data_tau_sliced_lat)
-            del data_rho_sliced_lat, data_tau_sliced_lat
-            data_tau_final = mean(mean(data_tau_final, axis=3), axis=0)
-            list_tau = list([data_tau_final])
         del data_co2_ice_sliced_lat, data_sliced_lat
 
-        data_final = mean(mean(data_final, axis=3), axis=0) * 1e6  # zonal mean and temporal mean, and m to µm
+        data_final = mean(mean(data_final, axis=3), axis=0)  # zonal mean and temporal mean, and m to µm
         list_data = list([data_final])
-        filenames = list([f'{data_name}_mean_{latitude_selected[0]:.0f}N_{latitude_selected[-1]:.0f}N_0-360Ls'])
-        list_time_selected = list([data_time[0], data_time[-1]])
+        filenames = list([f'{data_name}_mean_{latitude_selected[0]:.0f}N_'
+                          f'{latitude_selected[-1]:.0f}N_0-360Ls'])
+        list_time_selected = list(f'{data_time[0]} - {data_time[1]}')
     else:
-        directory_output = f'{data_name}_mean_radius_{latitude_selected[0]:.0f}N_{latitude_selected[-1]:.0f}N'
-        try:
+        directory_output = f'{data_name}_mean_radius_{latitude_selected[0]:.0f}N_' \
+                           f'{latitude_selected[-1]:.0f}N'
+        if not path.exists(directory_output):
             mkdir(directory_output)
-        except not directory_output:
-            pass
 
         time_step = float(input(f'Select the time step range (°): '))
         nb_step = int(data_time[-1] / time_step) + 1
-        print(f'nb_step: {nb_step}')
-        if data_time[-1] % time_step != 0:
-            print(f'data_time[-1]%time_step = {data_time[-1] % time_step}')
 
         list_data = list([])
         filenames = list([])
         list_time_selected = list([])
-        list_tau = list([])
         for i in range(nb_step):
-            data_sliced_lat_ls, time_selected = slice_data(data_sliced_lat, dimension_data=data_time[:],
-                                                           value=[i * time_step, (i + 1) * time_step])
-            data_co2_ice_sliced_lat_ls, time_selected = slice_data(data_co2_ice_sliced_lat, dimension_data=data_time[:],
-                                                                   value=[i * time_step, (i + 1) * time_step])
+            data_sliced_lat_ls, idx_time = slice_data(data_sliced_lat, dimension_data=data_time[:],
+                                                      value=[i * time_step, (i + 1) * time_step])
+            data_co2_ice_sliced_lat_ls, idx_time = slice_data(data_co2_ice_sliced_lat, dimension_data=data_time[:],
+                                                              value=[i * time_step, (i + 1) * time_step])
+
+            time_selected = data_time[idx_time[0]:idx_time[1]]
 
             print(f'\t\tselected: {time_selected[0]:.0f} {time_selected[-1]:.0f}')
-            list_time_selected.append([time_selected[0], time_selected[-1]])
+            list_time_selected.append(f'{time_selected[0]:.0f} - {time_selected[-1]:.0f} °Ls')
             # Mask data where co2ice is inferior to 1e-13, so where co2ice exists
             data_final = ma.masked_where(data_co2_ice_sliced_lat_ls < 1e-13, data_sliced_lat_ls)
-            if density:
-                data_rho_sliced_lat_ls, time_selected = slice_data(data_rho_sliced_lat, dimension_data=data_time[:],
-                                                                   value=[i * time_step, (i + 1) * time_step])
-                data_rho_final = ma.masked_where(data_co2_ice_sliced_lat_ls < 1e-13, data_rho_sliced_lat_ls)
-                data_final = data_final * data_rho_final
-
-                data_tau_sliced_lat_ls, time_selected = slice_data(data_tau_sliced_lat, dimension_data=data_time[:],
-                                                                   value=[i * time_step, (i + 1) * time_step])
-                data_tau_final = ma.masked_where(data_co2_ice_sliced_lat_ls < 1e-13, data_tau_sliced_lat_ls)
-                data_tau_final = mean(mean(data_tau_final, axis=3), axis=0)
-                list_tau.append(data_tau_final)
-                del data_rho_sliced_lat_ls, data_tau_sliced_lat_ls
 
             del data_co2_ice_sliced_lat_ls, data_sliced_lat_ls
 
-            data_final = mean(mean(data_final, axis=3), axis=0) * 1e6  # zonal mean and temporal mean, and m to µm
+            data_final = mean(mean(data_final, axis=3), axis=0)  # zonal mean and temporal mean
             list_data.append(data_final)
-            filenames.append(directory_output + '/{}_mean_{:.0f}N_{:.0f}N_Ls_{:.0f}-{:.0f}'.format(data_name,
-                                                                                                   latitude_selected[0],
-                                                                                                   latitude_selected[
-                                                                                                       -1],
-                                                                                                   time_selected[0],
-                                                                                                   time_selected[-1]))
+            filenames.append(f'{directory_output}/{data_name}_mean_{latitude_selected[0]:.0f}N_'
+                             f'{latitude_selected[-1]:.0f}N_Ls_{time_selected[0]:.0f}-'
+                             f'{time_selected[-1]:.0f}_{local_time:.0f}h')
 
         del data_sliced_lat, data_co2_ice_sliced_lat
 
-    return list_data, filenames, latitude_selected, list_time_selected, list_tau
+    return list_data, filenames, latitude_selected, list_time_selected
+
+
+def vars_localtime_longitude(filename, data, latitude, altitude):
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+
+    data, idx_latitude = slice_data(data=data, dimension_data=data_latitude[:], value=latitude)
+    data, idx_altitude = slice_data(data=data, dimension_data=data_altitude[:], value=altitude)
+
+    # data = mean(data.reshape(669, 12, data.shape[1]), axis=1)  # => sols, lon
+    data = mean(data.reshape(12, 669, data.shape[1]), axis=1)  # => hl, lon
+    return data
+
+
+def vars_ls_longitude(filename, data, latitude, altitude):
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+
+    data, idx_latitude = slice_data(data=data, dimension_data=data_latitude[:], value=latitude)
+    data, idx_altitude = slice_data(data=data, dimension_data=data_altitude[:], value=altitude)
+
+    return data.T
+
+
+def vars_localtime_ls(filename, data, latitude, altitude):
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+
+    data, idx_latitude = slice_data(data=data, dimension_data=data_latitude[:], value=latitude)
+    data, idx_altitude = slice_data(data=data, dimension_data=data_altitude[:], value=altitude)
+
+    data = mean(data, axis=1)
+
+    data = data.reshape(669, 12)  # => hl, lon
+
+    return data.T
 
 
 def vars_select_profile(data_target):

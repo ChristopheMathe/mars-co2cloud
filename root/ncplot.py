@@ -11,7 +11,10 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
     print('Correction value...')
     if data_target.ndim == 4:
-        data_target = correction_value(data_target[:, :, :, :], operator='inf', threshold=1e-13)
+        if name_target == 'satuco2':
+            data_target = correction_value(data_target[:, :, :, :], operator='inf_strict', threshold=1)
+        else:
+            data_target = correction_value(data_target[:, :, :, :], operator='inf', threshold=1e-13)
     elif data_target.ndim == 3:
         data_target = correction_value(data_target[:, :, :], operator='inf', threshold=1e-13)
 
@@ -24,14 +27,17 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('What do you wanna do?')
         print('     1: maximum in altitude and longitude, with others variables at these places (fig: lat-ls)')
         print('     2: zonal mean column density (fig: lat-ls)')
-        print('       201: special features for DARI report (compare to MOLA obs)')
+        print('        201: special features for DARI report (compare to MOLA obs)')
         print('     3: co2_ice coverage (fig: lat-lon)')
         print('     4: polar cloud distribution to compare with Fig.8 of Neumann+2003 (fig: #clouds-lat)')
         print('     5: cloud evolution with satuco2/temperature/radius (fig: alt-lat, gif)')
         print('     6: mmr structure in winter polar regions at 60°N/S (fig: alt-ls)')
         print('     7: Density column evolution in polar region, polar projection (fig: lon-lat)')
         print('     8: h2o_ice profile with co2_ice presence (fig: alt-ls)')
-        print('     9: localtime co2_ice column density')
+        print('     9: localtime co2_ice column density, at 0°N, zonal mean (fig: loc-ls)')
+        print('        901: localtime co2_ice at 0.5 Pa, 0°N, zonal mean (loc-ls)')
+        print('    10: co2_ice column density along longitude and localtime at 0.5 Pa and 0°N (fig: hl-lon)')
+        print('    11: co2_ice column density along longitude and solar longitude at 0.5 Pa and 0°N (fig: ls-lon)')
         print('')
 
         if view_mode is None:
@@ -85,12 +91,12 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         elif view_mode == 4:
             print('Processing data:')
             distribution_north, distribution_south, latitude_north, latitude_south = co2ice_polar_cloud_distribution(
-                filename, data_target, normalization='True', local_time=local_time)
+                filename, data_target, normalization=False, local_time=local_time)
 
             print('Display:')
             display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
                                                                  latitude_north, latitude_south,
-                                                                 save_name='distribution_polar_clouds')
+                                                                 save_name='distribution_polar_clouds_diurnal_mean')
 
         elif view_mode == 5:
             print('Processing data:')
@@ -99,9 +105,9 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
             print('Display:')
             filenames = []
-            for i in range(-9, 3):
+            for nb in range(-9, 3):
                 filenames.append(display_co2_ice_cloud_evolution_latitude(filename, data_target, data_satuco2,
-                                                                          data_temp, data_riceco2, idx_max, i,
+                                                                          data_temp, data_riceco2, idx_max, nb,
                                                                           latitude_selected))
 
             make_gif = input('Do you want create a gif (Y/n)?: ')
@@ -126,7 +132,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
                 filename_2 = getfilename(files)
                 filename_2 = path_2 + directory + filename_2
-                data_target_2 = get_data(filename_2, target=name_target)
+                data_target_2, list_var = get_data(filename_2, target=name_target)
                 data_north_2, data_south_2 = temp_thermal_structure_polar_region(filename=filename_2,
                                                                                  data=data_target_2)
 
@@ -164,18 +170,44 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                                                        directory=directory)
 
             print('Display:')
-            display_vars_altitude_ls(filename, data_target, data_co2_ice, local_time=local_time,
+            display_vars_altitude_ls(filename=filename, data_1=data_target, local_time=local_time,
+                                     norm='log', vmin=1e-13, vmax=1e-3, unit='kg/kg',
                                      title=f'Zonal mean of H2O ice mmr and\n CO2 ice mmr (black), at'
-                                           f' {int(latitude_selected)} °N ({local_time}h)',
+                                           f' {int(latitude_selected)} °N, diurnal mean',
                                      save_name=f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected)}N_'
-                                               f'{local_time}h')
+                                               f'diurnal_mean', data_2=data_co2_ice)
 
-        elif view_mode == 9:
+        elif view_mode == 9 or view_mode == 901:
             print('Processing data:')
-            data_processed = co2ice_cloud_localtime_along_ls(filename=filename, data=data_target)
+            if view_mode == 9:
+                data_processed = co2ice_cloud_localtime_along_ls(filename=filename, data=data_target)
+            else:
+                data_processed = vars_localtime_ls(filename=filename, data=data_target, latitude=0, altitude=0.5)
 
             print('Display:')
-            display_co2_ice_localtime_ls(filename=filename, data=data_processed)
+            display_co2_ice_localtime_ls(filename=filename, data=data_processed, unit='kg/kg', norm='log', vmin=1e-13,
+                                         vmax=1e-9, title='CO2 ice mmr at 0°N and 0.5 Pa',
+                                         save_name='co2_ice_zonal_mean_localtime_ls_0N_0p5Pa')
+
+        elif view_mode == 10:
+            print('Processing data:')
+            data_processed = vars_localtime_longitude(filename=filename, data=data_target, latitude=0, altitude=0.5)
+
+            print('Display:')
+            display_vars_localtime_longitude(filename=filename, data=data_processed, norm='log', vmin=1e-13, vmax=1e-7,
+                                             unit='kg/kg', title=f'CO$_2$ ice mmr at 0°N and 0.5 Pa',
+                                             save_name=f'co2_ice_local_time_longitude_0N_0p5Pa')
+
+        elif view_mode == 11:
+            print('Processing data:')
+            data_processed = vars_ls_longitude(filename=filename, data=data_target, latitude=0, altitude=0.5)
+
+            print('Display:')
+            display_vars_ls_longitude(filename=filename, data=data_processed, norm='log', vmin=1e-13, vmax=1e-7,
+                                      local_time=local_time,
+                                      unit='kg/kg', title=f'CO$_2$ ice mmr at 0°N and 0.5 Pa ('
+                                                          f'{local_time:.0f}h)',
+                                      save_name=f'co2_ice_ls_longitude_0N_0p5Pa_{local_time:.0f}h')
 
         else:
             print('Wrong value')
@@ -183,27 +215,28 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
     elif name_target in ['ccnNco2']:
         print('What do you wanna do?')
-        print('     1: Zonal mean of mean density where co2_ice exists (fig: alt-#/m3)')
+        print('     1: Zonal mean of CCNCO2 density where co2_ice exists (fig: alt-#/m3)')
         print('')
-        view_mode = int(input('Select number:'))
+        if view_mode is None:
+            view_mode = int(input('Select number:'))
 
         if view_mode == 1:
             print('Processing data:')
-            list_data, list_filename, latitude_selected, list_time_selected, list_tau = \
+            list_data, list_filename, latitude_selected, list_time_selected = \
                 vars_zonal_mean_in_time_co2ice_exists(filename=filename, data=data_target, data_name=name_target,
-                                                      local_time=local_time,
-                                                      density=True)
+                                                      local_time=local_time)
 
             print('Display:')
             display_vars_1fig_profiles(filename, list_data, latitude_selected, x_min=1e0, x_max=1e10,
                                        x_label='density of CCN (#.m$^{-3}$)',
                                        x_scale='log', y_scale='log',
-                                       second_var=list_tau,
-                                       x_min2=1e-9, x_max2=1e-1,
-                                       x_label2='opacity at 1 micron',
-                                       x_scale2='log',
-                                       title=f'Zonal mean density of CCN and Opacity where co2 ice exists between'
-                                             f' {latitude_selected[0]:d} - {latitude_selected[-1]:d}°N',
+                                       second_var=None,
+                                       x_min2=None, x_max2=None,
+                                       x_label2='None',
+                                       x_scale2='None',
+                                       title=f'Zonal mean density of CCN where co2 ice exists between'
+                                             f' {latitude_selected[0]:.0f} - {latitude_selected[-1]:.0f}°N '
+                                             f'({local_time}h)',
                                        save_name=list_filename,
                                        title_option=list_time_selected)
 
@@ -224,9 +257,9 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
         if view_mode == 1:
             print('Processing data:')
-            list_data, list_filename, latitude_selected, time_selected, list_tau = \
+            list_data, list_filename, latitude_selected, time_selected = \
                 vars_zonal_mean_in_time_co2ice_exists(filename=filename, data=data_target, data_name=name_target,
-                                                      local_time=local_time, density=False)
+                                                      local_time=local_time)
 
             print('Display:')
             display_vars_1fig_profiles(filename, list_data, latitude_selected, x_min=1e-2, x_max=2000,
@@ -297,7 +330,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                     files = listdir(path_2 + directory)
                 filename_2 = getfilename(files)
                 filename_2 = path_2 + directory + filename_2
-                data_target_2 = get_data(filename_2, target=name_target)
+                data_target_2, list_var = get_data(filename_2, target=name_target)
                 data_north_2, data_south_2 = temp_thermal_structure_polar_region(filename=filename_2,
                                                                                  data=data_target_2)
 
@@ -327,12 +360,14 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
         if view_mode == 9:
             print('Processing data:')
-            data_max_radius, data_max_alt, latitude = riceco2_max_local_time_evolution(filename=filename,
-                                                                                       data=data_target)
+            data_max_radius, data_max_alt, data_min_radius, data_min_alt, data_mean_radius, data_mean_alt, latitude = \
+                riceco2_max_local_time_evolution(filename=filename, data=data_target)
 
             print('Display:')
             display_riceco2_max_local_time_evolution(filename=filename, data_max_radius=data_max_radius,
-                                                     data_max_alt=data_max_alt, local_time=local_time,
+                                                     data_max_alt=data_max_alt, data_min_radius=data_min_radius,
+                                                     data_min_alt=data_min_alt, data_mean_radius=data_mean_radius,
+                                                     data_mean_alt=data_mean_alt, local_time=local_time,
                                                      latitude=latitude)
 
     elif name_target in ['satuco2']:
@@ -340,8 +375,9 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('     1: zonal mean of saturation, for 3 latitudes, with co2ice mmr (fig: alt-ls)')
         print('     2: [TBD] saturation in localtime (fig: lt-alt')
         print('     3: saturation with co2ice mmr in polar regions, [0:30]°ls SP, [270-300]°ls NP (fig: alt-lon)')
-        print('     4: Thickness atmosphere layer in polar regions, to compare with Fig.9 of Hu2019 (fig: thick-ls)')
+        print('     4: Thickness atmosphere layer in polar regions (fig: thick-ls)')
         print('     5: Saturation at 0°N along longitude (fig: alt-lon)')
+        print('     6: Saturation local time - ls, at 0°N, 0.5 Pa')
         print('')
         if view_mode is None:
             view_mode = int(input('Select number:'))
@@ -357,20 +393,20 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                      data_co2ice_north, data_co2ice_eq, data_co2ice_south,
                                                      latitude_north, latitude_eq, latitude_south, binned)
 
-        if view_mode == 2:
+        elif view_mode == 2:
             print('TO be done.')
 
-        if view_mode == 3:
+        elif view_mode == 3:
             print('Processing data:')
             data_satuco2_north, data_satuco2_south, data_co2ice_north, data_co2ice_south, latitude_north, \
-            latitude_south, binned = satuco2_time_mean_with_co2_ice(filename, data_target)
+                latitude_south, binned = satuco2_time_mean_with_co2_ice(filename, data_target)
 
             print('Display:')
             display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north, data_satuco2_south,
                                                             data_co2ice_north, data_co2ice_south, latitude_north,
                                                             latitude_south, binned)
 
-        if view_mode == 4:
+        elif view_mode == 4:
             print('Processing data:')
             data_ice_layer, data_ice_layer_std = satuco2_hu2012_fig9(filename=filename, data=data_target,
                                                                      local_time=local_time)
@@ -379,7 +415,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             display_satuco2_thickness_atm_layer(data_ice_layer, data_ice_layer_std,
                                                 save_name=f'satuco2_thickness_polar_region_{local_time}h.png')
 
-        if view_mode == 5:
+        elif view_mode == 5:
             print('Processing data:')
             data_processed = satuco2_altitude_longitude(filename=filename, data=data_target)
 
@@ -388,6 +424,13 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                             vcenter=1, vmax=1000,
                                             title=f'Saturation of CO2 at 0°N, mean over the year ({local_time}h)',
                                             save_name=f'satuco2_altitude_longitude_0N_{local_time}h')
+        elif view_mode == 6:
+            data_processed = vars_localtime_ls(filename=filename, data=data_target, latitude=0, altitude=0.5)
+
+            print('Display:')
+            display_co2_ice_localtime_ls(filename=filename, data=data_processed, unit='', norm='linear', vmin=1,
+                                         vmax=10, title='CO2 saturation at 0°N and 0.5 Pa',
+                                         save_name='satuco2_zonal_mean_localtime_ls_0N_0p5Pa')
 
     elif name_target in ['saturation']:
         print('What do you wanna do?')
@@ -401,7 +444,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             # TODO: put this in DataProcessed
             lat1 = float(input('Select the first latitude (°N): '))
             lat2 = float(input('Select the second latitude (°N): '))
-            data_latitude = get_data(filename, target='latitude')
+            data_latitude, list_var = get_data(filename, target='latitude')
             data_target, tmp = slice_data(data_target, dimension_data=data_latitude[:], value=[lat1, lat2])
 
             data_target = correction_value(data_target[:, :, :, :], operator='inf', threshold=1e-13)
@@ -421,8 +464,11 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('     6: Thermal structure in winter polar regions at 60°N/S (fig. alt-ls)')
         print('     \t 601: compare with another run')
         print('     7: dT zonal mean and altitude of cold pocket, compared to SPICAM data')
-        print('     8: stationary wave, years mean at 0°N (fig: alt-lon)')
+        print('     8: stationary wave, year mean at 0°N (fig: alt-lon)')
         print('     9: stationary wave, at 0°N and -45°E (fig: alt-ls)')
+        print('    10: temperature along longitude and localtime at 0.5 Pa and 0°N (fig: hl-lon)')
+        print('    11: temperature along longitude and solar longitude at 0.5 Pa and 0°N (fig: ls-lon)')
+        print('    12: temperature local time - ls, at 0°N, 0.5 Pa')
         print('')
 
         if view_mode is None:
@@ -465,7 +511,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
             print('Display:')
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed, unit='K',
-                                     norm=None, levels=None, observation=False, latitude_selected=None,
+                                     norm=None, vmin=100, vmax=300, observation=False, latitude_selected=None,
                                      localtime_selected=local_time, title=None, tes=None, mvals=None, layer=layer,
                                      save_name=f'temp_zonal_mean_layer{layer:d}_{layer_selected:.0e}_Pa_comparison'
                                                f'_tes_mvals')
@@ -490,7 +536,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
                 filename_2 = getfilename(files)
                 filename_2 = path_2 + directory + filename_2
-                data_target_2 = get_data(filename_2, target=name_target)
+                data_target_2, list_var = get_data(filename_2, target=name_target)
                 data_north_2, data_south_2 = temp_thermal_structure_polar_region(filename=filename_2,
                                                                                  data=data_target_2)
 
@@ -546,8 +592,34 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print(min(data_processed), max(data_processed))
             title = f'Temperature at [0°N, -45°E] ({local_time}h) '
             save_name = f'temp_altitude_ls_0N_-45E_{local_time}h'
-            display_vars_altitude_ls(filename=filename, data_1=data_processed,  local_time=local_time,
+            display_vars_altitude_ls(filename=filename, data_1=data_processed, local_time=local_time,
                                      norm='linear', unit='K', vmin=vmin, vmax=vmax, title=title, save_name=save_name)
+        elif view_mode == 10:
+            print('Processing data:')
+            data_processed = vars_localtime_longitude(filename=filename, data=data_target, latitude=0, altitude=0.5)
+
+            print('Display:')
+            display_vars_localtime_longitude(filename=filename, data=data_processed, norm='linear', vmin=140, vmax=160,
+                                             unit='K', title=f'Temperature at 0°N and 0.5 Pa',
+                                             save_name=f'temp_local_time_longitude_0N_0p5Pa')
+        elif view_mode == 11:
+            print('Processing data:')
+            data_processed = vars_ls_longitude(filename=filename, data=data_target, latitude=0, altitude=0.5)
+
+            print('Display:')
+            display_vars_ls_longitude(filename=filename, data=data_processed, norm='linear', vmin=100, vmax=160,
+                                      local_time=local_time,
+                                      unit='K', title=f'Temperature at 0°N and 0.5 Pa ('
+                                                      f'{local_time:.0f}h)',
+                                      save_name=f'temp_ls_longitude_0N_0p5Pa_{local_time:.0f}h')
+        elif view_mode == 12:
+            data_processed = vars_localtime_ls(filename=filename, data=data_target, latitude=0, altitude=0.5)
+
+            print('Display:')
+            display_co2_ice_localtime_ls(filename=filename, data=data_processed, unit='K', norm='linear', vmin=120,
+                                         vmax=160, title='Temperature at 0°N and 0.5 Pa',
+                                         save_name='temp_zonal_mean_localtime_ls_0N_0p5Pa')
+
     # ================================================================================================================ #
 
     # 3-Dimension variable
@@ -835,7 +907,7 @@ def main():
     filename = getfilename(files, selection=arg_file)
     filename = directory_store + filename
 
-    data_target = get_data(filename, target=arg_target)
+    data_target, list_var = get_data(filename, target=arg_target)
     print(f'You have selected the variable: {data_target.name}')
 
     if data_target.ndim <= 2:
