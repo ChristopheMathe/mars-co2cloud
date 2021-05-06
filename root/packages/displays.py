@@ -1622,7 +1622,7 @@ def display_vars_latitude_longitude(filename, data, unit, norm, vmin, vmax, titl
     return
 
 
-def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax, observation=False,
+def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax, cmap, observation=False,
                              latitude_selected=None, localtime_selected=None, title=None, tes=None, mvals=None,
                              layer=None, save_name='test'):
     from matplotlib.colors import LogNorm, Normalize
@@ -1633,7 +1633,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     if mvals:
         n_subplot += 1
 
-    cmap = 'inferno'  # 'coolwarm'
+
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
     else:
@@ -1764,7 +1764,11 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
             data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
                                                                          [latitude_selected[0], latitude_selected[-1]])
             if data_obs_ls.shape[0] != 0:
-                plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='+', zorder=1)
+                plt.scatter(data_obs_ls, data_obs_latitude, color='magenta', marker='o', s=3, zorder=10000,
+                            label='Meso')
+
+        mola_latitude, mola_ls, mola_altitude = mola(only_location=True)
+        plt.scatter(mola_ls, mola_latitude, color='red', marker='o', zorder=10000, s=3, label='Tropo')
 
     if i_subplot != 0:
         for axes in ax.reshape(-1):

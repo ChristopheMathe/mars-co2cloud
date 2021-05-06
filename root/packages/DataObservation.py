@@ -1,7 +1,7 @@
 from .ncdump import get_data
 
 
-def mola():
+def mola(only_location=None):
     """
     dimensions:
         x = 361 ;
@@ -21,18 +21,30 @@ def mola():
             :Title = "MOLA cloud top altitude above surface data (binned)" ;
     """
     path = '/home/mathe/Documents/owncloud/GCM/MOLA_cloudaltis_1x1.nc'
-    mola_latitude = get_data(filename=path, target='Latitude')
-    mola_ls = get_data(filename=path, target='Ls')
-    mola_altitude = get_data(filename=path, target='Altitude')
+    mola_latitude, list_var = get_data(filename=path, target='Latitude')
+    mola_ls, list_var = get_data(filename=path, target='Ls')
+    mola_altitude, list_var = get_data(filename=path, target='Altitude')
     mola_altitude = mola_altitude[:, :]
-    from numpy import max, min
+    from numpy import max, min, append, array
 
-    for i in range(mola_altitude.shape[0]):
-        for j in range(mola_altitude.shape[1]):
-            if mola_altitude[i, j] != mola_altitude[i, j]:
-                mola_altitude[i, j] = None
-
-    print(max(mola_altitude), min(mola_altitude))
+    tmp_lat = array([])
+    tmp_ls = array([])
+    if only_location:
+        for i in range(mola_altitude.shape[0]):
+            for j in range(mola_altitude.shape[1]):
+                if mola_altitude[i, j] != mola_altitude[i, j]:
+                    mola_altitude[i, j] = None
+                else:
+                    tmp_lat = append(tmp_lat, mola_latitude[i])
+                    tmp_ls = append(tmp_ls, mola_ls[j])
+        mola_ls = tmp_ls
+        mola_latitude = tmp_lat
+    else:
+        for i in range(mola_altitude.shape[0]):
+            for j in range(mola_altitude.shape[1]):
+                if mola_altitude[i, j] != mola_altitude[i, j]:
+                    mola_altitude[i, j] = None
+        print(max(mola_altitude), min(mola_altitude))
 
     return mola_latitude, mola_ls, mola_altitude
 
