@@ -4,6 +4,7 @@ from .lib_function import *
 from .ncdump import get_data, getfilename
 from os import mkdir, path
 from sys import exit
+from.constant_parameter import cst_stefan, threshold
 
 
 def co2ice_thickness_atm_layer(filename, data):
@@ -80,8 +81,8 @@ def co2ice_polar_cloud_distribution(filename, data, normalization, local_time):
 
     for latitude in range(data_north.shape[2]):
         for altitude in range(data_north.shape[1]):
-            distribution_north[latitude, altitude] = count_nonzero(data_north[:, altitude, latitude, :] >= 1e-13)
-            distribution_south[latitude, altitude] = count_nonzero(data_south[:, altitude, latitude, :] >= 1e-13)
+            distribution_north[latitude, altitude] = count_nonzero(data_north[:, altitude, latitude, :] >= threshold)
+            distribution_south[latitude, altitude] = count_nonzero(data_south[:, altitude, latitude, :] >= threshold)
 
     # normalisation
     if normalization:
@@ -229,9 +230,9 @@ def co2ice_coverage(filename, data):
     for lat in range(nlat):
         for lon in range(nlon):
             for ls in range(ntime):  # time
-                if any(data[ls, :, lat, lon] > 1e-13):  # There at least one cell with co2_ice
+                if any(data[ls, :, lat, lon] > threshold):  # There at least one cell with co2_ice
                     data_co2ice_coverage[lat, lon] += 1
-                    if any(data[ls, idx_10pa:, lat, lon] > 1e-13):  # There at least one cell with co2_ice in mesosphere
+                    if any(data[ls, idx_10pa:, lat, lon] > threshold):  # There at least one cell with co2_ice in mesosphere
                         data_co2ice_coverage_meso[lat, lon] = 1
 
     data_co2ice_coverage = correction_value(data=data_co2ice_coverage, operator='eq', threshold=0)
@@ -269,6 +270,13 @@ def emis_polar_winter_gg2020_fig13(filename, data, local_time):
     data_mean_sp = mean(data_sp, axis=0)
 
     return data_mean_np, data_mean_sp
+
+
+def flux_lw_apparent_temperature_zonal_mean(data):
+    # Flux = sigma T^4
+    temperature_apparent = power(data/cst_stefan, 1/4)
+    temperature_apparent = mean(temperature_apparent, axis=2).T
+    return temperature_apparent
 
 
 def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):

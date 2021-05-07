@@ -720,6 +720,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('What do you wanna do?')
         print('     1: zonal mean (fig: ls-lat)')
         print('     2: Polar plot every 15° ls mean, lat=60°-90° (fig: lat-ls)')
+        print('     3: Apparent temperature (fig:ls-lat)')
         print('')
         if view_mode is None:
             view_mode = int(input('Select number:'))
@@ -742,7 +743,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                      tes=None, mvals=None, layer=None,
                                      save_name=f'{name_target}_zonal_mean_{local_time}h')
 
-        if view_mode == 2:
+        elif view_mode == 2:
             print('Processing data:')
             data_mean, time_bin = vars_time_mean(filename=filename, data=data_target, duration=15)
 
@@ -751,6 +752,19 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                      levels=arange(0, 450, 25), norm=None, cmap='inferno',
                                                      localtime=local_time, unit='W.m$^{-2}$',
                                                      save_name=f'{name_target}_15ls_mean_')
+
+        elif view_mode == 3:
+            print('Processing:')
+            zonal_mean = flux_lw_apparent_temperature_zonal_mean(data=data_target)
+
+            print('Display:')
+            print(min(zonal_mean), max(zonal_mean))
+            display_vars_latitude_ls(filename=filename, name_target=name_target, data=zonal_mean, unit='K',
+                                     norm=None, vmin=130, vmax=220, observation=False, cmap='inferno',
+                                     latitude_selected=None, localtime_selected=local_time,
+                                     title=f'Zonal mean of apparent temperature, at {local_time}h',
+                                     tes=None, mvals=None, layer=None,
+                                     save_name=f'apparent_temperature_zonal_mean_{local_time}h')
 
     elif name_target in ['tau1mic']:
         print('What do you wanna do?')

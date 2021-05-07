@@ -7,6 +7,7 @@ from numpy.ma import masked_inside
 from os import listdir
 from pylab import *
 import matplotlib.pyplot as plt
+from sys import exit
 
 
 class NonLinearColormap(LinearSegmentedColormap):
@@ -175,6 +176,17 @@ def main():
     data_localtime, idx, stats = check_local_time(data_time, selected_time=14)
     data_time = data_time[idx::len(data_localtime)]
     ndx, axis_ls, ls_lin = get_ls_index(data_time)
+    if ls_lin:
+        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls = data_ls[idx::len(data_localtime)]
+        data_h2o_ice_s, data_time = linearize_ls(data=data_h2o_ice_s, data_ls=data_ls)
+        data_icetot, data_time = linearize_ls(data=data_icetot, data_ls=data_ls)
+        data_tau_tes, data_time = linearize_ls(data=data_tau_tes, data_ls=data_ls)
+        data_mtot, data_time = linearize_ls(data=data_mtot, data_ls=data_ls)
+        data_ps, data_time = linearize_ls(data=data_ps, data_ls=data_ls)
+        data_tsurf, data_time = linearize_ls(data=data_tsurf, data_ls=data_ls)
+        data_co2ice, data_time = linearize_ls(data=data_co2ice, data_ls=data_ls)
+        ndx, axis_ls, ls_lin = get_ls_index(data_time)
 
     # Compute the difference between Margaux and me
     delta_h2o_ice_s = compute_error(data_ref_h2o_ice_s, data_h2o_ice_s)
@@ -236,11 +248,13 @@ def main():
     data_tes = Dataset(directory_tes + 'TES.SeasonalClimatology.nc', "r", format="NETCDF4")
     data_tes_tauice = data_tes.variables['tauice']
     data_tes_h2o_vap = data_tes.variables['water']
+    data_tes_tsurf_day = data_tes.variables['Tsurf_day']
 
     data_tes_time = data_tes.variables['time']
     data_tes_latitude = data_tes.variables['latitude']
     zonal_mean_tes_tauice = mean(data_tes_tauice, axis=2).T
     zonal_mean_tes_h2o_vap = mean(data_tes_h2o_vap, axis=2).T
+    zonal_mean_tes_tsurf_day = mean(data_tes_tsurf_day, axis=2).T
 
     cmap_lin = get_cmap('jet')
     levels1 = [0, 0.025, 0.05, 0.075, 0.10, 0.15, 0.20, 0.75, 2.0, 4.0]
@@ -253,90 +267,145 @@ def main():
     idx2 = abs(data_tes_time[:] - 720).argmin()
 
     # FIRST PLOTS: TAU-TES
-    fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20, 8))
-    fig.subplots_adjust(wspace=0.1)
-    ax[0].set_title('TES')
+    gridspec = {'width_ratios': [1, 1, 1, 0.1]}
+    fig, ax = plt.subplots(nrows=1, ncols=4, figsize=(20, 8), gridspec_kw=gridspec)
+    fig.subplots_adjust(wspace=0.05)
+    ax[0].set_title('TES', fontsize=18)
     ctf = ax[0].contourf(data_tes_time[idx1:idx2] - 360, data_tes_latitude[:], zonal_mean_tes_tauice[:, idx1:idx2],
                          levels=levels1, cmap=cmap_non_lin1)
-    cbar = fig.colorbar(ctf)
-    cbar.set_label('Cloud opacity at 825 cm$^{-1}$')
 
-    ax[1].set_title('M. VALS')
+    ax[1].set_title('M. VALS', fontsize=18)
     ax[1].contourf(data_time_mvals[:], data_latitude[:], data_ref_tau_tes, levels=levels1, cmap=cmap_non_lin1)
 
-    ax[2].set_title('Our')
+    ax[2].set_title('Our', fontsize=18)
     ax[2].contourf(data_time[:], data_latitude[:], data_tau_tes, levels=levels1, cmap=cmap_non_lin1)
 
+    cbar = fig.colorbar(ctf, cax=ax[3])
+    cbar.set_label('Cloud opacity at 825 cm$^{-1}$', fontsize=18)
+    cbar.ax.tick_params(labelsize=18)
+
     ax[0].set_yticks(ticks=[-90, -60, -30, 0, 30, 60, 90])
-    ax[0].set_yticklabels(labels=[-90, -60, -30, 0, 30, 60, 90])
+    ax[0].set_yticklabels(labels=[-90, -60, -30, 0, 30, 60, 90], fontsize=18)
     ax[1].set_yticks(ticks=[-90, -60, -30, 0, 30, 60, 90])
     ax[1].set_yticklabels(labels='')
     ax[2].set_yticks(ticks=[-90, -60, -30, 0, 30, 60, 90])
     ax[2].set_yticklabels(labels='')
 
     ax[0].set_xticks(ticks=[0, 90, 180, 270, 360])
-    ax[0].set_xticklabels(labels=[0, 90, 180, 270, 360])
+    ax[0].set_xticklabels(labels=[0, 90, 180, 270, 360], fontsize=18)
     ax[1].set_xticks(ticks=[0, 90, 180, 270, 360])
-    ax[1].set_xticklabels(labels=['', 90, 180, 270, 360])
-    ax[2].set_xticks(ticks=[0, 90, 180, 270, 360])
-    ax[2].set_xticklabels(labels=['', 90, 180, 270, 360])
+    ax[1].set_xticklabels(labels=['', 90, 180, 270, 360], fontsize=18)
+    ax[2].set_xticks(ticks=ndx)
+    ax[2].set_xticklabels(labels=['', 90, 180, 270, 360], fontsize=18)
 
     ax[0].grid(color='black')
     ax[1].grid(color='black')
     ax[2].grid(color='black')
 
-    fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=14)
-    fig.text(0.5, 0.05, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
+    fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=18)
+    fig.text(0.5, 0.05, 'Solar longitude (°)', ha='center', va='center', fontsize=18)
     fig.savefig('check_water_cycle_tes_mvals_me_tauice.png', bbox_inche='tight')
     plt.close(fig)
 
     # PLOT 2 : H2O_VAP
-    fig, ax = plt.subplots(nrows=1, ncols=3, figsize=(20, 8))
-    fig.subplots_adjust(wspace=0.1)
-    ax[0].set_title('TES')
+    fig, ax = plt.subplots(nrows=1, ncols=4, figsize=(20, 8), gridspec_kw=gridspec)
+    fig.subplots_adjust(wspace=0.05)
+    ax[0].set_title('TES', fontsize=18)
     ctf = ax[0].contourf(data_tes_time[idx1:idx2] - 360, data_tes_latitude[:], zonal_mean_tes_h2o_vap[:, idx1:idx2],
                          levels=levels2, cmap=cmap_non_lin2)
     ctr = ax[0].contour(data_tes_time[idx1:idx2] - 360, data_tes_latitude[:], zonal_mean_tes_h2o_vap[:, idx1:idx2],
                         levels=levels2, colors='white', linewidths=1)
-    ax[0].clabel(ctr, inline=1, fontsize=10, fmt='%d')
+    ax[0].clabel(ctr, inline=1, fontsize=12, fmt='%d')
 
-    ax[1].set_title('M. VALS')
+    ax[1].set_title('M. VALS', fontsize=18)
     ax[1].contourf(data_time_mvals[:], data_latitude[:], data_ref_mtot * 1e3, levels=levels2, cmap=cmap_non_lin2)
     ctr1 = ax[1].contour(data_time_mvals[:], data_latitude[:], data_ref_mtot * 1e3, levels=levels2, colors='white',
                          linewidths=1)
-    ax[1].clabel(ctr1, inline=1, fontsize=10, fmt='%d')
+    ax[1].clabel(ctr1, inline=1, fontsize=12, fmt='%d')
 
-    ax[2].set_title('Our')
+    ax[2].set_title('Our', fontsize=18)
     ax[2].contourf(data_time[:], data_latitude[:], data_mtot * 1e3, levels=levels2, cmap=cmap_non_lin2)
     ctr2 = ax[2].contour(data_time[:], data_latitude[:], data_mtot * 1e3, levels=levels2, colors='white', linewidths=1)
-    ax[2].clabel(ctr2, inline=1, fontsize=10, fmt='%d')
+    ax[2].clabel(ctr2, inline=1, fontsize=12, fmt='%d')
 
-    cbar = fig.colorbar(ctf)
-    cbar.set_label('pr.µm')
+    cbar = fig.colorbar(ctf, cax=ax[3])
+    cbar.set_label('pr.µm', fontsize=18)
+    cbar.ax.tick_params(labelsize=18)
 
     ax[0].set_yticks(ticks=[-90, -60, -30, 0, 30, 60, 90])
-    ax[0].set_yticklabels(labels=[-90, -60, -30, 0, 30, 60, 90])
+    ax[0].set_yticklabels(labels=[-90, -60, -30, 0, 30, 60, 90], fontsize=18)
     ax[1].set_yticks(ticks=[-90, -60, -30, 0, 30, 60, 90])
     ax[1].set_yticklabels(labels='')
     ax[2].set_yticks(ticks=[-90, -60, -30, 0, 30, 60, 90])
     ax[2].set_yticklabels(labels='')
 
     ax[0].set_xticks(ticks=[0, 90, 180, 270, 360])
-    ax[0].set_xticklabels(labels=[0, 90, 180, 270, 360])
+    ax[0].set_xticklabels(labels=[0, 90, 180, 270, 360], fontsize=18)
     ax[1].set_xticks(ticks=[0, 90, 180, 270, 360])
-    ax[1].set_xticklabels(labels=['', 90, 180, 270, 360])
-    ax[2].set_xticks(ticks=[0, 90, 180, 270, 360])
-    ax[2].set_xticklabels(labels=['', 90, 180, 270, 360])
+    ax[1].set_xticklabels(labels=['', 90, 180, 270, 360], fontsize=18)
+    ax[2].set_xticks(ticks=ndx)
+    ax[2].set_xticklabels(labels=['', 90, 180, 270, 360], fontsize=18)
 
     ax[0].grid(color='black')
     ax[1].grid(color='black')
     ax[2].grid(color='black')
 
-    fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=14)
-    fig.text(0.5, 0.05, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
-    plt.savefig('check_water_cycle_tes_mvals_me_h2o_vap.png', bbox_inche='tight')
+    fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=18)
+    fig.text(0.5, 0.05, 'Solar longitude (°)', ha='center', va='center', fontsize=18)
+    plt.savefig('check_water_cycle_tes_mvals_me_h2o_vap.png')
     plt.close()
 
+    # PLOT 3 : Tsurf day
+    levels3 = arange(125, 350, 25)
+    cmap3 = 'inferno'
+    fig, ax = plt.subplots(nrows=1, ncols=4, figsize=(20, 8), gridspec_kw=gridspec)
+    fig.subplots_adjust(wspace=0.05)
+    ax[0].set_title('TES', fontsize=18)
+    ctf = ax[0].contourf(data_tes_time[idx1:idx2] - 360, data_tes_latitude[:], zonal_mean_tes_tsurf_day[:, idx1:idx2],
+                         levels=levels3, cmap=cmap3)
+    ctr = ax[0].contour(data_tes_time[idx1:idx2] - 360, data_tes_latitude[:], zonal_mean_tes_tsurf_day[:, idx1:idx2],
+                        levels=levels3, colors='white', linewidths=1)
+    ax[0].clabel(ctr, inline=1, fontsize=12, fmt='%d')
+
+    ax[1].set_title('M. VALS', fontsize=18)
+    ax[1].contourf(data_time_mvals[:], data_latitude[:], data_ref_tsurf, levels=levels3, cmap=cmap3)
+    ctr1 = ax[1].contour(data_time_mvals[:], data_latitude[:], data_ref_tsurf, levels=levels3, colors='white',
+                         linewidths=1)
+    ax[1].clabel(ctr1, inline=1, fontsize=12, fmt='%d')
+
+    ax[2].set_title('Our', fontsize=18)
+    ax[2].contourf(data_time[:], data_latitude[:], data_tsurf, levels=levels3, cmap=cmap3)
+    ctr2 = ax[2].contour(data_time[:], data_latitude[:], data_tsurf, levels=levels3, colors='white', linewidths=1)
+    ax[2].clabel(ctr2, inline=1, fontsize=12, fmt='%d')
+
+    cbar = fig.colorbar(ctf, cax=ax[3])
+    cbar.set_label('K', fontsize=18)
+    cbar.ax.tick_params(labelsize=18)
+
+    ax[0].set_yticks(ticks=[-90, -60, -30, 0, 30, 60, 90])
+    ax[0].set_yticklabels(labels=[-90, -60, -30, 0, 30, 60, 90], fontsize=18)
+    ax[1].set_yticks(ticks=[-90, -60, -30, 0, 30, 60, 90])
+    ax[1].set_yticklabels(labels='')
+    ax[2].set_yticks(ticks=[-90, -60, -30, 0, 30, 60, 90])
+    ax[2].set_yticklabels(labels='')
+
+    ax[0].set_xticks(ticks=[0, 90, 180, 270, 360])
+    ax[0].set_xticklabels(labels=[0, 90, 180, 270, 360], fontsize=18)
+    ax[1].set_xticks(ticks=[0, 90, 180, 270, 360])
+    ax[1].set_xticklabels(labels=['', 90, 180, 270, 360], fontsize=18)
+    ax[2].set_xticks(ticks=ndx)
+    ax[2].set_xticklabels(labels=['', 90, 180, 270, 360], fontsize=18)
+
+    ax[0].grid(color='black')
+    ax[1].grid(color='black')
+    ax[2].grid(color='black')
+
+    fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=18)
+    fig.text(0.5, 0.05, 'Solar longitude (°)', ha='center', va='center', fontsize=18)
+    plt.savefig('check_water_cycle_tes_mvals_me_tsurf_day.png')
+    plt.close()
+
+    exit()
     # Compare with PFS obs
     # To compare to Figure 2 of Navarro2014
     # Do water_vapor zonal mean
