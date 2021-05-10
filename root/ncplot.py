@@ -4,6 +4,7 @@ from packages.ncdump import *
 from os import listdir
 from numpy import mean, logspace, arange, linspace, min, max
 from sys import argv
+from packages.constant_parameter import threshold
 
 
 def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=None):
@@ -14,9 +15,9 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         if name_target == 'satuco2':
             data_target = correction_value(data_target[:, :, :, :], operator='inf_strict', threshold=1)
         else:
-            data_target = correction_value(data_target[:, :, :, :], operator='inf', threshold=1e-13)
+            data_target = correction_value(data_target[:, :, :, :], operator='inf', threshold=threshold)
     elif data_target.ndim == 3:
-        data_target = correction_value(data_target[:, :, :], operator='inf', threshold=1e-13)
+        data_target = correction_value(data_target[:, :, :], operator='inf', threshold=threshold)
 
     # ================================================================================================================ #
 
@@ -91,7 +92,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         elif view_mode == 4:
             print('Processing data:')
             distribution_north, distribution_south, latitude_north, latitude_south = co2ice_polar_cloud_distribution(
-                filename, data_target, normalization=False, local_time=local_time)
+                filename, data_target, normalization=True, local_time=local_time)
 
             print('Display:')
             display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
@@ -654,7 +655,8 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                                                         data=data_target)
 
             print('Display:')
-            display_vars_2fig_profile(filename, accumulation_north, accumulation_south)
+            display_co2ice_cumulative_mass_polar_region(filename=filename, data1=accumulation_north,
+                                                        data2=accumulation_south, local_time=local_time)
 
         if view_mode == 3:
             print('Processing data:')

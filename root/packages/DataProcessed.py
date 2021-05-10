@@ -64,6 +64,7 @@ def co2ice_polar_cloud_distribution(filename, data, normalization, local_time):
 
     latitude_north = data_latitude[latitude_north[0]: latitude_north[1]]
     latitude_south = data_latitude[latitude_south[0]: latitude_south[1]]
+
     # sliced data between 104 - 360°Ls time to compare with Fig8 of Neumann et al. 2003
     data_time, list_var = get_data(filename, target='Time')
     if data_time.units != 'deg':
@@ -76,13 +77,13 @@ def co2ice_polar_cloud_distribution(filename, data, normalization, local_time):
     data_north, time_selected = slice_data(data_north, dimension_data=data_time, value=[104, 360])
     data_south, time_selected = slice_data(data_south, dimension_data=data_time, value=[104, 360])
 
-    distribution_north = zeros((data_north.shape[2], data_north.shape[1]))
-    distribution_south = zeros((data_south.shape[2], data_south.shape[1]))
+    distribution_north = zeros((data_north.shape[1], data_north.shape[2]))
+    distribution_south = zeros((data_south.shape[1], data_south.shape[2]))
 
     for latitude in range(data_north.shape[2]):
         for altitude in range(data_north.shape[1]):
-            distribution_north[latitude, altitude] = count_nonzero(data_north[:, altitude, latitude, :] >= threshold)
-            distribution_south[latitude, altitude] = count_nonzero(data_south[:, altitude, latitude, :] >= threshold)
+            distribution_north[altitude, latitude] = count_nonzero(data_north[:, altitude, latitude, :] >= threshold)
+            distribution_south[altitude, latitude] = count_nonzero(data_south[:, altitude, latitude, :] >= threshold)
 
     # normalisation
     if normalization:
@@ -158,6 +159,10 @@ def co2ice_cumulative_masses_polar_cap(filename, data):
 
     data_area_north, latitude_selected = slice_data(data_area, dimension_data=data_latitude[:], value=[60, 90])
     data_area_south, latitude_selected = slice_data(data_area, dimension_data=data_latitude[:], value=[-60, -90])
+
+    # Diurnal mean
+    data_north = mean(data_north.reshape(669, 12, data_north.shape[1], data_north.shape[2]), axis=1)
+    data_south = mean(data_south.reshape(669, 12, data_south.shape[1], data_south.shape[2]), axis=1)
 
     accumulation_co2ice_north = zeros(data_north.shape[0])
     accumulation_co2ice_south = zeros(data_south.shape[0])
@@ -497,7 +502,7 @@ def riceco2_zonal_mean_co2ice_exists(filename, data, local_time):
     zonal_mean = mean(zonal_mean, axis=1)  # altitude mean
     zonal_mean = rotate_data(zonal_mean, do_flip=True)
 
-    zonal_mean = correction_value(zonal_mean[0], operator='inf', threshold=1e-13)
+    zonal_mean = correction_value(zonal_mean[0], operator='inf', threshold=threshold)
     zonal_mean = zonal_mean * 1e6  # m to µm
 
     return zonal_mean, latitude_selected

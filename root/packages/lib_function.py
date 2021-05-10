@@ -457,7 +457,7 @@ def slice_data(data, dimension_data, value):
         else:
             idx2 += 1
 
-        if idx2 == dimension_data.shape[0]:  # Deals with boundaries
+        if idx2 == dimension_data.shape[0] and dimension_data[idx2-1] > 0:  # Deals with boundaries
             idx2 -= 1
 
         selected_idx = [idx1, idx2]
