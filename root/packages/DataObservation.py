@@ -1,7 +1,7 @@
 from .ncdump import get_data
 
 
-def mola(only_location=None):
+def observation_mola(only_location=None):
     """
     dimensions:
         x = 361 ;
@@ -24,12 +24,12 @@ def mola(only_location=None):
     mola_latitude, list_var = get_data(filename=path, target='Latitude')
     mola_ls, list_var = get_data(filename=path, target='Ls')
     mola_altitude, list_var = get_data(filename=path, target='Altitude')
-    mola_altitude = mola_altitude[:, :]
-    from numpy import max, min, append, array
+    mola_altitude = mola_altitude[:, :] / 1e3  # m to km
+    from numpy import max, min, append, array, nan
 
-    tmp_lat = array([])
-    tmp_ls = array([])
     if only_location:
+        tmp_lat = array([])
+        tmp_ls = array([])
         for i in range(mola_altitude.shape[0]):
             for j in range(mola_altitude.shape[1]):
                 if mola_altitude[i, j] != mola_altitude[i, j]:
@@ -43,7 +43,7 @@ def mola(only_location=None):
         for i in range(mola_altitude.shape[0]):
             for j in range(mola_altitude.shape[1]):
                 if mola_altitude[i, j] != mola_altitude[i, j]:
-                    mola_altitude[i, j] = None
+                    mola_altitude[i, j] = nan
         print(max(mola_altitude), min(mola_altitude))
 
     return mola_latitude, mola_ls, mola_altitude

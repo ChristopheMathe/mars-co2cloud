@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 from .DataObservation import *
 from .DataProcessed import *
-from .constant_parameter import figsize_1graph, figsize_1graph_xtend, figsize_2graph_cols, figsize_6graph_cols, \
-    figsize_12graph_3rows_4cols, fontsize
+from .constant_parameter import figsize_1graph, figsize_1graph_xtend, figsize_2graph_rows, figsize_2graph_cols, \
+    figsize_6graph_cols, figsize_12graph_3rows_4cols, fontsize
 
 
 def colormap_idl_rainbow_plus_white():
@@ -275,7 +275,7 @@ def display_co2_ice_mola(filename, data):
 
     data_time, list_var = get_data(filename=filename, target='Time')
     data_latitude, list_var = get_data(filename=filename, target='latitude')
-    mola_latitude, mola_ls, mola_altitude = mola()
+    mola_latitude, mola_ls, mola_altitude = observation_mola()
     mola_altitude = correction_value(mola_altitude, operator='inf', threshold=0)
     mola_altitude = correction_value(mola_altitude, operator='sup', threshold=1e4)
 
@@ -785,10 +785,9 @@ def display_riceco2_max_local_time_evolution(filename, data_max_radius, data_max
     return
 
 
-def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None):
-    from matplotlib.colors import Normalize
+def display_riceco2_top_cloud_altitude(filename, top_cloud, mola=False, local_time=None):
+    from matplotlib.colors import Normalize, DivergingNorm
 
-    norm = Normalize(vmin=0, vmax=10)
     data_latitude, list_var = get_data(filename=filename, target='latitude')
     data_time, list_var = get_data(filename=filename, target='Time')
 
@@ -798,35 +797,75 @@ def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None):
         data_time = data_ls[idx::len(data_local_time)]
 
     top_cloud, interp_time = linearize_ls(data=top_cloud, data_ls=data_time)
+    idx, axis_ls, ls_lin = get_ls_index(interp_time)
 
     top_cloud = correction_value(data=top_cloud, operator='inf', threshold=0)
 
-    cmap = colormap_idl_rainbow_plus_white()
-    cmap.set_over("grey")
-    idx, axis_ls, ls_lin = get_ls_index(interp_time)
+    if mola:
+        cmap = 'Spectral'
+        #norm = Normalize(vmin=0, vmax=40)
+        norm = DivergingNorm(vmin=0, vcenter=10, vmax=40)
+        fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_2graph_rows)
+        fig.subplots_adjust(right=0.8, hspace=0.05)
+        cb = ax[0].pcolormesh(interp_time[:], data_latitude[:], top_cloud, norm=norm, cmap=cmap)
+        ax[0].set_facecolor('white')
+        ax[0].set_xticks(interp_time[idx])
+        ax[0].set_xticklabels(axis_ls, fontsize=fontsize)
+        ax[0].set_yticks(data_latitude[::8])
+        ax[0].set_yticklabels([str(int(x)) for x in data_latitude[::8]], fontsize=fontsize)
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
-    cb = ax.pcolormesh(interp_time[:], data_latitude[:], top_cloud, norm=norm, cmap=cmap)
-    ax.set_facecolor('white')
-    ax.set_xticks(interp_time[idx])
-    ax.set_xticklabels(axis_ls)
-    ax.set_yticks(data_latitude[::8])
-    ax.set_yticklabels(data_latitude[::8])
+        # MOLA observations
+        mola_latitude, mola_ls, mola_altitude = observation_mola(only_location=False)
+        ax[1].pcolormesh(mola_ls, mola_latitude, mola_altitude, norm=norm, cmap=cmap)
+        ax[1].set_facecolor('white')
+        ax[1].set_xticks(mola_ls[::90])
+        ax[1].set_xticklabels([str(int(x)) for x in mola_ls[::90]], fontsize=fontsize)
+        ax[1].set_yticks(mola_latitude[::30])
+        ax[1].set_yticklabels([str(int(x)) for x in mola_latitude[::30]], fontsize=fontsize)
 
-    cbar = plt.colorbar(cb, extend='max')
-    cbar.ax.set_title('km', fontsize=fontsize)
-    cbar.ax.tick_params(labelsize=fontsize)
+        cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+        cbar = plt.colorbar(cb, cax=cbar_ax, extend='max')
+        cbar.ax.set_title('km', fontsize=fontsize)
+        cbar.ax.tick_params(labelsize=fontsize)
 
-    ax.tick_params(axis='both', which='major', labelsize=fontsize)
-    ax.set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
-    ax.set_xlabel('Solar Longitude (°)', fontsize=fontsize)
-    ax.set_ylabel('Latitude (°N)', fontsize=fontsize)
-    if len(local_time) == 1:
-        ax.set_title(f'Zonal mean of top cloud altitude, at {local_time:0.f}h', fontsize=fontsize)
-        plt.savefig(f'top_cloud_altitude_comparable_to_mola_{local_time:0.f}h.png', bbox_inches='tight')
+        ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
+        ax[0].set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
+        fig.text(0.5, 0.06, 'Solar Longitude (°)', ha='center', va='center', fontsize=fontsize)
+        fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical',fontsize=fontsize)
+
+        if len(local_time) == 1:
+            ax[0].set_title(f'Zonal mean of top cloud altitude, at {local_time:0.f}h', fontsize=fontsize)
+            plt.savefig(f'top_cloud_altitude_compared_to_mola_{local_time:0.f}h.png', bbox_inches='tight')
+        else:
+            ax[0].set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
+            plt.savefig(f'top_cloud_altitude_diurnal_mean_compared_to_mola.png', bbox_inches='tight')
     else:
+        cmap = colormap_idl_rainbow_plus_white()
+        cmap.set_over("grey")
+        norm = Normalize(vmin=0, vmax=10)
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
+        cb = ax.pcolormesh(interp_time[:], data_latitude[:], top_cloud, norm=norm, cmap=cmap)
+        ax.set_facecolor('white')
+        ax.set_xticks(interp_time[idx])
+        ax.set_xticklabels(axis_ls)
+        ax.set_yticks(data_latitude[::8])
+        ax.set_yticklabels(data_latitude[::8])
+
+        cbar = plt.colorbar(cb, extend='max')
+        cbar.ax.set_title('km', fontsize=fontsize)
+        cbar.ax.tick_params(labelsize=fontsize)
+
+        ax.tick_params(axis='both', which='major', labelsize=fontsize)
         ax.set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
-        plt.savefig(f'top_cloud_altitude_comparable_to_mola_diurnal_mean.png', bbox_inches='tight')
+        ax.set_xlabel('Solar Longitude (°)', fontsize=fontsize)
+        ax.set_ylabel('Latitude (°N)', fontsize=fontsize)
+
+        if len(local_time) == 1:
+            ax.set_title(f'Zonal mean of top cloud altitude, at {local_time:0.f}h', fontsize=fontsize)
+            plt.savefig(f'top_cloud_altitude_comparable_to_mola_{local_time:0.f}h.png', bbox_inches='tight')
+        else:
+            ax.set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
+            plt.savefig(f'top_cloud_altitude_comparable_to_mola_diurnal_mean.png', bbox_inches='tight')
     plt.show()
     return
 
@@ -1810,7 +1849,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
                 plt.scatter(data_obs_ls, data_obs_latitude, color='magenta', marker='o', s=3, zorder=10000,
                             label='Meso')
 
-        mola_latitude, mola_ls, mola_altitude = mola(only_location=True)
+        mola_latitude, mola_ls, mola_altitude = observation_mola(only_location=True)
         plt.scatter(mola_ls, mola_latitude, color='red', marker='o', zorder=10000, s=3, label='Tropo')
 
     if i_subplot != 0:

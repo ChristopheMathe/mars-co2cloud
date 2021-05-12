@@ -246,6 +246,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('     1: mean radius at a latitude where co2_ice exists (fig: alt-µm)')
         print('     2: max radius day-night [To be done] (fig: lat-ls)')
         print('     3: altitude of top clouds (fig: lat-ls)')
+        print('        301: same but adapted for paper')
         print('     4: radius/co2ice/temp/satu in polar projection (not working)')
         print('     5: zonal mean of mean radius where co2_ice exists in the 15°N-15°S (fig: lat-ls)')
         print('     6: mean radius profile along year, with global mean radius (fig: alt-ls + alt+µm)')
@@ -278,12 +279,17 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print('Display:')
             print('To be Done.')  # TODO
 
-        if view_mode == 3:
+        if view_mode in [3, 301]:
             print('Processing data:')
             top_cloud = riceco2_top_cloud_altitude(filename=filename, data_target=data_target, local_time=local_time)
 
             print('Display:')
-            display_riceco2_top_cloud_altitude(filename=filename, top_cloud=top_cloud, local_time=local_time)
+            if view_mode == 3:
+                display_riceco2_top_cloud_altitude(filename=filename, top_cloud=top_cloud, local_time=local_time,
+                                                   mola=False)
+            if view_mode == 301:
+                display_riceco2_top_cloud_altitude(filename=filename, top_cloud=top_cloud, local_time=local_time,
+                                                   mola=True)
 
         if view_mode == 4:
             print('Processing data:')
