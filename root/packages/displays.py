@@ -2031,16 +2031,24 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, le
     import cartopy.crs as crs
     from numpy import unique, ma
     from matplotlib import cm
+    from matplotlib.colors import LogNorm, Normalize
 
     if isinstance(data, ma.MaskedArray):
         array_mask = True
     else:
         array_mask = False
 
+    if norm == 'log':
+        norm = LogNorm(vmin=1e1, vmax=1e13)
+    else:
+        norm = Normalize(vmin=0, vmax=1e13)
+
     plate_carree = crs.PlateCarree(central_longitude=0)
 
     data_longitude, list_var = get_data(filename=filename, target='longitude')
     data_latitude, list_var = get_data(filename=filename, target='latitude')
+
+    data_surface_local = gcm_surface_local(data_zareoid=None)
 
     # Slice data in polar regions
     latitude_np, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[60, 90])
@@ -2048,10 +2056,11 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, le
     latitude_sp, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[-90, -60])
     data_sp, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[-90, -60])
 
-    if array_mask:
-        data_np[data_np.mask] = 0
-        data_sp[data_sp.mask] = 0
+    data_np_surface, tmp = slice_data(data_surface_local[:, :], dimension_data=data_latitude[:], value=[60, 90])
+    data_sp_surface, tmp = slice_data(data_surface_local[:, :], dimension_data=data_latitude[:], value=[-90, -60])
 
+    data_np = correction_value(data=data_np, operator='inf', threshold=0)
+    data_sp = correction_value(data=data_sp, operator='inf', threshold=0)
     cmap = cm.get_cmap(cmap)
     cmap.set_under('w')
 
@@ -2060,60 +2069,70 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, le
     y_min, y_max = orthographic.y_limits
     orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
-    fig, ax = plt.subplots(nrows=5, ncols=5, subplot_kw={'projection': orthographic}, figsize=figsize_1graph)
-    fig.suptitle(f'North polar region ({unit})', fontsize=fontsize)
 
+    fig, ax = plt.subplots(nrows=3, ncols=4, subplot_kw={'projection': orthographic}, figsize=figsize_1graph_xtend)
+    fig.suptitle(f'North polar region ({unit})', fontsize=fontsize)
     ctf = None
     for i, axes in enumerate(ax.reshape(-1)):
         if i < 24:
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°', fontsize=fontsize)
             if array_mask and unique(data_np[i, :, :]).shape[0] != 1:
                 # Need at least 1 row filled with values
-                ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], levels=levels, norm=norm,
+                ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], norm=norm, levels=levels,
                                     transform=plate_carree, cmap=cmap, extend='max')
-            else:
-                ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], levels=levels, norm=norm,
-                                    transform=plate_carree, cmap=cmap, extend='max')
+                axes.contour(data_longitude[:], latitude_np, data_np_surface[:, :], transform=plate_carree,
+                                    cmap='Oranges')
 
-            axes.set_global()
-            workaround_gridlines(plate_carree, axes=axes, pole='north')
-            axes.set_facecolor('white')
-
+                axes.set_global()
+                workaround_gridlines(plate_carree, axes=axes, pole='north')
+                axes.set_facecolor('white')
+#            else:
+#                ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], norm=norm, levels=levels,
+#                                      transform=plate_carree, cmap=cmap)
+#                axes.contour(data_longitude[:], latitude_np, data_np_surface[:, :], transform=plate_carree,
+#                             cmap='Greys')
     pos1 = ax[0, 0].get_position().x0
-    pos2 = (ax[0, 4].get_position().x0 + ax[0, 4].get_position().width) - pos1
+    pos2 = (ax[0, 3].get_position().x0 + ax[0, 3].get_position().width) - pos1
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
     fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
-    fig.tight_layout()
-    plt.savefig(f'{save_name}_northern_polar_region_{localtime}h.png', bbox_inches='tight')
+#    fig.tight_layout()
+    if len(localtime) == 1:
+        plt.savefig(f'{save_name}_northern_polar_region_{localtime}h.png', bbox_inches='tight')
+    else:
+        plt.savefig(f'{save_name}_northern_polar_region_diurnal_mean.png', bbox_inches='tight')
 
     # South polar region
     orthographic = crs.Orthographic(central_longitude=0, central_latitude=-90, globe=False)
     y_min, y_max = orthographic.y_limits
     orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
-    fig, ax = plt.subplots(nrows=5, ncols=5, subplot_kw={'projection': orthographic}, figsize=figsize_1graph)
+    fig, ax = plt.subplots(nrows=3, ncols=4, subplot_kw={'projection': orthographic}, figsize=figsize_1graph_xtend)
     fig.suptitle(f'South polar region ({unit})', fontsize=fontsize)
-
     for i, axes in enumerate(ax.reshape(-1)):
         if i < 24:
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°', fontsize=fontsize)
             if array_mask and unique(data_sp[i, :, :]).shape[0] != 1:
-                ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], levels=levels, norm=norm,
+                ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], norm=norm, levels=levels,
                                     transform=plate_carree, cmap=cmap, extend='max')
+                axes.contour(data_longitude[:], latitude_sp, data_sp_surface[:, :], transform=plate_carree,
+                             cmap='Oranges')
             else:
-                ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], levels=levels, norm=norm,
+                ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], norm=norm, levels=levels,
                                     transform=plate_carree, cmap=cmap, extend='max')
-
+                axes.contour(data_longitude[:], latitude_sp, data_sp_surface[:, :], transform=plate_carree,
+                             camp='Oranges')
             axes.set_global()
             workaround_gridlines(plate_carree, axes=axes, pole='south')
             axes.set_facecolor('white')
     pos1 = ax[0, 0].get_position().x0
-    pos2 = (ax[0, 4].get_position().x0 + ax[0, 4].get_position().width) - pos1
+    pos2 = (ax[0, 3].get_position().x0 + ax[0, 3].get_position().width) - pos1
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
     fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
-    fig.tight_layout()
-
-    plt.savefig(f'{save_name}_southern_polar_region_{localtime}h.png', bbox_inches='tight')
+#    fig.tight_layout()
+    if len(localtime) == 1:
+        plt.savefig(f'{save_name}_southern_polar_region_{localtime}h.png', bbox_inches='tight')
+    else:
+        plt.savefig(f'{save_name}_southern_polar_region_diurnal_mean.png', bbox_inches='tight')
     return
 
 
@@ -2134,12 +2153,12 @@ def workaround_gridlines(src_proj, axes, pole):
     yn = zeros(len(latitudes))
     lona = longitudes + yn.reshape(len(latitudes), 1)
 
-    cs2 = axes.contour(longitudes, latitudes, lona, 10, transform=src_proj, colors='grey', linestyles='solid',
-                       levels=arange(0, 450, 90), linewidths=2)
-    axes.clabel(cs2, fontsize=10, inline=True, fmt='%1.0f', inline_spacing=30)
+    cs2 = axes.contour(longitudes, latitudes, lona, 10, transform=src_proj, colors='black', linestyles='--',
+                       levels=arange(0, 450, 90), linewidths=1)
+    axes.clabel(cs2, fontsize=8, inline=True, fmt='%1.0f', inline_spacing=30)
 
     yt = zeros(len(longitudes))
     contour_latitude = latitudes.reshape(len(latitudes), 1) + yt
-    cs = axes.contour(longitudes, latitudes, contour_latitude, 10, transform=src_proj, colors='grey',
-                      linestyles='solid', levels=2, linewidths=2)
-    axes.clabel(cs, fontsize=10, inline=True, fmt='%1.0f', inline_spacing=20)
+    cs = axes.contour(longitudes, latitudes, contour_latitude, 10, transform=src_proj, colors='black',
+                      linestyles='--', levels=2, linewidths=1)
+    axes.clabel(cs, fontsize=8, inline=True, fmt='%1.0f', inline_spacing=20)

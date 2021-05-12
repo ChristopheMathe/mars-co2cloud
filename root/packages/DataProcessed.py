@@ -1122,13 +1122,17 @@ def vars_time_mean(filename, data, duration, localtime=None):
     from math import ceil
 
     data_time, list_var = get_data(filename=filename, target='Time')
-    if localtime:
+    if len(localtime) == 1:
         data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=localtime)
         if data_time[-1] <= 360.:  # Ensure we are in ls time coordinate
             data_time = data_time[idx::len(data_local_time)]
         else:
             data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
             data_time = data_ls[idx::len(data_local_time)]
+    else:
+        if data_time.units != 'deg':
+            data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+            data_time = data_ls[:]
 
     if duration:
         nbin = ceil(data_time[-1] / duration)

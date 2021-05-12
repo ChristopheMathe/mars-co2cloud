@@ -660,13 +660,13 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
         if view_mode == 3:
             print('Processing data:')
-            data_mean, time_bin = co2ice_time_mean(filename=filename, data=data_target, duration=15,
+            data_mean, time_bin = co2ice_time_mean(filename=filename, data=data_target, duration=30,
                                                    localtime=local_time)
 
             print('Display:')
             display_vars_polar_projection_multi_plot(filename=filename, data=data_mean, time=time_bin,
                                                      localtime=local_time, levels=linspace(0, 1e13, 100), norm=None,
-                                                     cmap='inferno',
+                                                     cmap='winter',
                                                      unit='kg', save_name=f'co2ice_15ls_mean')
 
     elif name_target in ['emis']:
