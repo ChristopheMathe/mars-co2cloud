@@ -1,5 +1,5 @@
-from numpy import mean, abs, min, max, zeros, where, concatenate, arange, unravel_index, argmin, argmax, array, \
-    count_nonzero, std, append, asarray, power, ma, reshape
+from numpy import mean, abs, min, max, zeros, where, std, arange, unravel_index, argmin, argmax, array, \
+    count_nonzero, std, append, asarray, power, ma, reshape, swapaxes, log, exp
 from .lib_function import *
 from .ncdump import get_data, getfilename
 from os import mkdir, path
@@ -1149,6 +1149,34 @@ def vars_time_mean(filename, data, duration, localtime=None):
         time_bin = None
 
     return data_mean, time_bin
+
+
+def vars_zonal_n_time_mean(filename, data):
+    data = data * 1e6
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_north, latitude_north = slice_data(data=data, dimension_data=data_latitude[:], value=[60, 90])
+    data_south, latitude_south = slice_data(data=data, dimension_data=data_latitude[:], value=[-60, -90])
+
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_north, altitude = slice_data(data_north, dimension_data=data_altitude[:], value=[1e3, 1e-2])
+    data_south, altitude = slice_data(data_south, dimension_data=data_altitude[:], value=[1e3, 1e-2])
+    del data
+
+    # zonal mean
+    data_north = swapaxes(data_north, axis1=0, axis2=2)
+    data_north = data_north.reshape(data_north.shape[0], data_north.shape[1], -1)
+    data_north = correction_value(data=data_north, operator='inf', threshold=1e-6)
+    data_zonal_mean_north = exp(mean(log(data_north), axis=2))
+    stddev_north = exp(std(log(data_north), axis=2))
+    del data_north
+
+    data_south = swapaxes(data_south, axis1=0, axis2=2)
+    data_south = data_south.reshape(data_south.shape[0], data_south.shape[1], -1)
+    data_zonal_mean_south = exp(mean(log(data_south), axis=2))
+    stddev_south = exp(std(log(data_south), axis=2))
+    del data_south
+
+    return data_zonal_mean_north.T, data_zonal_mean_south.T, stddev_north.T, stddev_south.T
 
 
 def vars_zonal_mean(filename, data, layer=None, flip=None):

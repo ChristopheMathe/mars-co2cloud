@@ -250,7 +250,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('     4: radius/co2ice/temp/satu in polar projection (not working)')
         print('     5: zonal mean of mean radius where co2_ice exists in the 15°N-15°S (fig: lat-ls)')
         print('     6: mean radius profile along year, with global mean radius (fig: alt-ls + alt+µm)')
-        print('     7: radius structure ')
+        print('     7: radius structure in polar regions for each latitudes, diurnal mean (fig: alt-µm)')
         print('     8: radius local time evolution at a latitude (fig: alt-µm)')
         print('     9: max radius local time evolution at 0°N (fig: µm-lt)')
         print('')
@@ -318,42 +318,15 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print('Display:')
             display_riceco2_global_mean(filename, list_data)
 
-        if view_mode == 7 or view_mode == 701:
+        if view_mode == 7:
             print('Processing data:')
-            data_north, data_south = temp_thermal_structure_polar_region(filename=filename, data=data_target)
+            data_zonal_n_time_mean_north, data_zonal_n_time_mean_south, stddev_north, stddev_south =  \
+                vars_zonal_n_time_mean(filename=filename, data=data_target)
 
-            if view_mode == 701:
-                path_2 = '../occigen_test_64x48x32_1years_Tµphy_para_start_simu_ref_Margaux_co2clouds_Radiatif_actif/'
-                files = listdir(path_2)
-                print(files)
-                directory = []
-                try:
-                    directory = [x for x in files if 'occigen' in x][0] + '/'
-                except not directory:
-                    directory = None
-                if directory is None:
-                    directory = ''
-                else:
-                    files = listdir(path_2 + directory)
-                filename_2 = getfilename(files)
-                filename_2 = path_2 + directory + filename_2
-                data_target_2, list_var = get_data(filename_2, target=name_target)
-                data_north_2, data_south_2 = temp_thermal_structure_polar_region(filename=filename_2,
-                                                                                 data=data_target_2)
-
-                print('Display:')
-                display_temp_structure_polar_region(filename=filename, data_north=data_north - data_north_2,
-                                                    data_south=data_south - data_south_2, norm=None,
-                                                    levels=None,
-                                                    unit='µm',
-                                                    save_name='diff_riceoc2_zonal_mean_60NS_' + directory[:-1])
-            else:
-                print('Display:')
-                display_temp_structure_polar_region(filename=filename, data_north=data_north, data_south=data_south,
-                                                    norm=None,
-                                                    levels=None,
-                                                    unit='µm',
-                                                    save_name='riceco2_zonal_mean_60NS')
+            print('Display:')
+            display_riceco2_polar_latitudes(filename=filename, data_north=data_zonal_n_time_mean_north,
+                                            data_stddev_north=stddev_north, data_south=data_zonal_n_time_mean_south,
+                                            data_stddev_south=stddev_south)
 
         if view_mode == 8:
             latitude_selected = float(input('Select a latitude (°N): '))

@@ -785,6 +785,62 @@ def display_riceco2_max_local_time_evolution(filename, data_max_radius, data_max
     return
 
 
+def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, data_south, data_stddev_south):
+    from numpy import flip
+    from matplotlib import cm
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+
+    latitude_north, idx_north = slice_data(data=data_latitude, dimension_data=data_latitude[:], value=[60, 90])
+    latitude_south, idx_south = slice_data(data=data_latitude, dimension_data=data_latitude[:], value=[-60, -90])
+
+    data_altitude, altitude = slice_data(data=data_altitude, dimension_data=data_altitude[:], value=[1e3, 1e-2])
+
+    cmap = cm.get_cmap('hsv')
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_2graph_rows)
+    fig.subplots_adjust(wspace=0.01)
+
+    # northern polar region
+    ax[0].set_title('Northern polar region', fontsize=fontsize)
+    for i in range(latitude_north.shape[0]):
+        part = (i % data_north.shape[1]) / data_north.shape[1]
+        ax[0].plot(data_north[:, i], data_altitude[:], label=latitude_north[i], color=cmap(part))
+        ax[0].errorbar(data_north[:, i], data_altitude[:], xerr=[data_north[:, i] * (1 - 1/data_stddev_north[:, i]),
+                                                                 data_north[:, i] * (1 + 1/data_stddev_north[:, i])],
+                       color=cmap(part))
+    ax[0].set_yscale('log')
+    ax[0].set_xscale('log')
+    ax[0].set_ylim(1e3, 1e-2)
+    ax[0].set_xlim(1e-3, 1e3)
+    ax[0].grid()
+    ax[0].legend(loc='best', fontsize=fontsize)
+    ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
+
+    # southern polar region
+    ax[1].set_title('Southern polar region', fontsize=fontsize)
+    data_south = flip(data_south, axis=1)
+    data_stddev_south = flip(data_stddev_south, axis=1)
+    latitude_south = flip(latitude_south, axis=0)
+    for i in range(latitude_south.shape[0]):
+        part = (i % data_south.shape[1]) / data_south.shape[1]
+        ax[1].plot(data_south[:, i], data_altitude[:], label=latitude_south[i], color=cmap(part))
+        ax[1].errorbar(data_south[:, i], data_altitude[:], xerr=[data_south[:, i] * (1 - 1/data_stddev_south[:, i]),
+                                                                 data_south[:, i] * (1 + 1/data_stddev_south[:, i])],
+                       color=cmap(part))
+    ax[1].set_yscale('log')
+    ax[1].set_xscale('log')
+    ax[1].set_ylim(1e3, 1e-2)
+    ax[1].set_xlim(1e-3, 1e3)
+    ax[1].grid()
+    ax[1].legend(loc='best', fontsize=fontsize)
+    ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
+
+    fig.text(0.5, 0.06, 'Radius size (µm)', ha='center', va='center', fontsize=fontsize)
+    fig.text(0.06, 0.5, 'Altitude (Pa)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
+    fig.savefig('riceco2_polar_latitudes_structure.png', bbox_inches='tight')
+    return
+
+
 def display_riceco2_top_cloud_altitude(filename, top_cloud, mola=False, local_time=None):
     from matplotlib.colors import Normalize, DivergingNorm
 
