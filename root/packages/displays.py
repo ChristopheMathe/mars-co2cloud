@@ -1768,7 +1768,7 @@ def display_vars_latitude_longitude(filename, data, unit, norm, vmin, vmax, titl
 def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax, cmap, observation=False,
                              latitude_selected=None, localtime_selected=None, title=None, tes=None, mvals=None,
                              layer=None, save_name='test'):
-    from matplotlib.colors import LogNorm, Normalize
+    from matplotlib.colors import LogNorm, Normalize, DivergingNorm
 
     n_subplot = 1
     if tes:
@@ -1778,6 +1778,8 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
 
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
+    elif norm == 'div':
+        norm = DivergingNorm(vmin=vmin, vmax=vmax)
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
 
@@ -1930,7 +1932,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         ax.set_xticks(ticks=ndx)
         ax.set_xticklabels(axis_ls, fontsize=fontsize)
         ax.set_yticks(ticks=data_latitude[::4])
-        ax.set_yticklabels(labels=data_latitude[::4], fontsize=fontsize)
+        ax.set_yticklabels(labels=[str(int(x)) for x in data_latitude[::4]], fontsize=fontsize)
         ax.set_xlabel('Solar longitude (°)', fontsize=fontsize)
         ax.set_ylabel('Latitude (°N)', fontsize=fontsize)
         cbar = plt.colorbar(ctf)

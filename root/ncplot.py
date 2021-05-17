@@ -29,6 +29,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('     1: maximum in altitude and longitude, with others variables at these places (fig: lat-ls)')
         print('     2: zonal mean column density (fig: lat-ls)')
         print('        201: special features for DARI report (compare to MOLA obs)')
+        print('        202: adapted for Anni paper')
         print('     3: co2_ice coverage (fig: lat-lon)')
         print('     4: polar cloud distribution to compare with Fig.8 of Neumann+2003 (fig: #clouds-lat)')
         print('     5: cloud evolution with satuco2/temperature/radius (fig: alt-lat, gif)')
@@ -54,7 +55,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                    max_alt=max_alt, max_temp=max_temp, max_satu=max_satu,
                                                    max_radius=max_radius, max_ccn_n=max_ccn_n, unit='kg/kg')
 
-        elif view_mode == 2 or view_mode == 201:
+        elif view_mode in [2, 201, 202]:
             print('Processing data:')
             data_processed, altitude_limit, altitude_min, altitude_max, altitude_unit = \
                 vars_zonal_mean_column_density(filename, data_target)
@@ -66,7 +67,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                 else:
                     vmin, vmax = 1e-7, 1e-1
                 display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed,
-                                         unit='kg/m$^2$', norm='log', vmin=vmin, vmax=vmax, cmap='viridis',
+                                         unit='kg/m$^2$', norm='log', vmin=vmin, vmax=vmax, cmap='coolwarm',
                                          observation=True, latitude_selected=None, localtime_selected=local_time,
                                          title=f'Zonal mean column density of {name_target}\n between'
                                                f' {altitude_min:.1e}'
@@ -75,8 +76,21 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                          save_name=f'zonal_mean_density_column_{name_target}_{altitude_min:.1e}_'
                                                    f'{altitude_max:.1e}_{altitude_unit}_{local_time}h')
 
-            else:
+            elif view_mode == 201:
                 display_co2_ice_mola(filename, data_processed)
+
+            elif view_mode == 202:
+                if name_target == 'co2_ice':
+                    vmin, vmax = 1e-13, 10
+                else:
+                    vmin, vmax = 1e-7, 1e-1
+                display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed,
+                                         unit='kg/m$^2$', norm='log', vmin=vmin, vmax=vmax, cmap='coolwarm',
+                                         observation=False, latitude_selected=None, localtime_selected=local_time,
+                                         title=f'Zonal mean column density of {name_target} ({local_time} h)',
+                                         tes=None, mvals=None, layer=None,
+                                         save_name=f'zonal_mean_density_column_{name_target}_{altitude_min:.1e}_'
+                                                   f'{altitude_max:.1e}_{altitude_unit}_{local_time}h')
 
         elif view_mode == 3:
             print('Processing data:')
