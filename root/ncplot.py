@@ -246,7 +246,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('     1: mean radius at a latitude where co2_ice exists (fig: alt-µm)')
         print('     2: max radius day-night [To be done] (fig: lat-ls)')
         print('     3: altitude of top clouds (fig: lat-ls)')
-        print('        301: same but adapted for paper')
+        print('        301: same but adapted for paper, limited to 40 km altitude')
         print('     4: radius/co2ice/temp/satu in polar projection (not working)')
         print('     5: zonal mean of mean radius where co2_ice exists in the 15°N-15°S (fig: lat-ls)')
         print('     6: mean radius profile along year, with global mean radius (fig: alt-ls + alt+µm)')

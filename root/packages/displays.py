@@ -841,7 +841,7 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
     return
 
 
-def display_riceco2_top_cloud_altitude(filename, top_cloud, mola=False, local_time=None):
+def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None, mola=False):
     from matplotlib.colors import Normalize, DivergingNorm
 
     data_latitude, list_var = get_data(filename=filename, target='latitude')
@@ -880,14 +880,14 @@ def display_riceco2_top_cloud_altitude(filename, top_cloud, mola=False, local_ti
         ax[1].set_yticklabels([str(int(x)) for x in mola_latitude[::30]], fontsize=fontsize)
 
         cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
-        cbar = plt.colorbar(cb, cax=cbar_ax, extend='max')
+        cbar = plt.colorbar(cb, cax=cbar_ax)
         cbar.ax.set_title('km', fontsize=fontsize)
         cbar.ax.tick_params(labelsize=fontsize)
 
         ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
         ax[0].set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
         fig.text(0.5, 0.06, 'Solar Longitude (°)', ha='center', va='center', fontsize=fontsize)
-        fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical',fontsize=fontsize)
+        fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
 
         if len(local_time) == 1:
             ax[0].set_title(f'Zonal mean of top cloud altitude, at {local_time:0.f}h', fontsize=fontsize)

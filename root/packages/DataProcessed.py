@@ -448,31 +448,33 @@ def riceco2_top_cloud_altitude(filename, data_target, local_time):
     data_ccn_nco2 = mean(data_ccn_nco2[:, :, :, :], axis=3)
     data_rho = mean(data_rho[:, :, :, :], axis=3)
 
+    data_target, tmp = slice_data(data=data_target, dimension_data=data_altitude[:], value=[0, 4e4])
+    data_ccn_nco2, tmp = slice_data(data=data_ccn_nco2, dimension_data=data_altitude[:], value=[0, 4e4])
+    data_rho, tmp = slice_data(data=data_rho, dimension_data=data_altitude[:], value=[0, 4e4])
+
     if len(local_time) == 1:
         data_ccn_nco2, local_time = extract_at_a_local_time(filename=filename, data=data_ccn_nco2,
                                                             local_time=local_time)
         data_rho, local_time = extract_at_a_local_time(filename=filename, data=data_rho, local_time=local_time)
+        nb_time = data_target.shape[0]
+        nb_alt = data_target.shape[1]
+        nb_lat = data_target.shape[2]
     else:
         # diurnal mean: data (8028 => 669,12)
-        data_target = mean(data_target.reshape((669, 12, 32, 49)), axis=1)
-        data_ccn_nco2 = mean(data_ccn_nco2.reshape((669, 12, 32, 49)), axis=1)
-        data_rho = mean(data_rho.reshape((669, 12, 32, 49)), axis=1)
+        nb_alt = data_target.shape[1]
+        nb_lat = data_target.shape[2]
+        data_target = mean(data_target.reshape((669, 12, nb_alt, nb_lat)), axis=1)
+        data_ccn_nco2 = mean(data_ccn_nco2.reshape((669, 12, nb_alt, nb_lat)), axis=1)
+        data_rho = mean(data_rho.reshape((669, 12, nb_alt, nb_lat)), axis=1)
+        nb_time = data_target.shape[0]
 
     n_reflect = 2e-8 * power(data_target * 1e6, -2)  # from Tobie et al. 2003
     n_part = data_rho * data_ccn_nco2
-    nb_time = data_target.shape[0]
-    nb_alt = data_target.shape[1]
-    nb_lat = data_target.shape[2]
     del [data_target, data_ccn_nco2, data_rho]
-
-#    data_latitude, list_var = get_data(filename=filename, target='latitude')
-#    a = (abs(data_latitude[:] - 40)).argmin() + 1
-#    polar_latitude = concatenate((arange(a), arange(nb_lat - a, nb_lat)))
 
     top_cloud = zeros((nb_time, nb_lat))
     for t in range(nb_time):
         for lat in range(nb_lat):
-#        for lat in polar_latitude:
             for alt in range(nb_alt - 1, -1, -1):
                 if n_part[t, alt, lat] >= n_reflect[t, alt, lat] and alt > 1:
                     top_cloud[t, lat] = data_altitude[alt]
