@@ -305,17 +305,18 @@ def display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_
     norm = Normalize(vmin=0, vmax=2000)
     data_altitude, list_var = get_data(filename=filename, target='altitude')
 
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_2graph_cols)
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_2graph_rows)
 
     ax[0].set_title('North pole', fontsize=fontsize)
     pc = ax[0].pcolormesh(north_latitude, data_altitude[:] / 1e3, distribution_north, norm=norm, cmap='Greys',
                           shading='auto')
     ax[0].set_ylim(0, 40)
-
+    ax[0].tick_params(labelsize=fontsize)
     ax[1].set_title('South pole', fontsize=fontsize)
     ax[1].pcolormesh(south_latitude, data_altitude[:] / 1e3, distribution_south, norm=norm, cmap='Greys',
                      shading='auto')
     ax[1].set_ylim(0, 40)
+    ax[1].tick_params(labelsize=fontsize)
 
     plt.draw()
     p0 = ax[0].get_position().get_points().flatten()
