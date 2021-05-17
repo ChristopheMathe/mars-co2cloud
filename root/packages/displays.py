@@ -565,7 +565,10 @@ def display_co2_ice_localtime_ls(filename, data, title, unit, norm, vmin, vmax, 
     return
 
 
-def display_co2ice_cumulative_mass_polar_region(filename, data1, data2, local_time):
+def display_co2ice_cumulative_mass_polar_region(filename,data_co2_ice_north, data_co2_ice_south,
+                                                data_precip_co2_ice_north, data_precip_co2_ice_south,
+                                                data_direct_condco2_north, data_direct_condco2_south):
+
     data_time, list_var = get_data(filename, target='Time')
     data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=0)
 
@@ -573,13 +576,20 @@ def display_co2ice_cumulative_mass_polar_region(filename, data1, data2, local_ti
         data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
         data_time = data_ls[idx::len(data_local_time)]
 
-    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True, sharey=True, figsize=figsize_1graph)
+    fig, ax = plt.subplots(nrows=2, ncols=1, sharex='all', sharey='all', figsize=figsize_1graph)
 
     ax[0].set_title(u'Northern polar region, diurnal mean, lat=[60:90]°N', fontsize=fontsize)
-    ax[0].plot(data_time[:], data1 * 1e3, color='black')  # kg to g
+    ax[0].plot(data_time[:], data_co2_ice_north * 1e3, color='black', label='Total co2 ice')  # kg to g
+    ax[0].plot(data_time[:], data_precip_co2_ice_north * 1e3, color='blue', label='Precipitation')  # kg to g
+    ax[0].plot(data_time[:], data_direct_condco2_north * 1e3, color='red', label='Direct condencation')  # kg to g
+    print(max(data_precip_co2_ice_north * 1e3), max(data_direct_condco2_north * 1e3))
+    ax[0].legend(loc='best')
 
     ax[1].set_title(u'Southern polar region, diurnal mean, lat=[60:90]°S', fontsize=fontsize)
-    ax[1].plot(data_time[:], data2 * 1e3, color='black')  # kg to g
+    ax[1].plot(data_time[:], data_co2_ice_south * 1e3, color='black', label='Total co2 ice')  # kg to g
+    ax[1].plot(data_time[:], data_precip_co2_ice_south * 1e3, color='blue', label='Precipitation')  # kg to g
+    ax[1].plot(data_time[:], data_direct_condco2_south * 1e3, color='red', label='Direct condencation')  # kg to g
+    ax[1].legend(loc='best')
 
     ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
     ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
@@ -590,10 +600,7 @@ def display_co2ice_cumulative_mass_polar_region(filename, data1, data2, local_ti
              fontsize=fontsize)
     fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=fontsize)
 
-    if len(local_time) == 1:
-        fig.savefig(f'co2ice_cumulative_mass_polar_region_{local_time}h.png', bbox_inches='tight')
-    else:
-        fig.savefig(f'co2ice_cumulative_mass_polar_region_diurnal_mean.png', bbox_inches='tight')
+    fig.savefig(f'co2ice_cumulative_mass_polar_region_diurnal_mean.png', bbox_inches='tight')
     return
 
 

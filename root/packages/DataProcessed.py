@@ -148,30 +148,52 @@ def co2ice_cloud_localtime_along_ls(filename, data):
 def co2ice_cumulative_masses_polar_cap(filename, data):
     from numpy import sum
 
-    # TODO: improved by getting polar cap
-    data_latitude, list_var = get_data(filename, target='latitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
     data_north, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[60, 90])
     data_south, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[-60, -90])
     del data
 
+    # get precip_co2_ice
+    data_precip_co2_ice, list_var = get_data(filename=filename, target='precip_co2_ice')
+    data_precip_co2_ice_north, tmp = slice_data(data_precip_co2_ice[:, :, :], dimension_data=data_latitude[:], value=[60, 90])
+    data_precip_co2_ice_south, tmp = slice_data(data_precip_co2_ice[:, :, :], dimension_data=data_latitude[:], value=[-60, -90])
+    print(max(data_precip_co2_ice_north), max(data_precip_co2_ice_south))
+    # get co2_ice without microphysics
+#    data_ref = get_data(filename='', target='co2ice')
+
     # extract the area of grid
     data_area = gcm_area()
-
     data_area_north, latitude_selected = slice_data(data_area, dimension_data=data_latitude[:], value=[60, 90])
     data_area_south, latitude_selected = slice_data(data_area, dimension_data=data_latitude[:], value=[-60, -90])
 
     # Diurnal mean
-    data_north = mean(data_north.reshape(669, 12, data_north.shape[1], data_north.shape[2]), axis=1)
-    data_south = mean(data_south.reshape(669, 12, data_south.shape[1], data_south.shape[2]), axis=1)
+    nb_lat = data_north.shape[1]
+    nb_lon = data_north.shape[2]
+
+    data_north = mean(data_north.reshape(669, 12, nb_lat, nb_lon), axis=1)
+    data_south = mean(data_south.reshape(669, 12, nb_lat, nb_lon), axis=1)
+
+    data_precip_co2_ice_north = mean(data_precip_co2_ice_north.reshape(669, 12, nb_lat, nb_lon), axis=1)
+    data_precip_co2_ice_south = mean(data_precip_co2_ice_south.reshape(669, 12, nb_lat, nb_lon), axis=1)
 
     accumulation_co2ice_north = zeros(data_north.shape[0])
     accumulation_co2ice_south = zeros(data_south.shape[0])
+
+    accumulation_precip_co2_ice_north = zeros(data_north.shape[0])
+    accumulation_precip_co2_ice_south = zeros(data_south.shape[0])
 
     for ls in range(data_north.shape[0]):
         accumulation_co2ice_north[ls] = sum(data_north[ls, :, :] * data_area_north[:, :])
         accumulation_co2ice_south[ls] = sum(data_south[ls, :, :] * data_area_south[:, :])
 
-    return accumulation_co2ice_north, accumulation_co2ice_south
+        accumulation_precip_co2_ice_north[ls] = sum(data_precip_co2_ice_north[ls, :, :] * data_area_north[:, :])
+        accumulation_precip_co2_ice_south[ls] = sum(data_precip_co2_ice_south[ls, :, :] * data_area_south[:, :])
+
+    accumulation_direct_condco2_north = accumulation_co2ice_north - accumulation_precip_co2_ice_north
+    accumulation_direct_condco2_south = accumulation_co2ice_south - accumulation_precip_co2_ice_south
+
+    return accumulation_co2ice_north, accumulation_co2ice_south, accumulation_precip_co2_ice_north, \
+           accumulation_precip_co2_ice_south, accumulation_direct_condco2_north, accumulation_direct_condco2_south
 
 
 def co2ice_time_mean(filename, data, duration, localtime):

@@ -320,7 +320,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
         if view_mode == 7:
             print('Processing data:')
-            data_zonal_n_time_mean_north, data_zonal_n_time_mean_south, stddev_north, stddev_south =  \
+            data_zonal_n_time_mean_north, data_zonal_n_time_mean_south, stddev_north, stddev_south = \
                 vars_zonal_n_time_mean(filename=filename, data=data_target)
 
             print('Display:')
@@ -365,7 +365,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         if view_mode == 1:
             print('Processing data:')
             data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, \
-                data_co2ice_south, latitude_north, latitude_eq, latitude_south, binned = \
+            data_co2ice_south, latitude_north, latitude_eq, latitude_south, binned = \
                 satuco2_zonal_mean_with_co2_ice(filename=filename, data=data_target)
 
             print('Display:')
@@ -379,7 +379,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         elif view_mode == 3:
             print('Processing data:')
             data_satuco2_north, data_satuco2_south, data_co2ice_north, data_co2ice_south, latitude_north, \
-                latitude_south, binned = satuco2_time_mean_with_co2_ice(filename, data_target)
+            latitude_south, binned = satuco2_time_mean_with_co2_ice(filename, data_target)
 
             print('Display:')
             display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north, data_satuco2_south,
@@ -630,12 +630,19 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
         if view_mode == 2:
             print('Processing data:')
-            accumulation_north, accumulation_south = co2ice_cumulative_masses_polar_cap(filename=filename,
-                                                                                        data=data_target)
+            accumulation_north, accumulation_south, accumulation_precip_co2_ice_north, \
+                accumulation_precip_co2_ice_south, accumulation_direct_condco2_north, \
+                accumulation_direct_condco2_south = co2ice_cumulative_masses_polar_cap(filename=filename,
+                                                                                       data=data_target)
 
             print('Display:')
-            display_co2ice_cumulative_mass_polar_region(filename=filename, data1=accumulation_north,
-                                                        data2=accumulation_south, local_time=local_time)
+            display_co2ice_cumulative_mass_polar_region(filename=filename,
+                                                        data_co2_ice_north=accumulation_north,
+                                                        data_co2_ice_south=accumulation_south,
+                                                        data_precip_co2_ice_north=accumulation_precip_co2_ice_north,
+                                                        data_precip_co2_ice_south=accumulation_precip_co2_ice_south,
+                                                        data_direct_condco2_north=accumulation_direct_condco2_north,
+                                                        data_direct_condco2_south=accumulation_direct_condco2_south)
 
         if view_mode == 3:
             print('Processing data:')
