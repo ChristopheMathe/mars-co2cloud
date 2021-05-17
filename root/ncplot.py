@@ -99,8 +99,8 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print('Display:')
             display_vars_latitude_longitude(filename=filename, data=data_processed,
                                             unit='%', norm=None, vmin=0, vmax=70,
-                                            title=f'Percentage of Martian year with presence of CO2 clouds, '
-                                                  f'at {local_time}h local time',
+                                            title=f'Percentage of Martian year with presence of CO2 clouds '
+                                                  f'({local_time} h)',
                                             save_name=f'co2_ice_coverage_{local_time}h')
 
         elif view_mode == 4:
