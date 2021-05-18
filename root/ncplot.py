@@ -185,8 +185,16 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                                                        directory=directory)
 
             print('Display:')
-            display_vars_altitude_ls(filename=filename, data_1=data_target, local_time=local_time,
-                                     norm='log', vmin=1e-13, vmax=1e-3, unit='kg/kg',
+            if local_time:
+                display_vars_altitude_ls(filename=filename, data_1=data_target, local_time=local_time,
+                                         norm='log', vmin=1e-13, vmax=1e-3, unit='kg/kg', altitude_max=None,
+                                         title=f'Zonal mean of H2O ice mmr and\n CO2 ice mmr (black), at'
+                                               f' {int(latitude_selected)} °N ({int(local_time)} h)',
+                                         save_name=f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected)}N_'
+                                                   f'{int(local_time)}h', data_2=data_co2_ice)
+            else:
+                display_vars_altitude_ls(filename=filename, data_1=data_target, local_time=local_time,
+                                     norm='log', vmin=1e-13, vmax=1e-3, unit='kg/kg', altitude_max=1e-1,
                                      title=f'Zonal mean of H2O ice mmr and\n CO2 ice mmr (black), at'
                                            f' {int(latitude_selected)} °N, diurnal mean',
                                      save_name=f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected)}N_'

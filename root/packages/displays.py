@@ -1688,7 +1688,8 @@ def display_vars_altitude_longitude(filename, data, unit, norm, vmin, vcenter, v
     return
 
 
-def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, vmin, vmax, title, save_name, data_2=None):
+def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, altitude_max, vmin, vmax, title, save_name,
+                             data_2=None):
     from numpy import round
     from matplotlib.colors import LogNorm, Normalize
 
@@ -1724,8 +1725,9 @@ def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, vmin, vma
     if units == 'Pa':
         axes.set_yscale('log')
         axes.invert_yaxis()
-        axes.set_ylim(1e3, 1e-1)
+        axes.set_ylim(1e3, altitude_max)
     else:
+        axes.set_ylim(0, altitude_max)
         axes.set_yticklabels(labels=round(data_altitude[:], 0), fontsize=fontsize)
 
     cbar = plt.colorbar(cb, ax=axes)

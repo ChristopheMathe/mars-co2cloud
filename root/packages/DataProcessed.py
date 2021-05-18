@@ -307,7 +307,7 @@ def flux_lw_apparent_temperature_zonal_mean(data):
 
 
 def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
-    latitude = 80
+    latitude = 0
     data_latitude, list_var = get_data(filename=filename, target='latitude')
     data, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=latitude)
 
@@ -317,7 +317,7 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
         filename_co2 = getfilename(files=files, selection=None)
         data_co2_ice, list_var = get_data(filename=directory + filename_co2, target='co2_ice')
 
-    if len(local_time) == 1:
+    if local_time:
         data_co2_ice, tmp = extract_at_a_local_time(filename=filename, data=data_co2_ice, local_time=local_time)
 
     data_co2_ice, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:], value=latitude)
@@ -326,8 +326,9 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
     # zonal mean
     zonal_mean = mean(data, axis=2)  # zonal mean
     zonal_mean_co2_ice = mean(data_co2_ice, axis=2)
-    zonal_mean = mean(zonal_mean.reshape((669, 12, zonal_mean.shape[1])), axis=1)  # => sols, lon
-    zonal_mean_co2_ice = mean(zonal_mean_co2_ice.reshape((669, 12, zonal_mean_co2_ice.shape[1])), axis=1)  # => sols,
+    if not local_time:
+        zonal_mean = mean(zonal_mean.reshape((669, 12, zonal_mean.shape[1])), axis=1)  # => sols, lon
+        zonal_mean_co2_ice = mean(zonal_mean_co2_ice.reshape((669, 12, zonal_mean_co2_ice.shape[1])), axis=1)  # => sols,
     # lon
 
     zonal_mean, zonal_mean_co2_ice = rotate_data(zonal_mean, zonal_mean_co2_ice, do_flip=False)
