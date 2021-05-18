@@ -307,8 +307,9 @@ def flux_lw_apparent_temperature_zonal_mean(data):
 
 
 def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
+    latitude = 80
     data_latitude, list_var = get_data(filename=filename, target='latitude')
-    data, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=80)
+    data, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=latitude)
 
     if 'co2_ice' in list_var:
         data_co2_ice, list_var = get_data(filename=filename, target='co2_ice')
@@ -319,7 +320,7 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
     if len(local_time) == 1:
         data_co2_ice, tmp = extract_at_a_local_time(filename=filename, data=data_co2_ice, local_time=local_time)
 
-    data_co2_ice, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:], value=-80)
+    data_co2_ice, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:], value=latitude)
     data_co2_ice = correction_value(data_co2_ice, operator='inf', threshold=1e-13)
 
     # zonal mean

@@ -1716,7 +1716,7 @@ def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, vmin, vma
         data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
         data_time = data_ls[idx::len(data_local_time)]
 
-    fig, axes = plt.subplots(nrows=1, ncols=1, figsize=fontsize)
+    fig, axes = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
     cb = axes.pcolormesh(data_time[:], data_altitude[:], data_1, norm=norm, cmap='plasma', shading='auto')
     if data_2 is not None:
         axes.pcolormesh(data_time[:], data_altitude[:], data_2, norm=norm, cmap='binary', shading='auto')
@@ -1724,11 +1724,13 @@ def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, vmin, vma
     if units == 'Pa':
         axes.set_yscale('log')
         axes.invert_yaxis()
+        axes.set_ylim(1e3, 1e-1)
     else:
         axes.set_yticklabels(labels=round(data_altitude[:], 0), fontsize=fontsize)
 
     cbar = plt.colorbar(cb, ax=axes)
     cbar.ax.set_title(unit, fontsize=fontsize)
+    cbar.ax.tick_params(labelsize=fontsize)
 
     axes.set_title(title, fontsize=fontsize)
     axes.set_xlabel('Solar longitude (°)', fontsize=fontsize)

@@ -36,7 +36,7 @@ def get_data(filename, target=None):
         if variable_target is None:
             variable_target = input('Select the variable: ')  # TODO check if variable exists
     else:
-        list_var = None
+        list_var = []
         variable_target = target
 
     data_target = data.variables[variable_target]
