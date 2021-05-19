@@ -672,11 +672,13 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                    localtime=local_time)
 
             print('Display:')
-            display_vars_polar_projection_multi_plot(filename=filename, data=log(data_mean), time=time_bin,
-                                                     localtime=local_time, levels=arange(15, 33),
-                                                     norm=None,
+            display_vars_polar_projection_multi_plot(filename=filename, data=data_mean, time=time_bin,
+                                                     localtime=local_time, levels=array([1e7, 1e8, 1e9, 1e10, 1e11,
+                                                                                         1e12, 1e13, 1e14, 1e15]),
+                                                     #arange(15, 33),
+                                                     norm='log',
                                                      cmap='winter',
-                                                     unit='log(kg)', save_name=f'co2ice_15ls_mean')
+                                                     unit='kg', save_name=f'co2ice_15ls_mean')
 
     elif name_target in ['emis']:
         print('What do you wanna do?')

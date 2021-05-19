@@ -2191,7 +2191,7 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, le
             if array_mask and unique(data_np[i, :, :]).shape[0] != 1:
                 # Need at least 1 row filled with values
                 ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], norm=norm, levels=levels,
-                                    transform=plate_carree, cmap=cmap, extend='max')
+                                    transform=plate_carree, cmap=cmap)
                 axes.contour(data_longitude[:], latitude_np, data_np_surface[:, :], transform=plate_carree,
                              cmap='Oranges')
 
@@ -2219,7 +2219,7 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, le
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°', fontsize=fontsize)
             if array_mask and unique(data_sp[i, :, :]).shape[0] != 1:
                 ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], norm=norm, levels=levels,
-                                    transform=plate_carree, cmap=cmap, extend='max')
+                                    transform=plate_carree, cmap=cmap)
                 axes.contour(data_longitude[:], latitude_sp, data_sp_surface[:, :], transform=plate_carree,
                              cmap='Oranges')
             axes.set_global()
