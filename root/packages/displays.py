@@ -1957,16 +1957,17 @@ def display_vars_localtime_longitude(filename, data, norm, vmin, vmax, unit, tit
 
     data_longitude, list_var = get_data(filename=filename, target='longitude')
     data_time, list_var = get_data(filename=filename, target='Time')
-    data_local_time, tmp, tmp = check_local_time(data_time=data_time[:], selected_time=None)
+    data_local_time, tmp, tmp = check_local_time(data_time=data_time[:], selected_time=0)
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
 
     pcm = ax.pcolormesh(data_longitude[:], data_local_time[:], data, norm=norm, cmap='plasma', shading='auto')
     cbar = fig.colorbar(pcm)
     cbar.ax.set_title(unit, fontsize=fontsize)
+    cbar.ax.tick_params(labelsize=fontsize)
     ax.set_title(title, fontsize=fontsize)
     ax.set_yticks(data_local_time[:])
-    ax.set_yticklabels(data_local_time[:], fontsize=fontsize)
+    ax.set_yticklabels([str(int(x)) for x in data_local_time[:]], fontsize=fontsize)
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
     ax.set_ylabel('Local time (h)', fontsize=fontsize)
     ax.set_xlabel('Longitude (°E)', fontsize=fontsize)
@@ -1995,6 +1996,7 @@ def display_vars_ls_longitude(filename, data, norm, vmin, vmax, local_time, unit
     pcm = ax.pcolormesh(data_longitude[:], interp_time[:], data.T, norm=norm, cmap='plasma', shading='auto')
     cbar = fig.colorbar(pcm)
     cbar.ax.set_title(unit, fontsize=fontsize)
+    cbar.ax.tick_params(labelsize=fontsize)
     ax.set_title(title, fontsize=fontsize)
     ax.set_yticks(interp_time[::45])
     ax.set_yticklabels(interp_time[::45], fontsize=fontsize)
