@@ -2,7 +2,7 @@
 from packages.displays import *
 from packages.ncdump import *
 from os import listdir
-from numpy import mean, logspace, arange, linspace, min, max
+from numpy import mean, logspace, arange, linspace, min, max, log
 from sys import argv
 from packages.constant_parameter import threshold
 
@@ -631,7 +631,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('What do you wanna do?')
         print('     1: zonal mean (fig:lat-ls)')
         print('     2: cumulative masses in polar cap region, to compare with fig.10 of Hu+2012 (fig: g-ls)')
-        print('     3: Polar plot every 15° ls mean, lat=60°-90° (fig: lat-ls)')
+        print('     3: Polar plot every 30° ls mean, lat=60°-90° (fig: lat-ls)')
         print('')
 
         if view_mode is None:
@@ -672,10 +672,11 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                    localtime=local_time)
 
             print('Display:')
-            display_vars_polar_projection_multi_plot(filename=filename, data=data_mean, time=time_bin,
-                                                     localtime=local_time, levels=linspace(0, 1e13, 100), norm=None,
+            display_vars_polar_projection_multi_plot(filename=filename, data=log(data_mean), time=time_bin,
+                                                     localtime=local_time, levels=arange(15, 33),
+                                                     norm=None,
                                                      cmap='winter',
-                                                     unit='kg', save_name=f'co2ice_15ls_mean')
+                                                     unit='log(kg)', save_name=f'co2ice_15ls_mean')
 
     elif name_target in ['emis']:
         print('What do you wanna do?')
