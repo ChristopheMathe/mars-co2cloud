@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 from .DataObservation import *
 from .DataProcessed import *
-from .constant_parameter import figsize_1graph, figsize_1graph_xtend, figsize_2graph_rows, figsize_2graph_cols, \
-    figsize_6graph_cols, figsize_12graph_3rows_4cols, fontsize
+from .constant_parameter import *
 
 
 def colormap_idl_rainbow_plus_white():
@@ -1085,7 +1084,7 @@ def display_satuco2_thickness_atm_layer(data, data_std, save_name):
 
 def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_satuco2_eq, data_satuco2_south,
                                              data_co2ice_north, data_co2ice_eq, data_co2ice_south, latitude_north,
-                                             latitude_eq, latitude_south, binned):
+                                             latitude_eq, latitude_south, binned, local_time):
     from numpy import array, round, ones
 
     # Info latitude
@@ -1121,16 +1120,20 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
         data_surface_local = gcm_surface_local(data_zareoid[:, :, :, :])
 
     data_time, list_var = get_data(filename=filename, target='Time')
+    if data_time.units != 'deg':
+        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
+        data_time = data_ls[idx::len(data_local_time)]
+
     if binned.lower() == 'y' and data_zareoid is not None:
         data_time = data_time[::60]  # 5°Ls binned
         data_zareoid = data_zareoid[::12, :, :, :]
         data_surface_local = gcm_surface_local(data_zareoid[:, :, :, :])
-    ndx, axis_ls = get_ls_index(data_time)
 
     norm_satu = None  # TwoSlopeNorm(vmin=0, vcenter=1.0, vmax=100)
     levels_satu = array([1, 10, 20, 50, 100])
     levels_co2 = None
-    fig, ax = plt.subplots(nrows=3, ncols=1, figsize=fontsize)
+    fig, ax = plt.subplots(nrows=3, ncols=1, figsize=figsize_3graph_rows)
     ax[0].set_title(f'{latitude_north}°N', fontsize=fontsize)
     ax[0].contourf(data_time[:], data_altitude[:], data_satuco2_north, norm=norm_satu, cmap='coolwarm',
                    levels=levels_satu, extend='max')
@@ -1147,8 +1150,8 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
     ax[2].contour(data_time[:], data_altitude[:], data_co2ice_south, norm=None, levels=levels_co2, colors='black')
 
     for i, axe in enumerate(ax):
-        axe.set_xticks(ticks=axis_ls)
-        axe.set_xticklabels(labels=axis_ls)
+#        axe.set_xticks(ticks=axis_ls)
+#        axe.set_xticklabels(labels=axis_ls)
         axe.set_xlim(0, 360)
         axe.set_ylim(1e-3, 1e3)
 
@@ -1163,10 +1166,10 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
             data_surface_local_sliced, tmp = slice_data(data_surface_local, dimension_data=data_latitude,
                                                         value=list_latitudes[i])
 
-            lines_altitudes_0km = get_mean_index_altitude(data_surface_local_sliced, value=0, dimension='time')
-            lines_altitudes_10km = get_mean_index_altitude(data_surface_local_sliced, value=1e4, dimension='time')
-            lines_altitudes_40km = get_mean_index_altitude(data_surface_local_sliced, value=4e4, dimension='time')
-            lines_altitudes_80km = get_mean_index_altitude(data_surface_local_sliced, value=8e4, dimension='time')
+            lines_altitudes_0km = get_mean_index_altitude(data_surface_local_sliced, value=0, dimension='Time')
+            lines_altitudes_10km = get_mean_index_altitude(data_surface_local_sliced, value=1e4, dimension='Time')
+            lines_altitudes_40km = get_mean_index_altitude(data_surface_local_sliced, value=4e4, dimension='Time')
+            lines_altitudes_80km = get_mean_index_altitude(data_surface_local_sliced, value=8e4, dimension='Time')
             del data_surface_local_sliced
 
             axe.plot(data_altitude[lines_altitudes_0km], '-', color='grey', linewidth=0.5)
