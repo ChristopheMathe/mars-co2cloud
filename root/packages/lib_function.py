@@ -173,7 +173,7 @@ def extract_at_a_local_time(filename, data, local_time=None):
     data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
 
     if idx is not None:
-        local_time = data_local_time[idx]
+        local_time = [data_local_time[idx]]
         if data.ndim == 4:
             data_processed = data[idx::len(data_local_time), :, :, :]
         elif data.ndim == 3:

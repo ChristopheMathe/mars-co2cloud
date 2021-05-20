@@ -109,7 +109,13 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                 filename, data_target, normalization=True, local_time=local_time)
 
             print('Display:')
-            display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
+            if len(local_time) == 1:
+                display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
+                                                                     latitude_north, latitude_south,
+                                                                     save_name=f'distribution_polar_clouds_'
+                                                                               f'{local_time}h')
+            else:
+                display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
                                                                  latitude_north, latitude_south,
                                                                  save_name='distribution_polar_clouds_diurnal_mean')
 
@@ -377,7 +383,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('     1: zonal mean of saturation, for 3 latitudes, with co2ice mmr (fig: alt-ls)')
         print('     2: [TBD] saturation in localtime (fig: lt-alt')
         print('     3: saturation with co2ice mmr in polar regions, [0:30]°ls SP, [270-300]°ls NP (fig: alt-lon)')
-        print('     4: Thickness atmosphere layer in polar regions (fig: thick-ls)')
+        print('     4: Thickness atmosphere layer in polar regions (fig: thick-ls) Hu et al. 2012')
         print('     5: Saturation at 0°N along longitude (fig: alt-lon)')
         print('     6: Saturation local time - ls, at 0°N, 0.5 Pa')
         print('')
@@ -388,12 +394,12 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print('Processing data:')
             data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, \
             data_co2ice_south, latitude_north, latitude_eq, latitude_south, binned = \
-                satuco2_zonal_mean_with_co2_ice(filename=filename, data=data_target)
+                satuco2_zonal_mean_with_co2_ice(filename=filename, data=data_target, local_time=local_time)
 
             print('Display:')
             display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_satuco2_eq, data_satuco2_south,
                                                      data_co2ice_north, data_co2ice_eq, data_co2ice_south,
-                                                     latitude_north, latitude_eq, latitude_south, binned)
+                                                     latitude_north, latitude_eq, latitude_south, binned, local_time)
 
         elif view_mode == 2:
             print('TO be done.')
@@ -406,7 +412,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print('Display:')
             display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north, data_satuco2_south,
                                                             data_co2ice_north, data_co2ice_south, latitude_north,
-                                                            latitude_south, binned)
+                                                            latitude_south, binned, local_time)
 
         elif view_mode == 4:
             print('Processing data:')
@@ -414,8 +420,12 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                                      local_time=local_time)
 
             print('Display:')
-            display_satuco2_thickness_atm_layer(data_ice_layer, data_ice_layer_std,
-                                                save_name=f'satuco2_thickness_polar_region_{local_time}h.png')
+            if len(local_time) == 1:
+                display_satuco2_thickness_atm_layer(data_ice_layer, data_ice_layer_std,
+                                                    save_name=f'satuco2_thickness_polar_region_{local_time}h.png')
+            else:
+                display_satuco2_thickness_atm_layer(data_ice_layer, data_ice_layer_std,
+                                                    save_name=f'satuco2_thickness_polar_region_diurnal_mean.png')
 
         elif view_mode == 5:
             print('Processing data:')
@@ -811,7 +821,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
             print('Display:')
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed, unit='',
-                                     norm=None, vmin=0, vmax=1., observation=False,
+                                     norm=None, vmin=0, vmax=1., observation=False, cmap='inferno',
                                      latitude_selected=None, localtime_selected=local_time,
                                      title=f'Zonal mean of {name_target}, at {local_time}h', tes=None, mvals=None,
                                      save_name=f'tau_zonal_mean_{local_time}h')

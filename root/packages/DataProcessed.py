@@ -7,48 +7,6 @@ from sys import exit
 from.constant_parameter import cst_stefan, threshold
 
 
-def co2ice_thickness_atm_layer(filename, data):
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
-    if data_altitude.units in ['Pa']:
-        data_altitude, list_var = get_data(filename=filename, target='zareoid')
-
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
-    data_north = slice_data(data, dimension_data=data_latitude[:], value=[60, 90])
-    data_south = slice_data(data, dimension_data=data_latitude[:], value=[-60, -90])
-
-    data_time, list_var = get_data(filename=filename, target='Time')
-    # bin ls to 5°
-    if max(data_time[:]) < 360:
-        ls_bin = arange(0, 365, 5)
-    else:
-        # sols binned at 5° Ls
-        ls_bin = convert_sols_to_ls()
-
-    nbin = ls_bin.shape[0]
-    data_icelayer = zeros((2, nbin))
-
-    idx_max = None
-    for i in range(nbin - 1):
-        idx = (abs(data_time[:] - ls_bin[i])).argmin()
-        idx2 = (abs(data_time[:] - ls_bin[i + 1])).argmin()
-        data_binned_north = data_north[idx:idx2, :, :, :]
-        data_binned_south = data_south[idx:idx2, :, :, :]
-        if max(data_binned_north) >= 1e-10:
-            ind = unravel_index(argmax(data_binned_north, axis=None), data_binned_north.shape)
-            for z in range(int(ind[1]), data_altitude.shape[0]):
-                if data_binned_north[ind[0], z, ind[2], ind[3]] >= 1e-10:
-                    idx_max = z
-            data_icelayer[0, i] = data_altitude[idx_max] - data_altitude[ind[1]]
-        if max(data_binned_south) >= 1e-10:
-            ind = unravel_index(argmax(data_binned_south, axis=None), data_binned_south.shape)
-            for z in range(int(ind[1]), data_altitude.shape[0]):
-                if data_binned_south[ind[0], z, ind[2], ind[3]] >= 1e-10:
-                    idx_max = z
-            data_icelayer[1, i] = data_altitude[idx_max] - data_altitude[ind[1]]
-
-    return data_icelayer
-
-
 def co2ice_polar_cloud_distribution(filename, data, normalization, local_time):
     data_altitude, list_var = get_data(filename=filename, target='altitude')
     if data_altitude.long_name != 'Altitude above areoid':
@@ -535,7 +493,7 @@ def riceco2_zonal_mean_co2ice_exists(filename, data, local_time):
     return zonal_mean, latitude_selected
 
 
-def satuco2_zonal_mean_with_co2_ice(filename, data):
+def satuco2_zonal_mean_with_co2_ice(filename, data, local_time):
     data_latitude, list_var = get_data(filename=filename, target='latitude')
     # Select the three latitudes
     north = 80
@@ -560,7 +518,10 @@ def satuco2_zonal_mean_with_co2_ice(filename, data):
 
     # Get co2 ice mmr
     data_co2ice, list_var = get_data(filename, target='co2_ice')
-    data_co2ice = correction_value(data_co2ice[:, :, :, :], operator='inf', threshold=1e-13)
+    data_co2ice = correction_value(data_co2ice[:, :, :, :], operator='inf', threshold=threshold)
+
+    if len(local_time) == 1:
+        data_co2ice, tmp = extract_at_a_local_time(filename=filename, data=data_co2ice, local_time=local_time)
 
     # Slice co2 ice mmr at these 3 latitudes
     data_co2ice_north, north_latitude_selected = slice_data(data_co2ice, dimension_data=data_latitude, value=north)
@@ -759,7 +720,6 @@ def satuco2_time_mean_with_co2_ice(filename, data):
 def satuco2_hu2012_fig9(filename, data, local_time):
     data_latitude, list_var = get_data(filename=filename, target='latitude')
     data_altitude, list_var = get_data(filename=filename, target='altitude')
-
     if data_altitude.long_name != 'Altitude above local surface':
         print('The netCDF file did not zrecasted above the local surface')
         exit()
@@ -846,7 +806,6 @@ def satuco2_hu2012_fig9(filename, data, local_time):
             data_icelayer_std[1, BIN] = 0
 
         del tmp_north, tmp_south
-
     return data_icelayer, data_icelayer_std
 
 
