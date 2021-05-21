@@ -1776,18 +1776,25 @@ def display_vars_latitude_longitude(filename, data, unit, norm, vmin, vmax, titl
 def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax, cmap, observation=False,
                              latitude_selected=None, localtime_selected=None, title=None, tes=None, mvals=None,
                              layer=None, save_name='test'):
-    from matplotlib.colors import LogNorm, Normalize, DivergingNorm
+    from matplotlib.colors import LogNorm, Normalize, DivergingNorm, BoundaryNorm
+    from matplotlib import cm
 
     n_subplot = 1
+
     if tes:
         n_subplot += 1
     if mvals:
         n_subplot += 1
 
+    cmap = cm.get_cmap(cmap)
+
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
     elif norm == 'div':
         norm = DivergingNorm(vmin=vmin, vmax=vmax)
+    elif norm == 'set':
+        norm = BoundaryNorm([0, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2], ncolors=cmap.N, clip=False)
+        cmap.set_over('red')
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
 
@@ -1891,7 +1898,8 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         i_subplot += 1
 
     if i_subplot == 0:
-        ctf = ax.pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='auto', zorder=10)
+        ctf = ax.pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='auto', zorder=10,
+                            )
     else:
         ctf = ax[i_subplot].pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='auto',
                                        zorder=10)
@@ -1943,7 +1951,10 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         ax.set_yticklabels(labels=[str(int(x)) for x in data_latitude[::4]], fontsize=fontsize)
         ax.set_xlabel('Solar longitude (°)', fontsize=fontsize)
         ax.set_ylabel('Latitude (°N)', fontsize=fontsize)
-        cbar = plt.colorbar(ctf)
+        if extend:
+            cbar = plt.colorbar(ctf, extend='max')
+        else:
+            cbar = plt.colorbar(ctf)
         cbar.ax.set_title(unit, fontsize=fontsize)
         cbar.ax.tick_params(labelsize=fontsize)
     plt.savefig(f'{save_name}.png', bbox_inches='tight')

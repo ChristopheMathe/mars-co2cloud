@@ -823,7 +823,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print('Display:')
             print(max(data_processed))
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed, unit='',
-                                     norm=None, vmin=0, vmax=5., observation=False, cmap='inferno',
+                                     norm='set', vmin=0., vmax=2, observation=False, cmap='inferno',
                                      latitude_selected=None, localtime_selected=local_time,
                                      title=f'Zonal mean of {name_target}, at {int(local_time[0])} h', tes=None,
                                      mvals=None,
