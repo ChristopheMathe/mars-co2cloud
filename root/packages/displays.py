@@ -1044,15 +1044,15 @@ def display_satuco2_thickness_atm_layer(data, data_std, save_name):
     north_pole_ls_my29 = 197.5 + arange(27) * 5
     south_pole_ls_my29 = 12.5 + arange(35) * 5
 
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_1graph)
+    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_2graph_rows)
     ax[0].set_title('North pole above 60°N', fontsize=fontsize)
     ax[0].errorbar(arange(data.shape[1]) * 5, data[0, :] / 1e3,
                    yerr=data_std[0, :] / 1e3,
                    ls=' ', marker='+', color='blue', label='GCM')  # 72 points binned in 5°
-    ax[0].errorbar(north_pole_ls_my29, north_pole_my29[:, 1],
-                   yerr=[north_pole_my29[:, 2] - north_pole_my29[:, 1], north_pole_my29[:, 1] - north_pole_my29[:, 0]],
+    ax[0].errorbar(north_pole_ls_my28, north_pole_my28[:, 1],
+                   yerr=[north_pole_my28[:, 2] - north_pole_my28[:, 1], north_pole_my28[:, 1] - north_pole_my28[:, 0]],
                    color='black',
-                   ls=' ', marker='+', label='MCS MY29')
+                   ls=' ', marker='+', label='MCS MY28')
     ax[0].set_xticks(ticks=arange(0, 405, 45))
     ax[0].set_xticklabels(labels=arange(0, 405, 45), fontsize=fontsize)
     ax[0].tick_params(axis='both', which='major', labelsize=fontsize)

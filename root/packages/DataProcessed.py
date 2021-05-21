@@ -4,7 +4,7 @@ from .lib_function import *
 from .ncdump import get_data, getfilename
 from os import mkdir, path
 from sys import exit
-from.constant_parameter import cst_stefan, threshold
+from .constant_parameter import cst_stefan, threshold
 
 
 def co2ice_polar_cloud_distribution(filename, data, normalization, local_time):
@@ -113,11 +113,13 @@ def co2ice_cumulative_masses_polar_cap(filename, data):
 
     # get precip_co2_ice
     data_precip_co2_ice, list_var = get_data(filename=filename, target='precip_co2_ice')
-    data_precip_co2_ice_north, tmp = slice_data(data_precip_co2_ice[:, :, :], dimension_data=data_latitude[:], value=[60, 90])
-    data_precip_co2_ice_south, tmp = slice_data(data_precip_co2_ice[:, :, :], dimension_data=data_latitude[:], value=[-60, -90])
+    data_precip_co2_ice_north, tmp = slice_data(data_precip_co2_ice[:, :, :], dimension_data=data_latitude[:],
+                                                value=[60, 90])
+    data_precip_co2_ice_south, tmp = slice_data(data_precip_co2_ice[:, :, :], dimension_data=data_latitude[:],
+                                                value=[-60, -90])
     print(max(data_precip_co2_ice_north), max(data_precip_co2_ice_south))
     # get co2_ice without microphysics
-#    data_ref = get_data(filename='', target='co2ice')
+    #    data_ref = get_data(filename='', target='co2ice')
 
     # extract the area of grid
     data_area = gcm_area()
@@ -217,7 +219,8 @@ def co2ice_coverage(filename, data):
             for ls in range(ntime):  # time
                 if any(data[ls, :, lat, lon] > threshold):  # There at least one cell with co2_ice
                     data_co2ice_coverage[lat, lon] += 1
-                    if any(data[ls, idx_10pa:, lat, lon] > threshold):  # There at least one cell with co2_ice in mesosphere
+                    if any(data[ls, idx_10pa:, lat,
+                           lon] > threshold):  # There at least one cell with co2_ice in mesosphere
                         data_co2ice_coverage_meso[lat, lon] = 1
 
     data_co2ice_coverage = correction_value(data=data_co2ice_coverage, operator='eq', threshold=0)
@@ -259,7 +262,7 @@ def emis_polar_winter_gg2020_fig13(filename, data, local_time):
 
 def flux_lw_apparent_temperature_zonal_mean(data):
     # Flux = sigma T^4
-    temperature_apparent = power(data/cst_stefan, 1/4)
+    temperature_apparent = power(data / cst_stefan, 1 / 4)
     temperature_apparent = mean(temperature_apparent, axis=2).T
     return temperature_apparent
 
@@ -286,7 +289,8 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
     zonal_mean_co2_ice = mean(data_co2_ice, axis=2)
     if not local_time:
         zonal_mean = mean(zonal_mean.reshape((669, 12, zonal_mean.shape[1])), axis=1)  # => sols, lon
-        zonal_mean_co2_ice = mean(zonal_mean_co2_ice.reshape((669, 12, zonal_mean_co2_ice.shape[1])), axis=1)  # => sols,
+        zonal_mean_co2_ice = mean(zonal_mean_co2_ice.reshape((669, 12, zonal_mean_co2_ice.shape[1])),
+                                  axis=1)  # => sols,
     # lon
 
     zonal_mean, zonal_mean_co2_ice = rotate_data(zonal_mean, zonal_mean_co2_ice, do_flip=False)
@@ -758,36 +762,21 @@ def satuco2_hu2012_fig9(filename, data, local_time):
         print(f'Time: {data_time[time_selected[0]]:.0f} / {data_time[time_selected[-1]]:.0f}°Ls')
         tmp_north = array([])
         tmp_south = array([])
-
         # Find each super-saturation of co2 thickness
         for ls in range(data_binned_north.shape[0]):
             for longitude in range(data_binned_north.shape[3]):
 
                 # For northern polar region
                 for latitude_north in range(data_binned_north.shape[2]):
-                    for alt in range(data_binned_north.shape[1]):
-                        if data_binned_north[ls, alt, latitude_north, longitude] >= 1:
-                            idx_min_north = alt
-                            for alt2 in range(alt + 1, data_binned_north.shape[1]):
-                                if data_binned_north[ls, alt2, latitude_north, longitude] < 1:
-                                    idx_max_north = alt2 - 1
-                                    tmp_north = append(tmp_north, abs(data_altitude[idx_max_north] -
-                                                                      data_altitude[idx_min_north]))
-                                    break
-                            break
+                    a = data_altitude[data_binned_north[ls, :, latitude_north, longitude].mask == False]
+                    if len(a) != 0:
+                        tmp_north = append(tmp_north, abs(a[-1] - a[0]))
 
                 # For southern polar region
                 for latitude_south in range(data_binned_south.shape[2]):
-                    for alt in range(data_binned_south.shape[1]):
-                        if data_binned_south[ls, alt, latitude_south, longitude] >= 1:
-                            idx_min_south = alt
-                            for alt2 in range(alt + 1, data_binned_south.shape[1]):
-                                if data_binned_south[ls, alt2, latitude_south, longitude] < 1:
-                                    idx_max_south = alt2 - 1
-                                    tmp_south = append(tmp_south, abs(data_altitude[idx_max_south] -
-                                                                      data_altitude[idx_min_south]))
-                                    break
-                            break
+                    a = data_altitude[data_binned_south[ls, :, latitude_south, longitude].mask == False]
+                    if len(a) != 0:
+                        tmp_south = append(tmp_south, abs(a[-1] - a[0]))
         tmp_north = correction_value(tmp_north, 'inf', threshold=0)
         tmp_south = correction_value(tmp_south, 'inf', threshold=0)
 

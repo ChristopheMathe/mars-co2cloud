@@ -235,8 +235,8 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             display_vars_ls_longitude(filename=filename, data=data_processed, norm='log', vmin=1e-13, vmax=1e-7,
                                       local_time=local_time,
                                       unit='kg/kg', title=f'CO$_2$ ice mmr at 0°N and 0.5 Pa ('
-                                                          f'{local_time:.0f}h)',
-                                      save_name=f'co2_ice_ls_longitude_0N_0p5Pa_{local_time:.0f}h')
+                                                          f'{local_time[0]:.0f}h)',
+                                      save_name=f'co2_ice_ls_longitude_0N_0p5Pa_{local_time[0]:.0f}h')
 
         else:
             print('Wrong value')
