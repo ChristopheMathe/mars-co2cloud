@@ -268,7 +268,8 @@ def flux_lw_apparent_temperature_zonal_mean(data):
 
 
 def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
-    latitude = 0
+    latitude = float(input('Which latitude (°N)? '))
+
     data_latitude, list_var = get_data(filename=filename, target='latitude')
     data, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=latitude)
 
@@ -278,16 +279,16 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
         filename_co2 = getfilename(files=files, selection=None)
         data_co2_ice, list_var = get_data(filename=directory + filename_co2, target='co2_ice')
 
-    if local_time:
+    if len(local_time) == 1:
         data_co2_ice, tmp = extract_at_a_local_time(filename=filename, data=data_co2_ice, local_time=local_time)
 
     data_co2_ice, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:], value=latitude)
-    data_co2_ice = correction_value(data_co2_ice, operator='inf', threshold=1e-13)
+    data_co2_ice = correction_value(data_co2_ice, operator='inf', threshold=threshold)
 
     # zonal mean
     zonal_mean = mean(data, axis=2)  # zonal mean
     zonal_mean_co2_ice = mean(data_co2_ice, axis=2)
-    if not local_time:
+    if len(local_time) != 1:
         zonal_mean = mean(zonal_mean.reshape((669, 12, zonal_mean.shape[1])), axis=1)  # => sols, lon
         zonal_mean_co2_ice = mean(zonal_mean_co2_ice.reshape((669, 12, zonal_mean_co2_ice.shape[1])),
                                   axis=1)  # => sols,
@@ -1308,10 +1309,10 @@ def vars_localtime_longitude(filename, data, latitude, altitude):
 
     data, idx_latitude = slice_data(data=data, dimension_data=data_latitude[:], value=latitude)
     data, idx_altitude = slice_data(data=data, dimension_data=data_altitude[:], value=altitude)
-
-    # data = mean(data.reshape(669, 12, data.shape[1]), axis=1)  # => sols, lon
-    data = mean(data.reshape(12, 669, data.shape[1]), axis=1)  # => hl, lon
-    return data
+    data_mean = zeros((12, data.shape[1]))
+    for i in range(12):
+        data_mean[i, :] = mean(data[i::12, :], axis=0)
+    return data_mean
 
 
 def vars_ls_longitude(filename, data, latitude, altitude):

@@ -191,13 +191,13 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                                                        directory=directory)
 
             print('Display:')
-            if local_time:
+            if len(local_time) == 1:
                 display_vars_altitude_ls(filename=filename, data_1=data_target, local_time=local_time,
                                          norm='log', vmin=1e-13, vmax=1e-3, unit='kg/kg', altitude_max=None,
                                          title=f'Zonal mean of H2O ice mmr and\n CO2 ice mmr (black), at'
-                                               f' {int(latitude_selected)} °N ({int(local_time)} h)',
+                                               f' {int(latitude_selected)} °N ({int(local_time[0])} h)',
                                          save_name=f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected)}N_'
-                                                   f'{int(local_time)}h', data_2=data_co2_ice)
+                                                   f'{int(local_time[0])}h', data_2=data_co2_ice)
             else:
                 display_vars_altitude_ls(filename=filename, data_1=data_target, local_time=local_time,
                                      norm='log', vmin=1e-13, vmax=1e-3, unit='kg/kg', altitude_max=1e-1,
@@ -220,12 +220,12 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
         elif view_mode == 10:
             print('Processing data:')
-            data_processed = vars_localtime_longitude(filename=filename, data=data_target, latitude=0, altitude=0.5)
+            data_processed = vars_localtime_longitude(filename=filename, data=data_target, latitude=0, altitude=1)
 
             print('Display:')
-            display_vars_localtime_longitude(filename=filename, data=data_processed, norm='log', vmin=1e-13, vmax=1e-7,
-                                             unit='kg/kg', title=f'CO$_2$ ice mmr at 0°N and 0.5 Pa',
-                                             save_name=f'co2_ice_local_time_longitude_0N_0p5Pa')
+            display_vars_localtime_longitude(filename=filename, data=data_processed, norm='log', vmin=1e-13, vmax=1e-3,
+                                             unit='kg/kg', title=f'CO$_2$ ice mmr at 0°N and 1 Pa',
+                                             save_name=f'co2_ice_local_time_longitude_0N_1Pa')
 
         elif view_mode == 11:
             print('Processing data:')

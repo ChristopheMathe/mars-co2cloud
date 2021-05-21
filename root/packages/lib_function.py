@@ -445,7 +445,7 @@ def slice_data(data, dimension_data, value):
     # From the dimension, get the index(es) of the slice
     if (isinstance(value, float) is True) or (isinstance(value, int) is True):
         idx = (abs(dimension_data[:] - value)).argmin()
-        selected_idx = float(dimension_data[idx])
+        selected_idx = idx
 
     elif len(value) == 2:
         idx1 = (abs(dimension_data[:] - value[0])).argmin()
