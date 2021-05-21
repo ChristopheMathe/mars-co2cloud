@@ -304,7 +304,8 @@ def riceco2_local_time_evolution(filename, data, latitude):
     data = extract_where_co2_ice(filename=filename, data=data)
 
     data_latitude, list_var = get_data(filename=filename, target='latitude')
-    data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=latitude)
+    data, idx_latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=latitude)
+    latitude = data_latitude[idx_latitudes]
 
     data = mean(data, axis=2)  # zonal mean
 
@@ -315,9 +316,12 @@ def riceco2_local_time_evolution(filename, data, latitude):
         exit()
     else:
         nb_sol = int(data.shape[0] / 12)  # if there is 12 local time!
-    data = reshape(data, (nb_sol, 12, data.shape[1])).T
-    data = mean(data, axis=2) * 1e6  # m to µm
-    return data, latitudes
+
+    data_mean = zeros((data.shape[1], 12))  # altitude, local time
+    for i in range(12):
+        data_mean[:, i] = mean(data[i::12, :], axis=0) * 1e6
+
+    return data_mean, latitude
 
 
 def riceco2_max_local_time_evolution(filename, data):

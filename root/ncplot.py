@@ -220,12 +220,12 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
         elif view_mode == 10:
             print('Processing data:')
-            data_processed = vars_localtime_longitude(filename=filename, data=data_target, latitude=0, altitude=1)
+            data_processed = vars_localtime_longitude(filename=filename, data=data_target, latitude=0, altitude=0.5)
 
             print('Display:')
-            display_vars_localtime_longitude(filename=filename, data=data_processed, norm='log', vmin=1e-13, vmax=1e-3,
-                                             unit='kg/kg', title=f'CO$_2$ ice mmr at 0°N and 1 Pa',
-                                             save_name=f'co2_ice_local_time_longitude_0N_1Pa')
+            display_vars_localtime_longitude(filename=filename, data=data_processed, norm='log', vmin=1e-13, vmax=1e-7,
+                                             unit='kg/kg', title=f'CO$_2$ ice mmr at 0°N and 0.5 Pa',
+                                             save_name=f'co2_ice_local_time_longitude_0N_0p5Pa')
 
         elif view_mode == 11:
             print('Processing data:')
@@ -358,6 +358,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
         if view_mode == 8:
             latitude_selected = float(input('Select a latitude (°N): '))
+            print(latitude_selected)
             print('Processing data:')
             data_processed, latitude = riceco2_local_time_evolution(filename=filename, data=data_target,
                                                                     latitude=latitude_selected)
@@ -803,7 +804,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
             print('Display:')
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed, unit='',
-                                     norm='log', vmin=1e-13, vmax=1e-1, observation=False,
+                                     norm='log', vmin=1e-13, vmax=1e-1, observation=False, cmap='inferno',
                                      latitude_selected=None, localtime_selected=local_time,
                                      title=f'Zonal mean of {name_target} ({local_time}h)', tes=None, mvals=None,
                                      save_name=f'tau1mic_zonal_mean_{local_time}h')
@@ -820,11 +821,13 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             data_processed, tmp = vars_zonal_mean(filename=filename, data=data_target, layer=None)
 
             print('Display:')
+            print(max(data_processed))
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed, unit='',
-                                     norm=None, vmin=0, vmax=1., observation=False, cmap='inferno',
+                                     norm=None, vmin=0, vmax=5., observation=False, cmap='inferno',
                                      latitude_selected=None, localtime_selected=local_time,
-                                     title=f'Zonal mean of {name_target}, at {local_time}h', tes=None, mvals=None,
-                                     save_name=f'tau_zonal_mean_{local_time}h')
+                                     title=f'Zonal mean of {name_target}, at {int(local_time[0])} h', tes=None,
+                                     mvals=None,
+                                     save_name=f'tau_zonal_mean_{int(local_time[0])}h')
 
     elif name_target in ['tauTES']:
         print('What do you wanna do?')

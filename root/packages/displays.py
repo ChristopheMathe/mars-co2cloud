@@ -740,7 +740,7 @@ def display_riceco2_local_time_evolution(filename, data, local_time, latitude):
     cmap = get_cmap('hsv')
     fig, ax = plt.subplots(figsize=figsize_1graph)
     ax.set_yscale('log')
-    ax.set_ylim(1e3, 0)
+    ax.set_ylim(1e3, 1e-3)
     ax.set_xlim(1e-3, 1e2)
     ax.set_xscale('log')
     for i in range(data.shape[1]):
