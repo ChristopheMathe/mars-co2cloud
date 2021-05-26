@@ -1790,11 +1790,14 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
 
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
+        extend = False
     elif norm == 'div':
         norm = DivergingNorm(vmin=vmin, vmax=vmax)
+        extend = False
     elif norm == 'set':
         norm = BoundaryNorm([0, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2], ncolors=cmap.N, clip=False)
         cmap.set_over('red')
+        extend = True
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
 

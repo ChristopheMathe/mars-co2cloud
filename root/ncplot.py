@@ -24,7 +24,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
     # 4-Dimension variable
 
     # ================================================================================================================ #
-    if name_target in ['co2_ice', 'h2o_ice', 'q01']:  # q01 = h2o_ice
+    if name_target in ['co2_ice', 'h2o_ice', 'q01', 'dustq']:  # q01 = h2o_ice
         print('What do you wanna do?')
         print('     1: maximum in altitude and longitude, with others variables at these places (fig: lat-ls)')
         print('     2: zonal mean column density (fig: lat-ls)')
@@ -82,6 +82,8 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             elif view_mode == 202:
                 if name_target == 'co2_ice':
                     vmin, vmax = 1e-13, 10
+                elif name_target == 'dustq':
+                    vmin, vmax = 1e-5, 1e-2
                 else:
                     vmin, vmax = 1e-7, 1e-1
                 display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed,
