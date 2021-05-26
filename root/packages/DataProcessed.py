@@ -271,7 +271,7 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
     latitude = float(input('Which latitude (°N)? '))
 
     data_latitude, list_var = get_data(filename=filename, target='latitude')
-    data, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=latitude)
+    data, idx_latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=latitude)
 
     if 'co2_ice' in list_var:
         data_co2_ice, list_var = get_data(filename=filename, target='co2_ice')
@@ -282,7 +282,7 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
     if len(local_time) == 1:
         data_co2_ice, tmp = extract_at_a_local_time(filename=filename, data=data_co2_ice, local_time=local_time)
 
-    data_co2_ice, latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:], value=latitude)
+    data_co2_ice, idx_latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:], value=latitude)
     data_co2_ice = correction_value(data_co2_ice, operator='inf', threshold=threshold)
 
     # zonal mean
@@ -297,7 +297,7 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
     zonal_mean, zonal_mean_co2_ice = rotate_data(zonal_mean, zonal_mean_co2_ice, do_flip=False)
 
     del data, data_co2_ice
-    return zonal_mean, zonal_mean_co2_ice, latitude_selected
+    return zonal_mean, zonal_mean_co2_ice, data_latitude[idx_latitude_selected]
 
 
 def riceco2_local_time_evolution(filename, data, latitude):

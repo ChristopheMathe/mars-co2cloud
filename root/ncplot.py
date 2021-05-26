@@ -620,11 +620,12 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             data_processed = vars_ls_longitude(filename=filename, data=data_target, latitude=0, altitude=0.5)
 
             print('Display:')
-            display_vars_ls_longitude(filename=filename, data=data_processed, norm='linear', vmin=100, vmax=160,
+            print(min(data_processed), max(data_processed))
+            display_vars_ls_longitude(filename=filename, data=data_processed, norm='linear', vmin=120, vmax=180,
                                       local_time=local_time,
                                       unit='K', title=f'Temperature at 0°N and 0.5 Pa ('
-                                                      f'{local_time:.0f}h)',
-                                      save_name=f'temp_ls_longitude_0N_0p5Pa_{local_time:.0f}h')
+                                                      f'{local_time[0]:.0f}h)',
+                                      save_name=f'temp_ls_longitude_0N_0p5Pa_{local_time[0]:.0f}h')
         elif view_mode == 12:
             data_processed = vars_localtime_ls(filename=filename, data=data_target, latitude=0, altitude=0.5)
 
