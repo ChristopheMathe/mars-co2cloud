@@ -33,7 +33,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('     3: co2_ice coverage (fig: lat-lon)')
         print('     4: polar cloud distribution to compare with Fig.8 of Neumann+2003 (fig: #clouds-lat)')
         print('     5: cloud evolution with satuco2/temperature/radius (fig: alt-lat, gif)')
-        print('     6: mmr structure in winter polar regions at 60°N/S (fig: alt-ls)')
+        print('     6: mmr structure at a given latitude (fig: alt-ls)')
         print('     7: Density column evolution in polar region, polar projection (fig: lon-lat)')
         print('     8: h2o_ice profile with co2_ice presence (fig: alt-ls)')
         print('     9: localtime co2_ice column density, at 0°N, zonal mean (fig: loc-ls)')
@@ -137,43 +137,20 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             if make_gif.lower() == 'y':
                 create_gif(filenames)
 
-        elif view_mode == 6 or view_mode == 601:
+        elif view_mode == 6:
+            latitude = float(input('Enter a latitude (°N): '))
+
             print('Processing data:')
-            data_north, data_south = temp_thermal_structure_polar_region(filename=filename, data=data_target)
+            data_processed, latitude = vars_altitude_ls(filename=filename, data=data_target, latitude=latitude,
+                                              local_time=local_time)
 
-            if view_mode == 601:
-                path_2 = '../occigen_test_64x48x32_1years_Tµphy_para_start_simu_ref_Margaux_co2clouds_Radiatif_actif/'
-                files = listdir(path_2)
-                directory = []
-                try:
-                    directory = [x for x in files if 'occigen' in x][0] + '/'
-                except not directory:
-                    directory = ''
-
-                if directory is not None:
-                    files = listdir(path_2 + directory)
-
-                filename_2 = getfilename(files)
-                filename_2 = path_2 + directory + filename_2
-                data_target_2, list_var = get_data(filename_2, target=name_target)
-                data_north_2, data_south_2 = temp_thermal_structure_polar_region(filename=filename_2,
-                                                                                 data=data_target_2)
-
-                print('Display:')
-                display_temp_structure_polar_region(filename=filename,
-                                                    data_north=data_north - data_north_2,
-                                                    data_south=data_south - data_south_2,
-                                                    norm='log',
-                                                    levels=None,
-                                                    unit='kg/kg',
-                                                    save_name='diff_co2_ice_zonal_mean_60NS_' + directory[:-1])
-            else:
-                print('Display:')
-                display_temp_structure_polar_region(filename=filename, data_north=data_north, data_south=data_south,
-                                                    norm='log',
-                                                    levels=logspace(-13, 0, 14),
-                                                    unit='kg/kg',
-                                                    save_name='co2_ice_zonal_mean_60NS')
+            print('Display:')
+            print(min(data_processed), max(data_processed))
+            display_vars_altitude_ls(filename=filename, data_1=data_processed, data_2=None, altitude_max=None,
+                                                norm='log', unit='kg/kg', vmin=1e-13, vmax=1e-4,
+                                     title=f'{name_target} mmr at {latitude} ({local_time[0]:.0f} h), DS: MY28',
+                                     local_time=local_time,
+                                                save_name=f'{name_target}_zonal_mean_{latitude}N_{local_time[0]:.0f}h')
 
         elif view_mode == 7:
             print('Processing data:')

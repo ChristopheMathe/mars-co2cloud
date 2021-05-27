@@ -1048,6 +1048,14 @@ def temp_cold_pocket(filename, data, local_time):
     return
 
 
+def vars_altitude_ls(filename, data, latitude, local_time):
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+
+    data, idx_lat = slice_data(data=data, dimension_data=data_latitude[:], value=latitude)
+    data = mean(data, axis=2).T
+    return data, data_latitude[idx_lat]
+
+
 def vars_extract_at_grid_point(filename, data, latitude, longitude):
     data_latitude, list_var = get_data(filename=filename, target='latitude')
     data_longitude, list_var = get_data(filename=filename, target='longitude')
