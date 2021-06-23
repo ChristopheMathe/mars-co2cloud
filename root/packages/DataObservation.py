@@ -1,4 +1,5 @@
 from .ncdump import get_data
+from numpy import loadtxt
 
 
 def observation_mola(only_location=None):
@@ -296,3 +297,74 @@ def simulation_mvals(target, localtime):
     print(f'\tFile name: {filename}')
 
     return get_data(filename=filename, target=target)
+
+
+
+'''
+    Data extracted from: https://pds.nasa.gov/ds-view/pds/viewDataset.jsp?dsid=VL1%2FVL2-M-MET-3-P-V1.0
+    Information from: https://atmos.nmsu.edu/PDS/data/vl_1001/catalog/vl_p.cat
+    Data Set Overview                                                         
+    =================                                                         
+      This data set contains the martian surface atmospheric pressure         
+      readings obtained through much of the duration of the Viking            
+      Lander 1 and 2 missions (data are included for Viking Lander 1          
+      sols 0 - 2245 and Viking Lander 2 sols 0 - 1050).  The data are         
+      derived from the ambient pressure sensor carried onboard the            
+      Landers and values are presented on a point by point basis.             
+      The sampling rate was variable throughout the mission; the              
+      maximum sampling rate was one measurement per second, but               
+      ranged up to 65 minutes for Lander 1 and 105 minutes for Lander         
+      2.  For further background information on the Viking                    
+      Meteorology Instrument System (VMIS) and results from this              
+      experiment, see [CHAMBERLAIN_ETAL1976; HESS_ETAL_1976A;                 
+      HESS_ETAL_1976B; and HESS_ETAL_1977].  For discussions of               
+      analyses of experiment data, see also [TILLMAN_1977;                    
+      HESS_ETAL_1980; and TILLMAN_1988].  An earlier version of this          
+      data set is archived at the NSSDC (NSSDC ID 75-075C-07D and             
+      75-083C-07D).                                                           
+                                                                              
+      This data set is composed of the following fields (listed as            
+      the field name followed by a description):                              
+                                                                              
+      SC_ID                                                                   
+        Spacecraft id   /!\ Je l'ai supprime pour utiliser facilement loadtxt 
+                                                                              
+      SOL_LON                                                                 
+        Areocentric longitude of the Sun (Ls), derived for the                
+        local time of each measurement                                        
+                                                                              
+      VIKING_YEAR                                                             
+        Viking mission year, starting at 1 when the Viking                    
+        spacecraft reached Mars, and incremented at Ls = 0                    
+        every martian year                                                    
+                                                                              
+      MARTIAN_DAY                                                             
+        The martian solar day (sol), starting at day 0 when                   
+        each Lander touched down                                              
+                                                                              
+      LOCAL_HOUR                                                              
+        Local hour (Earth hour), beginning at midnight (hr 0)                 
+                                                                              
+      LOCAL_MINUTE                                                            
+        Local minute (Earth minute)                                           
+                                                                              
+      LOCAL_SECOND                                                            
+        Local second (Earth second)                                           
+                                                                              
+      PRESSURE                                                                
+        Surface atmospheric pressure     
+'''
+def viking_lander(lander):
+    path = ''
+    sols_0 = 0
+    if lander == 1:
+        path = '/home/mathe/Documents/owncloud/GCM/Viking_lander/viking_lander1_pression.dat'
+        sols_0 = 209  # http://www-mars.lmd.jussieu.fr/mars/time/martian_time.html , ls=97°
+    if lander == 2:
+        path = '/home/mathe/Documents/owncloud/GCM/Viking_lander/viking_lander2_pression.dat'
+        sols_0 = 253  # http://www-mars.lmd.jussieu.fr/mars/time/martian_time.html , ls=117°
+    dataset = loadtxt(path)
+    data_sols = sols_0 + dataset[:, 2]
+    data_pressure = dataset[:, 6] * 1e2  # mbar to Pa
+
+    return data_sols, data_pressure

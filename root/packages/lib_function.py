@@ -1,6 +1,6 @@
 from sys import exit
 from .ncdump import get_data
-
+from .constant_parameter import *
 
 # correct very low values of co2/h2o mmr
 def correction_value(data, operator, threshold):
@@ -102,7 +102,7 @@ def convert_sols_to_ls():
 
 
 def compute_column_density(filename, data):
-    from numpy import zeros, sum
+    from numpy import zeros, sum, max
 
     data_altitude, list_var = get_data(filename, target='altitude')
 
@@ -160,6 +160,7 @@ def compute_column_density(filename, data):
         print(f'Data has {data.ndim} dimension, need 3 or 4!')
         exit()
 
+    print(max(data_column))
     data_column = correction_value(data_column, 'inf', threshold=1e-13)
     data_column = sum(data_column, axis=1)
     data_column = correction_value(data_column, 'inf', threshold=1e-13)
@@ -215,7 +216,7 @@ def extract_where_co2_ice(filename, data):
 
     # extract co2_ice data
     data_co2_ice, list_var = get_data(filename, target='co2_ice')
-    data_where_co2_ice = ma.masked_where(data_co2_ice[:, :, :, :] < 1e-13, data, nan)
+    data_where_co2_ice = ma.masked_where(data_co2_ice[:, :, :, :] < threshold, data, nan)
     del data_co2_ice
 
     return data_where_co2_ice

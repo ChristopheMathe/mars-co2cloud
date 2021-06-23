@@ -1,16 +1,48 @@
-from numpy import isin, delete, array, append
+from numpy import isin, delete, array, append, int
 from math import ceil
 from netCDF4 import Dataset
+from os import listdir
+
+
+def get_argument(*argv):
+    arg_file = None
+    arg_target = None
+    arg_view_mode = None
+
+    if len(argv) > 2:
+        arg_file = int(argv[1])
+        arg_target = argv[2]
+        if len(argv) == 4:
+            arg_view_mode = int(argv[3])
+
+    files = listdir('.')
+    directory_store = []
+    try:
+        directory_store = [x for x in files if 'occigen' in x][0] + '/'
+    except not directory_store:
+        directory_store = None
+
+    if directory_store is None:
+        directory_store = ''
+    else:
+        files = listdir(directory_store)
+
+    filename = getfilename(files, selection=arg_file)
+    filename = directory_store + filename
+
+    data_target, list_var = get_data(filename, target=arg_target)
+    print(f'You have selected the variable: {data_target.name}')
+    return files, directory_store, filename, data_target.name, data_target, arg_view_mode
 
 
 def getfilename(files, selection=None):
     if any(".nc" in s for s in files):
         list_files = sorted([x for x in files if '.nc' in x])
         if len(list_files) > 1:
-            print(f'Netcdf files available: \t(0) {list_files[0]}')
-            for i, value_i in enumerate(list_files[1:]):
-                print(f'\t\t\t\t({i + 1}) {value_i}')
             if selection is None:
+                print(f'Netcdf files available: \t(0) {list_files[0]}')
+                for i, value_i in enumerate(list_files[1:]):
+                    print(f'\t\t\t\t({i + 1}) {value_i}')
                 filename = int(input("Select the file number: "))
             else:
                 filename = selection
@@ -22,7 +54,6 @@ def getfilename(files, selection=None):
         print('There is no Netcdf file in this directory !')
         filename = ''
         exit()
-    print(f'You have selected the file: {filename}')
     return filename
 
 

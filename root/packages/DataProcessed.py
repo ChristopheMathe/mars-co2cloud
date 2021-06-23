@@ -1,5 +1,5 @@
 from numpy import mean, abs, min, max, zeros, where, std, arange, unravel_index, argmin, argmax, array, \
-    count_nonzero, std, append, asarray, power, ma, reshape, swapaxes, log, exp
+    count_nonzero, std, append, asarray, power, ma, reshape, swapaxes, log, exp, concatenate
 from .lib_function import *
 from .ncdump import get_data, getfilename
 from os import mkdir, path
@@ -463,9 +463,13 @@ def riceco2_top_cloud_altitude(filename, data_target, local_time):
     n_part = data_rho * data_ccn_nco2
     del [data_target, data_ccn_nco2, data_rho]
 
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    a = (abs(data_latitude[:] - 45)).argmin() + 1
+    polar_latitude = concatenate((arange(a), arange(nb_lat - a, nb_lat)))
+
     top_cloud = zeros((nb_time, nb_lat))
     for t in range(nb_time):
-        for lat in range(nb_lat):
+        for lat in polar_latitude:
             for alt in range(nb_alt - 1, -1, -1):
                 if n_part[t, alt, lat] >= n_reflect[t, alt, lat] and alt > 1:
                     top_cloud[t, lat] = data_altitude[alt]
@@ -1181,7 +1185,14 @@ def vars_zonal_mean(filename, data, layer=None, flip=None):
     else:
         layer_selected = None
 
-    zonal_mean = mean(data[:, :, :], axis=2)
+    if data.ndim == 3:
+        zonal_mean = mean(data[:, :, :], axis=2)
+    elif data.ndim == 2:
+        zonal_mean = mean(data[:, :], axis=1)
+    else:
+        print('wrong ndim')
+        exit()
+
     if flip is None:
         zonal_mean = rotate_data(zonal_mean, do_flip=True)[0]
     else:
@@ -1191,16 +1202,24 @@ def vars_zonal_mean(filename, data, layer=None, flip=None):
     return zonal_mean, layer_selected
 
 
-def vars_zonal_mean_column_density(filename, data):
+def vars_zonal_mean_column_density(filename, data, local_time):
     # diurnal mean
-    #    data = mean(data.reshape(669, 12, data.shape[1], data.shape[2], data.shape[3]), axis=1)  # => sols, lon
+    if len(local_time) > 1:
+        data = data.reshape(669, 12, data.shape[1], data.shape[2], data.shape[3])
+        print(data.shape)
+        data = mean(data, axis=1)
 
     data, altitude_limit, altitude_min, altitude_max, altitude_unit = compute_column_density(filename=filename,
                                                                                              data=data)
 
     # compute zonal mean column density
-    data = mean(data, axis=2)  # Ls function of lat
-
+    print(max(data))
+    if data.ndim == 3:
+        data = mean(data, axis=2)  # Ls function of lat
+    else:
+        print('Stop wrong ndim !')
+        exit()
+    print(max(data))
     data = rotate_data(data, do_flip=True)[0]
 
     return data, altitude_limit, altitude_min, altitude_max, altitude_unit

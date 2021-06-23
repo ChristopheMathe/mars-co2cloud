@@ -818,7 +818,7 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
     ax[0].set_yscale('log')
     ax[0].set_xscale('log')
     ax[0].set_ylim(1e3, 1e-2)
-    ax[0].set_xlim(1e-3, 1e3)
+    ax[0].set_xlim(1e-4, 1e3)
     ax[0].grid()
     ax[0].legend(loc='best', fontsize=fontsize)
     ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
@@ -837,13 +837,13 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
     ax[1].set_yscale('log')
     ax[1].set_xscale('log')
     ax[1].set_ylim(1e3, 1e-2)
-    ax[1].set_xlim(1e-3, 1e3)
+    ax[1].set_xlim(1e-4, 1e3)
     ax[1].grid()
     ax[1].legend(loc='best', fontsize=fontsize)
     ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
 
     fig.text(0.5, 0.06, 'Radius size (µm)', ha='center', va='center', fontsize=fontsize)
-    fig.text(0.06, 0.5, 'Altitude (Pa)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
+    fig.text(0.03, 0.5, 'Altitude (Pa)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
     fig.savefig('riceco2_polar_latitudes_structure.png', bbox_inches='tight')
     return
 
@@ -1049,10 +1049,10 @@ def display_satuco2_thickness_atm_layer(data, data_std, save_name):
     ax[0].errorbar(arange(data.shape[1]) * 5, data[0, :] / 1e3,
                    yerr=data_std[0, :] / 1e3,
                    ls=' ', marker='+', color='blue', label='GCM')  # 72 points binned in 5°
-    ax[0].errorbar(north_pole_ls_my28, north_pole_my28[:, 1],
-                   yerr=[north_pole_my28[:, 2] - north_pole_my28[:, 1], north_pole_my28[:, 1] - north_pole_my28[:, 0]],
+    ax[0].errorbar(north_pole_ls_my29, north_pole_my29[:, 1],
+                   yerr=[north_pole_my29[:, 2] - north_pole_my29[:, 1], north_pole_my29[:, 1] - north_pole_my29[:, 0]],
                    color='black',
-                   ls=' ', marker='+', label='MCS MY28')
+                   ls=' ', marker='+', label='MCS MY29')
     ax[0].set_xticks(ticks=arange(0, 405, 45))
     ax[0].set_xticklabels(labels=arange(0, 405, 45), fontsize=fontsize)
     ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
@@ -1072,8 +1072,8 @@ def display_satuco2_thickness_atm_layer(data, data_std, save_name):
     ax[1].legend(loc='best')
     ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
 
-    ax[0].set_ylim(0, 35)
-    ax[1].set_ylim(0, 35)
+    ax[0].set_ylim(0, 40)
+    ax[1].set_ylim(0, 40)
     fig.text(0.06, 0.5, 'Thickness (km)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
     fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=fontsize)
 
@@ -1692,7 +1692,7 @@ def display_vars_altitude_longitude(filename, data, unit, norm, vmin, vcenter, v
 
 
 def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, altitude_max, vmin, vmax, title, save_name,
-                             data_2=None):
+                             data_2=None, norm_2=None, vmin_2=None, vmax_2=None):
     from numpy import round
     from matplotlib.colors import LogNorm, Normalize
 
@@ -1700,6 +1700,11 @@ def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, altitude_
         norm = LogNorm(vmin=vmin, vmax=vmax)
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
+
+    if norm_2 == 'log':
+        norm_2 = LogNorm(vmin=vmin_2, vmax=vmax_2)
+    else:
+        norm_2 = Normalize(vmin=vmin_2, vmax=vmax_2)
 
     data_altitude, list_var = get_data(filename, target='altitude')
 
@@ -1721,9 +1726,12 @@ def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, altitude_
         data_time = data_ls[idx::len(data_local_time)]
 
     fig, axes = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
-    cb = axes.pcolormesh(data_time[:], data_altitude[:], data_1, norm=norm, cmap='plasma', shading='auto')
+    cb = axes.pcolormesh(data_time[:], data_altitude[:], data_1, norm=norm, cmap='plasma', shading='auto') # autumn
     if data_2 is not None:
-        axes.pcolormesh(data_time[:], data_altitude[:], data_2, norm=norm, cmap='binary', shading='auto')
+        cb2 = axes.pcolormesh(data_time[:], data_altitude[:], data_2, norm=norm_2, cmap='winter', shading='auto')
+        cbar2 = plt.colorbar(cb2, ax=axes)
+        cbar2.ax.set_title(unit, fontsize=fontsize)
+        cbar2.ax.tick_params(labelsize=fontsize)
 
     if units == 'Pa':
         axes.set_yscale('log')
@@ -1736,6 +1744,7 @@ def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, altitude_
     cbar = plt.colorbar(cb, ax=axes)
     cbar.ax.set_title(unit, fontsize=fontsize)
     cbar.ax.tick_params(labelsize=fontsize)
+
 
     axes.set_title(title, fontsize=fontsize)
     axes.set_xlabel('Solar longitude (°)', fontsize=fontsize)
