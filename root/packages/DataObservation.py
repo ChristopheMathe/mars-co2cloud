@@ -355,6 +355,7 @@ def simulation_mvals(target, localtime):
         Surface atmospheric pressure     
 '''
 def viking_lander(lander):
+    from numpy import append, array, mean, where, unique, min, max
     path = ''
     sols_0 = 0
     if lander == 1:
@@ -367,4 +368,26 @@ def viking_lander(lander):
     data_sols = sols_0 + dataset[:, 2]
     data_pressure = dataset[:, 6] * 1e2  # mbar to Pa
 
-    return data_sols, data_pressure
+    # Diurnal mean
+    data_sols_diurnal = array([])
+    data_pressure_diurnal = array([])
+    main_cpt = 0
+    while main_cpt < data_sols.shape[0]:
+        cpt = 0
+        while data_sols[main_cpt] == data_sols[main_cpt + cpt]:
+            cpt += 1
+            if main_cpt+cpt == data_sols.shape[0]:
+                break
+        data_sols_diurnal = append(data_sols_diurnal, mean(data_sols[main_cpt:main_cpt+cpt]))
+        data_pressure_diurnal = append(data_pressure_diurnal, mean(data_pressure[main_cpt:main_cpt+cpt]))
+        main_cpt += cpt
+
+    # Annual mean
+    data_sols_diurnal = data_sols_diurnal % 669
+    data_sols_unique = unique(data_sols_diurnal)
+    data_pressure_annual = array([])
+    for i in range(data_sols_unique.shape[0]):
+        indexes = where(data_sols_diurnal == data_sols_unique[i])
+        data_pressure_annual = append(data_pressure_annual, mean(data_pressure_diurnal[indexes]))
+
+    return data_sols_unique, data_pressure_annual

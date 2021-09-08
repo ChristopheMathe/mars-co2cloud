@@ -384,26 +384,24 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
         if view_mode == 8:
             latitude_selected = float(input('Select a latitude (°N): '))
-            print(latitude_selected)
             print('Processing data:')
-            data_processed, latitude = riceco2_local_time_evolution(filename=filename, data=data_target,
+            data_processed, data_std, latitude = riceco2_local_time_evolution(filename=filename, data=data_target,
                                                                     latitude=latitude_selected)
 
             print('Display:')
-            display_riceco2_local_time_evolution(filename=filename, data=data_processed, local_time=local_time,
-                                                 latitude=latitude)
+            display_riceco2_local_time_evolution(filename=filename, data=data_processed, data_std=data_std,
+                                                 local_time=local_time, latitude=latitude)
 
         if view_mode == 9:
             print('Processing data:')
-            data_max_radius, data_max_alt, data_min_radius, data_min_alt, data_mean_radius, data_mean_alt, latitude = \
-                riceco2_max_local_time_evolution(filename=filename, data=data_target)
+            data_mean_radius, data_mean_alt, data_std_radius, data_min_alt, data_max_alt, latitude = \
+                riceco2_mean_local_time_evolution(filename=filename, data=data_target)
 
             print('Display:')
-            display_riceco2_max_local_time_evolution(filename=filename, data_max_radius=data_max_radius,
-                                                     data_max_alt=data_max_alt, data_min_radius=data_min_radius,
-                                                     data_min_alt=data_min_alt, data_mean_radius=data_mean_radius,
-                                                     data_mean_alt=data_mean_alt, local_time=local_time,
-                                                     latitude=latitude)
+            display_riceco2_mean_local_time_evolution(filename=filename, data_mean_radius=data_mean_radius,
+                                                      data_std_radius=data_std_radius, data_mean_alt=data_mean_alt,
+                                                      data_min_alt=data_min_alt, data_max_alt=data_max_alt,
+                                                      local_time=local_time, latitude=latitude)
 
     elif name_target in ['satuco2']:
         print('What do you wanna do?')
@@ -902,6 +900,33 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                      levels=arange(140, 310, 10), norm=None, cmap='seismic',
                                                      unit='K', localtime=local_time,
                                                      save_name='tsurf_15ls_mean_')
+
+    elif name_target in ['ps']:
+        #TODO: surface pressure viking
+        print('What do you wanna do?')
+        print('     1: Zonal mean (fig: lat-ls)')
+        print('     2: Zonal mean at viking land site (fig: pressure-sols)')
+        print('')
+        if view_mode is None:
+            view_mode = int(input('Select number:'))
+
+        if view_mode == 1:
+            print('Processing data:')
+            zonal_mean, tmp = vars_zonal_mean(filename, data_target[:, :, :], layer=None)
+
+            print('Display:')
+            display_vars_latitude_ls(filename=filename, name_target=name_target, data=zonal_mean, unit='K', norm=None,
+                                     vmin=None, vmax=None, observation=False, latitude_selected=None,
+                                     title=None, tes=True, mvals=True, layer=None,
+                                     save_name='ps_zonal_mean')
+        if view_mode == 2:
+            print('Processing data:')
+            data_pressure_at_viking1, latitude1, longitude1, data_pressure_at_viking2, latitude2, longitude2 = \
+                ps_at_viking(filename, data_target)
+
+            print('Display:')
+            display_ps_at_viking(data_pressure_at_viking1, latitude1, longitude1, data_pressure_at_viking2, latitude2,
+                       longitude2)
 
     # ================================================================================================================ #
 

@@ -1,5 +1,5 @@
 from numpy import mean, abs, min, max, zeros, where, std, arange, unravel_index, argmin, argmax, array, \
-    count_nonzero, std, append, asarray, power, ma, reshape, swapaxes, log, exp, concatenate
+    count_nonzero, std, append, asarray, power, ma, reshape, swapaxes, log, exp, concatenate, amin, amax
 from .lib_function import *
 from .ncdump import get_data, getfilename
 from os import mkdir, path
@@ -141,6 +141,8 @@ def co2ice_cumulative_masses_polar_cap(filename, data):
 
     accumulation_precip_co2_ice_north = zeros(data_north.shape[0])
     accumulation_precip_co2_ice_south = zeros(data_south.shape[0])
+    accumulation_direct_condco2_north = zeros(data_north.shape[0])
+    accumulation_direct_condco2_south = zeros(data_south.shape[0])
 
     for ls in range(data_north.shape[0]):
         accumulation_co2ice_north[ls] = sum(data_north[ls, :, :] * data_area_north[:, :])
@@ -148,9 +150,12 @@ def co2ice_cumulative_masses_polar_cap(filename, data):
 
         accumulation_precip_co2_ice_north[ls] = sum(data_precip_co2_ice_north[ls, :, :] * data_area_north[:, :])
         accumulation_precip_co2_ice_south[ls] = sum(data_precip_co2_ice_south[ls, :, :] * data_area_south[:, :])
-
-    accumulation_direct_condco2_north = accumulation_co2ice_north - accumulation_precip_co2_ice_north
-    accumulation_direct_condco2_south = accumulation_co2ice_south - accumulation_precip_co2_ice_south
+        accumulation_direct_condco2_north[ls] = accumulation_co2ice_north[ls] - accumulation_precip_co2_ice_north[ls]
+        accumulation_direct_condco2_south[ls] = accumulation_co2ice_south[ls] - accumulation_precip_co2_ice_south[ls]
+    accumulation_precip_co2_ice_north = correction_value(data=accumulation_precip_co2_ice_north, operator='eq',
+                                                         threshold=0)
+    accumulation_precip_co2_ice_south = correction_value(data=accumulation_precip_co2_ice_south, operator='eq',
+                                                         threshold=0)
 
     return accumulation_co2ice_north, accumulation_co2ice_south, accumulation_precip_co2_ice_north, \
            accumulation_precip_co2_ice_south, accumulation_direct_condco2_north, accumulation_direct_condco2_south
@@ -300,6 +305,27 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
     return zonal_mean, zonal_mean_co2_ice, data_latitude[idx_latitude_selected]
 
 
+def ps_at_viking(filename, data):
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
+
+    # Viking 1: Chryse Planitia (26° 42′ N, 320° 00′ E)
+    data_pressure_at_viking1, latitude1 = slice_data(data=data, dimension_data=data_latitude[:], value=26)
+    data_pressure_at_viking1, longitude1 = slice_data(data=data_pressure_at_viking1, dimension_data=data_longitude[:],
+                                                      value=320)
+
+    # Viking 2: Utopia Planitia (49° 42′ N, 118° 00′ E)
+    data_pressure_at_viking2, latitude2 = slice_data(data=data, dimension_data=data_latitude[:], value=49)
+    data_pressure_at_viking2, longitude2 = slice_data(data=data_pressure_at_viking2, dimension_data=data_longitude[:],
+                                                      value=118)
+
+    # Diurnal mean
+    data_pressure_at_viking1 = mean(data_pressure_at_viking1.reshape(669, 12), axis=1)
+    data_pressure_at_viking2 = mean(data_pressure_at_viking2.reshape(669, 12), axis=1)
+
+    return data_pressure_at_viking1, latitude1, longitude1, data_pressure_at_viking2, latitude2, longitude2
+
+
 def riceco2_local_time_evolution(filename, data, latitude):
     data = extract_where_co2_ice(filename=filename, data=data)
 
@@ -318,17 +344,23 @@ def riceco2_local_time_evolution(filename, data, latitude):
         nb_sol = int(data.shape[0] / 12)  # if there is 12 local time!
 
     data_mean = zeros((data.shape[1], 12))  # altitude, local time
+    data_std = zeros((data.shape[1], 12))  # altitude, local time
     for i in range(12):
         data_mean[:, i] = mean(data[i::12, :], axis=0) * 1e6
+        data_std[:, i] = std(data[i::12,:], axis=0) * 1e6
 
-    return data_mean, latitude
+    data_mean = correction_value(data=data_mean, operator='eq', threshold=0)
+    data_std = correction_value(data=data_std, operator='eq', threshold=0)
+    return data_mean, data_std, latitude
 
 
-def riceco2_max_local_time_evolution(filename, data):
+def riceco2_mean_local_time_evolution(filename, data):
+    import math
     data = extract_where_co2_ice(filename=filename, data=data)
 
     data_latitude, list_var = get_data(filename=filename, target='latitude')
-    data, latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=0)
+    data, idx_latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=0)
+    latitudes =data_latitude[idx_latitudes]
 
     data = mean(data, axis=2)  # zonal mean
 
@@ -341,25 +373,32 @@ def riceco2_max_local_time_evolution(filename, data):
         nb_sol = int(data.shape[0] / 12)  # if there is 12 local time!
 
     data = reshape(data, (nb_sol, 12, data.shape[1])).T
+    print(data.shape)
     data = mean(data, axis=2)  # mean over the year
+    print(data.shape)
 
-    data_max_radius = zeros(data.shape[1])
-    data_max_alt = zeros(data.shape[1])
-    data_min_radius = zeros(data.shape[1])
-    data_min_alt = zeros(data.shape[1])
     data_mean_radius = zeros(data.shape[1])
     data_mean_alt = zeros(data.shape[1])
+    data_std_radius = zeros(data.shape[1])
+    data_min_alt = zeros(data.shape[1])
+    data_max_alt = zeros(data.shape[1])
 
     data_altitude, list_var = get_data(filename=filename, target='altitude')
 
     for lt in range(data.shape[1]):
-        data_max_radius[lt] = max(data[:, lt])
-        data_max_alt[lt] = int(argmax(data[:, lt]))
 
-        data_min_radius[lt] = min(data[:, lt])
-        data_min_alt[lt] = int(argmin(data[:, lt]))
         data_mean_radius[lt] = mean(data[:, lt])
-        data_mean_alt[lt] = int(mean(data_max_alt[lt] + data_min_alt[lt]) / 2.)
+        data_std_radius[lt] = std(data[:, lt])
+
+        data_mean_alt[lt] = (int(argmin(data[:, lt])) + int(argmax(data[:, lt]))) / 2.
+        print(lt, argmin(data[:, lt]), argmax(data[:, lt]))
+        data_min_alt[lt] = amin([int(argmin(data[:, lt])), int(argmax(data[:, lt]))])
+        data_max_alt[lt] = amax([int(argmin(data[:, lt])), int(argmax(data[:, lt]))])
+#        data_mean_alt[lt] = int(mean(data_max_alt[lt] + data_min_alt[lt]) / 2.)
+#        data_std_alt[lt] = int(argmax(data[:, lt]))
+
+        #        data_min_radius[lt] = min(data[:, lt])
+        #        data_min_alt[lt] = int(argmin(data[:, lt]))
 
         if data_max_alt[lt] == 0:
             data_max_alt[lt] = -99999
@@ -376,19 +415,20 @@ def riceco2_max_local_time_evolution(filename, data):
         else:
             data_mean_alt[lt] = data_altitude[data_mean_alt[lt]]
 
-    data_max_radius = correction_value(data=data_max_radius, operator='eq', threshold=0)
-    data_max_alt = correction_value(data=data_max_alt, operator='inf', threshold=0)
-
-    data_min_radius = correction_value(data=data_min_radius, operator='eq', threshold=0)
-    data_min_alt = correction_value(data=data_min_alt, operator='inf', threshold=0)
-
     data_mean_radius = correction_value(data=data_mean_radius, operator='eq', threshold=0)
-    data_mean_alt = correction_value(data=data_mean_alt, operator='inf', threshold=0)
+#    data_max_alt = correction_value(data=data_max_alt, operator='inf', threshold=0)
 
-    data_min_radius = data_min_radius * 1e6
+#    data_min_radius = correction_value(data=data_min_radius, operator='eq', threshold=0)
+#    data_min_alt = correction_value(data=data_min_alt, operator='inf', threshold=0)
+
+    data_std_radius = correction_value(data=data_std_radius, operator='eq', threshold=0)
+#    data_mean_alt = correction_value(data=data_mean_alt, operator='inf', threshold=0)
+
+#    data_min_radius = data_min_radius * 1e6
     data_mean_radius = data_mean_radius * 1e6
-    data_max_radius = data_max_radius * 1e6
-    return data_max_radius, data_max_alt, data_min_radius, data_min_alt, data_mean_radius, data_mean_alt, latitudes
+    data_std_radius = data_std_radius * 1e6
+#    data_max_radius = data_max_radius * 1e6
+    return data_mean_radius, data_mean_alt, data_std_radius, data_min_alt, data_max_alt, latitudes
 
 
 def riceco2_max_day_night(filename, data):

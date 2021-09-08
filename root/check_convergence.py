@@ -42,38 +42,6 @@ def plot_global_mean(data_ps, data_tsurf, data_co2ice, data_h2o_ice_s, data_mtot
     fig.savefig(f'check_convergence_global_mean.png', bbox_inches='tight')
 
 
-def plot_pressure_viking(data_pressure, data_latitude, nb_year):
-    data_sols_1, data_pressure_viking1 = viking_lander(lander=1)
-    data_sols_2, data_pressure_viking2 = viking_lander(lander=2)
-
-    # Viking 1: Chryse Planitia (26° 42′ N, 320° 00′ E)
-    data_pressure_at_viking1, latitude1 = slice_data(data=data_pressure, dimension_data=data_latitude, value=26)
-
-    # Viking 2: Utopia Planitia (49° 42′ N, 118° 00′ E)
-    data_pressure_at_viking2, latitude2 = slice_data(data=data_pressure, dimension_data=data_latitude, value=49)
-
-    fig, ax = plt.subplots(ncols=2, figsize=figsize_2graph_cols)
-    fig.suptitle('Zonal mean and diurnal mean of surface pressure at', fontsize=fontsize)
-    ax[0].set_title(f'Viking 1 ({data_latitude[latitude1]:.0f}°N)', fontsize=fontsize)
-    ax[1].set_title(f'Viking 2 ({data_latitude[latitude2]:.0f}°N)', fontsize=fontsize)
-
-    ax[0].scatter(data_sols_1, data_pressure_viking1, c='black')
-    ax[1].scatter(data_sols_2, data_pressure_viking2, c='black')
-
-    for i in range(nb_year):
-        ax[0].plot(data_pressure_at_viking1[i*669:(i+1)*669], label=f'year {i+1}')
-        ax[1].plot(data_pressure_at_viking2[i*669:(i+1)*669], label=f'year {i+1}')
-    ax[0].legend(loc='best')
-    ax[1].legend(loc='best')
-    ax[0].set_xlabel('Sols', fontsize=fontsize)
-    ax[0].set_ylabel('Pressure (Pa)', fontsize=fontsize)
-    ax[1].set_xlabel('Sols', fontsize=fontsize)
-    ax[1].set_ylabel('Pressure (Pa)', fontsize=fontsize)
-    ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
-    ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
-    fig.savefig('check_convergence_pressure_viking_land_site.png')
-
-
 def list_filename():
     directory_store = [x for x in listdir('.') if 'occigen' in x][0] + '/'
     files = listdir(directory_store)
@@ -126,7 +94,10 @@ def main():
     # Deals with variables
     data_ps = concatenation(filenames=filenames, target='ps')
     data_tsurf = concatenation(filenames=filenames, target='tsurf')
-    data_co2ice = concatenation(filenames=filenames, target='co2ice')
+    try:
+        data_co2ice = concatenation(filenames=filenames, target='co2ice')
+    except:
+        data_co2ice = zeros(data_ps.shape)
     data_h2o_ice_s = concatenation(filenames=filenames, target='h2o_ice_s')
     data_watercap = concatenation(filenames=filenames, target='watercap')
     data_mtot = concatenation(filenames=filenames, target='mtot')
@@ -148,9 +119,6 @@ def main():
               data_watercap[i*669:(i+1)*669]
         plt.plot(tmp, label=f'year {i+1}')
     plt.savefig('check_converge_total_mass_h2o.png')
-    # Check pressure at Viking land site
-#    data_latitude, list_var = get_data(filename=filenames[0], target='latitude')
-#    plot_pressure_viking(data_pressure=data_ps, data_latitude=data_latitude, nb_year=total_nb_year)
 
 
 if '__main__' == __name__:
