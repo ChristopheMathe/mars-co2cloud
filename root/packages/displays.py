@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from.lib_function import save_figure_data
 from .DataObservation import *
 from .DataProcessed import *
 from .constant_parameter import *
@@ -1974,6 +1975,15 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         cbar.ax.set_title(unit, fontsize=fontsize)
         cbar.ax.tick_params(labelsize=fontsize)
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
+
+    dict_var = [{"data": data_time, "varname": "Solar longitude", "units": u"°", "shortname": "Ls"},
+                {"data": data_latitude, "varname": "Latitude", "units": "°N", "shortname": "Latitude"},
+                {"data": data.T, "varname": f"Zonal mean of density column of {name_target}", "units": "kg.m-2",
+                 "shortname": name_target}
+                ]
+    message = f'# Data used for the figure {save_name}.png'
+
+    save_figure_data(dict_var, message=message, savename=save_name)
     return
 
 
@@ -2058,7 +2068,30 @@ def display_ps_at_viking(data_pressure_at_viking1, latitude1, longitude1, data_p
     ax[1].set_ylabel('Pressure (Pa)', fontsize=fontsize)
     ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
     ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
-    fig.savefig('ps_at_viking_land_site.png', bbox_inches='tight')
+    savename = 'ps_at_viking_land_site'
+    fig.savefig(savename+'.png', bbox_inches='tight')
+
+    dict_var = [{"data": data_sols_1, "varname": "Time Viking 1", "units": "sols", "shortname": "Time VK1"},
+                {"data": data_pressure_viking1, "varname": "Pressure at Viking 1", "units": "Pa",
+                 "shortname": "Pres VK1"},
+                {"data": data_sols_2, "varname": "Time Viking 2", "units": "sols", "shortname": "Time VK2"},
+                {"data": data_pressure_viking2, "varname": "Pressure at Viking 2", "units": "Pa",
+                 "shortname": "Pres VK2"},
+                {"data": arange(669), "varname": "Time", "units": "sols", "shortname": "Time_sim"},
+                {"data": data_pressure_at_viking1, "varname": "Pressure simulated at Viking 1", "units": "Pa",
+                 "shortname": "P_sim VK1"},
+                {"data": data_pressure_at_viking2, "varname": "Pressure simulated at Viking 2", "units": "Pa",
+                 "shortname": "P_sim VK2"},
+                ]
+    message = f'Data used for the figure {savename}.png'
+
+    dict_info = [{"key": "Lat VK1", "value": latitude1},
+                 {"key": "Lon VK1", "value": longitude1},
+                 {"key": "Lat VK2", "value": latitude2},
+                 {"key": "Lon VK2", "value": longitude2}
+                ]
+
+    save_figure_data(dict_var,  dict_info, message=message, savename=savename)
 
 
 def display_vars_1fig_profiles(filename, data, latitude_selected, x_min, x_max, x_label, x_scale='linear',

@@ -2,6 +2,7 @@ from sys import exit
 from .ncdump import get_data
 from .constant_parameter import *
 
+
 # correct very low values of co2/h2o mmr
 def correction_value(data, operator, threshold):
     from numpy import ma
@@ -148,13 +149,13 @@ def compute_column_density(filename, data):
         if data_altitude.units in ['m', 'km']:
             for alt in range(data.shape[1] - 1):
                 data_column[:, alt, :] = data[:, alt, :] * \
-                                            (data_pressure[:, alt, :] - data_pressure[:, alt + 1, :]) / 3.711  # g
+                                         (data_pressure[:, alt, :] - data_pressure[:, alt + 1, :]) / 3.711  # g
             data_column[:, -1, :] = data[:, -1, :] * data_pressure[:, -1, :] / 3.711
         else:
             for alt in range(data.shape[1] - 1):
                 data_column[:, alt, :] = data[:, alt, :] * \
-                                            (data_altitude[altitude_idx[0] + alt] - data_altitude[
-                                                altitude_idx[0] + alt + 1]) / 3.711  # g
+                                         (data_altitude[altitude_idx[0] + alt] - data_altitude[
+                                             altitude_idx[0] + alt + 1]) / 3.711  # g
             data_column[:, -1, :] = data[:, -1, :] * data_altitude[altitude_idx[0] + alt + 1] / 3.711
     else:
         print(f'Data has {data.ndim} dimension, need 3 or 4!')
@@ -241,7 +242,7 @@ def extract_vars_max_along_lon(data, idx_lon=None):
 
 def gcm_area():
     filename = '/home/mathe/Documents/owncloud/GCM/gcm_aire_phisinit.nc'
-    data_aire,  list_var = get_data(filename=filename, target='aire')
+    data_aire, list_var = get_data(filename=filename, target='aire')
     return data_aire
 
 
@@ -427,6 +428,36 @@ def rotate_data(*list_data, do_flip):
     return list_data
 
 
+def save_figure_data(list_dict_var, list_dict_info, message, savename):
+    from os import mkdir, path, remove
+    from astropy.io import fits
+    # list_dict_var: data, varname, shortname, units
+
+    # Create folder figure_data
+    folder = 'figure_data/'
+    if not path.isdir(folder):
+        mkdir(folder)
+
+    filename = folder + savename + '.fits'
+    if path.isfile(filename):
+        remove(path=filename)
+
+    hdr = fits.Header()
+    hdr['Information'] = message
+    for x in range(len(list_dict_info)):
+        hdr[list_dict_info[x]["key"]] = list_dict_info[x]["value"]
+
+    primary = fits.PrimaryHDU(header=hdr)
+    hdul = fits.HDUList([primary])
+
+    for x in range(len(list_dict_var)):
+        c1 = fits.Column(name=list_dict_var[x]["varname"], array=list_dict_var[x]["data"], format='E',
+                         unit=list_dict_var[x]["units"])
+        hdu = fits.BinTableHDU.from_columns(columns=[c1], name=list_dict_var[x]['shortname'][:10])
+        hdul.append(hdu=hdu)
+    hdul.writeto(folder + savename + '.fits')
+    # TODO: faire avec netCDF
+
 def slice_data(data, dimension_data, value):
     idx, idx1, idx2, idx_dim = None, None, None, None
 
@@ -458,7 +489,7 @@ def slice_data(data, dimension_data, value):
         else:
             idx2 += 1
 
-        if idx2 == dimension_data.shape[0] and dimension_data[idx2-1] > 0:  # Deals with boundaries
+        if idx2 == dimension_data.shape[0] and dimension_data[idx2 - 1] > 0:  # Deals with boundaries
             idx2 -= 1
 
         selected_idx = [idx1, idx2]
