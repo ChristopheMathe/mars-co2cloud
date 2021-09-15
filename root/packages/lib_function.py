@@ -282,7 +282,7 @@ def get_extrema_in_alt_lon(data, extrema):
 def get_nearest_clouds_observed(data_obs, dim, data_dim, value):
     from numpy import abs
 
-    if dim is 'latitude':
+    if dim == 'latitude':
 
         # From the dimension, get the index(es) of the slice
         latitude_range = None
@@ -428,9 +428,10 @@ def rotate_data(*list_data, do_flip):
     return list_data
 
 
-def save_figure_data(list_dict_var, list_dict_info, message, savename):
+def save_figure_data(list_dict_var, list_dict_info, savename):
     from os import mkdir, path, remove
     from astropy.io import fits
+    from numpy import array
     # list_dict_var: data, varname, shortname, units
 
     # Create folder figure_data
@@ -443,20 +444,30 @@ def save_figure_data(list_dict_var, list_dict_info, message, savename):
         remove(path=filename)
 
     hdr = fits.Header()
-    hdr['Information'] = message
-    for x in range(len(list_dict_info)):
-        hdr[list_dict_info[x]["key"]] = list_dict_info[x]["value"]
+    if list_dict_info:
+        for x in range(len(list_dict_info)):
+            hdr[list_dict_info[x]["key"]] = list_dict_info[x]["value"]
 
     primary = fits.PrimaryHDU(header=hdr)
     hdul = fits.HDUList([primary])
 
     for x in range(len(list_dict_var)):
-        c1 = fits.Column(name=list_dict_var[x]["varname"], array=list_dict_var[x]["data"], format='E',
-                         unit=list_dict_var[x]["units"])
-        hdu = fits.BinTableHDU.from_columns(columns=[c1], name=list_dict_var[x]['shortname'][:10])
-        hdul.append(hdu=hdu)
+        if list_dict_var[x]["data"].ndim == 1:
+            list_col = fits.Column(name=list_dict_var[x]["varname"], array=list_dict_var[x]["data"], format='E',
+                             unit=list_dict_var[x]["units"])
+            hdu = fits.BinTableHDU.from_columns(columns=[list_col], name=list_dict_var[x]['shortname'][:10])
+            hdul.append(hdu=hdu)
+        elif list_dict_var[x]["data"].ndim == 2:
+            hdr_x = fits.Header()
+            hdr_x['unit'] = list_dict_var[x]["units"]
+            hdr_x['title'] = list_dict_var[x]["varname"]
+            hdu = fits.ImageHDU(list_dict_var[x]["data"], header=hdr_x, name=list_dict_var[x]['shortname'][:10])
+            hdul.append(hdu=hdu)
+        else:
+            print(f'{list_dict_var[x]["varname"]} has more than 2 dimensions')
     hdul.writeto(folder + savename + '.fits')
     # TODO: faire avec netCDF
+
 
 def slice_data(data, dimension_data, value):
     idx, idx1, idx2, idx_dim = None, None, None, None
