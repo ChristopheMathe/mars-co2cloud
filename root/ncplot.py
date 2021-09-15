@@ -93,10 +93,11 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                     display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed,
                                              unit='kg/m$^2$', norm='log', vmin=vmin, vmax=vmax, cmap='coolwarm',
                                              observation=False, latitude_selected=None, localtime_selected=local_time,
-                                             title=f'Zonal mean column density of {name_target} ({local_time} h)',
+                                             title=f'Zonal mean column density of {name_target}'
+                                                   f' ({local_time[0]:.0f}h)',
                                              tes=None, mvals=None, layer=None,
                                              save_name=f'zonal_mean_density_column_{name_target}_{altitude_min:.1e}_'
-                                                       f'{altitude_max:.1e}_{altitude_unit}_{local_time}h')
+                                                       f'{altitude_max:.1e}_{altitude_unit}_{local_time[0]:.0f}h')
                 else:
                     display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed,
                                              unit='kg/m$^2$', norm='log', vmin=vmin, vmax=vmax, cmap='coolwarm',

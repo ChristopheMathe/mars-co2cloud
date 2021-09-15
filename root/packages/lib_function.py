@@ -431,7 +431,9 @@ def rotate_data(*list_data, do_flip):
 def save_figure_data(list_dict_var, list_dict_info, savename):
     from os import mkdir, path, remove
     from astropy.io import fits
-    from numpy import array
+    from netCDF4 import Dataset
+    from numpy import where, array, zeros
+
     # list_dict_var: data, varname, shortname, units
 
     # Create folder figure_data
@@ -439,6 +441,7 @@ def save_figure_data(list_dict_var, list_dict_info, savename):
     if not path.isdir(folder):
         mkdir(folder)
 
+    # Case in FITS format
     filename = folder + savename + '.fits'
     if path.isfile(filename):
         remove(path=filename)
@@ -466,7 +469,37 @@ def save_figure_data(list_dict_var, list_dict_info, savename):
         else:
             print(f'{list_dict_var[x]["varname"]} has more than 2 dimensions')
     hdul.writeto(folder + savename + '.fits')
-    # TODO: faire avec netCDF
+
+    # Case in netCDF format
+    filename = folder + savename + '.nc'
+    if path.isfile(filename):
+        remove(path=filename)
+
+    f = Dataset(filename=filename, mode='w', format='NETCDF4')
+    axis = ['X', 'Y']
+    for x in range(len(list_dict_var)):
+        if list_dict_var[x]["data"].ndim == 1:
+            f.createDimension(list_dict_var[x]["shortname"], list_dict_var[x]["data"].shape[0])
+            dim = f.createVariable(list_dict_var[x]["shortname"], 'f4', (list_dict_var[x]["shortname"]))
+            dim.standard_name = list_dict_var[x]["shortname"]
+            dim.long_name = list_dict_var[x]["varname"]
+            dim.units = list_dict_var[x]["units"]
+            dim.axis = axis[x]
+            dim[:] = list_dict_var[x]["data"]
+
+        elif list_dict_var[x]["data"].ndim == 2:
+            list_dim = [list_dict_var[y]["data"].shape for y in range(x)]
+            list_dim = array(list_dim).reshape(-1)
+            ix = where(list_dict_var[x]["data"].shape[0] == list_dim)[0][0]
+            iy = where(list_dict_var[x]["data"].shape[1] == list_dim)[0][0]
+            temp = f.createVariable(list_dict_var[x]["shortname"], 'f4', (list_dict_var[ix]["shortname"],
+                                                                          list_dict_var[iy]["shortname"]))
+            temp.long_name = list_dict_var[x]["varname"]
+            temp.units = list_dict_var[x]["units"]
+            temp[:, :] = list_dict_var[x]["data"]
+        else:
+            print(f'{list_dict_var[x]["varname"]} has more than 2 dimensions')
+    f.close()
 
 
 def slice_data(data, dimension_data, value):
