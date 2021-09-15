@@ -1982,7 +1982,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
                  "shortname": f"{name_target}"}
                 ]
 
-    save_figure_data(dict_var, None, savename=save_name)
+    save_figure_data(dict_var, savename=save_name)
     return
 
 
@@ -2070,26 +2070,24 @@ def display_ps_at_viking(data_pressure_at_viking1, latitude1, longitude1, data_p
     savename = 'ps_at_viking_land_site'
     fig.savefig(savename+'.png', bbox_inches='tight')
 
-    dict_var = [{"data": data_sols_1, "varname": "Time Viking 1", "units": "sols", "shortname": "Time VK1"},
+    dict_var = [{"data": data_sols_1, "varname": "Time Viking 1", "units": "sols", "shortname": "Time_VK1"},
                 {"data": data_pressure_viking1, "varname": "Pressure at Viking 1", "units": "Pa",
-                 "shortname": "Pres VK1"},
-                {"data": data_sols_2, "varname": "Time Viking 2", "units": "sols", "shortname": "Time VK2"},
+                 "shortname": "Pres_VK1"},
+                {"data": data_sols_2, "varname": "Time Viking 2", "units": "sols", "shortname": "Time_VK2"},
                 {"data": data_pressure_viking2, "varname": "Pressure at Viking 2", "units": "Pa",
-                 "shortname": "Pres VK2"},
+                 "shortname": "Pres_VK2"},
                 {"data": arange(669), "varname": "Time", "units": "sols", "shortname": "Time_sim"},
                 {"data": data_pressure_at_viking1, "varname": "Pressure simulated at Viking 1", "units": "Pa",
-                 "shortname": "P_sim VK1"},
+                 "shortname": "P_sim_VK1"},
                 {"data": data_pressure_at_viking2, "varname": "Pressure simulated at Viking 2", "units": "Pa",
-                 "shortname": "P_sim VK2"},
+                 "shortname": "P_sim_VK2"},
+                {"data": array([latitude1, longitude1]), "varname": "Viking lander 1 site coordinate",
+                 "units": "deg N, deg E", "shortname": "VK1_coord"},
+                {"data": array([latitude2, longitude2]), "varname": "Viking lander 2 site coordinate",
+                 "units": "deg N, deg E", "shortname": "VK2_coord"}
                 ]
 
-    dict_info = [{"key": "Lat VK1", "value": latitude1},
-                 {"key": "Lon VK1", "value": longitude1},
-                 {"key": "Lat VK2", "value": latitude2},
-                 {"key": "Lon VK2", "value": longitude2}
-                 ]
-
-    save_figure_data(dict_var,  dict_info, savename=savename)
+    save_figure_data(dict_var, savename=savename)
 
 
 def display_vars_1fig_profiles(filename, data, latitude_selected, x_min, x_max, x_label, x_scale='linear',

@@ -428,7 +428,7 @@ def rotate_data(*list_data, do_flip):
     return list_data
 
 
-def save_figure_data(list_dict_var, list_dict_info, savename):
+def save_figure_data(list_dict_var, savename):
     from os import mkdir, path, remove
     from astropy.io import fits
     from netCDF4 import Dataset
@@ -447,9 +447,6 @@ def save_figure_data(list_dict_var, list_dict_info, savename):
         remove(path=filename)
 
     hdr = fits.Header()
-    if list_dict_info:
-        for x in range(len(list_dict_info)):
-            hdr[list_dict_info[x]["key"]] = list_dict_info[x]["value"]
 
     primary = fits.PrimaryHDU(header=hdr)
     hdul = fits.HDUList([primary])
@@ -484,7 +481,7 @@ def save_figure_data(list_dict_var, list_dict_info, savename):
             dim.standard_name = list_dict_var[x]["shortname"]
             dim.long_name = list_dict_var[x]["varname"]
             dim.units = list_dict_var[x]["units"]
-            dim.axis = axis[x]
+#            dim.axis = axis[x]
             dim[:] = list_dict_var[x]["data"]
 
         elif list_dict_var[x]["data"].ndim == 2:
