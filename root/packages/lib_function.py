@@ -473,7 +473,7 @@ def save_figure_data(list_dict_var, savename):
         remove(path=filename)
 
     f = Dataset(filename=filename, mode='w', format='NETCDF4')
-    axis = ['X', 'Y']
+
     for x in range(len(list_dict_var)):
         if list_dict_var[x]["data"].ndim == 1:
             f.createDimension(list_dict_var[x]["shortname"], list_dict_var[x]["data"].shape[0])
@@ -481,7 +481,6 @@ def save_figure_data(list_dict_var, savename):
             dim.standard_name = list_dict_var[x]["shortname"]
             dim.long_name = list_dict_var[x]["varname"]
             dim.units = list_dict_var[x]["units"]
-#            dim.axis = axis[x]
             dim[:] = list_dict_var[x]["data"]
 
         elif list_dict_var[x]["data"].ndim == 2:
