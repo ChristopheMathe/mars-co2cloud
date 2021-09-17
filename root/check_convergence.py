@@ -113,10 +113,12 @@ def main():
                      nb_year=total_nb_year)
 
     plt.figure()
+    cmap = plt.get_cmap('jet')
+    colors = [cmap(i) for i in linspace(0, 1, total_nb_year)]
     for i in range(total_nb_year):
         tmp = data_h2o_ice_s[i*669:(i+1)*669] + data_mtot[i*669:(i+1)*669] + data_icetot[i*669:(i+1)*669] + \
               data_watercap[i*669:(i+1)*669]
-        plt.plot(tmp, label=f'year {i+1}')
+        plt.plot(tmp, label=f'year {i+1}', color=colors[i])
     plt.savefig('check_converge_total_mass_h2o.png')
 
 
