@@ -304,7 +304,7 @@ def main():
 
     fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=18)
     fig.text(0.5, 0.05, 'Solar longitude (°)', ha='center', va='center', fontsize=18)
-    fig.savefig('check_water_cycle_tes_mvals_me_tauice.png', bbox_inche='tight')
+    fig.savefig('check_water_cycle_tes_mvals_me_tauice.png', bbox_inches='tight')
     plt.close(fig)
 
     # PLOT 2 : H2O_VAP
@@ -482,7 +482,7 @@ def main():
 
     fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=14)
     fig.text(0.5, 0.05, 'Solar longitude (°)', ha='center', va='center', fontsize=14)
-    fig.savefig('check_water_cycle_pfs_mvals_me_tauice.png', bbox_inche='tight')
+    fig.savefig('check_water_cycle_pfs_mvals_me_tauice.png', bbox_inches='tight')
     plt.close(fig)
 
 

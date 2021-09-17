@@ -671,6 +671,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         print('     1: zonal mean (fig:lat-ls)')
         print('     2: cumulative masses in polar cap region, to compare with fig.10 of Hu+2012 (fig: g-ls)')
         print('     3: Polar plot every 30° ls mean, lat=60°-90° (fig: lat-ls)')
+        print('     4: CO2 ice at Viking lander site along the year (fig: g-sols)')
         print('')
 
         if view_mode is None:
@@ -718,6 +719,13 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                      norm='log',
                                                      cmap='winter',
                                                      unit='kg', save_name=f'co2ice_15ls_mean')
+        if view_mode == 4:
+            print('Processing data:')
+            data_at_vk1, data_at_vk2, data_time = co2ice_at_viking_lander_site(filename=filename, data=data_target)
+
+            print('Display:')
+            display_co2ice_at_viking_lander_site(data_at_vk1=data_at_vk1, data_at_vk2=data_at_vk2, data_time=data_time)
+
 
     elif name_target in ['emis']:
         print('What do you wanna do?')

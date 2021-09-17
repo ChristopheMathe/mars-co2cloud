@@ -7,6 +7,32 @@ from sys import exit
 from .constant_parameter import cst_stefan, threshold
 
 
+def co2ice_at_viking_lander_site(filename, data):
+    data_time, list_var = get_data(filename=filename, target='Time')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
+    data_area = gcm_area()
+
+    # Viking 1: Chryse Planitia (26° 42′ N, 320° 00′ E so -40°E)
+    data_at_viking1, idx_latitude1 = slice_data(data=data, dimension_data=data_latitude[:], value=26)
+    data_at_viking1, idx_longitude1 = slice_data(data=data_at_viking1, dimension_data=data_longitude[:], value=-40)
+    data_area_at_viking1, idx_latitude1 = slice_data(data=data_area, dimension_data=data_latitude[:], value=26)
+    data_area_at_viking1, idx_longitude1 = slice_data(data=data_area_at_viking1, dimension_data=data_longitude[:],
+                                                      value=-40)
+
+    # Viking 2: Utopia Planitia (49° 42′ N, 118° 00′ E)
+    data_at_viking2, idx_latitude2 = slice_data(data=data, dimension_data=data_latitude[:], value=49)
+    data_at_viking2, idx_longitude2 = slice_data(data=data_at_viking2, dimension_data=data_longitude[:], value=118)
+    data_area_at_viking2, idx_latitude2 = slice_data(data=data_area, dimension_data=data_latitude[:], value=49)
+    data_area_at_viking2, idx_longitude2 = slice_data(data=data_area_at_viking2, dimension_data=data_longitude[:],
+                                                      value=118)
+
+    data_at_viking1 = data_at_viking1 * data_area_at_viking1
+    data_at_viking2 = data_at_viking2 * data_area_at_viking2
+
+    return data_at_viking1, data_at_viking2, data_time
+
+
 def co2ice_polar_cloud_distribution(filename, data, normalization, local_time):
     data_altitude, list_var = get_data(filename=filename, target='altitude')
     if data_altitude.long_name != 'Altitude above areoid':
@@ -309,15 +335,19 @@ def ps_at_viking(filename, data):
     data_latitude, list_var = get_data(filename=filename, target='latitude')
     data_longitude, list_var = get_data(filename=filename, target='longitude')
 
-    # Viking 1: Chryse Planitia (26° 42′ N, 320° 00′ E)
-    data_pressure_at_viking1, latitude1 = slice_data(data=data, dimension_data=data_latitude[:], value=26)
-    data_pressure_at_viking1, longitude1 = slice_data(data=data_pressure_at_viking1, dimension_data=data_longitude[:],
-                                                      value=320)
+    # Viking 1: Chryse Planitia (26° 42′ N, 320° 00′ E so -40°E)
+    data_pressure_at_viking1, idx_latitude1 = slice_data(data=data, dimension_data=data_latitude[:], value=26)
+    data_pressure_at_viking1, idx_longitude1 = slice_data(data=data_pressure_at_viking1,
+                                                          dimension_data=data_longitude[:], value=-40)
+    latitude1 = data_latitude[idx_latitude1]
+    longitude1 = data_longitude[idx_longitude1]
 
     # Viking 2: Utopia Planitia (49° 42′ N, 118° 00′ E)
-    data_pressure_at_viking2, latitude2 = slice_data(data=data, dimension_data=data_latitude[:], value=49)
-    data_pressure_at_viking2, longitude2 = slice_data(data=data_pressure_at_viking2, dimension_data=data_longitude[:],
-                                                      value=118)
+    data_pressure_at_viking2, idx_latitude2 = slice_data(data=data, dimension_data=data_latitude[:], value=49)
+    data_pressure_at_viking2, idx_longitude2 = slice_data(data=data_pressure_at_viking2,
+                                                         dimension_data=data_longitude[:], value=118)
+    latitude2 = data_latitude[idx_latitude2]
+    longitude2 = data_longitude[idx_longitude2]
 
     # Diurnal mean
     data_pressure_at_viking1 = mean(data_pressure_at_viking1.reshape(669, 12), axis=1)
