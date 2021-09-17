@@ -4,9 +4,8 @@ from packages.ncdump import *
 from packages.DataObservation import viking_lander
 from sys import argv, exit
 import matplotlib.pyplot as plt
-from numpy import ceil, floor, min, max, mean, zeros, sum, arange, abs, concatenate, append
-from matplotlib.colors import DivergingNorm, Normalize
-
+from numpy import ceil, floor, min, max, mean, zeros, sum, arange, abs, concatenate, append, linspace
+from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 
 def number_year(data_time):
     # Define the number of years simulated
@@ -19,14 +18,17 @@ def number_year(data_time):
         print(f'Time: from {data_time[0]} {data_time.units} to {data_time[-1]} {data_time.units}')
         print('Did you finish the year?')
         exit()
+    print(f'There is {nb_year} years simulated.')
     return nb_year
 
 
 def plot_global_mean(data_ps, data_tsurf, data_co2ice, data_h2o_ice_s, data_mtot, data_icetot, nb_year):
     def plot(axes, data, title, y_label):
+        cmap = plt.get_cmap('jet')
+        colors = [cmap(i) for i in linspace(0, 1, nb_year)]
         axes.set_title(title)
         for i in range(nb_year):
-            axes.plot(data[i * 669:(i + 1) * 669], label=f'year {i + 1}')
+            axes.plot(data[i * 669:(i + 1) * 669], color=colors[i], label=f'year {i + 1}')
         axes.legend(loc='best')
         axes.set_xlabel('Sols')
         axes.set_ylabel(y_label)
@@ -51,9 +53,7 @@ def list_filename():
     test = 1
     while test >= 0:
         test = int(input('Another (-1: exit): '))
-        print(test)
         if test >= 0:
-            print(test)
             filename.append(directory_store+getfilename(files, selection=test))
     return filename
 
@@ -61,7 +61,6 @@ def list_filename():
 def concatenation(filenames, target):
     list_tmp = []
     for i, value_i in enumerate(filenames):
-        print(value_i)
         data_target, list_var = get_data(filename=value_i, target=target)
         data_time, list_var = get_data(filename=value_i, target='Time')
         nb_year = number_year(data_time=data_time[:])
@@ -72,16 +71,16 @@ def concatenation(filenames, target):
         data_tmp = data_tmp.reshape(669*nb_year, 12, data_tmp.shape[1], data_tmp.shape[2])
         data_tmp = mean(data_tmp, axis=1)
         area = gcm_area()
-        if data_target.name in ['co2ice', 'h2o_ice_s', 'watercap', 'mtot','icetot']:
+        if data_target.name in ['co2ice', 'h2o_ice_s', 'watercap', 'mtot', 'icetot']:
             data_tmp = data_tmp * area
             data_tmp = sum(data_tmp, axis=(1, 2))
         else:
-            data_tmp = sum(data_tmp*area/sum(area), axis=(1,2))
+            data_tmp = sum(data_tmp*area/sum(area), axis=(1, 2))
 
         list_tmp.append(data_tmp)
 
-    if len(list_tmp) == 2:
-        data = concatenate((list_tmp[0], list_tmp[1]), axis=0)
+    if len(list_tmp) > 1:
+        data = concatenate(([list_tmp[x] for x in range(len(list_tmp))]), axis=0)
     else:
         data = list_tmp[0]
 
@@ -123,51 +122,3 @@ def main():
 
 if '__main__' == __name__:
     main()
-
-
-# OLDEST
-
-#    norm_relative = DivergingNorm(vmin=-1, vcenter=0, vmax=1)
-#    fig, ax = plt.subplots(ncols=2, figsize=(22, 11))
-#    fig.suptitle(f'Zonal mean of {name_target} (diurnal mean)')
-#    ax[0].set_title(f'year 1')
-#    pcm = ax[0].pcolormesh(data_time[:669], data_latitude[:], data_target[:, :669], norm=norm_1styear, cmap='plasma')
-#    cbar = plt.colorbar(pcm, ax=ax[0])
-#    cbar.ax.set_title(unit_target, fontsize=fontsize)
-
-#    mean_relative = zeros((data_target.shape[0], nb_year-1))
-#    for i in range(1, nb_year):
-#        relative = 100 * (data_target[:, (i-1)*669:i*669] - data_target[:, i*669:(i+1)*669]) /\
-#                   data_target[:, i*669:(i+1)*669]
-#        mean_relative[:, i-1] = mean(relative, axis=1)
-#    pcm2 = ax[1].pcolormesh(arange(nb_year), data_latitude[:], mean_relative, norm=norm_relative, cmap='seismic')
-#    ax[1].set_xlabel('Year')
-#    ax[1].set_ylabel(f'Latitude (°N)')
-#    ax[1].set_xticks(arange(nb_year-1)+0.5)
-#    ax[1].set_xticklabels(['2', '3', '4', '5'], fontsize=fontsize)
-#    cbar2 = plt.colorbar(pcm2, ax=ax[1])
-#    cbar2.ax.set_title('%')
-#    fig.savefig(f'check_convergence_{name_target}_zonal_mean_diurnal_mean.png', bbox_inches='tight')
-#    fig.show()
-
-
-#    norm_1styear = Normalize(vmin=floor(min(data_target[:, 669])), vmax=ceil(max(data_target[:, :669])))
-#    fig, ax = plt.subplots(ncols=2, figsize=(22, 11))
-#    fig.suptitle(f'Zonal mean of {name_target} (diurnal mean)')
-#    ax[0].set_title(f'year 1')
-#    tmp = data_time[::12]
-
-#    pcm = ax[0].pcolormesh(tmp[:669], data_latitude[:], data_target[:, :669], norm=norm_1styear, cmap='plasma')
-#    cbar = plt.colorbar(pcm, ax=ax[0])
-#    cbar.ax.set_title(unit_target, fontsize=fontsize)
-#    norm = zeros(nb_year-1)
-#    for i in range(1, nb_year):
-#        a = data_target[:, (i-1)*669:i*669]
-#        b = data_target[:, i*669:(i+1)*669]
-#        norm[i-1] = mean(abs(100.*(b - a)/a))
-#    ax[1].plot(norm)
-#    ax[1].set_xlabel('Year')
-#    ax[1].set_ylabel('Mean relative error from previous year (%)')
-#    ax[1].set_xticks(arange(nb_year-1))
-#    ax[1].set_xticklabels(['2', '3', '4', '5', '6', '7'])
-#    fig.savefig(f'check_convergence_{name_target}_zonal_mean_diurnal_mean.png', bbox_inches='tight')
