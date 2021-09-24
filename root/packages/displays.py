@@ -1752,6 +1752,7 @@ def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, altitude_
     fig, axes = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
     cb = axes.pcolormesh(data_time[:], data_altitude[:], data_1, norm=norm, cmap='plasma', shading='auto')  # autumn
     if data_2 is not None:
+        #TODO: inverse winter 
         cb2 = axes.pcolormesh(data_time[:], data_altitude[:], data_2, norm=norm_2, cmap='winter', shading='auto')
         cbar2 = plt.colorbar(cb2, ax=axes)
         cbar2.ax.set_title(unit, fontsize=fontsize)
@@ -2103,9 +2104,9 @@ def display_ps_at_viking(data_pressure_at_viking1, latitude1, longitude1, data_p
                  "units": "deg N, deg E", "shortname": "VK1_XYsim"},
                 {"data": array([latitude2, longitude2]), "varname": "Viking lander 2 site coordinate in GCM",
                  "units": "deg N, deg E", "shortname": "VK2_XYsim"},
-                {"data": array([26.7, -40]), "varname": "Viking lander 1 site coordinate",
+                {"data": array([22.27, 312.05]), "varname": "Viking lander 1 site coordinate",
                  "units": "deg N, deg E", "shortname": "VK1_XY"},
-                {"data": array([49.7, 118]), "varname": "Viking lander 2 site coordinate",
+                {"data": array([47.67, 134.28]), "varname": "Viking lander 2 site coordinate",
                  "units": "deg N, deg E", "shortname": "VK2_XY"}
                 ]
 

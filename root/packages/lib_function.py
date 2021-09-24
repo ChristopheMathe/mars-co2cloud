@@ -481,7 +481,6 @@ def save_figure_data(list_dict_var, savename):
             dim.standard_name = list_dict_var[x]["shortname"]
             dim.long_name = list_dict_var[x]["varname"]
             dim.units = list_dict_var[x]["units"]
-            print(x, list_dict_var[x]["data"])
             dim[:] = list_dict_var[x]["data"]
 
         elif list_dict_var[x]["data"].ndim == 2:

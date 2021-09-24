@@ -13,19 +13,20 @@ def co2ice_at_viking_lander_site(filename, data):
     data_longitude, list_var = get_data(filename=filename, target='longitude')
     data_area = gcm_area()
 
-    # Viking 1: Chryse Planitia (26° 42′ N, 320° 00′ E so -40°E)
-    data_at_viking1, idx_latitude1 = slice_data(data=data, dimension_data=data_latitude[:], value=26)
-    data_at_viking1, idx_longitude1 = slice_data(data=data_at_viking1, dimension_data=data_longitude[:], value=-40)
-    data_area_at_viking1, idx_latitude1 = slice_data(data=data_area, dimension_data=data_latitude[:], value=26)
+    # Viking 1: (22.27°N, 312.05°E so -48°E) near Chryse Planitia
+    # https://nssdc.gsfc.nasa.gov/planetary/viking.html
+    data_at_viking1, idx_latitude1 = slice_data(data=data, dimension_data=data_latitude[:], value=22)
+    data_at_viking1, idx_longitude1 = slice_data(data=data_at_viking1, dimension_data=data_longitude[:], value=-48)
+    data_area_at_viking1, idx_latitude1 = slice_data(data=data_area, dimension_data=data_latitude[:], value=22)
     data_area_at_viking1, idx_longitude1 = slice_data(data=data_area_at_viking1, dimension_data=data_longitude[:],
-                                                      value=-40)
+                                                      value=-48)
 
-    # Viking 2: Utopia Planitia (49° 42′ N, 118° 00′ E)
-    data_at_viking2, idx_latitude2 = slice_data(data=data, dimension_data=data_latitude[:], value=49)
-    data_at_viking2, idx_longitude2 = slice_data(data=data_at_viking2, dimension_data=data_longitude[:], value=118)
-    data_area_at_viking2, idx_latitude2 = slice_data(data=data_area, dimension_data=data_latitude[:], value=49)
+    # Viking 2:  (47.67°N, 134.28°E) near Utopia Planitia
+    data_at_viking2, idx_latitude2 = slice_data(data=data, dimension_data=data_latitude[:], value=48)
+    data_at_viking2, idx_longitude2 = slice_data(data=data_at_viking2, dimension_data=data_longitude[:], value=134)
+    data_area_at_viking2, idx_latitude2 = slice_data(data=data_area, dimension_data=data_latitude[:], value=48)
     data_area_at_viking2, idx_longitude2 = slice_data(data=data_area_at_viking2, dimension_data=data_longitude[:],
-                                                      value=118)
+                                                      value=134)
 
     data_at_viking1 = data_at_viking1 * data_area_at_viking1
     data_at_viking2 = data_at_viking2 * data_area_at_viking2
@@ -335,17 +336,18 @@ def ps_at_viking(filename, data):
     data_latitude, list_var = get_data(filename=filename, target='latitude')
     data_longitude, list_var = get_data(filename=filename, target='longitude')
 
-    # Viking 1: Chryse Planitia (26° 42′ N, 320° 00′ E so -40°E)
-    data_pressure_at_viking1, idx_latitude1 = slice_data(data=data, dimension_data=data_latitude[:], value=26)
+    # Viking 1: (22.27°N, 312.05°E so -48°E) near Chryse Planitia
+    # https://nssdc.gsfc.nasa.gov/planetary/viking.html
+    data_pressure_at_viking1, idx_latitude1 = slice_data(data=data, dimension_data=data_latitude[:], value=22)
     data_pressure_at_viking1, idx_longitude1 = slice_data(data=data_pressure_at_viking1,
-                                                          dimension_data=data_longitude[:], value=-40)
+                                                          dimension_data=data_longitude[:], value=-48)
     latitude1 = data_latitude[idx_latitude1]
     longitude1 = data_longitude[idx_longitude1]
 
-    # Viking 2: Utopia Planitia (49° 42′ N, 118° 00′ E)
-    data_pressure_at_viking2, idx_latitude2 = slice_data(data=data, dimension_data=data_latitude[:], value=49)
+    # Viking 2:  (47.67°N, 134.28°E) near Utopia Planitia
+    data_pressure_at_viking2, idx_latitude2 = slice_data(data=data, dimension_data=data_latitude[:], value=48)
     data_pressure_at_viking2, idx_longitude2 = slice_data(data=data_pressure_at_viking2,
-                                                         dimension_data=data_longitude[:], value=118)
+                                                          dimension_data=data_longitude[:], value=134)
     latitude2 = data_latitude[idx_latitude2]
     longitude2 = data_longitude[idx_longitude2]
 

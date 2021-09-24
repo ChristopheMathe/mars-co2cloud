@@ -303,6 +303,7 @@ def simulation_mvals(target, localtime):
 '''
     Data extracted from: https://pds.nasa.gov/ds-view/pds/viewDataset.jsp?dsid=VL1%2FVL2-M-MET-3-P-V1.0
     Information from: https://atmos.nmsu.edu/PDS/data/vl_1001/catalog/vl_p.cat
+    Other information from: https://nssdc.gsfc.nasa.gov/planetary/viking.html
     Data Set Overview                                                         
     =================                                                         
       This data set contains the martian surface atmospheric pressure         
