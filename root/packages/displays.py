@@ -1752,7 +1752,7 @@ def display_vars_altitude_ls(filename, data_1, local_time, norm, unit, altitude_
     fig, axes = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
     cb = axes.pcolormesh(data_time[:], data_altitude[:], data_1, norm=norm, cmap='plasma', shading='auto')  # autumn
     if data_2 is not None:
-        #TODO: inverse winter 
+        # TODO: inverse winter
         cb2 = axes.pcolormesh(data_time[:], data_altitude[:], data_2, norm=norm_2, cmap='winter', shading='auto')
         cbar2 = plt.colorbar(cb2, ax=axes)
         cbar2.ax.set_title(unit, fontsize=fontsize)
@@ -1832,6 +1832,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         cmap.set_over('red')
         extend = True
     else:
+        extend = False
         norm = Normalize(vmin=vmin, vmax=vmax)
 
     data_time, list_var = get_data(filename=filename, target='Time')
@@ -1934,11 +1935,18 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         i_subplot += 1
 
     if i_subplot == 0:
-        ctf = ax.pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='auto', zorder=10,
+        ctf = ax.pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='flat', zorder=10,
                             )
     else:
-        ctf = ax[i_subplot].pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='auto',
+        ctf = ax[i_subplot].pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='flat',
                                        zorder=10)
+
+    # Seasonal boundaries caps
+    north_cap_ls, north_cap_boundaries, north_cap_boundaries_error, south_cap_ls, south_cap_boundaries, \
+        south_cap_boundaries_error = boundaries_seasonal_caps()
+
+    ax.plot(north_cap_ls, north_cap_boundaries, color='black', zorder=11)
+    ax.plot(south_cap_ls, south_cap_boundaries, color='black', zorder=11)
 
     if name_target == 'temp':
         if i_subplot == 0:

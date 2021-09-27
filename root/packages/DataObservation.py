@@ -281,7 +281,7 @@ def mesospheric_clouds_observed():
     data_themis = loadtxt(directory + filenames[10], skiprows=1)
 
     return data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-        data_maven_limb, data_spicam, data_tesmoc, data_themis
+           data_maven_limb, data_spicam, data_tesmoc, data_themis
 
 
 def simulation_mvals(target, localtime):
@@ -297,7 +297,6 @@ def simulation_mvals(target, localtime):
     print(f'\tFile name: {filename}')
 
     return get_data(filename=filename, target=target)
-
 
 
 '''
@@ -355,6 +354,8 @@ def simulation_mvals(target, localtime):
       PRESSURE                                                                
         Surface atmospheric pressure     
 '''
+
+
 def viking_lander(lander):
     from numpy import append, array, mean, where, unique, min, max
     path = ''
@@ -377,10 +378,10 @@ def viking_lander(lander):
         cpt = 0
         while data_sols[main_cpt] == data_sols[main_cpt + cpt]:
             cpt += 1
-            if main_cpt+cpt == data_sols.shape[0]:
+            if main_cpt + cpt == data_sols.shape[0]:
                 break
-        data_sols_diurnal = append(data_sols_diurnal, mean(data_sols[main_cpt:main_cpt+cpt]))
-        data_pressure_diurnal = append(data_pressure_diurnal, mean(data_pressure[main_cpt:main_cpt+cpt]))
+        data_sols_diurnal = append(data_sols_diurnal, mean(data_sols[main_cpt:main_cpt + cpt]))
+        data_pressure_diurnal = append(data_pressure_diurnal, mean(data_pressure[main_cpt:main_cpt + cpt]))
         main_cpt += cpt
 
     # Annual mean
@@ -392,3 +393,29 @@ def viking_lander(lander):
         data_pressure_annual = append(data_pressure_annual, mean(data_pressure_diurnal[indexes]))
 
     return data_sols_unique, data_pressure_annual
+
+
+def boundaries_seasonal_caps():
+    '''
+    Data from Hu et al. (2012) paper. Inferred from MCS data
+    '''
+    from numpy import arange, array
+    north_ls = arange(185, 360, 5)
+    north_boundaries = array([90.00, 75.51, 74.07, 81.85, 78.17, 74.53, 74.52, 71.84, 68.74, 73.28, 71.54, 71.80, 69.71,
+                              71.08, 69.22, 68.02, 68.66, 74.85, 78.88, 78.46, 76.33, 76.48, 77.91, 81.00, 76.85, 75.21,
+                              73.79, 74.49, 71.59, 60.55, 66.37, 59.93, 80.90, 79.34, 90.00])
+
+    north_boundaries_error = array([0, 1.94, 1.22, 0.54, 1.35, 1.21, 0.53, 0.90, 1.34, 0.87, 0.75, 0.62, 0.98, 7.45,
+                                    3.62, 5.52, 3.59, 1.89, 2.59, 2.12, 1.89, 1.02, 1.02, 0.50, 0.49, 1.41, 1.17, 0.65,
+                                    3.33, 3.66, 6.88, 7.88, 1.09, 1.91, 0])
+
+    south_ls = arange(5, 190, 5)
+    south_boundaries = -1 * array([90.00, 83.31, 78.62, 76.10, 74.51, 71.22, 67.94, 66.37, 62.20, 64.20, 59.66, 60.99,
+                                   59.38, 58.21, 56.07, 55.47, 55.65, 54.68, 54.44, 53.27, 53.26, 54.19, 54.60, 54.25,
+                                   55.27, 56.19, 60.44, 64.06, 64.38, 68.48, 72.32, 73.62, 72.97, 75.37, 78.50,
+                                   85.39, 90.00])
+    south_boundaries_error = array([0, 1.27, 2.96, 3.89, 1.16, 2.97, 5.10, 5.76, 7.41, 3.90, 6.74, 2.23, 1.80, 2.20,
+                                    1.10, 1.35, 1.51, 1.28, 0.77, 2.59, 2.21, 2.33, 2.43, 1.69, 1.75, 2.09, 1.59,
+                                    4.72, 3.65, 2.78, 1.78, 1.90, 2.82, 2.25, 1.39, 1.29, 0])
+
+    return north_ls, north_boundaries, north_boundaries_error, south_ls, south_boundaries, south_boundaries_error
