@@ -88,14 +88,15 @@ def observation_tes(target, year=None):
     if year is not None:
         filename = f'TES.MappedClimatology.limb.MY{year:d}.nc'
         if target in ['T_limb_day', 'T_limb_nit']:
-            data = get_data(directory_tes + filename, target=target)
+            data, tmp = get_data(directory_tes + filename, target=target)
         else:
             print(f'Wrong target for {filename}!')
             exit()
     else:
         filename = 'TES.SeasonalClimatology.nc'
-        if target in ['taudust', 'tauice', 'water', 'Tsurf_day', 'T_50Pa_day', 'Tsurf_nit', 'T_50Pa_nit']:
-            data = get_data(directory_tes + filename, target=target)
+        if target in ['time', 'latitude', 'taudust', 'tauice', 'water', 'Tsurf_day', 'T_50Pa_day', 'Tsurf_nit',
+                      'T_50Pa_nit']:
+            data, tmp = get_data(directory_tes + filename, target=target)
         else:
             print('Wrong target for TES.SeasonalClimatology.nc !')
             exit()

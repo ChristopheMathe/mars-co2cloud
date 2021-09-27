@@ -1870,12 +1870,12 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
             data_latitude_tes = observation_tes(target='latitude', year=None)
 
             # (time, latitude, longitude), also Tsurf_day/Tsurf_nit
-            data_tes = observation_tes(target='Tsurf_nit', year=None)
+            data_tes = observation_tes(target='Tsurf_day', year=None)
             ax[i_subplot].set_title('TES climatology', fontsize=fontsize)
-            idx1 = (abs(data_time_tes[:] - 360 * 2)).argmin()
-            idx2 = (abs(data_time_tes[:] - 360 * 3)).argmin()
-            data_time_tes = data_time_tes[idx1:idx2] - 360 * 2
-            data_tes, tmp = vars_zonal_mean(filename='', data=data_tes[idx1:idx2, :, :], layer=None, flip=True)
+            idx1 = (abs(data_time_tes[:] - 360 * 1)).argmin()
+            idx2 = (abs(data_time_tes[:] - 360 * 2)).argmin()
+            data_time_tes = data_time_tes[idx1:idx2] - 360
+            data_tes = mean(data_tes, axis=2).T
         elif name_target == 'temp':
             data_time_tes = observation_tes(target='time', year=25)
             data_latitude_tes = observation_tes(target='latitude', year=25)
@@ -1904,7 +1904,8 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
             data_tes = None
             print('No case for TES, to be check!')
 
-        ax[i_subplot].pcolormesh(data_time_tes[:], data_latitude_tes[:], data_tes, shading='auto', cmap=cmap)
+        ax[i_subplot].pcolormesh(data_time_tes, data_latitude_tes[:], data_tes[:, idx1:idx2], norm=norm,
+                                 shading='flat', cmap=cmap)
         i_subplot += 1
 
     if mvals:
@@ -1944,9 +1945,9 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     # Seasonal boundaries caps
     north_cap_ls, north_cap_boundaries, north_cap_boundaries_error, south_cap_ls, south_cap_boundaries, \
         south_cap_boundaries_error = boundaries_seasonal_caps()
-
-    ax.plot(north_cap_ls, north_cap_boundaries, color='black', zorder=11)
-    ax.plot(south_cap_ls, south_cap_boundaries, color='black', zorder=11)
+    if i_subplot == 0:
+        ax.plot(north_cap_ls, north_cap_boundaries, color='black', zorder=11)
+        ax.plot(south_cap_ls, south_cap_boundaries, color='black', zorder=11)
 
     if name_target == 'temp':
         if i_subplot == 0:
@@ -1983,7 +1984,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
             axes.set_xticks(ticks=axis_ls)
         fig.text(0.02, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
         fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=fontsize)
-        plt.title(title, fontsize)
+#        fig.suptitle(title, fontsize=fontsize)
         pos0 = ax[0].get_position()
         cb_axes = fig.add_axes([pos0.x0, 0.95, pos0.x1 - pos0.x0, 0.025])
         cbar = plt.colorbar(ctf, cax=cb_axes, orientation="horizontal")

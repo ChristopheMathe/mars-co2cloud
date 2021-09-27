@@ -892,12 +892,14 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
         if view_mode == 1:
             print('Processing data:')
-            zonal_mean, tmp = vars_zonal_mean(filename, data_target[:, :, :], layer=None)
+            zonal_mean, tmp = vars_zonal_mean(filename, data_target[:, :, :], layer=None, local_time=local_time)
+
 
             print('Display:')
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=zonal_mean, unit='K', norm=None,
-                                     vmin=100, vmax=350, observation=False, latitude_selected=None,
-                                     title=None, tes=True, mvals=True, layer=None,
+                                     localtime_selected=local_time,
+                                     vmin=125, vmax=325, observation=False, latitude_selected=None, cmap='inferno',
+                                     title='Zonal mean of surface temperature', tes=True, mvals=False, layer=None,
                                      save_name='tsurf_zonal_mean')
 
         if view_mode == 2:

@@ -1242,7 +1242,7 @@ def vars_zonal_n_time_mean(filename, data):
     return data_zonal_mean_north.T, data_zonal_mean_south.T, stddev_north.T, stddev_south.T
 
 
-def vars_zonal_mean(filename, data, layer=None, flip=None):
+def vars_zonal_mean(filename, data, layer=None, flip=None, local_time=None):
     if layer is not None:
         if filename != '':
             data_altitude, list_var = get_data(filename=filename, target='altitude')
@@ -1264,6 +1264,11 @@ def vars_zonal_mean(filename, data, layer=None, flip=None):
     else:
         print('wrong ndim')
         exit()
+
+    # Diurnal mean
+    if len(local_time) > 1:
+        zonal_mean = zonal_mean.reshape(669, 12, zonal_mean.shape[1])
+        zonal_mean = mean(zonal_mean, axis=1)
 
     if flip is None:
         zonal_mean = rotate_data(zonal_mean, do_flip=True)[0]
