@@ -1,4 +1,4 @@
-from numpy import mean, abs, min, max, zeros, where, std, arange, unravel_index, argmin, argmax, array, \
+from numpy import mean, abs, min, max, zeros, where, arange, unravel_index, argmin, argmax, array, \
     count_nonzero, std, append, asarray, power, ma, reshape, swapaxes, log, exp, concatenate, amin, amax
 from .lib_function import *
 from .ncdump import get_data, getfilename
@@ -392,7 +392,7 @@ def riceco2_mean_local_time_evolution(filename, data):
 
     data_latitude, list_var = get_data(filename=filename, target='latitude')
     data, idx_latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=0)
-    latitudes =data_latitude[idx_latitudes]
+    latitudes = data_latitude[idx_latitudes]
 
     data = mean(data, axis=2)  # zonal mean
 
@@ -404,10 +404,13 @@ def riceco2_mean_local_time_evolution(filename, data):
     else:
         nb_sol = int(data.shape[0] / 12)  # if there is 12 local time!
 
-    data = reshape(data, (nb_sol, 12, data.shape[1])).T
+    data = reshape(data, (nb_sol, 12, data.shape[1]))
     print(data.shape)
-    data = mean(data, axis=2)  # mean over the year
+    data = mean(data, axis=0)  # mean over the year
     print(data.shape)
+    data = data.T
+    print(data.shape)
+    data = log(data)
 
     data_mean_radius = zeros(data.shape[1])
     data_mean_alt = zeros(data.shape[1])
@@ -421,11 +424,12 @@ def riceco2_mean_local_time_evolution(filename, data):
 
         data_mean_radius[lt] = mean(data[:, lt])
         data_std_radius[lt] = std(data[:, lt])
+        print(lt, data_mean_radius[lt], data_std_radius[lt], min(data[:, lt]), max(data[:, lt]))
 
         data_mean_alt[lt] = (int(argmin(data[:, lt])) + int(argmax(data[:, lt]))) / 2.
-        print(lt, argmin(data[:, lt]), argmax(data[:, lt]))
         data_min_alt[lt] = amin([int(argmin(data[:, lt])), int(argmax(data[:, lt]))])
         data_max_alt[lt] = amax([int(argmin(data[:, lt])), int(argmax(data[:, lt]))])
+        print(data_min_alt[lt], data_mean_alt[lt], data_max_alt[lt])
 #        data_mean_alt[lt] = int(mean(data_max_alt[lt] + data_min_alt[lt]) / 2.)
 #        data_std_alt[lt] = int(argmax(data[:, lt]))
 
@@ -447,19 +451,11 @@ def riceco2_mean_local_time_evolution(filename, data):
         else:
             data_mean_alt[lt] = data_altitude[data_mean_alt[lt]]
 
+    data_mean_radius = exp(data_mean_radius) * 1e6
+    data_std_radius = exp(data_std_radius)
     data_mean_radius = correction_value(data=data_mean_radius, operator='eq', threshold=0)
-#    data_max_alt = correction_value(data=data_max_alt, operator='inf', threshold=0)
-
-#    data_min_radius = correction_value(data=data_min_radius, operator='eq', threshold=0)
-#    data_min_alt = correction_value(data=data_min_alt, operator='inf', threshold=0)
-
     data_std_radius = correction_value(data=data_std_radius, operator='eq', threshold=0)
-#    data_mean_alt = correction_value(data=data_mean_alt, operator='inf', threshold=0)
 
-#    data_min_radius = data_min_radius * 1e6
-    data_mean_radius = data_mean_radius * 1e6
-    data_std_radius = data_std_radius * 1e6
-#    data_max_radius = data_max_radius * 1e6
     return data_mean_radius, data_mean_alt, data_std_radius, data_min_alt, data_max_alt, latitudes
 
 

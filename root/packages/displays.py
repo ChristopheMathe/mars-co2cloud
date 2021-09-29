@@ -787,7 +787,7 @@ def display_riceco2_mean_local_time_evolution(filename, data_mean_radius, data_s
     fig, ax = plt.subplots(figsize=figsize_1graph)
 
     ax.plot(local_time, data_mean_radius, color='black', linestyle='-', label='mean')
-    ax.fill_between(local_time, data_mean_radius - data_std_radius, data_mean_radius + data_std_radius, color='black',
+    ax.fill_between(local_time, data_mean_radius/data_std_radius, data_mean_radius*data_std_radius, color='black',
                     alpha=0.3)
     ax.set_yscale('log')
     ax.set_ylim(1e-3, 1e2)

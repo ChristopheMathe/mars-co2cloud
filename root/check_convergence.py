@@ -90,6 +90,16 @@ def concatenation(filenames, target):
 def main():
     filenames = list_filename()
 
+    # Total number of year
+    total_nb_year = 0
+    for i, value_i in enumerate(filenames):
+        data_time, list_var = get_data(filename=value_i, target='Time')
+        total_nb_year += number_year(data_time=data_time[:])
+
+    test = input(f'There is {total_nb_year} years. Do you want select a year limit? (y/N)')
+    if test.lower() == 'y':
+        total_nb_year = int(input("Enter the year: "))
+
     # Deals with variables
     data_ps = concatenation(filenames=filenames, target='ps')
     data_tsurf = concatenation(filenames=filenames, target='tsurf')
@@ -101,12 +111,6 @@ def main():
     data_watercap = concatenation(filenames=filenames, target='watercap')
     data_mtot = concatenation(filenames=filenames, target='mtot')
     data_icetot = concatenation(filenames=filenames, target='icetot')
-
-    # Total number of year
-    total_nb_year = 0
-    for i, value_i in enumerate(filenames):
-        data_time, list_var = get_data(filename=value_i, target='Time')
-        total_nb_year += number_year(data_time=data_time[:])
 
     # main plot
     plot_global_mean(data_ps, data_tsurf, data_co2ice, data_h2o_ice_s + data_watercap, data_mtot, data_icetot,
