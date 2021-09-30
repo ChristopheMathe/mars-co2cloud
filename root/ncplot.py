@@ -113,16 +113,16 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print('Display:')
             if len(local_time) == 1:
                 display_vars_latitude_longitude(filename=filename, data=data_processed,
-                                            unit='%', norm=None, vmin=0, vmax=70,
-                                            title=f'Percentage of Martian year with presence of CO2 clouds '
-                                                  f'({local_time} h)',
-                                            save_name=f'co2_ice_coverage_{local_time}h')
+                                                unit='%', norm=None, vmin=0, vmax=70,
+                                                title=f'Percentage of Martian year with presence of CO2 clouds '
+                                                      f'({local_time} h)',
+                                                save_name=f'co2_ice_coverage_{local_time}h')
             else:
                 display_vars_latitude_longitude(filename=filename, data=data_processed,
-                                            unit='%', norm=None, vmin=0, vmax=70,
-                                            title=f'Percentage of Martian year with presence of CO2 clouds '
-                                                  f'(diurnal mean)',
-                                            save_name=f'co2_ice_coverage_diurnal_mean')
+                                                unit='%', norm=None, vmin=0, vmax=70,
+                                                title=f'Percentage of Martian year with presence of CO2 clouds '
+                                                      f'(diurnal mean)',
+                                                save_name=f'co2_ice_coverage_diurnal_mean')
 
         elif view_mode == 4:
             print('Processing data:')
@@ -137,8 +137,8 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                                                f'{local_time}h')
             else:
                 display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
-                                                                 latitude_north, latitude_south,
-                                                                 save_name='distribution_polar_clouds_diurnal_mean')
+                                                                     latitude_north, latitude_south,
+                                                                     save_name='distribution_polar_clouds_diurnal_mean')
 
         elif view_mode == 5:
             print('Processing data:')
@@ -161,15 +161,15 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
             print('Processing data:')
             data_processed, latitude = vars_altitude_ls(filename=filename, data=data_target, latitude=latitude,
-                                              local_time=local_time)
+                                                        local_time=local_time)
 
             print('Display:')
             print(min(data_processed), max(data_processed))
             display_vars_altitude_ls(filename=filename, data_1=data_processed, data_2=None, altitude_max=None,
-                                                norm='log', unit='kg/kg', vmin=1e-13, vmax=1e-4,
+                                     norm='log', unit='kg/kg', vmin=1e-13, vmax=1e-4,
                                      title=f'{name_target} mmr at {latitude} ({local_time[0]:.0f} h), DS: MY28',
                                      local_time=local_time,
-                                                save_name=f'{name_target}_zonal_mean_{latitude}N_{local_time[0]:.0f}h')
+                                     save_name=f'{name_target}_zonal_mean_{latitude}N_{local_time[0]:.0f}h')
 
         elif view_mode == 7:
             print('Processing data:')
@@ -191,20 +191,21 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print('Display:')
             if len(local_time) == 1:
                 display_vars_altitude_ls(filename=filename, data_1=data_target, local_time=local_time,
-                                         norm='log', vmin=1e-13, vmax=1e-3, unit='kg/kg', altitude_max=None,
-                                         title=f'Zonal mean of H2O ice mmr (reddish) and\n CO2 ice mmr ('
-                                               f'bluish), at'
-                                               f' {int(latitude_selected)} °N ({int(local_time[0])} h)',
+                                         norm='log', vmin=1e-13, vmax=1e-3, unit='kg/kg', altitude_max=1e-3,
+                                         title=f'Zonal mean of H2O ice mmr (yellowish) and\n CO2 ice mmr ('
+                                               f'greenish), at'
+                                               f' {int(latitude_selected)}°N ({int(local_time[0])} h)',
                                          save_name=f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected)}N_'
                                                    f'{int(local_time[0])}h', data_2=data_co2_ice, norm_2='log',
                                          vmin_2=1e-13, vmax_2=1e-6)
             else:
                 display_vars_altitude_ls(filename=filename, data_1=data_target, local_time=local_time,
-                                     norm='log', vmin=1e-13, vmax=1e-3, unit='kg/kg', altitude_max=1e-1,
-                                     title=f'Zonal mean of H2O ice mmr and\n CO2 ice mmr (black), at'
-                                           f' {int(latitude_selected)} °N, diurnal mean',
-                                     save_name=f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected)}N_'
-                                               f'diurnal_mean', data_2=data_co2_ice)
+                                         norm='log', vmin=1e-13, vmax=1e-3, unit='kg/kg', altitude_max=1e-3,
+                                         title=f'Zonal and diurnal mean of H2O ice (yellowish)\nand CO2 ice ('
+                                               f'greenish) mmr, at {int(latitude_selected)}°N',
+                                         save_name=f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected)}N_'
+                                                   f'diurnal_mean', data_2=data_co2_ice, norm_2='log',
+                                         vmin_2=1e-13, vmax_2=1e-1)
 
         elif view_mode == 9 or view_mode == 901:
             print('Processing data:')
@@ -376,7 +377,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         if view_mode == 7:
             print('Processing data:')
             data_zonal_n_time_mean_north, data_zonal_n_time_mean_south, stddev_north, stddev_south = \
-                vars_zonal_n_time_mean(filename=filename, data=data_target)
+                riceco2_polar_latitudes(filename=filename, data=data_target)
 
             print('Display:')
             display_riceco2_polar_latitudes(filename=filename, data_north=data_zonal_n_time_mean_north,
@@ -387,7 +388,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             latitude_selected = float(input('Select a latitude (°N): '))
             print('Processing data:')
             data_processed, data_std, latitude = riceco2_local_time_evolution(filename=filename, data=data_target,
-                                                                    latitude=latitude_selected)
+                                                                              latitude=latitude_selected)
 
             print('Display:')
             display_riceco2_local_time_evolution(filename=filename, data=data_processed, data_std=data_std,
@@ -693,9 +694,9 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
         if view_mode == 2:
             print('Processing data:')
             accumulation_north, accumulation_south, accumulation_precip_co2_ice_north, \
-                accumulation_precip_co2_ice_south, accumulation_direct_condco2_north, \
-                accumulation_direct_condco2_south = co2ice_cumulative_masses_polar_cap(filename=filename,
-                                                                                       data=data_target)
+            accumulation_precip_co2_ice_south, accumulation_direct_condco2_north, \
+            accumulation_direct_condco2_south = co2ice_cumulative_masses_polar_cap(filename=filename,
+                                                                                   data=data_target)
 
             print('Display:')
             display_co2ice_cumulative_mass_polar_region(filename=filename,
@@ -715,7 +716,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             display_vars_polar_projection_multi_plot(filename=filename, data=data_mean, time=time_bin,
                                                      localtime=local_time, levels=array([1e7, 1e8, 1e9, 1e10, 1e11,
                                                                                          1e12, 1e13, 1e14, 1e15]),
-                                                     #arange(15, 33),
+                                                     # arange(15, 33),
                                                      norm='log',
                                                      cmap='winter',
                                                      unit='kg', save_name=f'co2ice_15ls_mean')
@@ -894,7 +895,6 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print('Processing data:')
             zonal_mean, tmp = vars_zonal_mean(filename, data_target[:, :, :], layer=None, local_time=local_time)
 
-
             print('Display:')
             display_vars_latitude_ls(filename=filename, name_target=name_target, data=zonal_mean, unit='K', norm=None,
                                      localtime_selected=local_time,
@@ -913,7 +913,6 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                                                      save_name='tsurf_15ls_mean_')
 
     elif name_target in ['ps']:
-        #TODO: surface pressure viking
         print('What do you wanna do?')
         print('     1: Zonal mean (fig: lat-ls)')
         print('     2: Zonal mean at viking land site (fig: pressure-sols)')
@@ -937,7 +936,7 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
             print('Display:')
             display_ps_at_viking(data_pressure_at_viking1, latitude1, longitude1, data_pressure_at_viking2, latitude2,
-                       longitude2)
+                                 longitude2)
 
     # ================================================================================================================ #
 

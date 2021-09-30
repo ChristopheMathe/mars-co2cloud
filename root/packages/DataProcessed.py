@@ -379,15 +379,15 @@ def riceco2_local_time_evolution(filename, data, latitude):
     data_std = zeros((data.shape[1], 12))  # altitude, local time
     for i in range(12):
         data_mean[:, i] = mean(data[i::12, :], axis=0) * 1e6
-        data_std[:, i] = std(data[i::12,:], axis=0) * 1e6
-
+        data_std[:, i] = std(data[i::12, :], axis=0) * 1e6
+        print('need to fix computation')
+        exit()
     data_mean = correction_value(data=data_mean, operator='eq', threshold=0)
     data_std = correction_value(data=data_std, operator='eq', threshold=0)
     return data_mean, data_std, latitude
 
 
 def riceco2_mean_local_time_evolution(filename, data):
-    import math
     data = extract_where_co2_ice(filename=filename, data=data)
 
     data_latitude, list_var = get_data(filename=filename, target='latitude')
@@ -405,11 +405,8 @@ def riceco2_mean_local_time_evolution(filename, data):
         nb_sol = int(data.shape[0] / 12)  # if there is 12 local time!
 
     data = reshape(data, (nb_sol, 12, data.shape[1]))
-    print(data.shape)
     data = mean(data, axis=0)  # mean over the year
-    print(data.shape)
     data = data.T
-    print(data.shape)
     data = log(data)
 
     data_mean_radius = zeros(data.shape[1])
@@ -424,17 +421,10 @@ def riceco2_mean_local_time_evolution(filename, data):
 
         data_mean_radius[lt] = mean(data[:, lt])
         data_std_radius[lt] = std(data[:, lt])
-        print(lt, data_mean_radius[lt], data_std_radius[lt], min(data[:, lt]), max(data[:, lt]))
 
         data_mean_alt[lt] = (int(argmin(data[:, lt])) + int(argmax(data[:, lt]))) / 2.
         data_min_alt[lt] = amin([int(argmin(data[:, lt])), int(argmax(data[:, lt]))])
         data_max_alt[lt] = amax([int(argmin(data[:, lt])), int(argmax(data[:, lt]))])
-        print(data_min_alt[lt], data_mean_alt[lt], data_max_alt[lt])
-#        data_mean_alt[lt] = int(mean(data_max_alt[lt] + data_min_alt[lt]) / 2.)
-#        data_std_alt[lt] = int(argmax(data[:, lt]))
-
-        #        data_min_radius[lt] = min(data[:, lt])
-        #        data_min_alt[lt] = int(argmin(data[:, lt]))
 
         if data_max_alt[lt] == 0:
             data_max_alt[lt] = -99999
@@ -572,6 +562,27 @@ def riceco2_zonal_mean_co2ice_exists(filename, data, local_time):
     zonal_mean = zonal_mean * 1e6  # m to µm
 
     return zonal_mean, latitude_selected
+
+
+def riceco2_polar_latitudes(filename, data):
+    data = extract_where_co2_ice(filename=filename, data=data)
+
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_north, idx_latitude_north = slice_data(data=data, dimension_data=data_latitude[:], value=[60, 90])
+    data_south, idx_latitude_south = slice_data(data=data, dimension_data=data_latitude[:], value=[-60, -90])
+    del data
+
+    data_north = swapaxes(data_north, axis1=0, axis2=2)
+    data_north = data_north.reshape(data_north.shape[0], data_north.shape[1], -1)
+    data_zonal_mean_north = exp(mean(log(data_north), axis=2))
+    stddev_north = exp(std(log(data_north), axis=2))
+
+    data_south = swapaxes(data_south, axis1=0, axis2=2)
+    data_south = data_south.reshape(data_south.shape[0], data_south.shape[1], -1)
+    data_zonal_mean_south = exp(mean(log(data_south), axis=2))
+    stddev_south = exp(std(log(data_south), axis=2))
+
+    return data_zonal_mean_north.T*1e6, data_zonal_mean_south.T*1e6, stddev_north.T, stddev_south.T
 
 
 def satuco2_zonal_mean_with_co2_ice(filename, data, local_time):
@@ -1208,34 +1219,6 @@ def vars_time_mean(filename, data, duration, localtime=None):
         time_bin = None
 
     return data_mean, time_bin
-
-
-def vars_zonal_n_time_mean(filename, data):
-    data = data * 1e6
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
-    data_north, latitude_north = slice_data(data=data, dimension_data=data_latitude[:], value=[60, 90])
-    data_south, latitude_south = slice_data(data=data, dimension_data=data_latitude[:], value=[-60, -90])
-
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
-    data_north, altitude = slice_data(data_north, dimension_data=data_altitude[:], value=[1e3, 1e-2])
-    data_south, altitude = slice_data(data_south, dimension_data=data_altitude[:], value=[1e3, 1e-2])
-    del data
-
-    # zonal mean
-    data_north = swapaxes(data_north, axis1=0, axis2=2)
-    data_north = data_north.reshape(data_north.shape[0], data_north.shape[1], -1)
-    data_north = correction_value(data=data_north, operator='inf', threshold=1e-6)
-    data_zonal_mean_north = exp(mean(log(data_north), axis=2))
-    stddev_north = exp(std(log(data_north), axis=2))
-    del data_north
-
-    data_south = swapaxes(data_south, axis1=0, axis2=2)
-    data_south = data_south.reshape(data_south.shape[0], data_south.shape[1], -1)
-    data_zonal_mean_south = exp(mean(log(data_south), axis=2))
-    stddev_south = exp(std(log(data_south), axis=2))
-    del data_south
-
-    return data_zonal_mean_north.T, data_zonal_mean_south.T, stddev_north.T, stddev_south.T
 
 
 def vars_zonal_mean(filename, data, layer=None, flip=None, local_time=None):

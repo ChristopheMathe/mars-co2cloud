@@ -825,8 +825,6 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
     latitude_north, idx_north = slice_data(data=data_latitude, dimension_data=data_latitude[:], value=[60, 90])
     latitude_south, idx_south = slice_data(data=data_latitude, dimension_data=data_latitude[:], value=[-60, -90])
 
-    data_altitude, altitude = slice_data(data=data_altitude, dimension_data=data_altitude[:], value=[1e3, 1e-2])
-
     cmap = cm.get_cmap('hsv')
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_2graph_rows)
     fig.subplots_adjust(wspace=0.01)
@@ -837,7 +835,7 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
         part = (i % data_north.shape[1]) / data_north.shape[1]
         ax[0].plot(data_north[:, i], data_altitude[:], label=latitude_north[i], color=cmap(part))
         ax[0].errorbar(data_north[:, i], data_altitude[:], xerr=[data_north[:, i] * (1 - 1 / data_stddev_north[:, i]),
-                                                                 data_north[:, i] * (1 + 1 / data_stddev_north[:, i])],
+                                                                 data_north[:, i] * (1 + 1 * data_stddev_north[:, i])],
                        color=cmap(part))
     ax[0].set_yscale('log')
     ax[0].set_xscale('log')
@@ -856,7 +854,7 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
         part = (i % data_south.shape[1]) / data_south.shape[1]
         ax[1].plot(data_south[:, i], data_altitude[:], label=latitude_south[i], color=cmap(part))
         ax[1].errorbar(data_south[:, i], data_altitude[:], xerr=[data_south[:, i] * (1 - 1 / data_stddev_south[:, i]),
-                                                                 data_south[:, i] * (1 + 1 / data_stddev_south[:, i])],
+                                                                 data_south[:, i] * (1 + 1 * data_stddev_south[:, i])],
                        color=cmap(part))
     ax[1].set_yscale('log')
     ax[1].set_xscale('log')
