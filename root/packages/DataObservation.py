@@ -285,6 +285,50 @@ def mesospheric_clouds_observed():
            data_maven_limb, data_spicam, data_tesmoc, data_themis
 
 
+def mesospheric_clouds_altitude_localtime_observed(instrument):
+    folder = '/home/mathe/Documents/owncloud/GCM/observation_mesocloud/CO2clouds_altitude_localtime_files/'
+    if instrument == 'HRSC':
+        # nro2, alti2, velo2, lat2, long2, loctime2, ls2
+        data = loadtxt(folder + 'altilista_HRSC.txt')
+        data_lat = data[:, 3]
+        data_lon = data[:, 4]
+        data_lt = data[:, 5]
+        data_ls = data[:, 6]
+    elif instrument == 'OMEGAlimb':
+        # nro4, lat4, long4, ls4, loctime4, alti4
+        data = loadtxt(folder + 'altilista_OMEGAlimb.txt')
+        data_lat = data[1]
+        data_lon = data[2]
+        data_lt = data[4]
+        data_ls = data[3]
+    elif instrument == 'OMEGAnadir':
+        # nro1, lat1, long1, ls1, loctime1, alti1
+        data = loadtxt(folder + 'altilista_OMEGA_nadir.txt')
+        data_lat = data[:, 1]
+        data_lon = data[:, 2]
+        data_lt = data[:, 4]
+        data_ls = data[:, 3]
+    elif instrument == 'SPICAM':
+        # nro5, lat5, long5, ls5, loctime5, alti5
+        data = loadtxt(folder + 'altilista_SPICAM_stelocc.txt')
+        data_lat = data[:, 1]
+        data_lon = data[:, 2]
+        data_lt = data[:, 4]
+        data_ls = data[:, 3]
+    elif instrument == 'THEMIS':
+        # nro3, ls3, lat3, long3, loctime3, inci, alti3, minalti3,maxalti3, velo3, minvelo3, maxvelo3
+        data = loadtxt(folder + 'altilista_THEMIS.txt', usecols=(1, 2, 3, 4))
+        data_lat = data[:, 1]
+        data_lon = data[:, 2]
+        data_lt = data[:, 3]
+        data_ls = data[:, 0]
+    else:
+        print(f'Wrong instrument: {instrument}')
+        exit()
+
+    return data_ls, data_lat, data_lon, data_lt
+
+
 def simulation_mvals(target, localtime):
     filename = None
     if target in ['tsurf', 'Time', 'latitude', 'longitude', 'altitude']:
@@ -357,41 +401,56 @@ def simulation_mvals(target, localtime):
 '''
 
 
-def viking_lander(lander):
-    from numpy import append, array, mean, where, unique, min, max
+def viking_lander(lander, mcd):
+    from numpy import append, array, mean, where, unique
+
     path = ''
-    sols_0 = 0
-    if lander == 1:
-        path = '/home/mathe/Documents/owncloud/GCM/Viking_lander/viking_lander1_pression.dat'
-        sols_0 = 209  # http://www-mars.lmd.jussieu.fr/mars/time/martian_time.html , ls=97°
-    if lander == 2:
-        path = '/home/mathe/Documents/owncloud/GCM/Viking_lander/viking_lander2_pression.dat'
-        sols_0 = 253  # http://www-mars.lmd.jussieu.fr/mars/time/martian_time.html , ls=117°
-    dataset = loadtxt(path)
-    data_sols = sols_0 + dataset[:, 2]
-    data_pressure = dataset[:, 6] * 1e2  # mbar to Pa
+    if mcd:
+        if lander ==1:
+            path = '/home/mathe/Documents/owncloud/GCM/Viking_lander/viking_lander1_pression_mcd.dat'
+        elif lander ==2:
+            path = '/home/mathe/Documents/owncloud/GCM/Viking_lander/viking_lander2_pression_mcd.dat'
+        else:
+            print('wrong lander number')
+            exit()
+        data_sols_unique = loadtxt(path)[:,0]
+        data_pressure_annual = loadtxt(path)[:,1]
+    else:
+        sols_0 = 0
+        if lander == 1:
+            path = '/home/mathe/Documents/owncloud/GCM/Viking_lander/viking_lander1_pression.dat'
+            sols_0 = 209  # http://www-mars.lmd.jussieu.fr/mars/time/martian_time.html , ls=97°
+        elif lander == 2:
+            path = '/home/mathe/Documents/owncloud/GCM/Viking_lander/viking_lander2_pression.dat'
+            sols_0 = 253  # http://www-mars.lmd.jussieu.fr/mars/time/martian_time.html , ls=117°
+        else:
+            print('wrong lander number')
+            exit()
+        dataset = loadtxt(path)
+        data_sols = sols_0 + dataset[:, 2]
+        data_pressure = dataset[:, 6] * 1e2  # mbar to Pa
 
-    # Diurnal mean
-    data_sols_diurnal = array([])
-    data_pressure_diurnal = array([])
-    main_cpt = 0
-    while main_cpt < data_sols.shape[0]:
-        cpt = 0
-        while data_sols[main_cpt] == data_sols[main_cpt + cpt]:
-            cpt += 1
-            if main_cpt + cpt == data_sols.shape[0]:
-                break
-        data_sols_diurnal = append(data_sols_diurnal, mean(data_sols[main_cpt:main_cpt + cpt]))
-        data_pressure_diurnal = append(data_pressure_diurnal, mean(data_pressure[main_cpt:main_cpt + cpt]))
-        main_cpt += cpt
+        # Diurnal mean
+        data_sols_diurnal = array([])
+        data_pressure_diurnal = array([])
+        main_cpt = 0
+        while main_cpt < data_sols.shape[0]:
+            cpt = 0
+            while data_sols[main_cpt] == data_sols[main_cpt + cpt]:
+                cpt += 1
+                if main_cpt + cpt == data_sols.shape[0]:
+                    break
+            data_sols_diurnal = append(data_sols_diurnal, mean(data_sols[main_cpt:main_cpt + cpt]))
+            data_pressure_diurnal = append(data_pressure_diurnal, mean(data_pressure[main_cpt:main_cpt + cpt]))
+            main_cpt += cpt
 
-    # Annual mean
-    data_sols_diurnal = data_sols_diurnal % 669
-    data_sols_unique = unique(data_sols_diurnal)
-    data_pressure_annual = array([])
-    for i in range(data_sols_unique.shape[0]):
-        indexes = where(data_sols_diurnal == data_sols_unique[i])
-        data_pressure_annual = append(data_pressure_annual, mean(data_pressure_diurnal[indexes]))
+        # Annual mean
+        data_sols_diurnal = data_sols_diurnal % 669
+        data_sols_unique = unique(data_sols_diurnal)
+        data_pressure_annual = array([])
+        for i in range(data_sols_unique.shape[0]):
+            indexes = where(data_sols_diurnal == data_sols_unique[i])
+            data_pressure_annual = append(data_pressure_annual, mean(data_pressure_diurnal[indexes]))
 
     return data_sols_unique, data_pressure_annual
 

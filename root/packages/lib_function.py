@@ -161,7 +161,6 @@ def compute_column_density(filename, data):
         print(f'Data has {data.ndim} dimension, need 3 or 4!')
         exit()
 
-    print(max(data_column))
     data_column = correction_value(data_column, 'inf', threshold=1e-13)
     data_column = sum(data_column, axis=1)
     data_column = correction_value(data_column, 'inf', threshold=1e-13)
@@ -451,21 +450,21 @@ def save_figure_data(list_dict_var, savename):
     primary = fits.PrimaryHDU(header=hdr)
     hdul = fits.HDUList([primary])
 
-    for x in range(len(list_dict_var)):
-        if list_dict_var[x]["data"].ndim == 1:
-            list_col = fits.Column(name=list_dict_var[x]["varname"], array=list_dict_var[x]["data"], format='E',
-                             unit=list_dict_var[x]["units"])
-            hdu = fits.BinTableHDU.from_columns(columns=[list_col], name=list_dict_var[x]['shortname'][:10])
-            hdul.append(hdu=hdu)
-        elif list_dict_var[x]["data"].ndim == 2:
-            hdr_x = fits.Header()
-            hdr_x['unit'] = list_dict_var[x]["units"]
-            hdr_x['title'] = list_dict_var[x]["varname"]
-            hdu = fits.ImageHDU(list_dict_var[x]["data"], header=hdr_x, name=list_dict_var[x]['shortname'][:10])
-            hdul.append(hdu=hdu)
-        else:
-            print(f'{list_dict_var[x]["varname"]} has more than 2 dimensions')
-    hdul.writeto(folder + savename + '.fits')
+#    for x in range(len(list_dict_var)):
+#        if list_dict_var[x]["data"].ndim == 1:
+#            list_col = fits.Column(name=list_dict_var[x]["varname"], array=list_dict_var[x]["data"], format='E',
+#                             unit=list_dict_var[x]["units"])
+#            hdu = fits.BinTableHDU.from_columns(columns=[list_col], name=list_dict_var[x]['shortname'][:10])
+#            hdul.append(hdu=hdu)
+#        elif list_dict_var[x]["data"].ndim == 2:
+#            hdr_x = fits.Header()
+#            hdr_x['unit'] = list_dict_var[x]["units"]
+#            hdr_x['title'] = list_dict_var[x]["varname"]
+#            hdu = fits.ImageHDU(list_dict_var[x]["data"], header=hdr_x, name=list_dict_var[x]['shortname'][:10])
+#            hdul.append(hdu=hdu)
+#        else:
+#            print(f'{list_dict_var[x]["varname"]} has more than 2 dimensions')
+#    hdul.writeto(filename)
 
     # Case in netCDF format
     filename = folder + savename + '.nc'
@@ -484,7 +483,8 @@ def save_figure_data(list_dict_var, savename):
             dim[:] = list_dict_var[x]["data"]
 
         elif list_dict_var[x]["data"].ndim == 2:
-            list_dim = [list_dict_var[y]["data"].shape for y in range(x)]
+            list_dim = [list_dict_var[y]["data"].shape if list_dict_var[y]["data"].ndim == 1 else array([0]) for y in
+                        range(x)]
             list_dim = array(list_dim).reshape(-1)
             ix = where(list_dict_var[x]["data"].shape[0] == list_dim)[0][0]
             iy = where(list_dict_var[x]["data"].shape[1] == list_dim)[0][0]
@@ -493,8 +493,21 @@ def save_figure_data(list_dict_var, savename):
             temp.long_name = list_dict_var[x]["varname"]
             temp.units = list_dict_var[x]["units"]
             temp[:, :] = list_dict_var[x]["data"]
+        elif list_dict_var[x]["data"].ndim == 3:
+            list_dim = [list_dict_var[y]["data"].shape if list_dict_var[y]["data"].ndim == 1 else array([0]) for y in
+                        range(x)]
+            list_dim = array(list_dim).reshape(-1)
+            ix = where(list_dict_var[x]["data"].shape[0] == list_dim)[0][0]
+            iy = where(list_dict_var[x]["data"].shape[1] == list_dim)[0][0]
+            iz = where(list_dict_var[x]["data"].shape[2] == list_dim)[0][0]
+            temp = f.createVariable(list_dict_var[x]["shortname"], 'f4', (list_dict_var[ix]["shortname"],
+                                                                          list_dict_var[iy]["shortname"],
+                                                                          list_dict_var[iz]["shortname"]))
+            temp.long_name = list_dict_var[x]["varname"]
+            temp.units = list_dict_var[x]["units"]
+            temp[:, :, :] = list_dict_var[x]["data"]
         else:
-            print(f'{list_dict_var[x]["varname"]} has more than 2 dimensions')
+            print(f'{list_dict_var[x]["varname"]} has more than 3 dimensions')
     f.close()
 
 

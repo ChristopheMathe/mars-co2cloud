@@ -1,5 +1,5 @@
 from numpy import mean, abs, min, max, zeros, where, arange, unravel_index, argmin, argmax, array, \
-    count_nonzero, std, append, asarray, power, ma, reshape, swapaxes, log, exp, concatenate, amin, amax
+    count_nonzero, std, append, asarray, power, ma, reshape, swapaxes, log, exp, concatenate, amin, amax, diff
 from .lib_function import *
 from .ncdump import get_data, getfilename
 from os import mkdir, path
@@ -111,13 +111,14 @@ def co2ice_cloud_evolution(filename, data):
 
 def co2ice_cloud_localtime_along_ls(filename, data):
     data_latitude, list_var = get_data(filename=filename, target='latitude')
-    data, latitude = slice_data(data=data, dimension_data=data_latitude[:], value=0)
+    latitude_min = float(input("Enter minimum latitude: "))
+    latitude_max = float(input("Enter maximum latitude: "))
+    data, latitude = slice_data(data=data, dimension_data=data_latitude[:], value=[latitude_min, latitude_max])
 
     data, altitude_limit, altitude_min, altitude_max, altitude_units = compute_column_density(filename=filename,
                                                                                               data=data)
-
+    data = mean(data, axis=2)
     data = mean(data, axis=1)
-
     # Reshape every localtime for one year!
     if data.shape[0] % 12 != 0:
         nb_sol = 0
@@ -126,32 +127,25 @@ def co2ice_cloud_localtime_along_ls(filename, data):
     else:
         nb_sol = int(data.shape[0] / 12)  # if there is 12 local time!
     data = reshape(data, (nb_sol, 12)).T
-
-    return data
+    return data, altitude_min, latitude_min, latitude_max
 
 
 def co2ice_cumulative_masses_polar_cap(filename, data):
     from numpy import sum
 
+    ptimestep = 924.739583 * 8
     data_latitude, list_var = get_data(filename=filename, target='latitude')
     data_north, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[60, 90])
     data_south, latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=[-60, -90])
     del data
 
     # get precip_co2_ice
-    data_precip_co2_ice, list_var = get_data(filename=filename, target='precip_co2_ice')
+    data_precip_co2_ice, list_var = get_data(filename=filename, target='precip_co2_ice_rate')
+    data_precip_co2_ice = data_precip_co2_ice[:,:,:] * ptimestep
     data_precip_co2_ice_north, tmp = slice_data(data_precip_co2_ice[:, :, :], dimension_data=data_latitude[:],
                                                 value=[60, 90])
     data_precip_co2_ice_south, tmp = slice_data(data_precip_co2_ice[:, :, :], dimension_data=data_latitude[:],
                                                 value=[-60, -90])
-    print(max(data_precip_co2_ice_north), max(data_precip_co2_ice_south))
-    # get co2_ice without microphysics
-    #    data_ref = get_data(filename='', target='co2ice')
-
-    # extract the area of grid
-    data_area = gcm_area()
-    data_area_north, latitude_selected = slice_data(data_area, dimension_data=data_latitude[:], value=[60, 90])
-    data_area_south, latitude_selected = slice_data(data_area, dimension_data=data_latitude[:], value=[-60, -90])
 
     # Diurnal mean
     nb_lat = data_north.shape[1]
@@ -163,37 +157,41 @@ def co2ice_cumulative_masses_polar_cap(filename, data):
     data_precip_co2_ice_north = mean(data_precip_co2_ice_north.reshape(669, 12, nb_lat, nb_lon), axis=1)
     data_precip_co2_ice_south = mean(data_precip_co2_ice_south.reshape(669, 12, nb_lat, nb_lon), axis=1)
 
+
+    # diff co2ice car accumulé
+    data_north = diff(data_north, axis=0)
+    data_south = diff(data_south, axis=0)
+
+    # sum over polar regions
+    accumulation_precip_co2_ice_north = zeros(data_precip_co2_ice_north.shape[0])
+    accumulation_precip_co2_ice_south = zeros(data_precip_co2_ice_north.shape[0])
+    for ls in range(data_precip_co2_ice_north.shape[0]):
+        accumulation_precip_co2_ice_north[ls] = sum(data_precip_co2_ice_north[ls, :, :])
+        accumulation_precip_co2_ice_south[ls] = sum(data_precip_co2_ice_south[ls, :, :])
+
     accumulation_co2ice_north = zeros(data_north.shape[0])
     accumulation_co2ice_south = zeros(data_south.shape[0])
-
-    accumulation_precip_co2_ice_north = zeros(data_north.shape[0])
-    accumulation_precip_co2_ice_south = zeros(data_south.shape[0])
-    accumulation_direct_condco2_north = zeros(data_north.shape[0])
-    accumulation_direct_condco2_south = zeros(data_south.shape[0])
-
     for ls in range(data_north.shape[0]):
-        accumulation_co2ice_north[ls] = sum(data_north[ls, :, :] * data_area_north[:, :])
-        accumulation_co2ice_south[ls] = sum(data_south[ls, :, :] * data_area_south[:, :])
+        accumulation_co2ice_north[ls] = sum(data_north[ls, :, :])
+        accumulation_co2ice_south[ls] = sum(data_south[ls, :, :])
 
-        accumulation_precip_co2_ice_north[ls] = sum(data_precip_co2_ice_north[ls, :, :] * data_area_north[:, :])
-        accumulation_precip_co2_ice_south[ls] = sum(data_precip_co2_ice_south[ls, :, :] * data_area_south[:, :])
-        accumulation_direct_condco2_north[ls] = accumulation_co2ice_north[ls] - accumulation_precip_co2_ice_north[ls]
-        accumulation_direct_condco2_south[ls] = accumulation_co2ice_south[ls] - accumulation_precip_co2_ice_south[ls]
-    accumulation_precip_co2_ice_north = correction_value(data=accumulation_precip_co2_ice_north, operator='eq',
-                                                         threshold=0)
-    accumulation_precip_co2_ice_south = correction_value(data=accumulation_precip_co2_ice_south, operator='eq',
-                                                         threshold=0)
+    accumulation_direct_condco2_north = accumulation_co2ice_north - accumulation_precip_co2_ice_north[1:]
+    accumulation_direct_condco2_south = accumulation_co2ice_south - accumulation_precip_co2_ice_south[1:]
 
     return accumulation_co2ice_north, accumulation_co2ice_south, accumulation_precip_co2_ice_north, \
            accumulation_precip_co2_ice_south, accumulation_direct_condco2_north, accumulation_direct_condco2_south
 
 
-def co2ice_time_mean(filename, data, duration, localtime):
-    data, time = vars_time_mean(filename=filename, data=data, duration=duration, localtime=localtime)
+def co2ice_time_mean(filename, data, duration, localtime, column=None):
 
-    data = correction_value(data, operator='eq', threshold=0)
-    data_area = gcm_area()
-    data = data * data_area[:, :]
+    data, time = vars_time_mean(filename=filename, data=data, duration=duration, localtime=localtime)
+    data = correction_value(data, operator='inf', threshold=threshold)
+    if not column:
+        data_area = gcm_area()
+        data = data * data_area[:, :]
+    else:
+        data, altitude_limit, altitude_min, altitude_max, altitude_units = compute_column_density(filename=filename,
+                                                                                                  data=data)
 
     return data, time
 
@@ -367,29 +365,25 @@ def riceco2_local_time_evolution(filename, data, latitude):
 
     data = mean(data, axis=2)  # zonal mean
 
-    # Reshape every localtime for one year!
+    # check if there are 12 local times
     if data.shape[0] % 12 != 0:
-        nb_sol = 0
         print('Stop, there is no 12 localtime')
         exit()
-    else:
-        nb_sol = int(data.shape[0] / 12)  # if there is 12 local time!
 
     data_mean = zeros((data.shape[1], 12))  # altitude, local time
     data_std = zeros((data.shape[1], 12))  # altitude, local time
     for i in range(12):
-        data_mean[:, i] = mean(data[i::12, :], axis=0) * 1e6
-        data_std[:, i] = std(data[i::12, :], axis=0) * 1e6
-        print('need to fix computation')
-        exit()
-    data_mean = correction_value(data=data_mean, operator='eq', threshold=0)
-    data_std = correction_value(data=data_std, operator='eq', threshold=0)
-    return data_mean, data_std, latitude
+        data_mean[:, i] = mean(data[i::12, :], axis=0)
+        data_std[:, i] = std(data[i::12, :], axis=0)
+
+    return data_mean*1e6, data_std, latitude
 
 
 def riceco2_mean_local_time_evolution(filename, data):
+    from scipy.stats import tmean, tsem
+    from math import sqrt
     data = extract_where_co2_ice(filename=filename, data=data)
-
+    data = data * 1e6
     data_latitude, list_var = get_data(filename=filename, target='latitude')
     data, idx_latitudes = slice_data(data=data, dimension_data=data_latitude[:], value=0)
     latitudes = data_latitude[idx_latitudes]
@@ -407,8 +401,9 @@ def riceco2_mean_local_time_evolution(filename, data):
     data = reshape(data, (nb_sol, 12, data.shape[1]))
     data = mean(data, axis=0)  # mean over the year
     data = data.T
-    data = log(data)
 
+    data_min_radius = zeros(data.shape[1])
+    data_max_radius = zeros(data.shape[1])
     data_mean_radius = zeros(data.shape[1])
     data_mean_alt = zeros(data.shape[1])
     data_std_radius = zeros(data.shape[1])
@@ -419,8 +414,10 @@ def riceco2_mean_local_time_evolution(filename, data):
 
     for lt in range(data.shape[1]):
 
-        data_mean_radius[lt] = mean(data[:, lt])
-        data_std_radius[lt] = std(data[:, lt])
+        data_min_radius[lt] = min(data[:, lt])
+        data_max_radius[lt] = max(data[:, lt])
+        data_mean_radius[lt] = tmean(data[:, lt])
+        data_std_radius[lt] = tsem(data[:, lt])
 
         data_mean_alt[lt] = (int(argmin(data[:, lt])) + int(argmax(data[:, lt]))) / 2.
         data_min_alt[lt] = amin([int(argmin(data[:, lt])), int(argmax(data[:, lt]))])
@@ -441,12 +438,11 @@ def riceco2_mean_local_time_evolution(filename, data):
         else:
             data_mean_alt[lt] = data_altitude[data_mean_alt[lt]]
 
-    data_mean_radius = exp(data_mean_radius) * 1e6
-    data_std_radius = exp(data_std_radius)
-    data_mean_radius = correction_value(data=data_mean_radius, operator='eq', threshold=0)
-    data_std_radius = correction_value(data=data_std_radius, operator='eq', threshold=0)
+#    data_mean_radius = correction_value(data=data_mean_radius, operator='eq', threshold=0)
+#    data_std_radius = correction_value(data=data_std_radius, operator='eq', threshold=0)
 
-    return data_mean_radius, data_mean_alt, data_std_radius, data_min_alt, data_max_alt, latitudes
+    return data_min_radius, data_max_radius, data_mean_radius, data_mean_alt, data_std_radius, data_min_alt, \
+            data_max_alt, latitudes
 
 
 def riceco2_max_day_night(filename, data):
@@ -1207,13 +1203,20 @@ def vars_time_mean(filename, data, duration, localtime=None):
 
     if duration:
         nbin = ceil(data_time[-1] / duration)
-        data_mean = zeros((nbin, data.shape[1], data.shape[2]))
         time_bin = arange(0, data_time[-1] + duration, duration)
+        if data.ndim == 3:
+            data_mean = zeros((nbin, data.shape[1], data.shape[2]))
+            for i in range(nbin):
+                data_sliced, time = slice_data(data=data, dimension_data=data_time[:],
+                                               value=[duration * i, duration * (i + 1)])
+                data_mean[i, :, :] = mean(data_sliced, axis=0)
+        elif data.ndim == 4:
+            data_mean = zeros((nbin, data.shape[1], data.shape[2], data.shape[3]))
+            for i in range(nbin):
+                data_sliced, time = slice_data(data=data, dimension_data=data_time[:],
+                                               value=[duration * i, duration * (i + 1)])
+                data_mean[i, :, :, :] = mean(data_sliced, axis=0)
 
-        for i in range(nbin):
-            data_sliced, time = slice_data(data=data, dimension_data=data_time[:],
-                                           value=[duration * i, duration * (i + 1)])
-            data_mean[i, :, :] = mean(data_sliced, axis=0)
     else:
         data_mean = mean(data, axis=0)
         time_bin = None
