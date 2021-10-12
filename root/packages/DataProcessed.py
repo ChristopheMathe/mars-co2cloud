@@ -1245,6 +1245,9 @@ def vars_zonal_mean(filename, data, layer=None, flip=None, local_time=None):
         zonal_mean = mean(data[:, :, :], axis=2)
     elif data.ndim == 2:
         zonal_mean = mean(data[:, :], axis=1)
+    elif data.ndim == 4:
+        zonal_mean = mean(data[:, :, :, :], axis=3)
+        zonal_mean = mean(zonal_mean, axis=1)
     else:
         print('wrong ndim')
         exit()

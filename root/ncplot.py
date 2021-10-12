@@ -380,12 +380,12 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
         if view_mode == 5:
             print('Processing data:')
-            data, latitude_selected = riceco2_zonal_mean_co2ice_exists(filename=filename, data=data_target,
+            data, latitude_selected = vars_zonal_mean(filename=filename, data=data_target, flip=None, layer=None,
                                                                        local_time=local_time)
 
             print('Display:')
-            display_vars_latitude_ls(filename=filename, name_target=name_target, data=data, unit='µm', norm='log',
-                                     vmin=1e-2, vmax=1e2, observation=True, cmap='inferno',
+            display_vars_latitude_ls(filename=filename, name_target=name_target, data=data*1e6, unit='µm', norm='log',
+                                     vmin=1e-13, vmax=1e6, observation=False, cmap='inferno',
                                      latitude_selected=latitude_selected,
                                      localtime_selected=local_time,
                                      title=f'Zonal mean of mean radius of co2 ice, at {local_time}h',
