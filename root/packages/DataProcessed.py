@@ -381,7 +381,6 @@ def riceco2_local_time_evolution(filename, data, latitude):
 
 def riceco2_mean_local_time_evolution(filename, data):
     from scipy.stats import tmean, tsem
-    from math import sqrt
     data = extract_where_co2_ice(filename=filename, data=data)
     data = data * 1e6
     data_latitude, list_var = get_data(filename=filename, target='latitude')
@@ -416,9 +415,10 @@ def riceco2_mean_local_time_evolution(filename, data):
 
         data_min_radius[lt] = min(data[:, lt])
         data_max_radius[lt] = max(data[:, lt])
-        data_mean_radius[lt] = tmean(data[:, lt])
-        data_std_radius[lt] = tsem(data[:, lt])
-
+        data_mean_radius[lt] = tmean(data[:, lt][~data[:, lt].mask])
+        data_std_radius[lt] = tsem(data[:, lt][~data[:, lt].mask])
+        print(data_min_radius[lt], data_max_radius[lt], data_mean_radius[lt], data_std_radius[lt])
+        print(data[:, lt])
         data_mean_alt[lt] = (int(argmin(data[:, lt])) + int(argmax(data[:, lt]))) / 2.
         data_min_alt[lt] = amin([int(argmin(data[:, lt])), int(argmax(data[:, lt]))])
         data_max_alt[lt] = amax([int(argmin(data[:, lt])), int(argmax(data[:, lt]))])
@@ -437,7 +437,9 @@ def riceco2_mean_local_time_evolution(filename, data):
             data_mean_alt[lt] = -99999
         else:
             data_mean_alt[lt] = data_altitude[data_mean_alt[lt]]
-
+    data_min_alt = correction_value(data=data_min_alt, operator='eq', threshold=-99999)
+    data_max_alt = correction_value(data=data_max_alt, operator='eq', threshold=-99999)
+    data_mean_alt = correction_value(data=data_mean_alt, operator='eq', threshold=-99999)
 #    data_mean_radius = correction_value(data=data_mean_radius, operator='eq', threshold=0)
 #    data_std_radius = correction_value(data=data_std_radius, operator='eq', threshold=0)
 

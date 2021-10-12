@@ -123,6 +123,9 @@ def main():
         tmp = data_h2o_ice_s[i*669:(i+1)*669] + data_mtot[i*669:(i+1)*669] + data_icetot[i*669:(i+1)*669] + \
               data_watercap[i*669:(i+1)*669]
         plt.plot(tmp, label=f'year {i+1}', color=colors[i])
+    plt.xlabel('Time (sols)')
+    plt.ylabel('Total H2O mass (kg)')
+    plt.legend(loc=0)
     plt.savefig('check_converge_total_mass_h2o.png')
 
     # save data

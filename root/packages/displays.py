@@ -801,6 +801,7 @@ def display_riceco2_mean_local_time_evolution(filename, data_min_radius, data_ma
                     color='black', alpha=0.7, label='1-$\sigma$')
     ax.fill_between(local_time, data_min_radius, data_max_radius, color='black', alpha=0.1, label='min-max')
     ax.set_yscale('log')
+    ax.set_xlim(0, 24)
     ax.set_ylim(1e-3, 1e2)
 
     ax2 = ax.twinx()
@@ -809,16 +810,16 @@ def display_riceco2_mean_local_time_evolution(filename, data_min_radius, data_ma
 
     ax2.set_yscale('log')
     ax2.set_ylim(1e3, 1e-3)
-
-    ax.set_title(f'Radius of CO2 ice particles at {latitude}N\n with their location (red)', fontsize=fontsize)
-    ax.set_ylabel(f'Radius particle (µm)', fontsize=fontsize)
-    ax.tick_params(axis='both', which='major', labelsize=fontsize)
-
+    ax2.set_xlim(0, 24)
     ax2.yaxis.set_label_position("right")
     ax2.yaxis.tick_right()
     ax2.set_ylabel(f'Altitude ({data_altitude.units})', fontsize=fontsize, color='red')
     ax2.tick_params(axis='both', which='major', labelsize=fontsize)
     ax2.tick_params(axis='y', colors='red')
+
+    ax.set_title(f'Radius of CO2 ice particles at {latitude}N\n with their location (red)', fontsize=fontsize)
+    ax.set_ylabel(f'Radius particle (µm)', fontsize=fontsize)
+    ax.tick_params(axis='both', which='major', labelsize=fontsize)
     ax.legend(loc=0)
     ax.set_xlabel('Local time (h)', fontsize=fontsize)
     ax.set_xticks(local_time)
