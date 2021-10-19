@@ -90,7 +90,7 @@ def main():
             savetxt(f'{directory_output}profile_dust_number', c_[data], fmt=format_output)
 
         else:
-            savetxt(f'{directory_output}profile_{value_i:d}', c_[data], fmt=format_output)
+            savetxt(f'{directory_output}profile_{value_i}', c_[data], fmt=format_output)
 
 
 if '__main__' == __name__:
