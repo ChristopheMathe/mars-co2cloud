@@ -102,8 +102,8 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                 else:
                     display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed,
                                              unit='kg/m$^2$', norm='log', vmin=vmin, vmax=vmax, cmap='coolwarm',
-                                             observation=False, latitude_selected=None, localtime_selected=local_time,
-                                             title=f'Zonal mean column density of {name_target} (diurnal mean)',
+                                             observation=True, latitude_selected=None, localtime_selected=local_time,
+                                             title=f'Zonal and diurnal mean of column density of CO$_2$ ice',
                                              tes=None, mvals=None, layer=None,
                                              save_name=f'zonal_mean_density_column_{name_target}_diurnal_mean')
 
@@ -288,9 +288,10 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
             print('Display:')
             display_vars_polar_projection_multi_plot(filename=filename, data=data_mean, time=time_bin,
-                                                     localtime=local_time, vmin=1e-4, vmax=1, norm='log',
+                                                     localtime=local_time, vmin=None, vmax=None, norm='nonlinear',
                                                      cmap='inferno', unit='kg/m2',
-                                                     save_name=f'co2_ice_density_column_15ls_mean')
+                                                     save_name=f'co2_ice_density_column_15ls_mean',
+                                                     levels=[1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1, 5e-1, 1])
         else:
             print('Wrong value')
             exit()
@@ -740,9 +741,10 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
             print('Display:')
             display_vars_polar_projection_multi_plot(filename=filename, data=data_mean, time=time_bin,
-                                                     localtime=local_time, vmin=1e7, vmax=1e14, norm='log',
+                                                     localtime=local_time, vmin=1e-5, vmax=1e4, norm='nonlinear',
                                                      cmap='inferno',
-                                                     unit='kg', save_name=f'co2ice_15ls_mean')
+                                                     unit='kg/m$^2$', save_name=f'co2ice_15ls_mean',
+                                                     levels=[1e-6, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4])
         if view_mode == 4:
             print('Processing data:')
             data_at_vk1, data_at_vk2, data_time = co2ice_at_viking_lander_site(filename=filename, data=data_target)
@@ -866,7 +868,8 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
                 display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed, unit='',
                                          norm='log', vmin=1e-13, vmax=1e-1, observation=False, cmap='inferno',
                                          latitude_selected=None, localtime_selected=local_time,
-                                         title=f'Zonal and diurnal mean of {name_target} ', tes=None, mvals=None,
+                                         title=f'Zonal and diurnal mean of optical thickness at 1 micron', tes=None,
+                                         mvals=None,
                                          save_name=f'tau1mic_zonal_diurnal_mean')
             else:
                 display_vars_latitude_ls(filename=filename, name_target=name_target, data=data_processed, unit='',

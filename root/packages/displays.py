@@ -1993,11 +1993,11 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
             data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
                                                                          [latitude_selected[0], latitude_selected[-1]])
             if data_obs_ls.shape[0] != 0:
-                plt.scatter(data_obs_ls, data_obs_latitude, color='magenta', marker='o', s=3, zorder=10000,
+                plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='o', s=3, zorder=10000,
                             label='Meso')
 
-        mola_latitude, mola_ls, mola_altitude = observation_mola(only_location=True)
-        plt.scatter(mola_ls, mola_latitude, color='red', marker='o', zorder=10000, s=3, label='Tropo')
+#        mola_latitude, mola_ls, mola_altitude = observation_mola(only_location=True)
+#        plt.scatter(mola_ls, mola_latitude, color='red', marker='o', zorder=10000, s=3, label='Tropo')
 
     if i_subplot != 0:
         for axes in ax.reshape(-1):
@@ -2285,11 +2285,13 @@ def display_vars_polar_projection(filename, data_np, data_sp, levels, unit, cmap
     return
 
 
-def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vmin, vmax, norm, cmap, unit, save_name):
+def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vmin, vmax, norm, cmap, unit,
+                                             save_name, levels=None):
     import cartopy.crs as crs
     from numpy import unique, ma
     from matplotlib import cm
-    from matplotlib.colors import LogNorm, Normalize
+    from matplotlib.colors import LogNorm, Normalize, BoundaryNorm
+    import matplotlib.ticker as ticker
 
     if isinstance(data, ma.MaskedArray):
         array_mask = True
@@ -2298,8 +2300,12 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
 
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
-    else:
+    elif norm == 'linear':
         norm = Normalize(vmin=vmin, vmax=vmax)
+    else:
+        cmap = cm.get_cmap(cmap)
+        levels = levels
+        norm = BoundaryNorm(levels, ncolors=cmap.N, clip=False)
 
     plate_carree = crs.PlateCarree(central_longitude=0)
 
@@ -2318,13 +2324,11 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
 
     data_np = correction_value(data=data_np, operator='inf', threshold=threshold)
     data_sp = correction_value(data=data_sp, operator='inf', threshold=threshold)
-#    data_np[data_np.mask] = -1
-#    data_sp[data_sp.mask] = -1
     cmap = cm.get_cmap(cmap)
     cmap.set_under('w')
 
     # North polar region
-    orthographic = crs.Orthographic(central_longitude=0, central_latitude=90)#, globe=False)
+    orthographic = crs.Orthographic(central_longitude=0, central_latitude=90)
     y_min, y_max = orthographic.y_limits
     orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
@@ -2348,7 +2352,7 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
     pos1 = ax[0, 0].get_position().x0
     pos2 = (ax[0, 3].get_position().x0 + ax[0, 3].get_position().width) - pos1
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
-    fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
+    fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal', format=ticker.FuncFormatter(lambda x, levels: "%.0e" % x))
     if len(localtime) == 1:
         plt.savefig(f'{save_name}_northern_polar_region_{localtime}h.png', bbox_inches='tight')
     else:
@@ -2376,7 +2380,7 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
     pos1 = ax[0, 0].get_position().x0
     pos2 = (ax[0, 3].get_position().x0 + ax[0, 3].get_position().width) - pos1
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
-    fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
+    fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal', format=ticker.FuncFormatter(lambda x, levels: "%.0e" % x))
     if len(localtime) == 1:
         plt.savefig(f'{save_name}_southern_polar_region_{localtime}h.png', bbox_inches='tight')
     else:

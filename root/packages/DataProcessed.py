@@ -185,11 +185,8 @@ def co2ice_cumulative_masses_polar_cap(filename, data):
 def co2ice_time_mean(filename, data, duration, localtime, column=None):
 
     data, time = vars_time_mean(filename=filename, data=data, duration=duration, localtime=localtime)
-    data = correction_value(data, operator='inf', threshold=threshold)
-    if not column:
-        data_area = gcm_area()
-        data = data * data_area[:, :]
-    else:
+    data = correction_value(data=data, operator='inf', threshold=threshold)
+    if column:
         data, altitude_limit, altitude_min, altitude_max, altitude_units = compute_column_density(filename=filename,
                                                                                                   data=data)
 
