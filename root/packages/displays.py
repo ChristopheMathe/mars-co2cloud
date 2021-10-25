@@ -1725,8 +1725,8 @@ def display_vars_altitude_longitude(filename, data, unit, norm, vmin, vcenter, v
     return
 
 
-def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_time, norm, unit, altitude_max, vmin,
-                             vmax, title, save_name, data_2=None, norm_2=None, vmin_2=None, vmax_2=None,
+def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_time, latitude, norm, unit, altitude_max,
+                             vmin, vmax, title, save_name, data_2=None, norm_2=None, vmin_2=None, vmax_2=None,
                              varname_2=None, shortname_2=None):
     from numpy import round
     from matplotlib.colors import LogNorm, Normalize
@@ -1741,7 +1741,10 @@ def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_tim
     else:
         norm_2 = Normalize(vmin=vmin_2, vmax=vmax_2)
 
-    data_altitude, list_var = get_data(filename, target='altitude')
+    data_altitude, list_var = get_data(filename=filename, target='altitude')
+    data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
+    longitude, idx_longitude = slice_data(data=data_longitude[:], dimension_data=data_longitude[:], value=0)
 
     if data_altitude.units == 'm':
         unit_altitude = 'km'
@@ -1753,12 +1756,29 @@ def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_tim
     else:
         unit_altitude = data_altitude.units
         altitude_name = 'Pressure'
+        data_zareoid, list_var = get_data(filename=filename, target='zareoid')
+        data_surface_local = gcm_surface_local(data_zareoid[:, :, :, :])
+        data_surface_local, latitude = slice_data(data=data_surface_local[:, :, :, :], dimension_data=data_latitude[:],
+                                                  value=latitude)
 
-    data_time, list_var = get_data(filename, target='Time')
-    if data_time.units != 'deg':
+    data_time, list_var = get_data(filename=filename, target='Time')
+    ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+    if ls_lin:
         data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
         data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
-        data_time = data_ls[idx::len(data_local_time)]
+        data_ls = data_ls[idx::len(data_local_time)]
+        data_1, data_time = linearize_ls(data=data_1, data_ls=data_ls)
+        data_2, data_time = linearize_ls(data=data_2, data_ls=data_ls)
+        if data_altitude.units == 'Pa':
+            index_10 = abs(data_surface_local[0, :, idx_longitude] - 10e3).argmin()
+            index_40 = abs(data_surface_local[0, :, idx_longitude] - 40e3).argmin()
+            index_80 = abs(data_surface_local[0, :, idx_longitude] - 80e3).argmin()
+    ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+
+#    if data_time.units != 'deg':
+#        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+#        data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
+#        data_time = data_ls[idx::len(data_local_time)]
 
     fig, axes = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
     cb = axes.pcolormesh(data_time[:], data_altitude[:], data_1, norm=norm, cmap='plasma', shading='auto')  # autumn
@@ -1780,10 +1800,26 @@ def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_tim
     cbar.ax.set_title(unit, fontsize=fontsize)
     cbar.ax.tick_params(labelsize=fontsize)
 
+    axes.set_xticks(ticks=ndx)
+    axes.set_xticklabels(axis_ls, fontsize=fontsize)
+
     axes.set_title(title, fontsize=fontsize)
     axes.set_xlabel('Solar longitude (°)', fontsize=fontsize)
     axes.set_ylabel(f'{altitude_name} ({unit_altitude})', fontsize=fontsize)
     axes.tick_params(axis='both', which='major', labelsize=fontsize)
+    axes.hlines(data_altitude[index_10], data_time[0], data_time[-1], ls='--', color='black')
+    axes.hlines(data_altitude[index_40], data_time[0], data_time[-1], ls='--', color='black')
+    axes.hlines(data_altitude[index_80], data_time[0], data_time[-1], ls='--', color='black')
+    axes.text(0,data_altitude[index_10], '10 km',
+             verticalalignment='bottom',
+             horizontalalignment='left', color='black', fontsize=10)
+    axes.text(0, data_altitude[index_40], '40 km',
+             verticalalignment='bottom',
+             horizontalalignment='left', color='black', fontsize=10)
+    axes.text(0, data_altitude[index_80], '80 km',
+             verticalalignment='bottom',
+             horizontalalignment='left', color='black', fontsize=10)
+
     fig.savefig(f'{save_name}.png', bbox_inches='tight')
 
     dict_var = [{'data': data_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'TIME'},
@@ -1791,6 +1827,8 @@ def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_tim
                  'shortname': "ALTITUDE"},
                 {'data': data_1, 'varname': f"{varname_1}", 'units': f"{unit}", 'shortname': f"{shortname_1}"},
                 {'data': data_2, 'varname': f"{varname_2}", 'units': f"{unit}", 'shortname': f"{shortname_2}"},
+                {'data': array([index_10, index_40, index_80]), 'varname': f"altitude index [10, 40, 80] km above "
+                   f"local surface", 'units': "km", 'shortname': "idx_km"},
                 ]
     #TODO: to fix
 #    if data_2 is not None:

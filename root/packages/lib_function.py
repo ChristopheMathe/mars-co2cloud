@@ -332,10 +332,14 @@ def get_nearest_clouds_observed(data_obs, dim, data_dim, value):
     return data_ls, data_latitude
 
 
-def get_ls_index(data_time):
+def get_ls_index(data_time, tab_ls=None):
     from numpy import array, searchsorted, max
 
-    axis_ls = array([0, 90, 180, 270, 360])
+    if tab_ls is not None:
+        axis_ls = tab_ls
+    else:
+        axis_ls = array([0, 90, 180, 270, 360])
+
     if max(data_time) > 361:
         # ls = 0, 90, 180, 270, 360
         idx = searchsorted(data_time[:], [0, 193.47, 371.99, 514.76, 669])
@@ -362,6 +366,7 @@ def get_mean_index_altitude(data_altitude, value, dimension):
         for ls in range(data_altitude.shape[0]):
             for longitude in range(data_altitude.shape[2]):
                 idx[longitude] = (abs(data_altitude[ls, :, longitude] - value)).argmin()
+            print(ls, idx)
             mean_idx[ls] = mean(idx)
             idx[:] = 0
 
@@ -394,13 +399,20 @@ def get_mean_index_altitude(data_altitude, value, dimension):
 
 def linearize_ls(data, data_ls):
     from numpy import arange
-    from scipy.interpolate import interp2d
-
-    # interpolation to get linear Ls
-    f = interp2d(x=data_ls, y=arange(data.shape[0]), z=data, kind='linear')
+    from scipy.interpolate import interp2d, interp1d
 
     interp_time = arange(360)
-    data = f(interp_time, arange(data.shape[0]))
+
+    # interpolation to get linear Ls
+    if data.ndim == 2:
+        f = interp2d(x=data_ls, y=arange(data.shape[0]), z=data, kind='linear')
+        data = f(interp_time, arange(data.shape[0]))
+    elif data.ndim == 1:
+        print('data_ls', data_ls)
+        print('new_data', interp_time)
+        f = interp1d(data_ls, data, bounds_error=False)
+        data = f(interp_time)
+
     return data, interp_time
 
 
