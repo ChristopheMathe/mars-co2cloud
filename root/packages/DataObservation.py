@@ -294,6 +294,7 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
         data_lon = data[:, 4]
         data_lt = data[:, 5]
         data_ls = data[:, 6]
+        data_alt = data[:, 1]
     elif instrument == 'OMEGAlimb':
         # nro4, lat4, long4, ls4, loctime4, alti4
         data = loadtxt(folder + 'altilista_OMEGAlimb.txt')
@@ -301,6 +302,7 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
         data_lon = data[2]
         data_lt = data[4]
         data_ls = data[3]
+        data_alt = data[5]
     elif instrument == 'OMEGAnadir':
         # nro1, lat1, long1, ls1, loctime1, alti1
         data = loadtxt(folder + 'altilista_OMEGA_nadir.txt')
@@ -308,6 +310,7 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
         data_lon = data[:, 2]
         data_lt = data[:, 4]
         data_ls = data[:, 3]
+        data_alt = data[:, 5]
     elif instrument == 'SPICAM':
         # nro5, lat5, long5, ls5, loctime5, alti5
         data = loadtxt(folder + 'altilista_SPICAM_stelocc.txt')
@@ -315,18 +318,20 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
         data_lon = data[:, 2]
         data_lt = data[:, 4]
         data_ls = data[:, 3]
+        data_alt = data[:, 5]
     elif instrument == 'THEMIS':
         # nro3, ls3, lat3, long3, loctime3, inci, alti3, minalti3,maxalti3, velo3, minvelo3, maxvelo3
-        data = loadtxt(folder + 'altilista_THEMIS.txt', usecols=(1, 2, 3, 4))
+        data = loadtxt(folder + 'altilista_THEMIS.txt', usecols=(1, 2, 3, 4, 6))
         data_lat = data[:, 1]
         data_lon = data[:, 2]
         data_lt = data[:, 3]
         data_ls = data[:, 0]
+        data_alt = data[:, 4]
     else:
         print(f'Wrong instrument: {instrument}')
         exit()
 
-    return data_ls, data_lat, data_lon, data_lt
+    return data_ls, data_lat, data_lon, data_lt, data_alt
 
 
 def simulation_mvals(target, localtime):

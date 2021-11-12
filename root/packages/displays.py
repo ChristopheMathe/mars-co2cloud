@@ -833,9 +833,21 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
     from matplotlib import cm
     data_altitude, list_var = get_data(filename=filename, target='altitude')
     data_latitude, list_var = get_data(filename=filename, target='latitude')
+    data_longitude, list_var = get_data(filename=filename, target='longitude')
 
     latitude_north, idx_north = slice_data(data=data_latitude, dimension_data=data_latitude[:], value=[60, 90])
     latitude_south, idx_south = slice_data(data=data_latitude, dimension_data=data_latitude[:], value=[-60, -90])
+
+    data_zareoid, list_var = get_data(filename=filename, target='zareoid')
+    data_surface_local = gcm_surface_local(data_zareoid[::12, :, :, :])
+    data_surface_local, latitude = slice_data(data=data_surface_local[:, :, :, :], dimension_data=data_latitude[:],
+                                              value=75)
+    longitude, idx_longitude = slice_data(data=data_longitude[:], dimension_data=data_longitude[:], value=0)
+    if data_altitude.units == 'Pa':
+        index_10 = abs(data_surface_local[0, :, idx_longitude] - 10e3).argmin()
+        index_40 = abs(data_surface_local[0, :, idx_longitude] - 40e3).argmin()
+        index_80 = abs(data_surface_local[0, :, idx_longitude] - 80e3).argmin()
+
 
     cmap = cm.get_cmap('hsv')
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_2graph_rows)
@@ -851,6 +863,18 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
                        color=cmap(part))
     ax[0].set_yscale('log')
     ax[0].set_xscale('log')
+    ax[0].hlines(data_altitude[index_10], 1e-4, 1e3, ls='--', color='black')
+    ax[0].hlines(data_altitude[index_40], 1e-4, 1e3, ls='--', color='black')
+    ax[0].hlines(data_altitude[index_80], 1e-4, 1e3, ls='--', color='black')
+    ax[0].text(1e-4, data_altitude[index_10], '10 km',
+             verticalalignment='bottom',
+             horizontalalignment='left', color='black', fontsize=10)
+    ax[0].text(1e-4, data_altitude[index_40], '40 km',
+             verticalalignment='bottom',
+             horizontalalignment='left', color='black', fontsize=10)
+    ax[0].text(1e-4, data_altitude[index_80], '80 km',
+             verticalalignment='bottom',
+             horizontalalignment='left', color='black', fontsize=10)
     ax[0].set_ylim(1e3, 1e-2)
     ax[0].set_xlim(1e-4, 1e3)
     ax[0].grid()
@@ -862,6 +886,15 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
     data_south = flip(data_south, axis=1)
     data_stddev_south = flip(data_stddev_south, axis=1)
     latitude_south = flip(latitude_south, axis=0)
+    data_surface_local = gcm_surface_local(data_zareoid[::12, :, :, :])
+    data_surface_local, latitude = slice_data(data=data_surface_local[:, :, :, :], dimension_data=data_latitude[:],
+                                              value=-75)
+    longitude, idx_longitude = slice_data(data=data_longitude[:], dimension_data=data_longitude[:], value=0)
+    if data_altitude.units == 'Pa':
+        index_10 = abs(data_surface_local[0, :, idx_longitude] - 10e3).argmin()
+        index_40 = abs(data_surface_local[0, :, idx_longitude] - 40e3).argmin()
+        index_80 = abs(data_surface_local[0, :, idx_longitude] - 80e3).argmin()
+
     for i in range(latitude_south.shape[0]):
         part = (i % data_south.shape[1]) / data_south.shape[1]
         ax[1].plot(data_south[:, i], data_altitude[:], label=latitude_south[i], color=cmap(part))
@@ -870,6 +903,19 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
                        color=cmap(part))
     ax[1].set_yscale('log')
     ax[1].set_xscale('log')
+    ax[1].hlines(data_altitude[index_10], 1e-4, 1e3, ls='--', color='black')
+    ax[1].hlines(data_altitude[index_40], 1e-4, 1e3, ls='--', color='black')
+    ax[1].hlines(data_altitude[index_80], 1e-4, 1e3, ls='--', color='black')
+    ax[1].text(1e-4, data_altitude[index_10], '10 km',
+             verticalalignment='bottom',
+             horizontalalignment='left', color='black', fontsize=10)
+    ax[1].text(1e-4, data_altitude[index_40], '40 km',
+             verticalalignment='bottom',
+             horizontalalignment='left', color='black', fontsize=10)
+    ax[1].text(1e-4, data_altitude[index_80], '80 km',
+             verticalalignment='bottom',
+             horizontalalignment='left', color='black', fontsize=10)
+
     ax[1].set_ylim(1e3, 1e-2)
     ax[1].set_xlim(1e-4, 1e3)
     ax[1].grid()
@@ -1758,8 +1804,12 @@ def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_tim
         altitude_name = 'Pressure'
         data_zareoid, list_var = get_data(filename=filename, target='zareoid')
         data_surface_local = gcm_surface_local(data_zareoid[:, :, :, :])
-        data_surface_local, latitude = slice_data(data=data_surface_local[:, :, :, :], dimension_data=data_latitude[:],
-                                                  value=latitude)
+        if len(latitude) > 1:
+            data_surface_local, tmp = slice_data(data=data_surface_local[:, :, :, :], dimension_data=data_latitude[:],
+                                                 value=(latitude[0]+latitude[-1])/2.)
+        else:
+            data_surface_local, latitude = slice_data(data=data_surface_local[:, :, :, :], dimension_data=data_latitude[:],
+                                                      value=latitude)
 
     data_time, list_var = get_data(filename=filename, target='Time')
     ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
@@ -1774,11 +1824,6 @@ def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_tim
             index_40 = abs(data_surface_local[0, :, idx_longitude] - 40e3).argmin()
             index_80 = abs(data_surface_local[0, :, idx_longitude] - 80e3).argmin()
     ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
-
-#    if data_time.units != 'deg':
-#        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
-#        data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
-#        data_time = data_ls[idx::len(data_local_time)]
 
     fig, axes = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
     cb = axes.pcolormesh(data_time[:], data_altitude[:], data_1, norm=norm, cmap='plasma', shading='auto')  # autumn
@@ -1807,18 +1852,33 @@ def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_tim
     axes.set_xlabel('Solar longitude (°)', fontsize=fontsize)
     axes.set_ylabel(f'{altitude_name} ({unit_altitude})', fontsize=fontsize)
     axes.tick_params(axis='both', which='major', labelsize=fontsize)
-    axes.hlines(data_altitude[index_10], data_time[0], data_time[-1], ls='--', color='black')
-    axes.hlines(data_altitude[index_40], data_time[0], data_time[-1], ls='--', color='black')
-    axes.hlines(data_altitude[index_80], data_time[0], data_time[-1], ls='--', color='black')
-    axes.text(0,data_altitude[index_10], '10 km',
+    axes.hlines(data_altitude[index_10], data_time[0], data_time[-1], ls='--', color='red')
+    axes.hlines(data_altitude[index_40], data_time[0], data_time[-1], ls='--', color='red')
+    axes.hlines(data_altitude[index_80], data_time[0], data_time[-1], ls='--', color='red')
+    axes.text(0, data_altitude[index_10], '10 km',
              verticalalignment='bottom',
-             horizontalalignment='left', color='black', fontsize=10)
+             horizontalalignment='left', color='red', fontsize=12, weight='bold')
     axes.text(0, data_altitude[index_40], '40 km',
              verticalalignment='bottom',
-             horizontalalignment='left', color='black', fontsize=10)
+             horizontalalignment='left', color='red', fontsize=12, weight='bold')
     axes.text(0, data_altitude[index_80], '80 km',
              verticalalignment='bottom',
-             horizontalalignment='left', color='black', fontsize=10)
+             horizontalalignment='left', color='red', fontsize=12, weight='bold')
+    # observation
+    list_instrument = ['HRSC', 'OMEGAlimb', 'OMEGAnadir', 'SPICAM', 'THEMIS']
+    list_marker = ['s', 'o', 'v', 'P', 'X']
+    list_colors = ['black', 'brown', 'gold', 'magenta', 'red', 'lime']
+    for i, value_i in enumerate(list_instrument):
+        data_ls, data_lat, data_lon, data_lt, data_alt = mesospheric_clouds_altitude_localtime_observed(
+                                                         instrument=value_i)
+
+        mask = (data_lat >= latitude[-1]) & (data_lat <= latitude[0])
+        if mask.any():
+            for j in range(data_alt[mask].shape[0]):
+                if data_alt[mask][j] != 0:
+                    index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j]*1e3).argmin()
+                    axes.scatter(data_ls[mask][j], data_altitude[index], color=list_colors[i], marker=list_marker[i],
+                                 label=value_i)
 
     fig.savefig(f'{save_name}.png', bbox_inches='tight')
 
@@ -2026,11 +2086,12 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
 
         list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
-                    data_maven_limb, data_spicam, data_tesmoc, data_themis]
+                    data_spicam, data_tesmoc, data_themis] #data_maven_limb
         for j, value in enumerate(list_obs):
             data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
                                                                          [latitude_selected[0], latitude_selected[-1]])
             if data_obs_ls.shape[0] != 0:
+                print('Observation used: ', value)
                 plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='o', s=3, zorder=10000,
                             label='Meso')
 

@@ -547,12 +547,13 @@ def slice_data(data, dimension_data, value):
     elif len(value) == 2:
         idx1 = (abs(dimension_data[:] - value[0])).argmin()
         idx2 = (abs(dimension_data[:] - value[1])).argmin()
+        print('here',idx1, idx2)
         if idx1 > idx2:
             tmp = idx1
             idx1 = idx2
-            idx2 = tmp + 1
-        else:
-            idx2 += 1
+            idx2 = tmp #+ 1
+#        else:
+#            idx2 += 1
 
         if idx2 == dimension_data.shape[0] and dimension_data[idx2 - 1] > 0:  # Deals with boundaries
             idx2 -= 1

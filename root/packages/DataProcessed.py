@@ -295,7 +295,11 @@ def flux_lw_apparent_temperature_zonal_mean(data):
 
 
 def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
-    latitude = float(input('Which latitude (°N)? '))
+    latitude = input('Which latitude (°N)? ')
+    if len(latitude.split(',')) > 1:
+        latitude = array(latitude.split(','), dtype=float)
+    else:
+        latitude = float(latitude)
 
     data_latitude, list_var = get_data(filename=filename, target='latitude')
     data, idx_latitude_selected = slice_data(data, dimension_data=data_latitude[:], value=latitude)
@@ -311,6 +315,10 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
 
     data_co2_ice, idx_latitude_selected = slice_data(data_co2_ice, dimension_data=data_latitude[:], value=latitude)
     data_co2_ice = correction_value(data_co2_ice, operator='inf', threshold=threshold)
+    # latitude mean
+    if len(latitude) > 1:
+        data = mean(data, axis=2)
+        data_co2_ice = mean(data_co2_ice, axis=2)
 
     # zonal mean
     zonal_mean = mean(data, axis=2)  # zonal mean
@@ -318,8 +326,7 @@ def h2o_ice_alt_ls_with_co2_ice(filename, data, local_time, directory, files):
     if len(local_time) != 1:
         zonal_mean = mean(zonal_mean.reshape((669, 12, zonal_mean.shape[1])), axis=1)  # => sols, lon
         zonal_mean_co2_ice = mean(zonal_mean_co2_ice.reshape((669, 12, zonal_mean_co2_ice.shape[1])),
-                                  axis=1)  # => sols,
-    # lon
+                                  axis=1)  # => sols, lon
 
     zonal_mean, zonal_mean_co2_ice = rotate_data(zonal_mean, zonal_mean_co2_ice, do_flip=False)
 
