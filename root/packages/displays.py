@@ -1852,33 +1852,44 @@ def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_tim
     axes.set_xlabel('Solar longitude (°)', fontsize=fontsize)
     axes.set_ylabel(f'{altitude_name} ({unit_altitude})', fontsize=fontsize)
     axes.tick_params(axis='both', which='major', labelsize=fontsize)
-    axes.hlines(data_altitude[index_10], data_time[0], data_time[-1], ls='--', color='red')
-    axes.hlines(data_altitude[index_40], data_time[0], data_time[-1], ls='--', color='red')
-    axes.hlines(data_altitude[index_80], data_time[0], data_time[-1], ls='--', color='red')
-    axes.text(0, data_altitude[index_10], '10 km',
+    axes.hlines(data_altitude[index_10], data_time[0], data_time[-1], ls='--', color='black')
+    axes.hlines(data_altitude[index_40], data_time[0], data_time[-1], ls='--', color='black')
+    axes.hlines(data_altitude[index_80], data_time[0], data_time[-1], ls='--', color='black')
+    axes.text(300, data_altitude[index_10], '10 km',
              verticalalignment='bottom',
-             horizontalalignment='left', color='red', fontsize=12, weight='bold')
-    axes.text(0, data_altitude[index_40], '40 km',
+             horizontalalignment='left', color='black', fontsize=12, weight='bold')
+    axes.text(300, data_altitude[index_40], '40 km',
              verticalalignment='bottom',
-             horizontalalignment='left', color='red', fontsize=12, weight='bold')
-    axes.text(0, data_altitude[index_80], '80 km',
+             horizontalalignment='left', color='black', fontsize=12, weight='bold')
+    axes.text(300, data_altitude[index_80], '80 km',
              verticalalignment='bottom',
-             horizontalalignment='left', color='red', fontsize=12, weight='bold')
+             horizontalalignment='left', color='black', fontsize=12, weight='bold')
     # observation
-    list_instrument = ['HRSC', 'OMEGAlimb', 'OMEGAnadir', 'SPICAM', 'THEMIS']
-    list_marker = ['s', 'o', 'v', 'P', 'X']
-    list_colors = ['black', 'brown', 'gold', 'magenta', 'red', 'lime']
+    list_instrument = ['HRSC', 'OMEGAlimb', 'OMEGAnadir', 'SPICAM', 'THEMIS', 'NOMAD']
+    list_marker = ['s', 'o', 'v', 'P', 'X', '1']
+    list_colors = ['black', 'brown', 'gold', 'magenta', 'orangered', 'purple']
     for i, value_i in enumerate(list_instrument):
-        data_ls, data_lat, data_lon, data_lt, data_alt = mesospheric_clouds_altitude_localtime_observed(
-                                                         instrument=value_i)
+        data_ls, data_lat, data_lon, data_lt, data_alt, data_alt_min, data_alt_max = \
+            mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
 
         mask = (data_lat >= latitude[-1]) & (data_lat <= latitude[0])
         if mask.any():
-            for j in range(data_alt[mask].shape[0]):
-                if data_alt[mask][j] != 0:
-                    index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j]*1e3).argmin()
-                    axes.scatter(data_ls[mask][j], data_altitude[index], color=list_colors[i], marker=list_marker[i],
-                                 label=value_i)
+            if value_i == 'NOMAD':
+                for j in range(data_alt[mask].shape[0]):
+                    if data_alt[mask][j] != 0:
+                        index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j]*1e3).argmin()
+                        index_min = abs(data_surface_local[0, :, idx_longitude] - data_alt_min[mask][j]*1e3).argmin()
+                        index_max = abs(data_surface_local[0, :, idx_longitude] - data_alt_max[mask][j]*1e3).argmin()
+                        yerr_min = data_altitude[index] - data_altitude[index_min]
+                        yerr_max = data_altitude[index_max] - data_altitude[index]
+                        axes.errorbar([data_ls[mask][j]], [data_altitude[index]], yerr=[[yerr_min], [yerr_max]],
+                                      fmt='o', color=list_colors[i], label=value_i, capsize=5)
+            else:
+                for j in range(data_alt[mask].shape[0]):
+                    if data_alt[mask][j] != 0:
+                        index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j]*1e3).argmin()
+                        axes.scatter(data_ls[mask][j], data_altitude[index], color=list_colors[i], marker=list_marker[i],
+                                     label=value_i)
 
     fig.savefig(f'{save_name}.png', bbox_inches='tight')
 
@@ -2055,8 +2066,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         i_subplot += 1
 
     if i_subplot == 0:
-        ctf = ax.pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='flat', zorder=10,
-                            )
+        ctf = ax.pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='flat', zorder=10)
     else:
         ctf = ax[i_subplot].pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='flat',
                                        zorder=10)
@@ -2083,10 +2093,10 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     if observation:
         # Get latitude range between entre value-1 et value+1
         data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
+        data_maven_limb, data_spicam, data_tesmoc, data_themis, data_nomad = mesospheric_clouds_observed()
 
         list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
-                    data_spicam, data_tesmoc, data_themis] #data_maven_limb
+                    data_spicam, data_tesmoc, data_themis, data_nomad] #data_maven_limb
         for j, value in enumerate(list_obs):
             data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
                                                                          [latitude_selected[0], latitude_selected[-1]])
@@ -2420,7 +2430,6 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
     data_sp, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[-90, -60])
     data_np_surface, tmp = slice_data(data_surface_local[:, :], dimension_data=data_latitude[:], value=[60, 90])
     data_sp_surface, tmp = slice_data(data_surface_local[:, :], dimension_data=data_latitude[:], value=[-90, -60])
-
     data_np = correction_value(data=data_np, operator='inf', threshold=threshold)
     data_sp = correction_value(data=data_sp, operator='inf', threshold=threshold)
     cmap = cm.get_cmap(cmap)
@@ -2453,7 +2462,7 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
     fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal', format=ticker.FuncFormatter(lambda x, levels: "%.0e" % x))
     if len(localtime) == 1:
-        plt.savefig(f'{save_name}_northern_polar_region_{localtime}h.png', bbox_inches='tight')
+        plt.savefig(f'{save_name}_northern_polar_region_{int(localtime[0])}h.png', bbox_inches='tight')
     else:
         plt.savefig(f'{save_name}_northern_polar_region_diurnal_mean.png', bbox_inches='tight')
 
@@ -2467,6 +2476,7 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
     for i, axes in enumerate(ax.reshape(-1)):
         if i < 24:
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°', fontsize=fontsize)
+            print(f'{int(time[i])}° - {int(time[i + 1])}°')
             if array_mask and unique(data_sp[i, :, :]).shape[0] != 1:
                 ctf = axes.pcolormesh(data_longitude[:], latitude_sp, data_sp[i, :, :], norm=norm,
                                     transform=plate_carree, cmap=cmap, shading='flat')
@@ -2481,7 +2491,7 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
     fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal', format=ticker.FuncFormatter(lambda x, levels: "%.0e" % x))
     if len(localtime) == 1:
-        plt.savefig(f'{save_name}_southern_polar_region_{localtime}h.png', bbox_inches='tight')
+        plt.savefig(f'{save_name}_southern_polar_region_{int(localtime[0])}h.png', bbox_inches='tight')
     else:
         plt.savefig(f'{save_name}_southern_polar_region_diurnal_mean.png', bbox_inches='tight')
 

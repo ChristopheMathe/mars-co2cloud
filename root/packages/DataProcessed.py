@@ -1,5 +1,5 @@
 from numpy import mean, abs, min, max, zeros, where, arange, unravel_index, argmin, argmax, array, \
-    count_nonzero, std, append, asarray, power, ma, reshape, swapaxes, log, exp, concatenate, amin, amax, diff
+    count_nonzero, std, append, asarray, power, ma, reshape, swapaxes, log, exp, concatenate, amin, amax, diff, sort
 from .lib_function import *
 from .ncdump import get_data, getfilename
 from os import mkdir, path
@@ -1195,17 +1195,19 @@ def vars_time_mean(filename, data, duration, localtime=None):
     from math import ceil
 
     data_time, list_var = get_data(filename=filename, target='Time')
-    if len(localtime) == 1:
-        data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=localtime)
-        if data_time[-1] <= 360.:  # Ensure we are in ls time coordinate
-            data_time = data_time[idx::len(data_local_time)]
+    print(data_time.units)
+    if data_time.units != 'degrees':
+        if len(localtime) == 1:
+            data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=localtime)
+            if data_time[-1] <= 360.:  # Ensure we are in ls time coordinate
+                data_time = data_time[idx::len(data_local_time)]
+            else:
+                data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+                data_time = data_ls[idx::len(data_local_time)]
         else:
-            data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
-            data_time = data_ls[idx::len(data_local_time)]
-    else:
-        if data_time.units != 'deg':
-            data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
-            data_time = data_ls[:]
+            if data_time.units != 'degrees':
+                data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+                data_time = data_ls[:]
 
     if duration:
         nbin = ceil(data_time[-1] / duration)
@@ -1226,6 +1228,7 @@ def vars_time_mean(filename, data, duration, localtime=None):
     else:
         data_mean = mean(data, axis=0)
         time_bin = None
+    data_mean = correction_value(data=data_mean, operator='inf', threshold=threshold)
 
     return data_mean, time_bin
 

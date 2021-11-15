@@ -266,7 +266,8 @@ def mesospheric_clouds_observed():
                  'Mesocloud_obs_MAVENlimb.txt',
                  'Mesocloud_obs_SPICAM.txt',
                  'Mesocloud_obs_TES-MOC.txt',
-                 'Mesocloud_obs_THEMIS.txt']
+                 'Mesocloud_obs_THEMIS.txt',
+                 'CO2clouds_altitude_localtime_files/nomad_liuzzi2021.txt']
 
     # column:  1 = ls, 2 = lat (°N), 3 = lon (°E)
     data_crism_limb = loadtxt(directory + filenames[0], skiprows=1)
@@ -280,12 +281,14 @@ def mesospheric_clouds_observed():
     data_spicam = loadtxt(directory + filenames[8], skiprows=1)
     data_tesmoc = loadtxt(directory + filenames[9], skiprows=1)
     data_themis = loadtxt(directory + filenames[10], skiprows=1)
+    data_nomad = loadtxt(directory + filenames[11], usecols=(1, 2, 3), skiprows=2, delimiter=',')
 
     return data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-           data_maven_limb, data_spicam, data_tesmoc, data_themis
+           data_maven_limb, data_spicam, data_tesmoc, data_themis, data_nomad
 
 
 def mesospheric_clouds_altitude_localtime_observed(instrument):
+    from numpy import zeros
     folder = '/home/mathe/Documents/owncloud/GCM/observation_mesocloud/CO2clouds_altitude_localtime_files/'
     if instrument == 'HRSC':
         # nro2, alti2, velo2, lat2, long2, loctime2, ls2
@@ -295,6 +298,8 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
         data_lt = data[:, 5]
         data_ls = data[:, 6]
         data_alt = data[:, 1]
+        data_alt_min = zeros(data_alt.shape[0])
+        data_alt_max = zeros(data_alt.shape[0])
     elif instrument == 'OMEGAlimb':
         # nro4, lat4, long4, ls4, loctime4, alti4
         data = loadtxt(folder + 'altilista_OMEGAlimb.txt')
@@ -303,6 +308,8 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
         data_lt = data[4]
         data_ls = data[3]
         data_alt = data[5]
+        data_alt_min = 0
+        data_alt_max = 0
     elif instrument == 'OMEGAnadir':
         # nro1, lat1, long1, ls1, loctime1, alti1
         data = loadtxt(folder + 'altilista_OMEGA_nadir.txt')
@@ -311,6 +318,8 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
         data_lt = data[:, 4]
         data_ls = data[:, 3]
         data_alt = data[:, 5]
+        data_alt_min = zeros(data_alt.shape[0])
+        data_alt_max = zeros(data_alt.shape[0])
     elif instrument == 'SPICAM':
         # nro5, lat5, long5, ls5, loctime5, alti5
         data = loadtxt(folder + 'altilista_SPICAM_stelocc.txt')
@@ -319,6 +328,8 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
         data_lt = data[:, 4]
         data_ls = data[:, 3]
         data_alt = data[:, 5]
+        data_alt_min = zeros(data_alt.shape[0])
+        data_alt_max = zeros(data_alt.shape[0])
     elif instrument == 'THEMIS':
         # nro3, ls3, lat3, long3, loctime3, inci, alti3, minalti3,maxalti3, velo3, minvelo3, maxvelo3
         data = loadtxt(folder + 'altilista_THEMIS.txt', usecols=(1, 2, 3, 4, 6))
@@ -327,11 +338,23 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
         data_lt = data[:, 3]
         data_ls = data[:, 0]
         data_alt = data[:, 4]
+        data_alt_min = zeros(data_alt.shape[0])
+        data_alt_max = zeros(data_alt.shape[0])
+    elif instrument == 'NOMAD':
+        # UT time, LS, Lat, E Lon, Local_time, Altitude (min, highest CO2 ice, max), CO2 ice max [ppmv], Radius [um], Criteria (T=temp. profile, H=highres)
+        data = loadtxt(folder + 'nomad_liuzzi2021.txt', usecols=(1, 2, 3, 4, 5, 6, 7), skiprows=2, delimiter=',')
+        data_ls = data[:, 0]
+        data_lat = data[:, 1]
+        data_lon = data[:, 2]
+        data_lt = data[:, 3]
+        data_alt = data[:, 5]
+        data_alt_min = data[:, 4]
+        data_alt_max = data[:, 6]
     else:
         print(f'Wrong instrument: {instrument}')
         exit()
 
-    return data_ls, data_lat, data_lon, data_lt, data_alt
+    return data_ls, data_lat, data_lon, data_lt, data_alt, data_alt_min, data_alt_max
 
 
 def simulation_mvals(target, localtime):

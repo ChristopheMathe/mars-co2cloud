@@ -8,7 +8,13 @@ from packages.constant_parameter import threshold
 
 
 def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=None):
+    # With h2o_ice_s we must add watercap before anything we attempt to
+#    if name_target == "h2o_ice_s":
+#        data_watercap, list_var = get_data(filename=filename, target='watercap')
+#        data_target = data_target[:, :, :] #- data_watercap[:, :, :]
+
     data_target, local_time = extract_at_a_local_time(filename=filename, data=data_target, local_time=None)
+
 
     print('Correction value...')
     if data_target.ndim == 4:
@@ -190,13 +196,13 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
             print('Display:')
             if len(local_time) == 1:
-                vmax_2=1e-6
+                vmax_2 = 1e-6
                 if len(latitude_selected) == 1:
                     title = f'Zonal mean of H$_2$O ice mmr (yellowish) and\n CO$_2$ ice mmr (greenish), ' \
                             f'at {int(latitude_selected)}°N ({int(local_time[0])} h)'
                     save_name = f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected)}N_{int(local_time[0])}h'
                 else:
-                    title = f'Zonal mean of H$_2$O ice mmr (yellowish) and\n CO$_2$ ice mmr (greenish), ' \
+                    title = f'Zonal mean of H$_2$O ice mmr (yellowish) and CO$_2$ ice\nmmr (greenish), ' \
                             f'between [{int(latitude_selected[0])}:{int(latitude_selected[-1])}]°N ' \
                             f'({int(local_time[0])}h)'
                     save_name = f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected[0])}_' \
@@ -760,6 +766,25 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print('Display:')
             display_co2ice_at_viking_lander_site(data_at_vk1=data_at_vk1, data_at_vk2=data_at_vk2, data_time=data_time)
 
+    elif name_target in ['h2o_ice_s']:
+        print('What do you wanna do?')
+        print('     1: Polar plot every 30° ls mean, lat=60°-90° (fig: lat-ls)')
+
+        if view_mode is None:
+            view_mode = int(input('Select number:'))
+
+        if view_mode == 1:
+            print('Processing data:')
+            data_mean, time_bin = vars_time_mean(filename=filename, data=data_target, duration=30, localtime=local_time)
+
+            print('Display:')
+            print(min(data_mean), max(data_mean))
+            display_vars_polar_projection_multi_plot(filename=filename, data=data_mean, time=time_bin,
+                                                     localtime=local_time, vmin=1e-9, vmax=1e2, norm='nonlinear',
+                                                     cmap='inferno',
+                                                     unit='kg/m$^2$', save_name=f'h2o_ice_s_30ls_mean',
+                                                     levels=[1e-9, 1e-6, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1,
+                                                             1e2])
 
     elif name_target in ['emis']:
         print('What do you wanna do?')

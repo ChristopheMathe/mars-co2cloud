@@ -18,8 +18,8 @@ def get_argument(*argv):
     files = listdir('.')
     directory_store = []
     try:
-        directory_store = [x for x in files if 'occigen' in x][0] + '/'
-    except not directory_store:
+        directory_store = [x for x in files if 'occigen' in x or 'simu' in x][0] + '/'
+    except:
         directory_store = None
 
     if directory_store is None:
