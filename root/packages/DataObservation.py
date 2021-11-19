@@ -1,4 +1,5 @@
 from .ncdump import get_data
+from netCDF4 import Dataset
 from numpy import loadtxt
 
 
@@ -485,7 +486,8 @@ def viking_lander(lander, mcd):
 
 def boundaries_seasonal_caps():
     '''
-    Data from Hu et al. (2012) paper. Inferred from MCS data
+    Data from Hu et al. (2012) paper. Inferred from MCS data.
+    These is related to CO2 ice in the atmosphere
     '''
     from numpy import arange, array
     north_ls = arange(185, 360, 5)
@@ -507,3 +509,14 @@ def boundaries_seasonal_caps():
                                     4.72, 3.65, 2.78, 1.78, 1.90, 2.82, 2.25, 1.39, 1.29, 0])
 
     return north_ls, north_boundaries, north_boundaries_error, south_ls, south_boundaries, south_boundaries_error
+
+
+def get_polar_cap():
+    filename = '/home/mathe/Documents/owncloud/GCM/co2icecover_titus.nc'
+    dataset = Dataset(filename=filename, mode='r', format='NETCDF4')
+
+    data_ls = dataset.variables["Ls"][:]
+    data_latitude = dataset.variables["Latitude"][:]
+    data_longitude = dataset.variables["Longitude"][:]
+    co2_ice_cover = dataset.variables['co2icecover'][:, :, :]
+    return data_ls, data_latitude, data_longitude, co2_ice_cover
