@@ -119,12 +119,14 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
 
             print('Display:')
             if len(local_time) == 1:
+                print(max(data_processed))
                 display_vars_latitude_longitude(filename=filename, data=data_processed,
                                                 unit='%', norm=None, vmin=0, vmax=70,
                                                 title=f'Percentage of Martian year with presence of CO2 clouds '
                                                       f'({local_time} h)',
                                                 save_name=f'co2_ice_coverage_{local_time}h')
             else:
+                print(max(data_processed))
                 display_vars_latitude_longitude(filename=filename, data=data_processed,
                                                 unit='%', norm=None, vmin=0, vmax=70,
                                                 title=f'Percentage of Martian year with presence of CO2 clouds '
@@ -303,7 +305,8 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             print('Display:')
             display_vars_polar_projection_multi_plot(filename=filename, data=data_mean, time=time_bin,
                                                      localtime=local_time, vmin=None, vmax=None, norm='nonlinear',
-                                                     cmap='inferno', unit='kg/m2',
+                                                     cmap='inferno', unit='kg/m$^2$',
+                                                     title='density column of CO$_2$',
                                                      save_name=f'co2_ice_density_column_15ls_mean',
                                                      levels=[1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1, 5e-1, 1])
         else:
@@ -757,8 +760,11 @@ def plot_sim_3d(filename, data_target, name_target, directory, files, view_mode=
             display_vars_polar_projection_multi_plot(filename=filename, data=data_mean, time=time_bin,
                                                      localtime=local_time, vmin=1e-5, vmax=1e4, norm='nonlinear',
                                                      cmap='inferno',
-                                                     unit='kg/m$^2$', save_name=f'co2ice_15ls_mean',
-                                                     levels=[1e-6, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4])
+                                                     unit='kg/m$^2$',
+                                                     title='CO$_2$ ice at the surface',
+                                                     save_name=f'co2ice_15ls_mean',
+                                                     levels=[1e-6, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4],
+                                                     co2_ice_cover=True)
         if view_mode == 4:
             print('Processing data:')
             data_at_vk1, data_at_vk2, data_time = co2ice_at_viking_lander_site(filename=filename, data=data_target)
