@@ -580,13 +580,17 @@ def display_co2_ice_localtime_ls(filename, data, lat_min, lat_max, title, unit, 
     ax.set_yticklabels(data_local_time, fontsize=fontsize)
 
     # observation
-    list_instrument = ['HRSC', 'OMEGAlimb', 'OMEGAnadir', 'SPICAM', 'THEMIS']
-    list_marker = ['s', 'o', 'v', 'P', 'X']
+    list_instrument = ['HRSC', 'OMEGAlimb', 'OMEGAnadir', 'SPICAM', 'THEMIS', 'NOMAD']
+    list_marker = ['s', 'o', 'v', 'P', 'X', '1']
+    list_colors = ['black', 'brown', 'green', 'aquamarine', 'red', 'blue']
     for i, value_i in enumerate(list_instrument):
-        data_ls, data_lat, data_lon, data_lt = mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
+        data_ls, data_lat, data_lon, data_lt, data_alt, data_alt_min, data_alt_max = \
+            mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
+
         mask = (data_lat >= lat_min) & (data_lat <= lat_max)
         if mask.any():
-            ax.scatter(data_ls[mask], data_lt[mask], color='black', marker=list_marker[i], label=value_i)
+            ax.scatter(data_ls[mask], data_lt[mask], color=list_colors[i], marker=list_marker[i], label=value_i)
+
     ax.legend(loc=0)
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
     return
@@ -1867,29 +1871,30 @@ def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_tim
     # observation
     list_instrument = ['HRSC', 'OMEGAlimb', 'OMEGAnadir', 'SPICAM', 'THEMIS', 'NOMAD']
     list_marker = ['s', 'o', 'v', 'P', 'X', '1']
-    list_colors = ['black', 'brown', 'gold', 'magenta', 'orangered', 'purple']
+    #list_colors = ['black', 'brown', 'gold', 'magenta', 'orangered', 'purple']
+    list_colors = ['red', 'red', 'red', 'red', 'red', 'red']
     for i, value_i in enumerate(list_instrument):
         data_ls, data_lat, data_lon, data_lt, data_alt, data_alt_min, data_alt_max = \
             mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
 
         mask = (data_lat >= latitude[-1]) & (data_lat <= latitude[0])
         if mask.any():
-            if value_i == 'NOMAD':
-                for j in range(data_alt[mask].shape[0]):
-                    if data_alt[mask][j] != 0:
-                        index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j]*1e3).argmin()
-                        index_min = abs(data_surface_local[0, :, idx_longitude] - data_alt_min[mask][j]*1e3).argmin()
-                        index_max = abs(data_surface_local[0, :, idx_longitude] - data_alt_max[mask][j]*1e3).argmin()
-                        yerr_min = data_altitude[index] - data_altitude[index_min]
-                        yerr_max = data_altitude[index_max] - data_altitude[index]
-                        axes.errorbar([data_ls[mask][j]], [data_altitude[index]], yerr=[[yerr_min], [yerr_max]],
-                                      fmt='o', color=list_colors[i], label=value_i, capsize=5)
-            else:
-                for j in range(data_alt[mask].shape[0]):
-                    if data_alt[mask][j] != 0:
-                        index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j]*1e3).argmin()
-                        axes.scatter(data_ls[mask][j], data_altitude[index], color=list_colors[i], marker=list_marker[i],
-                                     label=value_i)
+#            if value_i == 'NOMAD':
+#                for j in range(data_alt[mask].shape[0]):
+#                    if data_alt[mask][j] != 0:
+#                        index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j]*1e3).argmin()
+#                        index_min = abs(data_surface_local[0, :, idx_longitude] - data_alt_min[mask][j]*1e3).argmin()
+#                        index_max = abs(data_surface_local[0, :, idx_longitude] - data_alt_max[mask][j]*1e3).argmin()
+#                        yerr_min = data_altitude[index] - data_altitude[index_min]
+#                        yerr_max = data_altitude[index_max] - data_altitude[index]
+#                        axes.errorbar([data_ls[mask][j]], [data_altitude[index]], yerr=[[yerr_min], [yerr_max]],
+#                                      fmt='o', color=list_colors[i], label=value_i, capsize=5)
+#            else:
+            for j in range(data_alt[mask].shape[0]):
+                if data_alt[mask][j] != 0:
+                    index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j]*1e3).argmin()
+                    axes.scatter(data_ls[mask][j], data_altitude[index], color=list_colors[i], marker=list_marker[i],
+                                 label=value_i)
 
     fig.savefig(f'{save_name}.png', bbox_inches='tight')
 
@@ -2395,7 +2400,7 @@ def display_vars_polar_projection(filename, data_np, data_sp, levels, unit, cmap
 
 
 def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vmin, vmax, norm, cmap, unit,
-                                             save_name, levels=None):
+                                             title, save_name, levels=None, co2_ice_cover=None):
     import cartopy.crs as crs
     from numpy import unique, ma
     from matplotlib import cm
@@ -2435,13 +2440,20 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
     cmap = cm.get_cmap(cmap)
     cmap.set_under('w')
 
+    if co2_ice_cover:
+        tab_ls, tab_lat, tab_lon, tab_co2_ice_cover = get_polar_cap()
+        tab_lat_np, tmp = slice_data(data=tab_lat, dimension_data=tab_lat, value=[60, 90])
+        tab_co2_ice_cover_np, tmp = slice_data(data=tab_co2_ice_cover, dimension_data=tab_lat, value=[60, 90])
+        tab_lat_sp, tmp = slice_data(data=tab_lat, dimension_data=tab_lat, value=[-90, -60])
+        tab_co2_ice_cover_sp, tmp = slice_data(data=tab_co2_ice_cover, dimension_data=tab_lat, value=[-90, -60])
+
     # North polar region
     orthographic = crs.Orthographic(central_longitude=0, central_latitude=90)
     y_min, y_max = orthographic.y_limits
     orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
     fig, ax = plt.subplots(nrows=3, ncols=4, subplot_kw={'projection': orthographic}, figsize=figsize_1graph_xtend)
-    fig.suptitle(f'North polar region ({unit})', fontsize=fontsize)
+    fig.suptitle(f'North polar region, {title} ({unit})', fontsize=fontsize, y=1.05)
     ctf = None
 
     for i, axes in enumerate(ax.reshape(-1)):
@@ -2453,14 +2465,33 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
                                     transform=plate_carree, cmap=cmap, shading='flat')
                 axes.contour(data_longitude[:], latitude_np, data_np_surface[:, :], transform=plate_carree,
                              cmap='Blues')
+                if co2_ice_cover:
+                    tmp = mean(tab_co2_ice_cover_np[30*i:30*(i+1), :, :], axis=0)
+                    tmp = where(tmp == 1, 1.1, tmp)
+                    axes.contour(tab_lon, tab_lat_np, tmp, transform=plate_carree,
+                                 colors='black', linestyles='-', levels=[-1, 0, 1., 2.], linewidths=0.5)
+                    axes.contourf(tab_lon, tab_lat_np, tmp, transform=plate_carree,
+                                 hatches=[None, '//', '.', '-'], levels=[-1, 0, 1., 2.], alpha=0, colors='none')
                 axes.set_global()
                 workaround_gridlines(plate_carree, axes=axes, pole='north')
+                axes.text(1, 1,'135°E', verticalalignment='top', horizontalalignment='right', rotation=45,
+                          transform=axes.transAxes)
+                axes.text(1, 0,'45°E', verticalalignment='bottom', horizontalalignment='right', rotation=-45,
+                          transform=axes.transAxes)
+                axes.text(0, 0,'315°E', verticalalignment='bottom', horizontalalignment='left', rotation=-315,
+                          transform=axes.transAxes)
+
+                axes.text(0, 1,'225°E', verticalalignment='top', horizontalalignment='left', rotation=315,
+                          transform=axes.transAxes)
             else:
                 axes.set_facecolor('white')
     pos1 = ax[0, 0].get_position().x0
     pos2 = (ax[0, 3].get_position().x0 + ax[0, 3].get_position().width) - pos1
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
-    fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal', format=ticker.FuncFormatter(lambda x, levels: "%.0e" % x))
+    cbar = fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal',
+                        format=ticker.FuncFormatter(lambda x, levels: "%.0e" % x))
+    cbar.ax.tick_params(labelsize=fontsize, bottom=False, top=True, labeltop=True, labelbottom=False)
+
     if len(localtime) == 1:
         plt.savefig(f'{save_name}_northern_polar_region_{int(localtime[0])}h.png', bbox_inches='tight')
     else:
@@ -2472,7 +2503,7 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
     orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
     fig, ax = plt.subplots(nrows=3, ncols=4, subplot_kw={'projection': orthographic}, figsize=figsize_1graph_xtend)
-    fig.suptitle(f'South polar region ({unit})', fontsize=fontsize)
+    fig.suptitle(f'South polar region, {title} ({unit})', fontsize=fontsize, y=1.05)
     for i, axes in enumerate(ax.reshape(-1)):
         if i < 24:
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°', fontsize=fontsize)
@@ -2482,14 +2513,34 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
                                     transform=plate_carree, cmap=cmap, shading='flat')
                 axes.contour(data_longitude[:], latitude_sp, data_sp_surface[:, :], transform=plate_carree,
                              cmap='Blues')
+                if co2_ice_cover:
+                    tmp = mean(tab_co2_ice_cover_sp[30*i:30*(1+i), :, :], axis=0)
+                    tmp = where(tmp == 1, 1.1, tmp)
+                    axes.contour(tab_lon, tab_lat_sp, tmp, transform=plate_carree,
+                                 colors='black', linestyles='-', levels=[-1, 0, 1, 2], linewidths=0.5)
+                    axes.contourf(tab_lon, tab_lat_sp, tmp, transform=plate_carree,
+                                 hatches=[None, '//', '.','-'], levels=[-1, 0, 1, 2], alpha=0, colors='none',
+                                  extend='lower')
                 axes.set_global()
                 workaround_gridlines(plate_carree, axes=axes, pole='south')
+                axes.text(1, 1,'45°E', verticalalignment='top', horizontalalignment='right', rotation=45,
+                          transform=axes.transAxes)
+                axes.text(1, 0,'135°E', verticalalignment='bottom', horizontalalignment='right', rotation=-45,
+                          transform=axes.transAxes)
+                axes.text(0, 0,'225°E', verticalalignment='bottom', horizontalalignment='left', rotation=-315,
+                          transform=axes.transAxes)
+
+                axes.text(0, 1,'315°E', verticalalignment='top', horizontalalignment='left', rotation=315,
+                          transform=axes.transAxes)
             else:
                 axes.set_facecolor('white')
     pos1 = ax[0, 0].get_position().x0
     pos2 = (ax[0, 3].get_position().x0 + ax[0, 3].get_position().width) - pos1
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
-    fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal', format=ticker.FuncFormatter(lambda x, levels: "%.0e" % x))
+    cbar = fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal',
+                        format=ticker.FuncFormatter(lambda x, levels: "%.0e" % x))
+    cbar.ax.tick_params(labelsize=fontsize, bottom=False, top=True, labeltop=True, labelbottom=False)
+
     if len(localtime) == 1:
         plt.savefig(f'{save_name}_southern_polar_region_{int(localtime[0])}h.png', bbox_inches='tight')
     else:
@@ -2520,10 +2571,10 @@ def workaround_gridlines(src_proj, axes, pole):
     latitudes = None
     longitudes = linspace(0, 360, num=360, endpoint=False)
     if pole == 'north':
-        latitudes = linspace(60, 90, num=31, endpoint=True)
+        latitudes = linspace(59, 90, num=31, endpoint=True)
         levels = [60, 70, 80]
     elif pole == 'south':
-        latitudes = linspace(-90, -49, num=41, endpoint=True)
+        latitudes = linspace(-90, -59, num=31, endpoint=True)
         levels = [-80, -70, -60]
     else:
         print('Wrong input pole')
@@ -2531,12 +2582,13 @@ def workaround_gridlines(src_proj, axes, pole):
 
     yn = zeros(len(latitudes))
     lona = longitudes + yn.reshape(len(latitudes), 1)
-    cs2 = axes.contour(longitudes, latitudes, lona, 10, transform=src_proj, colors='black', linestyles='--',
-                       levels=arange(0, 450, 90), linewidths=1)
-    axes.clabel(cs2, fontsize=8, inline=True, fmt='%1.0f', inline_spacing=30)
+    cs2 = axes.contour(longitudes, latitudes, lona, 10, transform=src_proj, colors='grey', linestyles='--',
+                       levels=arange(45, 495, 90), linewidths=1)
+#    axes.clabel(cs2, fontsize=12, inline=True, fmt='%1.0f', inline_spacing=10,  colors='blue',
+#                )
 
     yt = zeros(len(longitudes))
     contour_latitude = latitudes.reshape(len(latitudes), 1) + yt
-    cs = axes.contour(longitudes, latitudes, contour_latitude, 10, transform=src_proj, colors='black',
+    cs = axes.contour(longitudes, latitudes, contour_latitude, 10, transform=src_proj, colors='grey',
                       linestyles='--', levels=levels, linewidths=1)
-    axes.clabel(cs, fontsize=8, inline=True, fmt='%1.0f', inline_spacing=20)
+    #axes.clabel(cs, fontsize=12, inline=True, fmt='%1.0f', inline_spacing=20, colors='grey')

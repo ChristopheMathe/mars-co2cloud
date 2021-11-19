@@ -141,7 +141,7 @@ def co2ice_cumulative_masses_polar_cap(filename, data):
 
     # get precip_co2_ice
     data_precip_co2_ice, list_var = get_data(filename=filename, target='precip_co2_ice_rate')
-    data_precip_co2_ice = data_precip_co2_ice[:,:,:] * ptimestep
+    data_precip_co2_ice = data_precip_co2_ice[:, :, :] * ptimestep
     data_precip_co2_ice_north, tmp = slice_data(data_precip_co2_ice[:, :, :], dimension_data=data_latitude[:],
                                                 value=[60, 90])
     data_precip_co2_ice_south, tmp = slice_data(data_precip_co2_ice[:, :, :], dimension_data=data_latitude[:],
@@ -156,7 +156,6 @@ def co2ice_cumulative_masses_polar_cap(filename, data):
 
     data_precip_co2_ice_north = mean(data_precip_co2_ice_north.reshape(669, 12, nb_lat, nb_lon), axis=1)
     data_precip_co2_ice_south = mean(data_precip_co2_ice_south.reshape(669, 12, nb_lat, nb_lon), axis=1)
-
 
     # diff co2ice car accumulé
     data_north = diff(data_north, axis=0)
@@ -183,7 +182,6 @@ def co2ice_cumulative_masses_polar_cap(filename, data):
 
 
 def co2ice_time_mean(filename, data, duration, localtime, column=None):
-
     data, time = vars_time_mean(filename=filename, data=data, duration=duration, localtime=localtime)
     data = correction_value(data=data, operator='inf', threshold=threshold)
     if column:
@@ -380,7 +378,7 @@ def riceco2_local_time_evolution(filename, data, latitude):
         data_mean[:, i] = mean(data[i::12, :], axis=0)
         data_std[:, i] = std(data[i::12, :], axis=0)
 
-    return data_mean*1e6, data_std, latitude
+    return data_mean * 1e6, data_std, latitude
 
 
 def riceco2_mean_local_time_evolution(filename, data):
@@ -444,11 +442,11 @@ def riceco2_mean_local_time_evolution(filename, data):
     data_min_alt = correction_value(data=data_min_alt, operator='eq', threshold=-99999)
     data_max_alt = correction_value(data=data_max_alt, operator='eq', threshold=-99999)
     data_mean_alt = correction_value(data=data_mean_alt, operator='eq', threshold=-99999)
-#    data_mean_radius = correction_value(data=data_mean_radius, operator='eq', threshold=0)
-#    data_std_radius = correction_value(data=data_std_radius, operator='eq', threshold=0)
+    #    data_mean_radius = correction_value(data=data_mean_radius, operator='eq', threshold=0)
+    #    data_std_radius = correction_value(data=data_std_radius, operator='eq', threshold=0)
 
     return data_min_radius, data_max_radius, data_mean_radius, data_mean_alt, data_std_radius, data_min_alt, \
-            data_max_alt, latitudes
+           data_max_alt, latitudes
 
 
 def riceco2_max_day_night(filename, data):
@@ -584,7 +582,7 @@ def riceco2_polar_latitudes(filename, data):
     data_zonal_mean_south = exp(mean(log(data_south), axis=2))
     stddev_south = exp(std(log(data_south), axis=2))
 
-    return data_zonal_mean_north.T*1e6, data_zonal_mean_south.T*1e6, stddev_north.T, stddev_south.T
+    return data_zonal_mean_north.T * 1e6, data_zonal_mean_south.T * 1e6, stddev_north.T, stddev_south.T
 
 
 def satuco2_zonal_mean_with_co2_ice(filename, data, local_time):
@@ -822,6 +820,10 @@ def satuco2_hu2012_fig9(filename, data, local_time):
     data_south, latitude_selected = slice_data(data=data, dimension_data=data_latitude, value=[-60, -90])
     del data
 
+    data_north, altitude_selected = slice_data(data=data_north, dimension_data=data_altitude, value=[0, 70e3])
+    data_south, altitude_selected = slice_data(data=data_south, dimension_data=data_altitude, value=[0, 70e3])
+    data_altitude, altitude_selected = slice_data(data=data_altitude, dimension_data=data_altitude, value=[0, 70e3])
+
     # Bin time in 5° Ls
     data_time, list_var = get_data(filename=filename, target='Time')
     if data_time.units != 'deg':
@@ -849,9 +851,10 @@ def satuco2_hu2012_fig9(filename, data, local_time):
                                                       value=[BIN * 5, (BIN + 1) * 5])
         data_binned_south, time_selected = slice_data(data_south, dimension_data=data_time[:],
                                                       value=[BIN * 5, (BIN + 1) * 5])
-        print(f'Time: {data_time[time_selected[0]]:.0f} / {data_time[time_selected[-1]]:.0f}°Ls')
+        print(f'Time range {BIN}: {data_time[time_selected[0]]:.0f} / {data_time[time_selected[-1]]:.0f}°Ls')
         tmp_north = array([])
         tmp_south = array([])
+
         # Find each super-saturation of co2 thickness
         for ls in range(data_binned_north.shape[0]):
             for longitude in range(data_binned_north.shape[3]):
