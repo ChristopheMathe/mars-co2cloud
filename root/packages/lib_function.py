@@ -443,7 +443,7 @@ def save_figure_data(list_dict_var, savename):
     from os import mkdir, path, remove
     from astropy.io import fits
     from netCDF4 import Dataset
-    from numpy import where, array, zeros
+    from numpy import where, array
 
     # list_dict_var: data, varname, shortname, units
 
@@ -547,13 +547,10 @@ def slice_data(data, dimension_data, value):
     elif len(value) == 2:
         idx1 = (abs(dimension_data[:] - value[0])).argmin()
         idx2 = (abs(dimension_data[:] - value[1])).argmin()
-        print('here', idx1, idx2)
         if idx1 > idx2:
             tmp = idx1
             idx1 = idx2
-            idx2 = tmp #+ 1
-#        else:
-#            idx2 += 1
+            idx2 = tmp
 
         if idx2 == dimension_data.shape[0] and dimension_data[idx2 - 1] > 0:  # Deals with boundaries
             idx2 -= 1
@@ -570,7 +567,7 @@ def slice_data(data, dimension_data, value):
         if idx is not None:
             data = data[idx]
         else:
-            data = data[idx1:idx2]
+            data = data[idx1:idx2+1]
 
     elif data.ndim == 2:
         # 1st dimension
@@ -578,14 +575,14 @@ def slice_data(data, dimension_data, value):
             if idx is not None:
                 data = data[idx, :]
             else:
-                data = data[idx1:idx2, :]
+                data = data[idx1:idx2+1, :]
 
         # 2nd dimension
         elif dimension_data.shape[0] == data.shape[1]:
             if idx is not None:
                 data = data[:, idx]
             else:
-                data = data[:, idx1:idx2]
+                data = data[:, idx1:idx2+1]
 
     elif data.ndim == 3:
         # 1st dimension
@@ -593,21 +590,21 @@ def slice_data(data, dimension_data, value):
             if idx is not None:
                 data = data[idx, :, :]
             else:
-                data = data[idx1:idx2, :, :]
+                data = data[idx1:idx2+1, :, :]
 
         # 2nd dimension
         elif dimension_data.shape[0] == data.shape[1]:
             if idx is not None:
                 data = data[:, idx, :]
             else:
-                data = data[:, idx1:idx2, :]
+                data = data[:, idx1:idx2+1, :]
 
         # 3rd dimension
         elif dimension_data.shape[0] == data.shape[2]:
             if idx is not None:
                 data = data[:, :, idx]
             else:
-                data = data[:, :, idx1:idx2]
+                data = data[:, :, idx1:idx2+1]
 
     elif data.ndim == 4:
         # 1st dimension
@@ -615,28 +612,28 @@ def slice_data(data, dimension_data, value):
             if idx is not None:
                 data = data[idx, :, :, :]
             else:
-                data = data[idx1:idx2, :, :, :]
+                data = data[idx1:idx2+1, :, :, :]
 
         # 2nd dimension
         elif dimension_data.shape[0] == data.shape[1]:
             if idx is not None:
                 data = data[:, idx, :, :]
             else:
-                data = data[:, idx1:idx2, :, :]
+                data = data[:, idx1:idx2+1, :, :]
 
         # 3rd dimension
         elif dimension_data.shape[0] == data.shape[2]:
             if idx is not None:
                 data = data[:, :, idx, :]
             else:
-                data = data[:, :, idx1:idx2, :]
+                data = data[:, :, idx1:idx2+1, :]
 
         # 4th dimension
         elif dimension_data.shape[0] == data.shape[3]:
             if idx is not None:
                 data = data[:, :, :, idx]
             else:
-                data = data[:, :, :, idx1:idx2]
+                data = data[:, :, :, idx1:idx2+1]
         else:
             print('The dimension of data exceed dimension 4 !')
             exit()
