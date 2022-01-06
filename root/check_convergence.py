@@ -67,7 +67,7 @@ def concatenation(filenames, target):
         if data_target.name == 'watercap':
             data_tmp = data_target[:, :, :]
         else:
-            data_tmp = correction_value(data=data_target[:, :, :], operator='inf', threshold=threshold)
+            data_tmp = correction_value(data=data_target[:, :, :], operator='inf', value=threshold)
         data_tmp = data_tmp.reshape(669*nb_year, 12, data_tmp.shape[1], data_tmp.shape[2])
         data_tmp = mean(data_tmp, axis=1)
         area = gcm_area()

@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-from .lib_function import save_figure_data
 from .DataObservation import *
 from .DataProcessed import *
 from .constant_parameter import *
@@ -289,20 +288,18 @@ def display_co2ice_at_viking_lander_site(data_at_vk1, data_at_vk2, data_time):
     save_figure_data(list_dict_var=dict_var, savename='co2ice_at_viking_lander_site')
 
 
-def display_co2_ice_mola(filename, data):
+def display_co2_ice_mola(info_netcdf):
     from matplotlib.colors import LogNorm
     from numpy import logspace
 
-    data_time, list_var = get_data(filename=filename, target='Time')
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
     mola_latitude, mola_ls, mola_altitude = observation_mola()
-    mola_altitude = correction_value(mola_altitude, operator='inf', threshold=0)
-    mola_altitude = correction_value(mola_altitude, operator='sup', threshold=1e4)
+    mola_altitude = correction_value(mola_altitude, operator='inf', value=0)
+    mola_altitude = correction_value(mola_altitude, operator='sup', value=1e4)
 
     fig, ax = plt.subplots(ncols=2, figsize=figsize_1graph)
     ax[0].set_title('Zonal mean of column density \n of CO$_2$ ice (kg.m$^{-2}$)', loc='center')
-    ctf = ax[0].contourf(data_time[:], data_latitude[:], data, norm=LogNorm(), levels=logspace(-9, 2, 12),
-                         cmap='inferno')
+    ctf = ax[0].contourf(info_netcdf.data_dim.time, info_netcdf.data_dim.latitude, info_netcdf.data_target,
+                         norm=LogNorm(), levels=logspace(-9, 2, 12), cmap='inferno')
     plt.colorbar(ctf, ax=ax[0])
 
     ax[1].set_title('Top altitude of the CO$_2$ cloud \nobserved from MOLA (km)')
@@ -318,23 +315,22 @@ def display_co2_ice_mola(filename, data):
     plt.show()
 
 
-def display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_north, distribution_south,
+def display_co2_ice_distribution_altitude_latitude_polar(info_netcdf, distribution_north, distribution_south,
                                                          north_latitude, south_latitude, save_name):
     from matplotlib.colors import Normalize
 
     norm = Normalize(vmin=0, vmax=2000)
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
 
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_2graph_rows)
 
     ax[0].set_title('North pole', fontsize=fontsize)
-    pc = ax[0].pcolormesh(north_latitude, data_altitude[:] / 1e3, distribution_north, norm=norm, cmap='Greys',
-                          shading='auto')
+    pc = ax[0].pcolormesh(north_latitude, info_netcdf.data_dim.altitude / 1e3, distribution_north, norm=norm,
+                          cmap='Greys', shading='auto')
     ax[0].set_ylim(0, 40)
     ax[0].tick_params(labelsize=fontsize)
     ax[1].set_title('South pole', fontsize=fontsize)
-    ax[1].pcolormesh(south_latitude, data_altitude[:] / 1e3, distribution_south, norm=norm, cmap='Greys',
-                     shading='auto')
+    ax[1].pcolormesh(south_latitude, info_netcdf.data_dim.altitude / 1e3, distribution_south, norm=norm,
+                     cmap='Greys', shading='auto')
     ax[1].set_ylim(0, 40)
     ax[1].tick_params(labelsize=fontsize)
 
@@ -345,23 +341,22 @@ def display_co2_ice_distribution_altitude_latitude_polar(filename, distribution_
     cbar.ax.set_title('count', fontsize=fontsize)
     cbar.ax.tick_params(labelsize=fontsize)
 
-    fig.text(0.02, 0.5, f'{data_altitude.name} above areoid (k{data_altitude.units})', ha='center', va='center',
-             rotation='vertical', fontsize=fontsize)
+    fig.text(0.02, 0.5, f'{info_netcdf.data_dim.altitude.name} above areoid (k{info_netcdf.data_dim.altitude.units})',
+             ha='center', va='center', rotation='vertical', fontsize=fontsize)
     fig.text(0.5, 0.06, 'Latitude (°N)', ha='center', va='center', fontsize=fontsize)
 
     fig.savefig(save_name + '.png', bbox_inches='tight')
     plt.show()
 
 
-def display_co2_ice_cloud_evolution_latitude(filename, data, data_satuco2, data_temp, data_riceco2, idx_max, x_time,
+def display_co2_ice_cloud_evolution_latitude(info_netcdf, data, data_satuco2, data_temp, data_riceco2, idx_max, x_time,
                                              latitude_selected):
     from numpy import arange, logspace, concatenate, array
     from matplotlib.colors import DivergingNorm, LogNorm
 
-    data_time, list_var = get_data(filename, target='Time')
-    data_altitude, list_var = get_data(filename, target='altitude')
-    data_latitude, list_var = get_data(filename, target='latitude')
-    data_latitude, latitude_selected = slice_data(data_latitude, dimension_data=data_latitude,
+    data_latitude, latitude_selected = slice_data(data=info_netcdf.data_dim.latitude,
+                                                  idx_dim_slice=1,
+                                                  dimension_slice=info_netcdf.data_dim.latitude,
                                                   value=[latitude_selected[0], latitude_selected[-1]])
     data = data[x_time, :, :]
     data_satuco2 = data_satuco2[x_time, :, :]
@@ -370,11 +365,11 @@ def display_co2_ice_cloud_evolution_latitude(filename, data, data_satuco2, data_
 
     fig, ax = plt.subplots(nrows=2, ncols=2, figsize=figsize_1graph)
     fig.subplots_adjust(wspace=0.4)
-    fig.suptitle(f'Sols: {data_time[:][idx_max[0] + x_time]:.0f}, local time:  '
-                 f'{data_time[:][idx_max[0] + x_time] * 24 % 24:.0f} h')
+    fig.suptitle(f'Sols: {info_netcdf.data_dim.time[:][idx_max[0] + x_time]:.0f}, local time:  '
+                 f'{info_netcdf.data_dim.time[:][idx_max[0] + x_time] * 24 % 24:.0f} h')
 
     ax[0, 0].title.set_text('CO$_2$ ice mmr')
-    pc0 = ax[0, 0].contourf(data_latitude[:], data_altitude[:], data, norm=LogNorm(vmin=1e-12, vmax=1e-4),
+    pc0 = ax[0, 0].contourf(data_latitude[:], info_netcdf.data_dim.altitude, data, norm=LogNorm(vmin=1e-12, vmax=1e-4),
                             levels=logspace(-11, -1, 11), cmap='Greys')
     ax[0, 0].set_yscale('log')
     ax[0, 0].invert_yaxis()
@@ -383,7 +378,7 @@ def display_co2_ice_cloud_evolution_latitude(filename, data, data_satuco2, data_
     cbar0.ax.set_yticklabels([f'{i:.2e}' for i in cbar0.get_ticks()])
 
     ax[0, 1].title.set_text('Temperature')
-    pc1 = ax[0, 1].contourf(data_latitude[:], data_altitude[:], data_temp, vmin=80, vmax=240,
+    pc1 = ax[0, 1].contourf(data_latitude[:], info_netcdf.data_dim.altitude, data_temp, vmin=80, vmax=240,
                             levels=arange(80, 260, 20), cmap='plasma')
     cbar1 = plt.colorbar(pc1, ax=ax[0, 1])
     ax[0, 1].set_yscale('log')
@@ -391,7 +386,7 @@ def display_co2_ice_cloud_evolution_latitude(filename, data, data_satuco2, data_
     cbar1.ax.set_title('K')
 
     ax[1, 0].title.set_text('Saturation of CO$_2$ ice')
-    pc2 = ax[1, 0].contourf(data_latitude[:], data_altitude[:], data_satuco2,
+    pc2 = ax[1, 0].contourf(data_latitude[:], info_netcdf.data_dim.altitude, data_satuco2,
                             norm=DivergingNorm(vmin=0, vcenter=1.0, vmax=17),
                             levels=concatenate([array([0, 1]), arange(3, 19, 2)]), cmap='seismic')
     ax[1, 0].set_yscale('log')
@@ -400,7 +395,7 @@ def display_co2_ice_cloud_evolution_latitude(filename, data, data_satuco2, data_
     cbar2.ax.set_title('')
 
     ax[1, 1].title.set_text('Radius of CO$_2$ ice particle')
-    pc3 = ax[1, 1].contourf(data_latitude[:], data_altitude[:], data_riceco2 * 1e6, vmin=0, vmax=60,
+    pc3 = ax[1, 1].contourf(data_latitude[:], info_netcdf.data_dim.altitude, data_riceco2 * 1e6, vmin=0, vmax=60,
                             levels=arange(0, 65, 5), cmap='Greys')
     ax[1, 1].set_yscale('log')
     ax[1, 1].invert_yaxis()
@@ -410,26 +405,24 @@ def display_co2_ice_cloud_evolution_latitude(filename, data, data_satuco2, data_
     fig.text(0.02, 0.5, 'Altitude (Pa)', ha='center', va='center', rotation='vertical', fontsize=14)
     fig.text(0.5, 0.06, 'Latitude (°N)', ha='center', va='center', fontsize=14)
 
-    save_name = f'cloud_evolution_latitude_sols_{data_time[:][idx_max[0] + x_time]:.0f}_' \
-                f'{data_time[:][idx_max[0] + x_time] * 24 % 24:.0f}h.png'
+    save_name = f'cloud_evolution_latitude_sols_{info_netcdf.data_dim.time[:][idx_max[0] + x_time]:.0f}_' \
+                f'{info_netcdf.data_dim.time[:][idx_max[0] + x_time] * 24 % 24:.0f}h.png'
     plt.savefig(save_name, bbox_inches='tight')
     plt.close()
 
     return save_name
 
 
-def display_co2_ice_max_longitude_altitude(filename, name, max_mmr, max_alt, max_temp, max_satu, max_radius,
-                                           max_ccn_n, unit):
+def display_co2_ice_max_longitude_altitude(info_netcdf, max_mmr, max_alt, max_temp, max_satu, max_radius, max_ccn_n,
+                                           unit):
     from matplotlib.colors import LogNorm, DivergingNorm
     from numpy import arange, logspace
-
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
 
     # PLOT
     fig, ax = plt.subplots(nrows=6, ncols=1, figsize=figsize_6graph_cols)
 
     # plot 1
-    ax[0].set_title(f'Max {name} in altitude/longitude')
+    ax[0].set_title(f'Max {info_netcdf.target_name} in altitude/longitude')
     pc = ax[0].contourf(max_mmr, norm=LogNorm(), levels=logspace(-10, 1, 12), cmap='warm')
     ax[0].set_facecolor('white')
     ax[0].set_xticklabels(labels='')
@@ -469,8 +462,8 @@ def display_co2_ice_max_longitude_altitude(filename, name, max_mmr, max_alt, max
     ax[4].set_title('Radius of co2_ice at co2_ice mmr max')
     pc5 = ax[4].contourf(max_radius * 1e3, cmap='warm')
     ax[4].set_facecolor('white')
-    ax[4].set_yticks(ticks=arange(0, len(data_latitude), 6))
-    ax[4].set_yticklabels(labels=data_latitude[::6])
+    ax[4].set_yticks(ticks=arange(0, len(info_netcdf.data_dim.latitude), 6))
+    ax[4].set_yticklabels(labels=info_netcdf.data_dim.latitude[::6])
     ax[4].set_xticklabels(labels='')
     ax[4].set_ylabel('Latitude (°N)')
     cbar5 = plt.colorbar(pc5, ax=ax[4])
@@ -485,19 +478,17 @@ def display_co2_ice_max_longitude_altitude(filename, name, max_mmr, max_alt, max
     cbar3 = plt.colorbar(pc3, ax=ax[5])
     cbar3.ax.set_title('nb/kg')
 
-    fig.savefig(f'max_{name}_in_altitude_longitude.png', bbox_inches='tight')
+    fig.savefig(f'max_{info_netcdf.target_name}_in_altitude_longitude.png', bbox_inches='tight')
 
     plt.show()
 
 
-def display_co2_ice_density_column_evolution_polar_region(filename, data, time, latitude):
+def display_co2_ice_density_column_evolution_polar_region(info_netcdf, time, latitude):
     from numpy import logspace
     from math import floor
     from matplotlib import cm
     from matplotlib.colors import LogNorm
     import cartopy.crs as crs
-
-    data_longitude, list_var = get_data(filename=filename, target='longitude')
 
     plate_carree = crs.PlateCarree(central_longitude=0)
 
@@ -522,14 +513,13 @@ def display_co2_ice_density_column_evolution_polar_region(filename, data, time, 
     save_name = list([])
 
     # PLOT
-    for i in range(data.shape[0]):
+    for i in range(info_netcdf.data_dim.time.shape[0]):
         fig, ax = plt.subplots(nrows=1, ncols=1, subplot_kw={'projection': orthographic}, figsize=figsize_1graph,
                                facecolor='white')
         ax.set_title(title + f', sols {floor(time[i]):.0f} LT {time[i] * 24 % 24:.0f}')
         ax.set_facecolor('white')
-        ctf = ax.contourf(data_longitude[:], latitude, data[i, :, :], norm=norm, levels=levels,
-                          transform=plate_carree,
-                          cmap=cmap)
+        ctf = ax.contourf(info_netcdf.data_dim.longitude, latitude, info_netcdf.data_target[i, :, :], norm=norm,
+                          levels=levels, transform=plate_carree, cmap=cmap)
         workaround_gridlines(plate_carree, axes=ax, pole=pole)
         ax.set_global()
         cbar = fig.colorbar(ctf)
@@ -543,26 +533,33 @@ def display_co2_ice_density_column_evolution_polar_region(filename, data, time, 
     return
 
 
-def display_co2_ice_localtime_ls(filename, data, lat_min, lat_max, title, unit, norm, vmin, vmax, save_name):
+def display_co2_ice_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, norm, vmin, vmax, save_name):
     from matplotlib.colors import LogNorm, Normalize
+    from numpy.ma import masked_outside
 
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
 
-    data_time, list_var = get_data(filename=filename, target='Time')
-    data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=0)
+    data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time, selected_time=0)
 
-    if data_time.units != 'deg':
+    if info_netcdf.data_dim.time.units != 'deg':
         data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
-        data_time = data_ls[idx::len(data_local_time)]
+        if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
+            data_time = data_ls[idx::len(data_local_time)]
+            data, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
+            ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+        else:
+            data_ls = data_ls[:info_netcdf.data_dim.time.shape[0]]
+            data_time = data_ls[idx::len(data_local_time)]
+            data, data_time = linearize_ls(data=info_netcdf.data_taget, data_ls=data_time)
+            ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time, tab_ls=data_time[::20])
     else:
-        data_time = data_time[idx::len(data_local_time)]
+        data_time = info_netcdf.data_dim.time[idx::len(data_local_time)]
+        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+        data = info_netcdf.data_target
 
-    data, data_time = linearize_ls(data=data, data_ls=data_time)
-
-    ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
     ctf = ax.pcolormesh(data_time[:], data_local_time[:], data, norm=norm, cmap="plasma", shading='auto')
     cbar = fig.colorbar(ctf)
@@ -587,25 +584,24 @@ def display_co2_ice_localtime_ls(filename, data, lat_min, lat_max, title, unit, 
         data_ls, data_lat, data_lon, data_lt, data_alt, data_alt_min, data_alt_max = \
             mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
 
-        mask = (data_lat >= lat_min) & (data_lat <= lat_max)
-        if mask.any():
-            ax.scatter(data_ls[mask], data_lt[mask], color=list_colors[i], marker=list_marker[i], label=value_i)
+        mask = masked_outside(data_lat, lat_min, lat_max)
+        ax.scatter(data_ls[mask], data_lt[mask], color=list_colors[i], marker=list_marker[i], label=value_i)
 
     ax.legend(loc=0)
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
     return
 
 
-def display_co2ice_cumulative_mass_polar_region(filename, data_co2_ice_north, data_co2_ice_south,
+def display_co2ice_cumulative_mass_polar_region(info_netcdf, data_co2_ice_north, data_co2_ice_south,
                                                 data_precip_co2_ice_north, data_precip_co2_ice_south,
                                                 data_direct_condco2_north, data_direct_condco2_south):
-    from numpy import log
-    data_time, list_var = get_data(filename, target='Time')
-    data_local_time, idx, stats = check_local_time(data_time=data_time, selected_time=0)
+    data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time, selected_time=0)
 
-    if data_time.units != 'deg':
+    if info_netcdf.data_dim.time.units != 'deg':
         data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
         data_time = data_ls[idx::len(data_local_time)]
+    else:
+        data_time = info_netcdf.data_dim.time
 
     fig, ax = plt.subplots(nrows=2, ncols=1, sharex='all', sharey='all', figsize=figsize_1graph)
     ax[0].set_yscale('symlog')
@@ -619,7 +615,7 @@ def display_co2ice_cumulative_mass_polar_region(filename, data_co2_ice_north, da
 
     ax[1].set_title(u'Southern polar region, diurnal mean, lat=[60:90]°S', fontsize=fontsize)
     ax[1].plot(data_time[1:], data_co2_ice_south, color='black', label='Total co2 ice')
-    ax[1].plot(data_time[:], data_precip_co2_ice_south*10, color='blue', label='Precipitation')
+    ax[1].plot(data_time[:], data_precip_co2_ice_south * 10, color='blue', label='Precipitation')
     ax[1].plot(data_time[1:], data_direct_condco2_south, color='red', label='Direct condensation')
     ax[1].hlines(0, xmin=0, xmax=360, color='grey')
     ax[1].legend(loc='best')
@@ -627,7 +623,7 @@ def display_co2ice_cumulative_mass_polar_region(filename, data_co2_ice_north, da
     ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
     ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
     ax[0].set_xlim(0, 360)
-#    ax[0].set_ylim(-1e-10, 1e6)
+    #    ax[0].set_ylim(-1e-10, 1e6)
 
     fig.text(0.05, 0.5, 'Flux (kg/m2)', ha='center', va='center', rotation='vertical',
              fontsize=fontsize)
@@ -637,26 +633,35 @@ def display_co2ice_cumulative_mass_polar_region(filename, data_co2_ice_north, da
     return
 
 
-def display_emis_polar_projection_garybicas2020_figs11_12(filename, data, time, levels, cmap, save_name):
+def display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf, time, levels, cmap, save_name):
     import cartopy.crs as crs
     from numpy import ndarray
 
-    if isinstance(data, ndarray):
+    if isinstance(info_netcdf.data_target, ndarray):
         array_mask = True
     else:
         array_mask = False
 
     plate_carree = crs.PlateCarree(central_longitude=0)
 
-    data_longitude, list_var = get_data(filename=filename, target='longitude')
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
-
     # Slice data in polar regions
-    latitude_np, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[60, 90])
-    data_np, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[60, 90])
+    latitude_np, tmp = slice_data(data=info_netcdf.data_dim.latitude,
+                                  idx_dim_slice=1,
+                                  dimension_slice=info_netcdf.data_dim.latitude,
+                                  value=[60, 90])
+    data_np, tmp = slice_data(data=info_netcdf.data_target,
+                              idx_dim_slice=info_netcdf.idx_dim.latitude,
+                              dimension_slice=info_netcdf.data_dim.latitude,
+                              value=[60, 90])
 
-    latitude_sp, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[-90, -60])
-    data_sp, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[-90, -60])
+    latitude_sp, tmp = slice_data(data=info_netcdf.data_dim.latitude,
+                                  idx_dim_slice=1,
+                                  dimension_slice=info_netcdf.data_dim.latitude,
+                                  value=[-90, -60])
+    data_sp, tmp = slice_data(data=info_netcdf.data_target,
+                              idx_dim_slice=info_netcdf.idx_dim.latitude,
+                              dimension_slice=info_netcdf.data_dim.latitude,
+                              value=[-90, -60])
 
     # Slice data binned in 15°Ls during their winter period
     data_np = data_np[12:, :, :]
@@ -674,13 +679,13 @@ def display_emis_polar_projection_garybicas2020_figs11_12(filename, data, time, 
     for i, axes in enumerate(ax.reshape(-1)):
         axes.set_title(f'{int(time[i] + 180)}° - {int(time[i + 1] + 180)}°')
         if array_mask:
-            ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], levels=levels,
+            ctf = axes.contourf(info_netcdf.data_dim.longitude, latitude_np, data_np[i, :, :], levels=levels,
                                 transform=plate_carree, cmap=cmap)
         else:
             if data_np[i, :, :].mask.all():
                 continue
             else:
-                ctf = axes.contourf(data_longitude[:], latitude_np, data_np[i, :, :], levels=levels,
+                ctf = axes.contourf(info_netcdf.data_dim.longitude, latitude_np, data_np[i, :, :], levels=levels,
                                     transform=plate_carree, cmap=cmap)
         axes.set_global()
         workaround_gridlines(plate_carree, axes=axes, pole='north')
@@ -703,13 +708,13 @@ def display_emis_polar_projection_garybicas2020_figs11_12(filename, data, time, 
         if i < 12:
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°')
             if array_mask:
-                ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], levels=levels,
+                ctf = axes.contourf(info_netcdf.data_dim.longitude, latitude_sp, data_sp[i, :, :], levels=levels,
                                     transform=plate_carree, cmap=cmap)
             else:
                 if data_sp[i, :, :].mask.all():
                     continue
                 else:
-                    ctf = axes.contourf(data_longitude[:], latitude_sp, data_sp[i, :, :], levels=levels,
+                    ctf = axes.contourf(info_netcdf.data_dim.longitude, latitude_sp, data_sp[i, :, :], levels=levels,
                                         transform=plate_carree, cmap=cmap)
             workaround_gridlines(plate_carree, axes=axes, pole='south')
             axes.set_global()
@@ -722,13 +727,10 @@ def display_emis_polar_projection_garybicas2020_figs11_12(filename, data, time, 
     return
 
 
-def display_riceco2_global_mean(filename, list_data):
+def display_riceco2_global_mean(info_netcdf, list_data):
     from numpy import mean
     list_data[0] = mean(list_data[0], axis=2)
     list_data[1] = mean(list_data[1], axis=2)
-
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
-    data_time, list_var = get_data(filename, target='Time')
 
     fig, ax = plt.subplots(nrows=2, ncols=2, sharey='col', figsize=figsize_1graph)
     fig.subplots_adjust(wspace=0, hspace=0)
@@ -740,17 +742,19 @@ def display_riceco2_global_mean(filename, list_data):
         axes.set_ylim(1e3, 0.2)
 
     ax[0, 0].set_title('Zonal and latitudinal mean of riceco2', fontsize=fontsize)
-    pc = ax[0, 0].contourf(data_time[:], data_altitude[:], list_data[0].T * 1e6, levels=levels, cmap='inferno')
-    ax[1, 0].contourf(data_time[:], data_altitude[:], list_data[1].T * 1e6, levels=levels, cmap='inferno')
+    pc = ax[0, 0].contourf(info_netcdf.data_dim.time, info_netcdf.data_dim.altitude, list_data[0].T * 1e6,
+                           levels=levels, cmap='inferno')
+    ax[1, 0].contourf(info_netcdf.data_dim.time, info_netcdf.data_dim.altitude, list_data[1].T * 1e6, levels=levels,
+                      cmap='inferno')
     ax[1, 0].set_xlabel('Solar longitude (°)', fontsize=fontsize)
 
     ax[0, 1].set_title('Global mean of riceco2', fontsize=fontsize)
     ax[0, 1].set_xscale('log')
-    ax[0, 1].plot(mean(list_data[0], axis=0).T * 1e6, data_altitude[:])
+    ax[0, 1].plot(mean(list_data[0], axis=0).T * 1e6, info_netcdf.data_dim.altitude)
     ax[0, 1].text(1.1, 0.5, 'North Pole (40°-90°N)', ha='center', va='center', rotation='vertical', fontsize=fontsize,
                   transform=ax[0, 1].transAxes)
 
-    ax[1, 1].plot(mean(list_data[1], axis=0).T * 1e6, data_altitude[:])
+    ax[1, 1].plot(mean(list_data[1], axis=0).T * 1e6, info_netcdf.data_dim.altitude)
     ax[1, 1].set_xscale('log')
     ax[1, 1].text(1.1, 0.5, 'South Pole (40°-90°S)', ha='center', va='center', rotation='vertical', fontsize=fontsize,
                   transform=ax[1, 1].transAxes)
@@ -766,9 +770,8 @@ def display_riceco2_global_mean(filename, list_data):
     return
 
 
-def display_riceco2_local_time_evolution(filename, data, data_std, local_time, latitude):
+def display_riceco2_local_time_evolution(info_netcdf, data, data_std, latitude):
     from matplotlib.cm import get_cmap
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
 
     cmap = get_cmap('hsv')
     fig, ax = plt.subplots(figsize=figsize_1graph)
@@ -777,14 +780,14 @@ def display_riceco2_local_time_evolution(filename, data, data_std, local_time, l
     ax.set_xlim(1e-3, 1e2)
     ax.set_xscale('log')
     for i in range(data.shape[1]):
-        ax.errorbar(data[:, i], data_altitude[:], xerr=[data[:, i]-data_std[:, i],
-                                                        data[:, i]+data_std[:, i]],
+        ax.errorbar(data[:, i], info_netcdf.data_dim.altitude, xerr=[data[:, i] - data_std[:, i],
+                                                                     data[:, i] + data_std[:, i]],
                     color=cmap(((i + 6) % data.shape[1]) / data.shape[1]),
-                    label=f'{local_time[i]:2.0f} h', capsize=2)
+                    label=f'{info_netcdf.local_time[i]:2.0f} h', capsize=2)
 
     ax.legend(loc=0)
     ax.set_title(f'Radius of CO$_2$ ice particles at {latitude:.0f}°N, zonal mean', fontsize=fontsize)
-    ax.set_ylabel(f'Altitude ({data_altitude.units})', fontsize=fontsize)
+    ax.set_ylabel(f'Altitude ({info_netcdf.data_dim.altitude.units})', fontsize=fontsize)
     ax.set_xlabel('Radius particle (µm)', fontsize=fontsize)
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
 
@@ -792,32 +795,28 @@ def display_riceco2_local_time_evolution(filename, data, data_std, local_time, l
     return
 
 
-def display_riceco2_mean_local_time_evolution(filename, data_min_radius, data_max_radius, data_mean_radius,
-                                              data_std_radius, data_mean_alt,
-                                              data_min_alt, data_max_alt,
-                                              local_time, latitude):
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
-
+def display_riceco2_mean_local_time_evolution(info_netcdf, data_min_radius, data_max_radius, data_mean_radius,
+                                              data_std_radius, data_mean_alt, data_min_alt, data_max_alt, latitude):
     fig, ax = plt.subplots(figsize=figsize_1graph)
 
-    ax.plot(local_time, data_mean_radius, color='black', linestyle='-', label='mean')
-    ax.fill_between(local_time, data_mean_radius-data_std_radius, data_mean_radius+data_std_radius,
+    ax.plot(info_netcdf.local_time, data_mean_radius, color='black', linestyle='-', label='mean')
+    ax.fill_between(info_netcdf.local_time, data_mean_radius - data_std_radius, data_mean_radius + data_std_radius,
                     color='black', alpha=0.7, label='1-$\sigma$')
-    ax.fill_between(local_time, data_min_radius, data_max_radius, color='black', alpha=0.1, label='min-max')
+    ax.fill_between(info_netcdf.local_time, data_min_radius, data_max_radius, color='black', alpha=0.1, label='min-max')
     ax.set_yscale('log')
     ax.set_xlim(0, 24)
     ax.set_ylim(1e-3, 1e2)
 
     ax2 = ax.twinx()
-    ax2.plot(local_time, data_mean_alt, color='red', linestyle='-', label='alt: mean')
-    ax2.fill_between(local_time, data_min_alt, data_max_alt, color='red', alpha=0.3, label='alt: min-max')
+    ax2.plot(info_netcdf.local_time, data_mean_alt, color='red', linestyle='-', label='alt: mean')
+    ax2.fill_between(info_netcdf.local_time, data_min_alt, data_max_alt, color='red', alpha=0.3, label='alt: min-max')
 
     ax2.set_yscale('log')
     ax2.set_ylim(1e3, 1e-3)
     ax2.set_xlim(0, 24)
     ax2.yaxis.set_label_position("right")
     ax2.yaxis.tick_right()
-    ax2.set_ylabel(f'Altitude ({data_altitude.units})', fontsize=fontsize, color='red')
+    ax2.set_ylabel(f'Altitude ({info_netcdf.data_dim.altitude.units})', fontsize=fontsize, color='red')
     ax2.tick_params(axis='both', which='major', labelsize=fontsize)
     ax2.tick_params(axis='y', colors='red')
 
@@ -826,32 +825,41 @@ def display_riceco2_mean_local_time_evolution(filename, data_min_radius, data_ma
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
     ax.legend(loc=0)
     ax.set_xlabel('Local time (h)', fontsize=fontsize)
-    ax.set_xticks(local_time)
-    ax.set_xticklabels(local_time, fontsize=fontsize)
+    ax.set_xticks(info_netcdf.local_time)
+    ax.set_xticklabels(info_netcdf.local_time, fontsize=fontsize)
     plt.savefig(f'riceco2_max_localtime_evolution_{latitude}N.png', bbox_inches='tight')
     return
 
 
-def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, data_south, data_stddev_south):
+def display_riceco2_polar_latitudes(info_netcdf, data_north, data_stddev_north, data_south, data_stddev_south):
     from numpy import flip
     from matplotlib import cm
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
-    data_longitude, list_var = get_data(filename=filename, target='longitude')
 
-    latitude_north, idx_north = slice_data(data=data_latitude, dimension_data=data_latitude[:], value=[60, 90])
-    latitude_south, idx_south = slice_data(data=data_latitude, dimension_data=data_latitude[:], value=[-60, -90])
+    latitude_north, idx_north = slice_data(data=info_netcdf.data_dim.latitude,
+                                           idx_dim_slice=1,
+                                           dimension_slice=info_netcdf.data_dim.latitude,
+                                           value=[60, 90])
+    latitude_south, idx_south = slice_data(data=info_netcdf.data_dim.latitude,
+                                           idx_dim_slice=1,
+                                           dimension_slice=info_netcdf.data_dim.latitude,
+                                           value=[-60, -90])
 
-    data_zareoid, list_var = get_data(filename=filename, target='zareoid')
+    data_zareoid, list_var = get_data(filename=info_netcdf.filename, target='zareoid')
     data_surface_local = gcm_surface_local(data_zareoid[::12, :, :, :])
-    data_surface_local, latitude = slice_data(data=data_surface_local[:, :, :, :], dimension_data=data_latitude[:],
+    data_surface_local, latitude = slice_data(data=data_surface_local[:, :, :, :],
+                                              idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                              dimension_slice=info_netcdf.data_dim.data_latitude,
                                               value=75)
-    longitude, idx_longitude = slice_data(data=data_longitude[:], dimension_data=data_longitude[:], value=0)
-    if data_altitude.units == 'Pa':
+    longitude, idx_longitude = slice_data(data=info_netcdf.data_dim.longitude,
+                                          idx_dim_slice=1,
+                                          dimension_slice=info_netcdf.data_dim.longitude,
+                                          value=0)
+    if info_netcdf.data_dim.altitude.units == 'Pa':
         index_10 = abs(data_surface_local[0, :, idx_longitude] - 10e3).argmin()
         index_40 = abs(data_surface_local[0, :, idx_longitude] - 40e3).argmin()
         index_80 = abs(data_surface_local[0, :, idx_longitude] - 80e3).argmin()
-
+    else:
+        index_10, index_40, index_80 = None, None, None
 
     cmap = cm.get_cmap('hsv')
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_2graph_rows)
@@ -861,24 +869,25 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
     ax[0].set_title('Northern polar region', fontsize=fontsize)
     for i in range(latitude_north.shape[0]):
         part = (i % data_north.shape[1]) / data_north.shape[1]
-        ax[0].plot(data_north[:, i], data_altitude[:], label=latitude_north[i], color=cmap(part))
-        ax[0].errorbar(data_north[:, i], data_altitude[:], xerr=[data_north[:, i] * (1 - 1 / data_stddev_north[:, i]),
-                                                                 data_north[:, i] * (1 + 1 * data_stddev_north[:, i])],
+        ax[0].plot(data_north[:, i], info_netcdf.data_dim.altitude, label=latitude_north[i], color=cmap(part))
+        ax[0].errorbar(data_north[:, i], info_netcdf.data_dim.altitude,
+                       xerr=[data_north[:, i] * (1 - 1 / data_stddev_north[:, i]),
+                             data_north[:, i] * (1 + 1 * data_stddev_north[:, i])],
                        color=cmap(part))
     ax[0].set_yscale('log')
     ax[0].set_xscale('log')
-    ax[0].hlines(data_altitude[index_10], 1e-4, 1e3, ls='--', color='black')
-    ax[0].hlines(data_altitude[index_40], 1e-4, 1e3, ls='--', color='black')
-    ax[0].hlines(data_altitude[index_80], 1e-4, 1e3, ls='--', color='black')
-    ax[0].text(1e-4, data_altitude[index_10], '10 km',
-             verticalalignment='bottom',
-             horizontalalignment='left', color='black', fontsize=10)
-    ax[0].text(1e-4, data_altitude[index_40], '40 km',
-             verticalalignment='bottom',
-             horizontalalignment='left', color='black', fontsize=10)
-    ax[0].text(1e-4, data_altitude[index_80], '80 km',
-             verticalalignment='bottom',
-             horizontalalignment='left', color='black', fontsize=10)
+    ax[0].hlines(info_netcdf.data_dim.altitude[index_10], 1e-4, 1e3, ls='--', color='black')
+    ax[0].hlines(info_netcdf.data_dim.altitude[index_40], 1e-4, 1e3, ls='--', color='black')
+    ax[0].hlines(info_netcdf.data_dim.altitude[index_80], 1e-4, 1e3, ls='--', color='black')
+    ax[0].text(1e-4, info_netcdf.data_dim.altitude[index_10], '10 km',
+               verticalalignment='bottom',
+               horizontalalignment='left', color='black', fontsize=10)
+    ax[0].text(1e-4, info_netcdf.data_dim.altitude[index_40], '40 km',
+               verticalalignment='bottom',
+               horizontalalignment='left', color='black', fontsize=10)
+    ax[0].text(1e-4, info_netcdf.data_dim.altitude[index_80], '80 km',
+               verticalalignment='bottom',
+               horizontalalignment='left', color='black', fontsize=10)
     ax[0].set_ylim(1e3, 1e-2)
     ax[0].set_xlim(1e-4, 1e3)
     ax[0].grid()
@@ -891,34 +900,40 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
     data_stddev_south = flip(data_stddev_south, axis=1)
     latitude_south = flip(latitude_south, axis=0)
     data_surface_local = gcm_surface_local(data_zareoid[::12, :, :, :])
-    data_surface_local, latitude = slice_data(data=data_surface_local[:, :, :, :], dimension_data=data_latitude[:],
+    data_surface_local, latitude = slice_data(data=data_surface_local[:, :, :, :],
+                                              idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                              dimension_slice=info_netcdf.data_dim.latitude,
                                               value=-75)
-    longitude, idx_longitude = slice_data(data=data_longitude[:], dimension_data=data_longitude[:], value=0)
-    if data_altitude.units == 'Pa':
+    longitude, idx_longitude = slice_data(data=info_netcdf.data_dim.longitude,
+                                          idx_dim_slice=1,
+                                          dimension_slice=info_netcdf.data_dim.longitude,
+                                          value=0)
+    if info_netcdf.data_dim.altitude.units == 'Pa':
         index_10 = abs(data_surface_local[0, :, idx_longitude] - 10e3).argmin()
         index_40 = abs(data_surface_local[0, :, idx_longitude] - 40e3).argmin()
         index_80 = abs(data_surface_local[0, :, idx_longitude] - 80e3).argmin()
 
     for i in range(latitude_south.shape[0]):
         part = (i % data_south.shape[1]) / data_south.shape[1]
-        ax[1].plot(data_south[:, i], data_altitude[:], label=latitude_south[i], color=cmap(part))
-        ax[1].errorbar(data_south[:, i], data_altitude[:], xerr=[data_south[:, i] * (1 - 1 / data_stddev_south[:, i]),
-                                                                 data_south[:, i] * (1 + 1 * data_stddev_south[:, i])],
+        ax[1].plot(data_south[:, i], info_netcdf.data_dim.altitude, label=latitude_south[i], color=cmap(part))
+        ax[1].errorbar(data_south[:, i], info_netcdf.data_dim.altitude,
+                       xerr=[data_south[:, i] * (1 - 1 / data_stddev_south[:, i]),
+                             data_south[:, i] * (1 + 1 * data_stddev_south[:, i])],
                        color=cmap(part))
     ax[1].set_yscale('log')
     ax[1].set_xscale('log')
-    ax[1].hlines(data_altitude[index_10], 1e-4, 1e3, ls='--', color='black')
-    ax[1].hlines(data_altitude[index_40], 1e-4, 1e3, ls='--', color='black')
-    ax[1].hlines(data_altitude[index_80], 1e-4, 1e3, ls='--', color='black')
-    ax[1].text(1e-4, data_altitude[index_10], '10 km',
-             verticalalignment='bottom',
-             horizontalalignment='left', color='black', fontsize=10)
-    ax[1].text(1e-4, data_altitude[index_40], '40 km',
-             verticalalignment='bottom',
-             horizontalalignment='left', color='black', fontsize=10)
-    ax[1].text(1e-4, data_altitude[index_80], '80 km',
-             verticalalignment='bottom',
-             horizontalalignment='left', color='black', fontsize=10)
+    ax[1].hlines(info_netcdf.data_dim.altitude[index_10], 1e-4, 1e3, ls='--', color='black')
+    ax[1].hlines(info_netcdf.data_dim.altitude[index_40], 1e-4, 1e3, ls='--', color='black')
+    ax[1].hlines(info_netcdf.data_dim.altitude[index_80], 1e-4, 1e3, ls='--', color='black')
+    ax[1].text(1e-4, info_netcdf.data_dim.altitude[index_10], '10 km',
+               verticalalignment='bottom',
+               horizontalalignment='left', color='black', fontsize=10)
+    ax[1].text(1e-4, info_netcdf.data_dim.altitude[index_40], '40 km',
+               verticalalignment='bottom',
+               horizontalalignment='left', color='black', fontsize=10)
+    ax[1].text(1e-4, info_netcdf.data_dim.altitude[index_80], '80 km',
+               verticalalignment='bottom',
+               horizontalalignment='left', color='black', fontsize=10)
 
     ax[1].set_ylim(1e3, 1e-2)
     ax[1].set_xlim(1e-4, 1e3)
@@ -932,21 +947,21 @@ def display_riceco2_polar_latitudes(filename, data_north, data_stddev_north, dat
     return
 
 
-def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None, mola=False):
+def display_riceco2_top_cloud_altitude(info_netcdf, top_cloud, mola=False):
     from matplotlib.colors import Normalize, DivergingNorm
 
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
-    data_time, list_var = get_data(filename=filename, target='Time')
-
-    if data_time.units != 'deg':
+    if info_netcdf.data_dim.time.units != 'deg':
         data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
-        data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
+        data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
+                                                            selected_time=info_netcdf.local_time)
         data_time = data_ls[idx::len(data_local_time)]
+    else:
+        data_time = info_netcdf.data_dim.time
 
     top_cloud, interp_time = linearize_ls(data=top_cloud, data_ls=data_time)
     idx, axis_ls, ls_lin = get_ls_index(interp_time)
 
-    top_cloud = correction_value(data=top_cloud, operator='inf', threshold=0)
+    top_cloud = correction_value(data=top_cloud, operator='inf', value=0)
 
     if mola:
         cmap = 'Spectral'
@@ -954,12 +969,12 @@ def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None, mol
         norm = DivergingNorm(vmin=0, vcenter=10, vmax=40)
         fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_2graph_rows)
         fig.subplots_adjust(right=0.8, hspace=0.05)
-        cb = ax[0].pcolormesh(interp_time[:], data_latitude[:], top_cloud, norm=norm, cmap=cmap)
+        cb = ax[0].pcolormesh(interp_time[:], info_netcdf.data_dim.latitude[:], top_cloud, norm=norm, cmap=cmap)
         ax[0].set_facecolor('white')
         ax[0].set_xticks(interp_time[idx])
         ax[0].set_xticklabels(axis_ls, fontsize=fontsize)
-        ax[0].set_yticks(data_latitude[::8])
-        ax[0].set_yticklabels([str(int(x)) for x in data_latitude[::8]], fontsize=fontsize)
+        ax[0].set_yticks(info_netcdf.data_dim.latitude[::8])
+        ax[0].set_yticklabels([str(int(x)) for x in info_netcdf.data_dim.latitude[::8]], fontsize=fontsize)
 
         # MOLA observations
         mola_latitude, mola_ls, mola_altitude = observation_mola(only_location=False)
@@ -980,9 +995,9 @@ def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None, mol
         fig.text(0.5, 0.06, 'Solar Longitude (°)', ha='center', va='center', fontsize=fontsize)
         fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
 
-        if len(local_time) == 1:
-            ax[0].set_title(f'Zonal mean of top cloud altitude, at {local_time:0.f}h', fontsize=fontsize)
-            plt.savefig(f'top_cloud_altitude_compared_to_mola_{local_time:0.f}h.png', bbox_inches='tight')
+        if len(info_netcdf.local_time) == 1:
+            ax[0].set_title(f'Zonal mean of top cloud altitude, at {info_netcdf.local_time:0.f}h', fontsize=fontsize)
+            plt.savefig(f'top_cloud_altitude_compared_to_mola_{info_netcdf.local_time:0.f}h.png', bbox_inches='tight')
         else:
             ax[0].set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
             plt.savefig(f'top_cloud_altitude_diurnal_mean_compared_to_mola.png', bbox_inches='tight')
@@ -991,12 +1006,12 @@ def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None, mol
         cmap.set_over("grey")
         norm = Normalize(vmin=0, vmax=10)
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
-        cb = ax.pcolormesh(interp_time[:], data_latitude[:], top_cloud, norm=norm, cmap=cmap)
+        cb = ax.pcolormesh(interp_time[:], info_netcdf.data_dim.latitude[:], top_cloud, norm=norm, cmap=cmap)
         ax.set_facecolor('white')
         ax.set_xticks(interp_time[idx])
         ax.set_xticklabels(axis_ls)
-        ax.set_yticks(data_latitude[::8])
-        ax.set_yticklabels(data_latitude[::8])
+        ax.set_yticks(info_netcdf.data_dim.latitude[::8])
+        ax.set_yticklabels(info_netcdf.data_dim.latitude[::8])
 
         cbar = plt.colorbar(cb, extend='max')
         cbar.ax.set_title('km', fontsize=fontsize)
@@ -1007,9 +1022,9 @@ def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None, mol
         ax.set_xlabel('Solar Longitude (°)', fontsize=fontsize)
         ax.set_ylabel('Latitude (°N)', fontsize=fontsize)
 
-        if len(local_time) == 1:
-            ax.set_title(f'Zonal mean of top cloud altitude, at {local_time:0.f}h', fontsize=fontsize)
-            plt.savefig(f'top_cloud_altitude_comparable_to_mola_{local_time:0.f}h.png', bbox_inches='tight')
+        if len(info_netcdf.local_time) == 1:
+            ax.set_title(f'Zonal mean of top cloud altitude, at {info_netcdf.local_time:0.f}h', fontsize=fontsize)
+            plt.savefig(f'top_cloud_altitude_comparable_to_mola_{info_netcdf.local_time:0.f}h.png', bbox_inches='tight')
         else:
             ax.set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
             plt.savefig(f'top_cloud_altitude_comparable_to_mola_diurnal_mean.png', bbox_inches='tight')
@@ -1017,9 +1032,9 @@ def display_riceco2_top_cloud_altitude(filename, top_cloud, local_time=None, mol
     return
 
 
-def display_satuco2_thickness_atm_layer(data, data_std, save_name):
+def display_satuco2_thickness_atm_layer(info_netcdf, data_std, save_name):
     from numpy import arange, ma, array
-    data = ma.masked_where(data == 0, data)
+    data = ma.masked_where(info_netcdf.data_target == 0, info_netcdf.data_target)
 
     # data from Fig 9 in Hu et al., 2012
 
@@ -1166,47 +1181,42 @@ def display_satuco2_thickness_atm_layer(data, data_std, save_name):
     return
 
 
-def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_satuco2_eq, data_satuco2_south,
+def display_satuco2_with_co2_ice_altitude_ls(info_netcdf, data_satuco2_north, data_satuco2_eq, data_satuco2_south,
                                              data_co2ice_north, data_co2ice_eq, data_co2ice_south, latitude_north,
-                                             latitude_eq, latitude_south, binned, local_time):
+                                             latitude_eq, latitude_south, binned):
     from numpy import array, round, ones
 
     # Info latitude
-    data_latitude, list_var = get_data(filename, target='latitude')
     list_latitudes = [latitude_north, latitude_eq, latitude_south]
 
     # Get latitude range between value-1 et value+1
     data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-    data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
+        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
 
     list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
                 data_maven_limb, data_spicam, data_tesmoc, data_themis]
 
-    data_altitude, list_var = get_data(filename, target='altitude')
-    data_zareoid = None
-    altitude_unit = None
-    altitude_name = None
-    data_surface_local = None
-    ticks_altitude = None
-    if data_altitude.units == 'm':
+    data_zareoid, altitude_unit, altitude_name, data_surface_local, ticks_altitude = None, None, None, None, None
+
+    if info_netcdf.data_dim.altitude.units == 'm':
         altitude_unit = 'km'
         altitude_name = 'Altitude'
-        data_altitude = data_altitude[:] / 1e3
+        info_netcdf.data_dim.altitude = info_netcdf.data_dim.altitude / 1e3
         ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
-    elif data_altitude.units == 'km':
-        altitude_unit = data_altitude.units
+    elif info_netcdf.data_dim.altitude.units == 'km':
+        altitude_unit = info_netcdf.data_dim.altitude.units
         altitude_name = 'Altitude'
         ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
-    elif data_altitude.units == 'Pa':
-        altitude_unit = data_altitude.units
+    elif info_netcdf.data_dim.altitude.units == 'Pa':
+        altitude_unit = info_netcdf.data_dim.altitude.units
         altitude_name = 'Pressure'
-        data_zareoid, list_var = get_data(filename, target='zareoid')
+        data_zareoid, list_var = get_data(filename=info_netcdf.filename, target='zareoid')
         data_surface_local = gcm_surface_local(data_zareoid[:, :, :, :])
 
-    data_time, list_var = get_data(filename=filename, target='Time')
+    data_time, list_var = get_data(filename=info_netcdf.filename, target='Time')
     if data_time.units != 'deg':
         data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
-        data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
+        data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=info_netcdf.local_time)
         data_time = data_ls[idx::len(data_local_time)]
 
     if binned.lower() == 'y' and data_zareoid is not None:
@@ -1219,19 +1229,22 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
     levels_co2 = None
     fig, ax = plt.subplots(nrows=3, ncols=1, figsize=figsize_3graph_rows)
     ax[0].set_title(f'{latitude_north}°N', fontsize=fontsize)
-    ax[0].contourf(data_time[:], data_altitude[:], data_satuco2_north, norm=norm_satu, cmap='coolwarm',
+    ax[0].contourf(data_time[:], info_netcdf.data_dim.altitude, data_satuco2_north, norm=norm_satu, cmap='coolwarm',
                    levels=levels_satu, extend='max')
-    ax[0].contour(data_time[:], data_altitude[:], data_co2ice_north, norm=None, levels=levels_co2, colors='black')
+    ax[0].contour(data_time[:], info_netcdf.data_dim.altitude, data_co2ice_north, norm=None, levels=levels_co2,
+                  colors='black')
 
     ax[1].set_title(f'{latitude_eq}°N', fontsize=fontsize)
-    ax[1].contourf(data_time[:], data_altitude[:], data_satuco2_eq, norm=norm_satu, cmap='coolwarm',
+    ax[1].contourf(data_time[:], info_netcdf.data_dim.altitude, data_satuco2_eq, norm=norm_satu, cmap='coolwarm',
                    levels=levels_satu, extend='max')
-    ax[1].contour(data_time[:], data_altitude[:], data_co2ice_eq, norm=None, levels=levels_co2, colors='black')
+    ax[1].contour(data_time[:], info_netcdf.data_dim.altitude, data_co2ice_eq, norm=None, levels=levels_co2,
+                  colors='black')
 
     ax[2].set_title(f'{abs(latitude_south)}°S', fontsize=fontsize)
-    cb = ax[2].contourf(data_time[:], data_altitude[:], data_satuco2_south, norm=norm_satu, cmap='coolwarm',
-                        levels=levels_satu, extend='max')
-    ax[2].contour(data_time[:], data_altitude[:], data_co2ice_south, norm=None, levels=levels_co2, colors='black')
+    cb = ax[2].contourf(data_time[:], info_netcdf.data_dim.altitude, data_satuco2_south, norm=norm_satu,
+                        cmap='coolwarm', levels=levels_satu, extend='max')
+    ax[2].contour(data_time[:], info_netcdf.data_dim.altitude, data_co2ice_south, norm=None, levels=levels_co2,
+                  colors='black')
 
     for i, axe in enumerate(ax):
         #        axe.set_xticks(ticks=axis_ls)
@@ -1240,14 +1253,17 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
         axe.set_ylim(1e-3, 1e3)
 
         for j, value in enumerate(list_obs):
-            data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
-                                                                         list_latitudes[i])
+            data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(data_obs=value, dim='latitude',
+                                                                         data_dim=info_netcdf.data_dim.altitude,
+                                                                         value=list_latitudes[i])
             if data_obs_ls.shape[0] != 0:
                 axe.quiver(data_obs_ls, ones(data_obs_ls.shape[0]) * 1e-3, zeros(data_obs_ls.shape[0]),
                            -ones(data_obs_ls.shape[0]) * 3, color='black')
 
         if altitude_unit == 'Pa':
-            data_surface_local_sliced, tmp = slice_data(data_surface_local, dimension_data=data_latitude,
+            data_surface_local_sliced, tmp = slice_data(data=data_surface_local,
+                                                        idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                        dimension_slice=info_netcdf.data_dim.latitude,
                                                         value=list_latitudes[i])
 
             lines_altitudes_0km = get_mean_index_altitude(data_surface_local_sliced, value=0, dimension='Time')
@@ -1256,21 +1272,21 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
             lines_altitudes_80km = get_mean_index_altitude(data_surface_local_sliced, value=8e4, dimension='Time')
             del data_surface_local_sliced
 
-            axe.plot(data_altitude[lines_altitudes_0km], '-', color='grey', linewidth=0.5)
-            axe.plot(data_altitude[lines_altitudes_10km], '-', color='grey', linewidth=0.5)
-            axe.plot(data_altitude[lines_altitudes_40km], '-', color='grey', linewidth=0.5)
-            axe.plot(data_altitude[lines_altitudes_80km], '-', color='grey', linewidth=0.5)
+            axe.plot(info_netcdf.data_dim.altitude[lines_altitudes_0km], '-', color='grey', linewidth=0.5)
+            axe.plot(info_netcdf.data_dim.altitude[lines_altitudes_10km], '-', color='grey', linewidth=0.5)
+            axe.plot(info_netcdf.data_dim.altitude[lines_altitudes_40km], '-', color='grey', linewidth=0.5)
+            axe.plot(info_netcdf.data_dim.altitude[lines_altitudes_80km], '-', color='grey', linewidth=0.5)
 
-            axe.text(0, data_altitude[lines_altitudes_0km[0]], '0 km',
+            axe.text(0, info_netcdf.data_dim.altitude[lines_altitudes_0km[0]], '0 km',
                      verticalalignment='bottom',
                      horizontalalignment='left', color='grey', fontsize=6)
-            axe.text(0, data_altitude[lines_altitudes_10km[0]], '10 km',
+            axe.text(0, info_netcdf.data_dim.altitude[lines_altitudes_10km[0]], '10 km',
                      verticalalignment='bottom',
                      horizontalalignment='left', color='grey', fontsize=6)
-            axe.text(0, data_altitude[lines_altitudes_40km[0]], '40 km',
+            axe.text(0, info_netcdf.data_dim.altitude[lines_altitudes_40km[0]], '40 km',
                      verticalalignment='bottom',
                      horizontalalignment='left', color='grey', fontsize=6)
-            axe.text(0, data_altitude[lines_altitudes_80km[0]], '80 km',
+            axe.text(0, info_netcdf.data_dim.altitude[lines_altitudes_80km[0]], '80 km',
                      verticalalignment='bottom',
                      horizontalalignment='left', color='grey', fontsize=6)
 
@@ -1278,7 +1294,7 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
             axe.invert_yaxis()
         else:
             axe.set_yticks(ticks=ticks_altitude)
-            axe.set_yticklabels(labels=round(data_altitude))
+            axe.set_yticklabels(labels=round(info_netcdf.data_dim.altitude))
 
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
@@ -1297,74 +1313,78 @@ def display_satuco2_with_co2_ice_altitude_ls(filename, data_satuco2_north, data_
     return
 
 
-def display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north, data_satuco2_south, data_co2ice_north,
+def display_satuco2_with_co2_ice_altitude_longitude(info_netcdf, data_satuco2_north, data_satuco2_south,
+                                                    data_co2ice_north,
                                                     data_co2ice_south, latitude_north, latitude_south, binned):
     from numpy import array, round, ones
 
     # Info latitude
-    data_latitude, list_var = get_data(filename, target='latitude')
     list_latitudes = [latitude_north, latitude_south]
 
-    data_time, list_var = get_data(filename=filename, target='Time')
     list_time_range = array(([270, 300], [0, 30]))
 
     # Info longitude
-    data_longitude, list_var = get_data(filename, target='longitude')
 
     # Get latitude range between value-1 et value+1
     data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-    data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
+        data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
 
     list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
                 data_maven_limb, data_spicam, data_tesmoc, data_themis]
 
-    data_altitude, list_var = get_data(filename, target='altitude')
-    data_surface_local = None
-    ticks_altitude = None
-    if data_altitude.units == 'm':
+    data_surface_local, ticks_altitude = None, None
+
+    if info_netcdf.data_dim.altitude.units == 'm':
         altitude_unit = 'km'
         altitude_name = 'Altitude'
-        data_altitude = data_altitude[:] / 1e3
+        info_netcdf.data_dim.altitude = info_netcdf.data_dim.altitude / 1e3
         ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
-    elif data_altitude.units == 'km':
-        altitude_unit = data_altitude.units
+    elif info_netcdf.data_dim.altitude.units == 'km':
+        altitude_unit = info_netcdf.data_dim.altitude.units
         altitude_name = 'Altitude'
         ticks_altitude = [0, 4, 8, 12, 16, 20, 24, 28, 31]
     else:
-        altitude_unit = data_altitude.units
+        altitude_unit = info_netcdf.data_dim.altitude.units
         altitude_name = 'Pressure'
-        data_zareoid, list_var = get_data(filename, target='zareoid')
+        data_zareoid, list_var = get_data(filename=info_netcdf.filename, target='zareoid')
         data_surface_local = gcm_surface_local(data_zareoid[:, :, :, :])
 
-    norm_satu = None  # TwoSlopeNorm(vmin=0, vcenter=1.0, vmax=100)
+    norm_satu, levels_co2 = None, None
     levels_satu = array([1, 10, 20, 50, 100])
-    levels_co2 = None
+
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_1graph)
     ax[0].set_title(f'{latitude_north}°N', fontsize=fontsize)
-    ax[0].contourf(data_longitude[:], data_altitude[:], data_satuco2_north, norm=norm_satu, cmap='coolwarm',
-                   levels=levels_satu, extend='max')
-    ax[0].contour(data_longitude[:], data_altitude[:], data_co2ice_north, norm=None, levels=levels_co2, colors='black')
+    ax[0].contourf(info_netcdf.data_dim.longitude, info_netcdf.data_dim.altitude, data_satuco2_north, norm=norm_satu,
+                   cmap='coolwarm', levels=levels_satu, extend='max')
+    ax[0].contour(info_netcdf.data_dim.longitude, info_netcdf.data_dim.altitude, data_co2ice_north, norm=None,
+                  levels=levels_co2, colors='black')
 
     ax[1].set_title(f'{abs(latitude_south)}°S', fontsize=fontsize)
-    cb = ax[1].contourf(data_longitude[:], data_altitude[:], data_satuco2_south, norm=norm_satu, cmap='coolwarm',
-                        levels=levels_satu, extend='max')
-    ax[1].contour(data_longitude[:], data_altitude[:], data_co2ice_south, norm=None, levels=levels_co2, colors='black')
+    cb = ax[1].contourf(info_netcdf.data_dim.longitude, info_netcdf.data_dim.altitude, data_satuco2_south,
+                        norm=norm_satu, cmap='coolwarm', levels=levels_satu, extend='max')
+    ax[1].contour(info_netcdf.data_dim.longitude, info_netcdf.data_dim.altitude, data_co2ice_south, norm=None,
+                  levels=levels_co2, colors='black')
 
     for i, axe in enumerate(ax):
         axe.set_ylim(1e-3, 1e3)
 
         for j, value in enumerate(list_obs):
-            data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
-                                                                         list_latitudes[i])
+            data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(data_obs=value, dim='latitude',
+                                                                         data_dim=info_netcdf.data_dim.latitude,
+                                                                         value=list_latitudes[i])
             if data_obs_ls.shape[0] != 0:
                 axe.quiver(data_obs_ls, ones(data_obs_ls.shape[0]) * 1e-3, zeros(data_obs_ls.shape[0]),
                            -ones(data_obs_ls.shape[0]) * 3, color='black')
 
         if altitude_unit == 'Pa':
-            data_surface_local_sliced, tmp = slice_data(data_surface_local, dimension_data=data_latitude,
+            data_surface_local_sliced, tmp = slice_data(data=data_surface_local,
+                                                        idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                        dimension_slice=info_netcdf.data_dim.latitude,
                                                         value=list_latitudes[i])
 
-            data_surface_local_sliced, tmp = slice_data(data_surface_local_sliced, dimension_data=data_time,
+            data_surface_local_sliced, tmp = slice_data(data=data_surface_local_sliced,
+                                                        idx_dim_slice=info_netcdf.idx_dim.time,
+                                                        dimension_slice=info_netcdf.data_dim.time,
                                                         value=list_time_range[i])
 
             lines_altitudes_0km = get_mean_index_altitude(data_surface_local_sliced, value=0, dimension='longitude')
@@ -1373,21 +1393,21 @@ def display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north
             lines_altitudes_80km = get_mean_index_altitude(data_surface_local_sliced, value=8e4, dimension='longitude')
             del data_surface_local_sliced
 
-            axe.plot(data_altitude[lines_altitudes_0km], '-', color='grey', linewidth=0.5)
-            axe.plot(data_altitude[lines_altitudes_10km], '-', color='grey', linewidth=0.5)
-            axe.plot(data_altitude[lines_altitudes_40km], '-', color='grey', linewidth=0.5)
-            axe.plot(data_altitude[lines_altitudes_80km], '-', color='grey', linewidth=0.5)
+            axe.plot(info_netcdf.data_dim.altitude[lines_altitudes_0km], '-', color='grey', linewidth=0.5)
+            axe.plot(info_netcdf.data_dim.altitude[lines_altitudes_10km], '-', color='grey', linewidth=0.5)
+            axe.plot(info_netcdf.data_dim.altitude[lines_altitudes_40km], '-', color='grey', linewidth=0.5)
+            axe.plot(info_netcdf.data_dim.altitude[lines_altitudes_80km], '-', color='grey', linewidth=0.5)
 
-            axe.text(0, data_altitude[lines_altitudes_0km[0]], '0 km',
+            axe.text(0, info_netcdf.data_dim.altitude[lines_altitudes_0km[0]], '0 km',
                      verticalalignment='bottom',
                      horizontalalignment='left', color='grey', fontsize=6)
-            axe.text(0, data_altitude[lines_altitudes_10km[0]], '10 km',
+            axe.text(0, info_netcdf.data_dim.altitude[lines_altitudes_10km[0]], '10 km',
                      verticalalignment='bottom',
                      horizontalalignment='left', color='grey', fontsize=6)
-            axe.text(0, data_altitude[lines_altitudes_40km[0]], '40 km',
+            axe.text(0, info_netcdf.data_dim.altitude[lines_altitudes_40km[0]], '40 km',
                      verticalalignment='bottom',
                      horizontalalignment='left', color='grey', fontsize=6)
-            axe.text(0, data_altitude[lines_altitudes_80km[0]], '80 km',
+            axe.text(0, info_netcdf.data_dim.altitude[lines_altitudes_80km[0]], '80 km',
                      verticalalignment='bottom',
                      horizontalalignment='left', color='grey', fontsize=6)
 
@@ -1395,7 +1415,7 @@ def display_satuco2_with_co2_ice_altitude_longitude(filename, data_satuco2_north
             axe.invert_yaxis()
         else:
             axe.set_yticks(ticks=ticks_altitude)
-            axe.set_yticklabels(labels=round(data_altitude))
+            axe.set_yticklabels(labels=round(info_netcdf.data_dim.altitude))
 
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
@@ -1452,72 +1472,67 @@ def display_satuco2_zonal_mean_day_night(data_satuco2_day, data_satuco2_night, d
     return
 
 
-def display_satuco2_altitude_latitude(data, data_altitude, data_latitude):
-    from matplotlib.colors import DivergingNorm
-    from numpy import arange, searchsorted, max
-    from scipy.interpolate import interp2d
+def display_satuco2_maxval_with_maxalt(info_netcdf, data_maxval, data_altval):
+    from matplotlib.colors import LogNorm
+    cmap = plt.get_cmap('inferno')
+    cmap.set_under('white')
+    cmap_revert = plt.get_cmap('inferno_r')
+    cmap_revert.set_under('white')
+    norm_val = LogNorm(vmin=1e0, vmax=1e6)
+    norm_alt = LogNorm(vmin=1e-3, vmax=1e3)
 
-    # ----------------------------------------------------------
-    #    south pole
-    # -------------
-    #    idx_lat_1 = (abs(data_latitude[:] + 57)).argmin() + 1
-    #    idx_lat_2 = (abs(data_latitude[:] + 90)).argmin() + 1
-    #    idx_ls_1 = (abs(data_time[:] - 0)).argmin()
-    #    idx_ls_2 = (abs(data_time[:] - 180)).argmin()
-    #    save_name = 'altitude_latitude_saturation_south_pole'
-    # ----------------------------------------------------------
-    #    north pole
-    # -------------
-    idx_lat_1 = (abs(data_latitude[:] + 90)).argmin()
-    idx_lat_2 = (abs(data_latitude[:] - 90)).argmin()
-    #    idx_ls_1 = (abs(data_time[:] - 180)).argmin()
-    #    idx_ls_2 = (abs(data_time[:] - 360)).argmin()
-    save_name = 'altitude_latitude_saturation_max'
-    # ----------------------------------------------------------
+    data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
+                                                        selected_time=info_netcdf.local_time)
 
-    #    idx_alt = (abs(data_altitude[:] - 20)).argmin() + 1
+    data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+    if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
+        if info_netcdf.data_dim.time.units != 'deg':
+            data_time = data_ls[idx::len(data_local_time)]
+        else:
+            data_time = info_netcdf.data_dim.time[idx::len(data_local_time)]
 
-    zoomed_data = data[:, :, idx_lat_1:idx_lat_2, :]
+        data_maxval, tmp = linearize_ls(data=data_maxval, data_ls=data_time)
+        data_altval, data_time = linearize_ls(data=data_altval, data_ls=data_time)
+        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+    else:
+        data_ls = data_ls[:info_netcdf.data_dim.time.shape[0]]
+        data_time = data_ls[idx::len(data_local_time)]
+        data_maxval, tmp = linearize_ls(data=data_maxval, data_ls=data_time)
+        data_altval, data_time = linearize_ls(data=data_altval, data_ls=data_time)
+        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time, tab_ls=data_time[::20])
 
-    # zoom data: [ls, alt, lat, lon] => [alt, lat]
-    zoomed_data = max(max(zoomed_data[:, :, :, :], axis=3), axis=0)  # zonal mean, then temporal mean
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize_2graph_cols)
+    axes[0].set_title('Max value of CO$_2$ saturation\n(zonal and diurnal mean)')
+    pc1 = axes[0].pcolormesh(data_time, info_netcdf.data_dim.latitude, data_maxval, norm=norm_val, cmap=cmap)
+    cb1 = plt.colorbar(pc1, ax=axes[0])
+    cb1.ax.tick_params(labelsize=fontsize)
 
-    zoomed_data = zoomed_data[:, ::-1]
+    axes[1].set_title('Altitude corresponding')
+    pc2 = axes[1].pcolormesh(data_time, info_netcdf.data_dim.latitude, data_altval, norm=norm_alt, cmap=cmap_revert)
+    cb2 = plt.colorbar(pc2, ax=axes[1])
+    cb2.ax.set_title('Pa', fontsize=fontsize)
+    cb2.ax.tick_params(labelsize=fontsize)
 
-    f = interp2d(x=arange(len(data_latitude[idx_lat_1:idx_lat_2])), y=arange(len(data_altitude[:])),
-                 z=zoomed_data, kind='linear')
-
-    axis_altitude = arange(0, 123)
-    interp_altitude = searchsorted(data_altitude[:], axis_altitude)
-    zoomed_data = f(arange(len(data_latitude[idx_lat_1:idx_lat_2])), interp_altitude)
-
-    # plot
-    divnorm = DivergingNorm(vmin=0, vcenter=1, vmax=4)
-
-    fig, ax = plt.subplots(figsize=figsize_1graph)
-    ax.set_title('CO$_2$ saturation max', fontsize=fontsize)
-    plt.contourf(zoomed_data, cmap='seismic', norm=divnorm, levels=arange(0, 5))
-    plt.xticks(ticks=arange(0, len(data_latitude[idx_lat_1:idx_lat_2]), 4),
-               labels=data_latitude[idx_lat_1:idx_lat_2:4])
-    plt.yticks(ticks=arange(0, len(interp_altitude)), labels=[f'{i:1d}' for i in data_altitude[:]])
-    cbar = plt.colorbar()
-    cbar.ax.set_title('')
-    plt.xlabel('Latitude (°)', fontsize=fontsize)
-    plt.ylabel('Altitude (km)', fontsize=fontsize)
-    plt.savefig(f'{save_name}.png', bbox_inches='tight')
+    for ax in axes.reshape(-1):
+        ax.set_xticks(ticks=ndx)
+        ax.set_xticklabels(axis_ls, fontsize=fontsize)
+        ax.set_yticks(ticks=info_netcdf.data_dim.latitude[::4])
+        ax.set_yticklabels(labels=[str(int(x)) for x in info_netcdf.data_dim.latitude[::4]], fontsize=fontsize)
+        ax.set_xlabel('Solar longitude (°)', fontsize=fontsize)
+        ax.set_ylabel('Latitude (°N)', fontsize=fontsize)
+    plt.savefig('satuco2_maxval_with_maxalt_zonalmean_diurnalmean.png', bbox_inches='tight')
     plt.show()
     return
 
 
-def display_temp_gg2011_fig6(filename, data, data_localtime):
+def display_temp_gg2011_fig6(info_netcdf, data_localtime):
     from numpy import arange
-
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
 
     cmap = colormap_idl_rainbow_plus_white()
 
     fig = plt.figure(figsize=figsize_1graph)
-    pc = plt.contourf(data_localtime, data_altitude[:] / 1e3, data.T, levels=arange(0, 125, 5), cmap=cmap)
+    pc = plt.contourf(data_localtime, info_netcdf.data_dim.altitude / 1e3, info_netcdf.data_target.T,
+                      levels=arange(0, 125, 5), cmap=cmap)
     plt.ylim(0, 120)
 
     cbar = fig.colorbar(pc, orientation="vertical")
@@ -1530,15 +1545,14 @@ def display_temp_gg2011_fig6(filename, data, data_localtime):
     return
 
 
-def display_temp_gg2011_fig7(filename, data, data_altitude):
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
-
+def display_temp_gg2011_fig7(info_netcdf, data_altitude):
     cmap = colormap_idl_rainbow_plus_white()
 
     # plot
     fig, ax = plt.subplots(figsize=figsize_1graph)
     ax.set_title('Temperature - Tcond CO$_2$', fontsize=fontsize)
-    ctf = ax.contourf(data_latitude[:], data_altitude / 1e3, data, levels=arange(0, 130, 10), cmap=cmap)
+    ctf = ax.contourf(info_netcdf.data_dim.latitude, data_altitude / 1e3, info_netcdf.data_target,
+                      levels=arange(0, 130, 10), cmap=cmap)
     ax.set_ylim(40, 120)
 
     cbar = plt.colorbar(ctf)
@@ -1552,16 +1566,13 @@ def display_temp_gg2011_fig7(filename, data, data_altitude):
     return
 
 
-def display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides):
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
-    data_altitude, list_var = get_data(filename=filename, target='altitude')[:]
-
+def display_temp_gg2011_fig8(info_netcdf, data_thermal_tides):
     fig, ax = plt.subplots(nrows=2, figsize=figsize_1graph)
 
     cmap = colormap_idl_rainbow_plus_white()
     # Zonal mean at 16 H local time
-    ctf1 = ax[0].contourf(data_latitude[:], data_altitude / 1e3, data_zonal_mean, levels=arange(110, 240, 10),
-                          cmap=cmap)
+    ctf1 = ax[0].contourf(info_netcdf.data_dim.latitude, info_netcdf.data_dim.altitude / 1e3, info_netcdf.data_target,
+                          levels=arange(110, 240, 10), cmap=cmap)
     cbar = plt.colorbar(ctf1, ax=ax[0])
     cbar.ax.set_title('K', fontsize=fontsize)
     ax[0].set_ylim(40, 120)
@@ -1569,8 +1580,8 @@ def display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides):
     ax[0].set_ylabel('Altitude above areoid (km)', fontsize=fontsize)
 
     # Thermal tides: 12h - 00h
-    ctf2 = ax[1].contourf(data_latitude[:], data_altitude / 1e3, data_thermal_tides, levels=arange(-20, 32, 4),
-                          cmap=cmap)
+    ctf2 = ax[1].contourf(info_netcdf.data_dim.latitude, info_netcdf.data_dim.altitude / 1e3, data_thermal_tides,
+                          levels=arange(-20, 32, 4), cmap=cmap)
     cbar2 = plt.colorbar(ctf2, ax=ax[1])
     cbar2.ax.set_title('K', fontsize=fontsize)
     ax[1].set_ylim(40, 120)
@@ -1582,13 +1593,12 @@ def display_temp_gg2011_fig8(filename, data_zonal_mean, data_thermal_tides):
     return
 
 
-def display_temp_gg2011_fig9(filename, data, data_altitude):
-    data_longitude, list_var = get_data(filename=filename, target='longitude')
-
+def display_temp_gg2011_fig9(info_netcdf, data_altitude):
     cmap = colormap_idl_rainbow_plus_white()
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
-    pc = ax.contourf(data_longitude[:], data_altitude / 1e3, data, levels=arange(0, 130, 10), cmap=cmap)
+    pc = ax.contourf(info_netcdf.data_dim.longitude, data_altitude / 1e3, info_netcdf.data_target,
+                     levels=arange(0, 130, 10), cmap=cmap)
 
     cbar = fig.colorbar(pc, orientation="vertical")
     cbar.ax.set_title('K', fontsize=fontsize)
@@ -1602,48 +1612,46 @@ def display_temp_gg2011_fig9(filename, data, data_altitude):
     return
 
 
-def display_temp_structure_polar_region(filename, data_north, data_south, norm, levels, unit, save_name):
+def display_temp_structure_polar_region(info_netcdf, data_north, data_south, norm, levels, unit, save_name):
     cmap = 'coolwarm'
-
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
-    data_time, list_var = get_data(filename=filename, target='Time')
 
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_1graph)
 
     ax[0].set_title('North pole at 60°N', fontsize=fontsize)
-    ctf = ax[0].contourf(data_time[:], data_altitude[:], data_north.T, norm=norm, levels=levels, cmap=cmap)
+    ctf = ax[0].contourf(info_netcdf.data_dim.time, info_netcdf.data_dim.altitude, data_north.T, norm=norm,
+                         levels=levels, cmap=cmap)
 
     ax[1].set_title('South pole at 60°S', fontsize=fontsize)
-    ax[1].contourf(data_time[:], data_altitude[:], data_south.T, norm=norm, levels=levels, cmap=cmap)
+    ax[1].contourf(info_netcdf.data_dim.time, info_netcdf.data_dim.altitude, data_south.T, norm=norm, levels=levels,
+                   cmap=cmap)
 
     for axes in ax.reshape(-1):
         axes.set_yscale('log')
         axes.invert_yaxis()
-        axes.set_ylim(data_altitude[0], 1e1)
+        axes.set_ylim(info_netcdf.data_dim.altitude[0], 1e1)
 
     fig.subplots_adjust(right=0.8)
     cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
     cbar = fig.colorbar(ctf, cax=cbar_ax)
     cbar.ax.set_title(unit)
 
-    fig.text(0.02, 0.5, f'{data_altitude.name} ({data_altitude.units})', ha='center', va='center', rotation='vertical',
-             fontsize=fontsize)
+    fig.text(0.02, 0.5, f'{info_netcdf.data_dim.altitude.name} ({info_netcdf.data_dim.altitude.units})', ha='center',
+             va='center', rotation='vertical', fontsize=fontsize)
     fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=fontsize)
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
     plt.show()
     return
 
 
-def display_temp_cold_pocket_spicam(filename, data, local_time, title, save_name):
-    data_altitude, list_var = get_data(filename, target='altitude')
-
-    data_time, list_var = get_data(filename, target='Time')
-    if data_time.units != 'deg':
+def display_temp_cold_pocket_spicam(info_netcdf, title, save_name):
+    if info_netcdf.data_dim.time.units != 'deg':
         data_time, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+    else:
+        data_time = info_netcdf.data_dim.time
 
-    data_time, local_time = extract_at_a_local_time(filename=filename, data=data_time, local_time=local_time)
+    data_time, local_time = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_time)
 
-    data, interp_time = linearize_ls(data=data, data_ls=data_time)
+    data, interp_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
 
     fig, axes = plt.subplot(figsize=figsize_1graph, projection='polar')
     axes.set_title(title, fontsize=fontsize)
@@ -1651,7 +1659,7 @@ def display_temp_cold_pocket_spicam(filename, data, local_time, title, save_name
     axes.polar(interp_time, )
 
     axes.set_xlabel('Solar longitude (°)', fontsize=fontsize)
-    axes.set_ylabel(f'Pressure ({data_altitude.units})', fontsize=fontsize)
+    axes.set_ylabel(f'Pressure ({info_netcdf.data_dim.altitude.units})', fontsize=fontsize)
     axes.set_yscale('log')
     axes.invert_yaxis()
 
@@ -1660,11 +1668,11 @@ def display_temp_cold_pocket_spicam(filename, data, local_time, title, save_name
     return
 
 
-def display_vars_altitude_variable(data, data_latitude, data_pressure, title):
+def display_vars_altitude_variable(info_netcdf, data_latitude, data_pressure, title):
     plt.figure(figsize=figsize_1graph)
     plt.title(title, fontsize=fontsize)
 
-    plt.semilogy(data[:, :], data_pressure[0, :, :, 0], label=data_latitude)
+    plt.semilogy(info_netcdf.data_target[:, :], data_pressure[0, :, :, 0], label=data_latitude)
 
     plt.xlabel('K', fontsize=fontsize)
     plt.ylabel('Pressure (Pa)', fontsize=fontsize)
@@ -1676,12 +1684,9 @@ def display_vars_altitude_variable(data, data_latitude, data_pressure, title):
     return
 
 
-def display_vars_altitude_latitude(filename, data, unit, title, save_name):
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
-
+def display_vars_altitude_latitude(info_netcdf, unit, title, save_name):
     if unit == 'pr.µm':
-        data = data * 1e3  # convert kg/m2 to pr.µm
+        info_netcdf.data_target = info_netcdf.data_target * 1e3  # convert kg/m2 to pr.µm
 
     cmap = 'hot'
 
@@ -1689,56 +1694,52 @@ def display_vars_altitude_latitude(filename, data, unit, title, save_name):
     fig, ax = plt.subplots(figsize=figsize_1graph)
     ax.set_title(title, fontsize=fontsize)
     ax.set_yscale('log')
-    ctf = ax.contourf(data_latitude[:], data_altitude[:], data, cmap=cmap)
+    ctf = ax.contourf(info_netcdf.data_dim.latitude, info_netcdf.data_dim.altitude, info_netcdf.data_target, cmap=cmap)
     ax.invert_yaxis()
 
     cbar = plt.colorbar(ctf)
     cbar.ax.set_title(unit, fontsize=fontsize)
 
     ax.set_xlabel('Latitude (°N)', fontsize=fontsize)
-    ax.set_ylabel(f'{data_altitude.name} ({data_altitude.units})')
+    ax.set_ylabel(f'{info_netcdf.data_dim.altitude.name} ({info_netcdf.data_dim.altitude.units})')
 
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
     plt.show()
     return
 
 
-def display_vars_altitude_localtime(filename, data, data_localtime, title, unit, save_name):
+def display_vars_altitude_localtime(info_netcdf, title, unit, save_name):
     from numpy import arange, zeros
     from matplotlib.colors import TwoSlopeNorm
-
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
 
     fig = plt.figure(figsize=figsize_1graph)
     if unit == '':
         scale = zeros(5)
         scale[1] = 1
         scale[2:] = 10 ** arange(1, 4)
-        pc = plt.contourf(data_localtime, data_altitude[:], data.T, norm=TwoSlopeNorm(vmin=0, vcenter=1.0, vmax=1000),
-                          levels=scale, cmap='seismic', extend='max')
+        pc = plt.contourf(info_netcdf.local_time, info_netcdf.data_dim.altitude, info_netcdf.data_target.T,
+                          norm=TwoSlopeNorm(vmin=0, vcenter=1.0, vmax=1000), levels=scale, cmap='seismic', extend='max')
     else:
         plt.yscale('log')
-        pc = plt.contourf(data_localtime, data_altitude[:], data.T, levels=arange(0, 140, 10), cmap='seismic')
+        pc = plt.contourf(info_netcdf.local_time, info_netcdf.data_dim.altitude, info_netcdf.data_target.T,
+                          levels=arange(0, 140, 10), cmap='seismic')
         ax = plt.gca()
         ax.invert_yaxis()
 
     cbar = fig.colorbar(pc, orientation="vertical")
     cbar.ax.set_title(unit, fontsize=fontsize)
     plt.title(title, fontsize=fontsize)
-    plt.ylabel(f'{data_altitude.name} ({data_altitude.units})', fontsize=fontsize)
+    plt.ylabel(f'{info_netcdf.data_dim.altitude.name} ({info_netcdf.data_dim.altitude.units})', fontsize=fontsize)
     plt.xlabel('Local time (h)', fontsize=fontsize)
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
     plt.show()
     return
 
 
-def display_vars_altitude_longitude(filename, data, unit, norm, vmin, vcenter, vmax, title, save_name):
+def display_vars_altitude_longitude(info_netcdf, unit, norm, vmin, vcenter, vmax, title, save_name):
     from matplotlib.colors import TwoSlopeNorm, Normalize, LogNorm
 
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
-    data_longitude, list_var = get_data(filename=filename, target='longitude')
-
-    if data_altitude.units == 'Pa':
+    if info_netcdf.data_dim.altitude.units == 'Pa':
         yscale = 'log'
     else:
         yscale = 'linear'
@@ -1755,31 +1756,34 @@ def display_vars_altitude_longitude(filename, data, unit, norm, vmin, vcenter, v
 
     # PLOT
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
-    pc = ax.pcolormesh(data_longitude[:], data_altitude[:], data, norm=norm, cmap=cmap, shading='auto')
+    pc = ax.pcolormesh(info_netcdf.data_dim.longitude, info_netcdf.data_dim.altitude, info_netcdf.data_target,
+                       norm=norm, cmap=cmap, shading='auto')
 
     cbar = fig.colorbar(pc, orientation="vertical")
     cbar.ax.set_title(unit, fontsize=fontsize)
     cbar.ax.tick_params(labelsize=fontsize)
 
     ax.set_yscale(yscale)
-    if data_altitude.units == 'Pa':
+    if info_netcdf.data_dim.altitude.units == 'Pa':
         ax.invert_yaxis()
-    ax.set_xticks(data_longitude[::8])
-    ax.set_xticklabels(labels=data_longitude[::8], fontsize=fontsize)
+    ax.set_xticks(info_netcdf.data_dim.longitude[::8])
+    ax.set_xticklabels(labels=info_netcdf.data_dim.longitude[::8], fontsize=fontsize)
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
 
     ax.set_title(title, fontsize=fontsize)
     ax.set_xlabel('Longitude (°E)', fontsize=fontsize)
-    ax.set_ylabel(f'Altitude ({data_altitude.units})', fontsize=fontsize)
+    ax.set_ylabel(f'Altitude ({info_netcdf.data_dim.altitude.units})', fontsize=fontsize)
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
     return
 
 
-def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_time, latitude, norm, unit, altitude_max,
-                             vmin, vmax, title, save_name, data_2=None, norm_2=None, vmin_2=None, vmax_2=None,
-                             varname_2=None, shortname_2=None):
+def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm, unit,
+                             altitude_min, altitude_max, vmin, vmax, title, save_name, data_2=None, norm_2=None,
+                             vmin_2=None, vmax_2=None, varname_2=None, shortname_2=None, alti_line=None):
     from numpy import round
+    from numpy.ma import masked_outside
     from matplotlib.colors import LogNorm, Normalize
+    data_surface_local, index_10, index_40, index_80 = None, None, None, None
 
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
@@ -1791,48 +1795,67 @@ def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_tim
     else:
         norm_2 = Normalize(vmin=vmin_2, vmax=vmax_2)
 
-    data_altitude, list_var = get_data(filename=filename, target='altitude')
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
-    data_longitude, list_var = get_data(filename=filename, target='longitude')
-    longitude, idx_longitude = slice_data(data=data_longitude[:], dimension_data=data_longitude[:], value=0)
+    longitude, idx_longitude = slice_data(data=info_netcdf.data_dim.longitude,
+                                          dimension_slice=info_netcdf.data_dim.longitude,
+                                          idx_dim_slice=0,
+                                          value=0)
 
-    if data_altitude.units == 'm':
-        unit_altitude = 'km'
+    if info_netcdf.data_dim.altitude.units == 'm':
+        unit_altitude = 'm'
         altitude_name = 'Altitude'
-        data_altitude = data_altitude[:] / 1e3
-    elif data_altitude.units == 'km':
-        unit_altitude = data_altitude.units
+    elif info_netcdf.data_dim.altitude.units == 'km':
+        unit_altitude = info_netcdf.data_dim.altitude.units
         altitude_name = 'Altitude'
     else:
-        unit_altitude = data_altitude.units
+        unit_altitude = info_netcdf.data_dim.altitude.units
         altitude_name = 'Pressure'
-        data_zareoid, list_var = get_data(filename=filename, target='zareoid')
-        data_surface_local = gcm_surface_local(data_zareoid[:, :, :, :])
-        if len(latitude) > 1:
-            data_surface_local, tmp = slice_data(data=data_surface_local[:, :, :, :], dimension_data=data_latitude[:],
-                                                 value=(latitude[0]+latitude[-1])/2.)
-        else:
-            data_surface_local, latitude = slice_data(data=data_surface_local[:, :, :, :], dimension_data=data_latitude[:],
-                                                      value=latitude)
+        if alti_line:
+            data_zareoid, list_var = get_data(filename=info_netcdf.filename, target='zareoid')
+            data_surface_local = gcm_surface_local(data_zareoid[:, :, :, :])
+            if len(latitude) > 1:
+                data_surface_local, tmp = slice_data(data=data_surface_local[:, :, :, :],
+                                                     dimension_slice=info_netcdf.data_dim.latitude,
+                                                     idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                     value=(latitude[0] + latitude[-1]) / 2.)
+            else:
+                data_surface_local, latitude = slice_data(data=data_surface_local[:, :, :, :],
+                                                          dimension_slice=info_netcdf.data_dim.latitude,
+                                                          idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                          value=latitude)
 
-    data_time, list_var = get_data(filename=filename, target='Time')
-    ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
-    if ls_lin:
-        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
-        data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
-        data_ls = data_ls[idx::len(data_local_time)]
-        data_1, data_time = linearize_ls(data=data_1, data_ls=data_ls)
-        data_2, data_time = linearize_ls(data=data_2, data_ls=data_ls)
-        if data_altitude.units == 'Pa':
+    data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
+                                                        selected_time=info_netcdf.local_time)
+    data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+    if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
+        if info_netcdf.data_dim.time.units != 'deg':
+            data_time = data_ls[idx::len(data_local_time)]
+        else:
+            data_time = info_netcdf.data_dim.time[idx::len(data_local_time)]
+
+        data_1, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
+        if data_2:
+            data_2, data_time = linearize_ls(data=data_2, data_ls=data_time)
+        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+    else:
+        data_ls = data_ls[:info_netcdf.data_dim.time.shape[0]]
+        data_time = data_ls[idx::len(data_local_time)]
+        data_1, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
+        if data_2:
+            data_2, data_time = linearize_ls(data=data_2, data_ls=data_time)
+        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time, tab_ls=data_time[::20])
+
+    if alti_line:
+        if info_netcdf.data_dim.altitude.units == 'Pa':
             index_10 = abs(data_surface_local[0, :, idx_longitude] - 10e3).argmin()
             index_40 = abs(data_surface_local[0, :, idx_longitude] - 40e3).argmin()
             index_80 = abs(data_surface_local[0, :, idx_longitude] - 80e3).argmin()
-    ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
 
     fig, axes = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
-    cb = axes.pcolormesh(data_time[:], data_altitude[:], data_1, norm=norm, cmap='plasma', shading='auto')  # autumn
+    cb = axes.pcolormesh(data_time[:], info_netcdf.data_dim.altitude[:], data_1, norm=norm, cmap='inferno',
+                         shading='auto')  # autumn
     if data_2 is not None:
-        cb2 = axes.pcolormesh(data_time[:], data_altitude[:], data_2, norm=norm_2, cmap='winter', shading='auto')
+        cb2 = axes.pcolormesh(data_time[:], info_netcdf.data_dim.altitude[:], data_2, norm=norm_2, cmap='winter',
+                              shading='auto')
         cbar2 = plt.colorbar(cb2, ax=axes)
         cbar2.ax.set_title(unit, fontsize=fontsize)
         cbar2.ax.tick_params(labelsize=fontsize)
@@ -1840,10 +1863,10 @@ def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_tim
     if unit_altitude == 'Pa':
         axes.set_yscale('log')
         axes.invert_yaxis()
-        axes.set_ylim(1e3, altitude_max)
+        axes.set_ylim(altitude_min, altitude_max)
     else:
         axes.set_ylim(0, altitude_max)
-        axes.set_yticklabels(labels=round(data_altitude[:], 0), fontsize=fontsize)
+        axes.set_yticklabels(labels=round(info_netcdf.data_dim.altitude[:], 0), fontsize=fontsize)
 
     cbar = plt.colorbar(cb, ax=axes)
     cbar.ax.set_title(unit, fontsize=fontsize)
@@ -1856,81 +1879,70 @@ def display_vars_altitude_ls(filename, data_1, varname_1, shortname_1, local_tim
     axes.set_xlabel('Solar longitude (°)', fontsize=fontsize)
     axes.set_ylabel(f'{altitude_name} ({unit_altitude})', fontsize=fontsize)
     axes.tick_params(axis='both', which='major', labelsize=fontsize)
-    axes.hlines(data_altitude[index_10], data_time[0], data_time[-1], ls='--', color='black')
-    axes.hlines(data_altitude[index_40], data_time[0], data_time[-1], ls='--', color='black')
-    axes.hlines(data_altitude[index_80], data_time[0], data_time[-1], ls='--', color='black')
-    axes.text(300, data_altitude[index_10], '10 km',
-             verticalalignment='bottom',
-             horizontalalignment='left', color='black', fontsize=12, weight='bold')
-    axes.text(300, data_altitude[index_40], '40 km',
-             verticalalignment='bottom',
-             horizontalalignment='left', color='black', fontsize=12, weight='bold')
-    axes.text(300, data_altitude[index_80], '80 km',
-             verticalalignment='bottom',
-             horizontalalignment='left', color='black', fontsize=12, weight='bold')
+    if alti_line:
+        axes.hlines(info_netcdf.data_dim.altitude[index_10], data_time[0], data_time[-1], ls='--', color='black')
+        axes.hlines(info_netcdf.data_dim.altitude[index_40], data_time[0], data_time[-1], ls='--', color='black')
+        axes.hlines(info_netcdf.data_dim.altitude[index_80], data_time[0], data_time[-1], ls='--', color='black')
+        axes.text(300, info_netcdf.data_dim.altitude[index_10], '10 km',
+                  verticalalignment='bottom',
+                  horizontalalignment='left', color='black', fontsize=12, weight='bold')
+        axes.text(300, info_netcdf.data_dim.altitude[index_40], '40 km',
+                  verticalalignment='bottom',
+                  horizontalalignment='left', color='black', fontsize=12, weight='bold')
+        axes.text(300, info_netcdf.data_dim.altitude[index_80], '80 km',
+                  verticalalignment='bottom',
+                  horizontalalignment='left', color='black', fontsize=12, weight='bold')
     # observation
     list_instrument = ['HRSC', 'OMEGAlimb', 'OMEGAnadir', 'SPICAM', 'THEMIS', 'NOMAD']
     list_marker = ['s', 'o', 'v', 'P', 'X', '1']
-    #list_colors = ['black', 'brown', 'gold', 'magenta', 'orangered', 'purple']
     list_colors = ['red', 'red', 'red', 'red', 'red', 'red']
     for i, value_i in enumerate(list_instrument):
         data_ls, data_lat, data_lon, data_lt, data_alt, data_alt_min, data_alt_max = \
             mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
 
-        mask = (data_lat >= latitude[-1]) & (data_lat <= latitude[0])
-        if mask.any():
-#            if value_i == 'NOMAD':
-#                for j in range(data_alt[mask].shape[0]):
-#                    if data_alt[mask][j] != 0:
-#                        index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j]*1e3).argmin()
-#                        index_min = abs(data_surface_local[0, :, idx_longitude] - data_alt_min[mask][j]*1e3).argmin()
-#                        index_max = abs(data_surface_local[0, :, idx_longitude] - data_alt_max[mask][j]*1e3).argmin()
-#                        yerr_min = data_altitude[index] - data_altitude[index_min]
-#                        yerr_max = data_altitude[index_max] - data_altitude[index]
-#                        axes.errorbar([data_ls[mask][j]], [data_altitude[index]], yerr=[[yerr_min], [yerr_max]],
-#                                      fmt='o', color=list_colors[i], label=value_i, capsize=5)
-#            else:
-            for j in range(data_alt[mask].shape[0]):
-                if data_alt[mask][j] != 0:
-                    index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j]*1e3).argmin()
-                    axes.scatter(data_ls[mask][j], data_altitude[index], color=list_colors[i], marker=list_marker[i],
-                                 label=value_i)
+        mask = masked_outside(data_lat, latitude[0], latitude[-1])
+        for j in range(data_alt[mask].shape[0]):
+            if data_alt[mask][j] != 0:
+                index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j] * 1e3).argmin()
+                axes.scatter(data_ls[mask][j], info_netcdf.data_dim.altitude[index], color=list_colors[i],
+                             marker=list_marker[i], label=value_i, s=64)
 
     fig.savefig(f'{save_name}.png', bbox_inches='tight')
 
     dict_var = [{'data': data_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'TIME'},
-                {'data': data_altitude[:], 'varname': f"{altitude_name}", 'units': f"{unit_altitude}",
+                {'data': info_netcdf.data_dim.altitude[:], 'varname': f"{altitude_name}", 'units': f"{unit_altitude}",
                  'shortname': "ALTITUDE"},
                 {'data': data_1, 'varname': f"{varname_1}", 'units': f"{unit}", 'shortname': f"{shortname_1}"},
-                {'data': data_2, 'varname': f"{varname_2}", 'units': f"{unit}", 'shortname': f"{shortname_2}"},
-                {'data': array([index_10, index_40, index_80]), 'varname': f"altitude index [10, 40, 80] km above "
-                   f"local surface", 'units': "km", 'shortname': "idx_km"},
                 ]
-    #TODO: to fix
-#    if data_2 is not None:
-#        dict_var.append([{'data': data_2, 'varname': varname_2, 'units': unit, 'shortname': shortname_2}])
+    if alti_line:
+        dict_var.append({'data': array([index_10, index_40, index_80]),
+                         'varname': f"altitude index [10, 40, 80] km above local surface", 'units': "km",
+                         'shortname': "idx_km"})
+
+    if data_2:
+        dict_var.append({'data': data_2, 'varname': f"{varname_2}", 'units': f"{unit}", 'shortname': f"{shortname_2}"})
+
     save_figure_data(list_dict_var=dict_var, savename=save_name)
     return
 
 
-def display_vars_latitude_longitude(filename, data, unit, norm, vmin, vmax, title, save_name):
+def display_vars_latitude_longitude(info_netcdf, unit, norm, vmin, vmax, title, save_name):
     from matplotlib.colors import LogNorm, Normalize
 
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
-    data_longitude, list_var = get_data(filename=filename, target='longitude')
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
 
     # PLOT
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph_xtend)
     ax.set_title(title, fontsize=fontsize)
-    ctf = ax.pcolormesh(data_longitude[:], data_latitude[:], data, norm=norm, cmap='plasma', shading='auto')
-    ax.set_xticks(data_longitude[::8])
-    ax.set_xticklabels([str(int(x)) for x in data_longitude[::8]], fontsize=fontsize)
-    ax.set_yticks(data_latitude[::4])
-    ax.set_yticklabels([str(int(x)) for x in data_latitude[::4]], fontsize=fontsize)
+    ctf = ax.pcolormesh(info_netcdf.data_dim.longitude, info_netcdf.data_dim.latitude, info_netcdf.data_target,
+                        norm=norm, cmap='plasma', shading='auto')
+    ax.set_xticks(info_netcdf.data_dim.longitude[::8])
+    ax.set_xticklabels([str(int(x)) for x in info_netcdf.data_dim.longitude[::8]], fontsize=fontsize)
+    ax.set_yticks(info_netcdf.data_dim.latitude[::4])
+    ax.set_yticklabels([str(int(x)) for x in info_netcdf.data_dim.latitude[::4]], fontsize=fontsize)
     ax.set_xlabel('Longitude (°E)', fontsize=fontsize)
     ax.set_ylabel('Latitude (°N)', fontsize=fontsize)
     cbar = fig.colorbar(ctf)
@@ -1941,11 +1953,12 @@ def display_vars_latitude_longitude(filename, data, unit, norm, vmin, vmax, titl
     return
 
 
-def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax, cmap, observation=False,
-                             latitude_selected=None, localtime_selected=None, title=None, tes=None, mvals=None,
+def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observation=False,
+                             latitude_selected=None, title=None, tes=None, mvals=None,
                              layer=None, save_name='test'):
     from matplotlib.colors import LogNorm, Normalize, DivergingNorm, BoundaryNorm
     from matplotlib import cm
+    idx1, idx2 = None, None
 
     n_subplot = 1
 
@@ -1970,27 +1983,32 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         extend = False
         norm = Normalize(vmin=vmin, vmax=vmax)
 
-    data_time, list_var = get_data(filename=filename, target='Time')
-    data_local_time, idx, stats_file = check_local_time(data_time=data_time[:], selected_time=localtime_selected)
+    data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
+                                                        selected_time=info_netcdf.local_time)
 
-    if data_time.units != 'deg':
-        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
-        data_time = data_ls[idx::len(data_local_time)]
+    data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+    if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
+        if info_netcdf.data_dim.time.units != 'deg':
+            data_time = data_ls[idx::len(data_local_time)]
+        else:
+            data_time = info_netcdf.data_dim.time[idx::len(data_local_time)]
+
+        info_netcdf.data_target, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
+        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
     else:
-        data_time = data_time[idx::len(data_local_time)]
+        data_ls = data_ls[:info_netcdf.data_dim.time.shape[0]]
+        data_time = data_ls[idx::len(data_local_time)]
+        info_netcdf.data_target, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
+        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time, tab_ls=data_time[::20])
 
-    data, data_time = linearize_ls(data=data, data_ls=data_time)
-    ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
-
-    data_altitude, list_var = get_data(filename, target='altitude')
-
-    data_latitude, list_var = get_data(filename, target='latitude')
     if latitude_selected is not None:
-        data_latitude, latitude_selected = slice_data(data_latitude, dimension_data=data_latitude,
+        data_latitude, latitude_selected = slice_data(data=info_netcdf.data_dim.latitude,
+                                                      dimension_slice=info_netcdf.data_dim.latitude,
+                                                      idx_dim_slice=0,
                                                       value=[latitude_selected[0], latitude_selected[-1]])
     else:
         latitude_selected = [-90, 90]
-    data_latitude = data_latitude[::-1]
+        data_latitude = info_netcdf.data_dim.latitude[:]
 
     # PLOT
     fig, ax = plt.subplots(nrows=n_subplot, ncols=1, figsize=figsize_1graph)
@@ -2000,7 +2018,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     if tes:
         # Extract TES data
         print('Takes TES data')
-        if name_target == 'tsurf':
+        if info_netcdf.name_target == 'tsurf':
             data_time_tes = observation_tes(target='time', year=None)  # None == climatology
             data_latitude_tes = observation_tes(target='latitude', year=None)
 
@@ -2011,7 +2029,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
             idx2 = (abs(data_time_tes[:] - 360 * 2)).argmin()
             data_time_tes = data_time_tes[idx1:idx2] - 360
             data_tes = mean(data_tes, axis=2).T
-        elif name_target == 'temp':
+        elif info_netcdf.name_target == 'temp':
             data_time_tes = observation_tes(target='time', year=25)
             data_latitude_tes = observation_tes(target='latitude', year=25)
             data_altitude_tes = observation_tes(target='altitude', year=25)  # Pa
@@ -2019,18 +2037,18 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
             year = 1
 
             # Select altitude for TES data close to the specified layer
-            target_layer = data_altitude[::-1][layer]
+            target_layer = info_netcdf.data_dim.altitude[::-1][layer]
             in_range = ma.masked_outside(data_altitude_tes[:], target_layer, target_layer)
             if not in_range.all():
                 data_tes = zeros((data_tes.shape[2], data_tes.shape[0]))
                 altitude_tes = 'out range'
             else:
-                idx = abs(data_altitude_tes[:] - data_altitude[::-1][layer]).argmin()
+                idx = abs(data_altitude_tes[:] - info_netcdf.data_dim.altitude[::-1][layer]).argmin()
                 data_tes = data_tes[:, idx, :, :]
-                data_tes, tmp = vars_zonal_mean('', data_tes[:, :, :], layer=None)
+                data_tes, tmp = vars_zonal_mean(data_input=data_tes[:, :, :])
                 altitude_tes = data_altitude_tes[idx]
 
-            data_tes, tmp = vars_zonal_mean('', data_tes[:, :, :], layer=None)
+            data_tes, tmp = vars_zonal_mean(data_input=data_tes[:, :, :])
             ax[i_subplot].set_title(f'TES Mars Year {24 + year:d} at {altitude_tes} {data_altitude_tes.units}',
                                     fontsize=fontsize)
         else:
@@ -2046,7 +2064,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     if mvals:
         # Extract mvals data
         print('Takes M. Vals data')
-        data_mvals = simulation_mvals(target=name_target, localtime=2)
+        data_mvals = simulation_mvals(target=info_netcdf.name_target, localtime=2)
         data_time_mvals = simulation_mvals(target='Time', localtime=2)
         data_latitude_mvals = simulation_mvals(target='latitude', localtime=2)
         data_altitude_mvals = simulation_mvals(target='altitude', localtime=2)
@@ -2054,14 +2072,14 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
             data_mvals = data_mvals[:, layer, :, :]
 
         if data_mvals.ndim == 3:
-            data_mvals = correction_value(data_mvals[:, :, :], operator='inf', threshold=threshold)
+            data_mvals = correction_value(data_mvals[:, :, :], operator='inf', value=threshold)
         else:
-            data_mvals = correction_value(data_mvals[:, :, :, :], operator='inf', threshold=threshold)
+            data_mvals = correction_value(data_mvals[:, :, :, :], operator='inf', value=threshold)
 
         # Compute zonal mean
-        data_mvals, tmp = vars_zonal_mean(filename='', data=data_mvals, layer=layer, flip=False)
+        data_mvals, tmp = vars_zonal_mean(data_input=data_mvals, layer=layer)
 
-        if name_target == 'temp':
+        if info_netcdf.name_target == 'temp':
             ax[i_subplot].set_title(f'M. VALS at {data_altitude_mvals[layer]:.2e} {data_altitude_mvals.units}',
                                     fontsize=fontsize)
         else:
@@ -2071,11 +2089,13 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         i_subplot += 1
 
     if i_subplot == 0:
-        ctf = ax.pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='flat', zorder=10)
+        ctf = ax.pcolormesh(data_time[:], data_latitude[:], info_netcdf.data_target, norm=norm, cmap=cmap,
+                            shading='flat', zorder=10)
     else:
-        ctf = ax[i_subplot].pcolormesh(data_time[:], data_latitude[:], data, norm=norm, cmap=cmap, shading='flat',
+        ctf = ax[i_subplot].pcolormesh(data_time[:], data_latitude[:], info_netcdf.data_target, norm=norm, cmap=cmap,
+                                       shading='flat',
                                        zorder=10)
-
+    ax.set_xlim(0, 360)
     # Seasonal boundaries caps
     north_cap_ls, north_cap_boundaries, north_cap_boundaries_error, south_cap_ls, south_cap_boundaries, \
         south_cap_boundaries_error = boundaries_seasonal_caps()
@@ -2083,11 +2103,12 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         ax.plot(north_cap_ls, north_cap_boundaries, color='black', zorder=11)
         ax.plot(south_cap_ls, south_cap_boundaries, color='black', zorder=11)
 
-    if name_target == 'temp':
+    if info_netcdf.target_name == 'temp':
         if i_subplot == 0:
             ax.set_title(title, fontsize=fontsize)
         else:
-            ax[i_subplot].set_title(f'My work at {data_altitude[::-1][layer]:.2e} {data_altitude.units}',
+            ax[i_subplot].set_title(f'My work at {info_netcdf.data_dim.altitude[::-1][layer]:.2e}'
+                                    f' {info_netcdf.data_dim.altitude.units}',
                                     fontsize=fontsize)
     else:
         if i_subplot == 0:
@@ -2098,10 +2119,10 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
     if observation:
         # Get latitude range between entre value-1 et value+1
         data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-        data_maven_limb, data_spicam, data_tesmoc, data_themis, data_nomad = mesospheric_clouds_observed()
+            data_maven_limb, data_spicam, data_tesmoc, data_themis, data_nomad = mesospheric_clouds_observed()
 
         list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
-                    data_spicam, data_tesmoc, data_themis, data_nomad] #data_maven_limb
+                    data_spicam, data_tesmoc, data_themis, data_nomad]  # data_maven_limb
         for j, value in enumerate(list_obs):
             data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
                                                                          [latitude_selected[0], latitude_selected[-1]])
@@ -2110,8 +2131,8 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
                 plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='o', s=3, zorder=10000,
                             label='Meso')
 
-#        mola_latitude, mola_ls, mola_altitude = observation_mola(only_location=True)
-#        plt.scatter(mola_ls, mola_latitude, color='red', marker='o', zorder=10000, s=3, label='Tropo')
+    #        mola_latitude, mola_ls, mola_altitude = observation_mola(only_location=True)
+    #        plt.scatter(mola_ls, mola_latitude, color='red', marker='o', zorder=10000, s=3, label='Tropo')
 
     if i_subplot != 0:
         for axes in ax.reshape(-1):
@@ -2119,7 +2140,7 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
             axes.set_xticks(ticks=axis_ls)
         fig.text(0.02, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
         fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=fontsize)
-#        fig.suptitle(title, fontsize=fontsize)
+        #        fig.suptitle(title, fontsize=fontsize)
         pos0 = ax[0].get_position()
         cb_axes = fig.add_axes([pos0.x0, 0.95, pos0.x1 - pos0.x0, 0.025])
         cbar = plt.colorbar(ctf, cax=cb_axes, orientation="horizontal")
@@ -2138,18 +2159,18 @@ def display_vars_latitude_ls(filename, name_target, data, unit, norm, vmin, vmax
         cbar.ax.set_title(unit, fontsize=fontsize)
         cbar.ax.tick_params(labelsize=fontsize)
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
-
     dict_var = [{"data": data_time, "varname": "Solar longitude", "units": "deg", "shortname": "Ls"},
                 {"data": data_latitude, "varname": "Latitude", "units": "deg N", "shortname": "Latitude"},
-                {"data": data, "varname": f"Zonal mean of density column of {name_target}", "units": "kg.m-2",
-                 "shortname": f"{name_target}"}
+                {"data": info_netcdf.data_target,
+                 "varname": f"Zonal mean of density column of {info_netcdf.target_name}",
+                 "units": "kg.m-2", "shortname": f"{info_netcdf.target_name}"}
                 ]
 
     save_figure_data(dict_var, savename=save_name)
     return
 
 
-def display_vars_localtime_longitude(filename, data, norm, vmin, vmax, unit, title, save_name):
+def display_vars_localtime_longitude(info_netcdf, norm, vmin, vmax, unit, title, save_name):
     from matplotlib.colors import Normalize, LogNorm
 
     if norm == 'log':
@@ -2157,13 +2178,12 @@ def display_vars_localtime_longitude(filename, data, norm, vmin, vmax, unit, tit
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
 
-    data_longitude, list_var = get_data(filename=filename, target='longitude')
-    data_time, list_var = get_data(filename=filename, target='Time')
-    data_local_time, tmp, tmp = check_local_time(data_time=data_time[:], selected_time=0)
+    data_local_time, tmp, tmp = check_local_time(data_time=info_netcdf.data_dim.time, selected_time=0)
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
 
-    pcm = ax.pcolormesh(data_longitude[:], data_local_time[:], data, norm=norm, cmap='plasma', shading='auto')
+    pcm = ax.pcolormesh(info_netcdf.data_dim.longitude[:], data_local_time[:], info_netcdf.data_target, norm=norm,
+                        cmap='plasma', shading='auto')
     cbar = fig.colorbar(pcm)
     cbar.ax.set_title(unit, fontsize=fontsize)
     cbar.ax.tick_params(labelsize=fontsize)
@@ -2177,7 +2197,7 @@ def display_vars_localtime_longitude(filename, data, norm, vmin, vmax, unit, tit
     return
 
 
-def display_vars_ls_longitude(filename, data, norm, vmin, vmax, local_time, unit, title, save_name):
+def display_vars_ls_longitude(info_netcdf, norm, vmin, vmax, unit, title, save_name):
     from matplotlib.colors import Normalize, LogNorm
 
     if norm == 'log':
@@ -2185,17 +2205,18 @@ def display_vars_ls_longitude(filename, data, norm, vmin, vmax, local_time, unit
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
 
-    data_longitude, list_var = get_data(filename=filename, target='longitude')
-    data_time, list_var = get_data(filename=filename, target='Time')
-    data_local_time, idx, stats = check_local_time(data_time=data_time[:], selected_time=local_time)
+    data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time,
+                                                   selected_time=info_netcdf.local_time)
+
     data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
     data_time = data_ls[idx::len(data_local_time)]
-
-    data, interp_time = linearize_ls(data=data, data_ls=data_time)
+    print(info_netcdf.data_target.shape, data_time.shape, len(data_local_time), idx)
+    info_netcdf.data_target, interp_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
 
-    pcm = ax.pcolormesh(data_longitude[:], interp_time[:], data.T, norm=norm, cmap='plasma', shading='auto')
+    pcm = ax.pcolormesh(info_netcdf.data_dim.longitude, interp_time[:], info_netcdf.data_target.T, norm=norm,
+                        cmap='plasma', shading='auto')
     cbar = fig.colorbar(pcm)
     cbar.ax.set_title(unit, fontsize=fontsize)
     cbar.ax.tick_params(labelsize=fontsize)
@@ -2268,33 +2289,32 @@ def display_ps_at_viking(data_pressure_at_viking1, latitude1, longitude1, data_p
     save_figure_data(dict_var, savename=savename)
 
 
-def display_vars_1fig_profiles(filename, data, latitude_selected, x_min, x_max, x_label, x_scale='linear',
+def display_vars_1fig_profiles(info_netcdf, list_data, latitude_selected, x_min, x_max, x_label, x_scale='linear',
                                y_scale='linear', second_var=None, x_min2=None, x_max2=None, x_label2=None,
                                x_scale2=None, title='', save_name='profiles', title_option=None):
     from numpy import arange
 
-    data_altitude, list_var = get_data(filename, target='altitude')
-    if data_altitude.units == 'm':
+    if info_netcdf.data_dim.altitude.units == 'm':
         units = 'km'
         altitude_name = 'Altitude'
-        data_altitude = data_altitude[:] / 1e3
+        info_netcdf.data_dim.altitude = info_netcdf.data_dim.altitude / 1e3
         y_scale = 'linear'
-    elif data_altitude.units == 'km':
-        units = data_altitude.units
+    elif info_netcdf.data_dim.altitude.units == 'km':
+        units = info_netcdf.data_dim.altitude.units
         altitude_name = 'Altitude'
         y_scale = 'linear'
     else:
-        units = data_altitude.units
+        units = info_netcdf.data_dim.altitude.units
         altitude_name = 'Pressure'
 
-    for i, d, s in zip(arange(len(save_name)), data, save_name):
+    for i, d, s in zip(arange(len(save_name)), list_data, save_name):
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
         # plot variable 1
         if d.ndim > 1:
             for j in range(d.shape[1]):
                 ax.set_xscale(x_scale)
                 ax.set_yscale(y_scale)
-                ax.plot(d[:, j], data_altitude[:], label=f'{latitude_selected[j]:.2f}°N')
+                ax.plot(d[:, j], info_netcdf.data_dim.altitude, label=f'{latitude_selected[j]:.2f}°N')
         else:
             ax.set_xscale(x_scale)
             ax.set_yscale(y_scale)
@@ -2306,7 +2326,7 @@ def display_vars_1fig_profiles(filename, data, latitude_selected, x_min, x_max, 
             ax2.set_xlim(x_min2, x_max2)
             ax2.set_xlabel(x_label2)
             for j in range(second_var[0].shape[1]):
-                ax2.plot(second_var[i][:, j], data_altitude[:], ls='--')
+                ax2.plot(second_var[i][:, j], info_netcdf.data_dim.altitude, ls='--')
         ax.set_xlim(x_min, x_max)
         if altitude_name == 'Pressure':
             ax.invert_yaxis()
@@ -2322,25 +2342,11 @@ def display_vars_1fig_profiles(filename, data, latitude_selected, x_min, x_max, 
     return
 
 
-def display_vars_4figs_polar_projection(filename, data_riceco2):
-    from cartopy import crs
-
-    longitudes, list_var = get_data(filename, target='longitude')
-    latitudes, list_var = get_data(filename, target='latitude')
-
-    plt.figure(figsize=figsize_1graph)
-    ax1 = plt.subplot(1, 1, 1, projection=crs.Orthographic())
-    ax1.contourf(longitudes[:], latitudes[:], data_riceco2[0, 0, :, :], 60, transform=crs.Orthographic())
-    plt.show()
-    return
-
-
-def display_vars_stats_zonal_mean(filename, data):
-    data_latitude, list_var = get_data(filename, target='latitude')
-
+def display_vars_stats_zonal_mean(info_netcdf):
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
     ax.set_title('Zonal mean of surface emissivity at 14h', fontsize=fontsize)
-    ctf = ax.contourf(arange(12), data_latitude[:], data.T, levels=([0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.]))
+    ctf = ax.contourf(arange(12), info_netcdf.data_dim.latitude, info_netcdf.data_target.T,
+                      levels=([0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.]))
     ax.set_xlabel('Months', fontsize=fontsize)
     ax.set_ylabel('Latitude (°N)', fontsize=fontsize)
     cbar = plt.colorbar(ctf)
@@ -2350,14 +2356,39 @@ def display_vars_stats_zonal_mean(filename, data):
     return
 
 
-def display_vars_polar_projection(filename, data_np, data_sp, levels, unit, cmap, sup_title, save_name):
+def display_vars_histo(info_netcdf):
+    labels = [f"{x:.2e}" for x in info_netcdf.data_dim.altitude]
+
+    cmap = plt.get_cmap('inferno')
+    tab_colors = cmap(arange(info_netcdf.data_target.shape[1]) / info_netcdf.data_target.shape[1])
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
+    ax.hist(info_netcdf.data_target, bins=250 - 60, range=(60, 250), density=True, histtype='barstacked',
+            stacked=True, color=tab_colors, label=labels)
+    ax.axvline(min(info_netcdf.data_target), ymin=0, ymax=100, ls='--', color='black')
+    ax.axvline(max(info_netcdf.data_target), ymin=0, ymax=100, ls='--', color='black')
+
+    ax.legend(loc=0)
+    ax.set_xlabel('Temperature (K)')
+    ax.set_ylabel('Count normalized')
+    ax.set_ylim(0, 0.018)
+    ax.set_xlim(60, 250)
+    plt.savefig(f'{info_netcdf.target_name}_histo.png', bbox_inches='tight')
+    plt.show()
+    return
+
+
+def display_vars_polar_projection(info_netcdf, data_np, data_sp, levels, unit, cmap, sup_title, save_name):
     import cartopy.crs as crs
 
-    data_longitude, list_var = get_data(filename=filename, target='longitude')
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
-
-    latitude_np, tmp = slice_data(data=data_latitude, dimension_data=data_latitude, value=[60, 90])
-    latitude_sp, tmp = slice_data(data=data_latitude, dimension_data=data_latitude, value=[-60, -90])
+    latitude_np, tmp = slice_data(data=info_netcdf.data_dim.latitude,
+                                  idx_dim_slice=1,
+                                  dimension_slice=info_netcdf.data_dim.latitude,
+                                  value=[60, 90])
+    latitude_sp, tmp = slice_data(data=info_netcdf.data_dim.latitude,
+                                  idx_dim_slice=1,
+                                  dimension_slice=info_netcdf.data_dim.latitude,
+                                  value=[-60, -90])
 
     plate_carree = crs.PlateCarree(central_longitude=0)
 
@@ -2379,13 +2410,15 @@ def display_vars_polar_projection(filename, data_np, data_sp, levels, unit, cmap
 
     # South polar region
     ax1.set_title('South polar region', fontsize=fontsize)
-    ctf = ax1.contourf(data_longitude[:], latitude_sp, data_sp, levels=levels, transform=plate_carree, cmap=cmap)
+    ctf = ax1.contourf(info_netcdf.data_dim.longitude, latitude_sp, data_sp, levels=levels, transform=plate_carree,
+                       cmap=cmap)
     workaround_gridlines(plate_carree, axes=ax1, pole='south')
     ax1.set_global()
 
     # North polar region
     ax2.set_title('North polar region', fontsize=fontsize)
-    ax2.contourf(data_longitude[:], latitude_np, data_np, levels=levels, transform=plate_carree, cmap=cmap)
+    ax2.contourf(info_netcdf.data_dim.longitude, latitude_np, data_np, levels=levels, transform=plate_carree,
+                 cmap=cmap)
     workaround_gridlines(plate_carree, axes=ax2, pole='north')
     ax2.set_global()
 
@@ -2399,7 +2432,7 @@ def display_vars_polar_projection(filename, data_np, data_sp, levels, unit, cmap
     return
 
 
-def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vmin, vmax, norm, cmap, unit,
+def display_vars_polar_projection_multi_plot(info_netcdf, time, vmin, vmax, norm, cmap, unit,
                                              title, save_name, levels=None, co2_ice_cover=None):
     import cartopy.crs as crs
     from numpy import unique, ma
@@ -2407,7 +2440,9 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
     from matplotlib.colors import LogNorm, Normalize, BoundaryNorm
     import matplotlib.ticker as ticker
 
-    if isinstance(data, ma.MaskedArray):
+    tab_co2_ice_cover_np, tab_co2_ice_cover_sp, tab_lon, tab_lat_np, tab_lat_sp = None, None, None, None, None
+
+    if isinstance(info_netcdf.data_target, ma.MaskedArray):
         array_mask = True
     else:
         array_mask = False
@@ -2423,29 +2458,56 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
 
     plate_carree = crs.PlateCarree(central_longitude=0)
 
-    data_longitude, list_var = get_data(filename=filename, target='longitude')
-    data_latitude, list_var = get_data(filename=filename, target='latitude')
-
     data_surface_local = gcm_surface_local(data_zareoid=None)
 
     # Slice data in polar regions
-    latitude_np, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[60, 90])
-    data_np, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[60, 90])
-    latitude_sp, tmp = slice_data(data_latitude, dimension_data=data_latitude[:], value=[-90, -60])
-    data_sp, tmp = slice_data(data[:, :, :], dimension_data=data_latitude[:], value=[-90, -60])
-    data_np_surface, tmp = slice_data(data_surface_local[:, :], dimension_data=data_latitude[:], value=[60, 90])
-    data_sp_surface, tmp = slice_data(data_surface_local[:, :], dimension_data=data_latitude[:], value=[-90, -60])
-    data_np = correction_value(data=data_np, operator='inf', threshold=threshold)
-    data_sp = correction_value(data=data_sp, operator='inf', threshold=threshold)
+    latitude_np, tmp = slice_data(data=info_netcdf.data_dim.latitude,
+                                  idx_dim_slice=1,
+                                  dimension_slice=info_netcdf.data_dim.latitude,
+                                  value=[60, 90])
+    data_np, tmp = slice_data(data=info_netcdf.data_target,
+                              idx_dim_slice=info_netcdf.idx_dim.latitude,
+                              dimension_slice=info_netcdf.data_dim.latitude,
+                              value=[60, 90])
+    latitude_sp, tmp = slice_data(data=info_netcdf.data_dim.latitude,
+                                  idx_dim_slice=1,
+                                  dimension_slice=info_netcdf.data_dim.latitude,
+                                  value=[-90, -60])
+    data_sp, tmp = slice_data(data=info_netcdf.data_target,
+                              idx_dim_slice=info_netcdf.idx_dim.latitude,
+                              dimension_slice=info_netcdf.data_dim.latitude,
+                              value=[-90, -60])
+    data_np_surface, tmp = slice_data(data=data_surface_local[:, :],
+                                      idx_dim_slice=1,
+                                      dimension_slice=info_netcdf.data_dim.latitude,
+                                      value=[60, 90])
+    data_sp_surface, tmp = slice_data(data_surface_local[:, :],
+                                      idx_dim_slice=1,
+                                      dimension_slice=info_netcdf.data_dim.latitude,
+                                      value=[-90, -60])
+    data_np = correction_value(data=data_np, operator='inf', value=threshold)
+    data_sp = correction_value(data=data_sp, operator='inf', value=threshold)
     cmap = cm.get_cmap(cmap)
     cmap.set_under('w')
 
     if co2_ice_cover:
         tab_ls, tab_lat, tab_lon, tab_co2_ice_cover = get_polar_cap()
-        tab_lat_np, tmp = slice_data(data=tab_lat, dimension_data=tab_lat, value=[60, 90])
-        tab_co2_ice_cover_np, tmp = slice_data(data=tab_co2_ice_cover, dimension_data=tab_lat, value=[60, 90])
-        tab_lat_sp, tmp = slice_data(data=tab_lat, dimension_data=tab_lat, value=[-90, -60])
-        tab_co2_ice_cover_sp, tmp = slice_data(data=tab_co2_ice_cover, dimension_data=tab_lat, value=[-90, -60])
+        tab_lat_np, tmp = slice_data(data=tab_lat,
+                                     idx_dim_slice=1,
+                                     dimension_slice=tab_lat,
+                                     value=[60, 90])
+        tab_co2_ice_cover_np, tmp = slice_data(data=tab_co2_ice_cover,
+                                               idx_dim_slice=1,
+                                               dimension_slice=tab_lat,
+                                               value=[60, 90])
+        tab_lat_sp, tmp = slice_data(data=tab_lat,
+                                     idx_dim_slice=1,
+                                     dimension_slice=tab_lat,
+                                     value=[-90, -60])
+        tab_co2_ice_cover_sp, tmp = slice_data(data=tab_co2_ice_cover,
+                                               idx_dim_slice=1,
+                                               dimension_slice=tab_lat,
+                                               value=[-90, -60])
 
     # North polar region
     orthographic = crs.Orthographic(central_longitude=0, central_latitude=90)
@@ -2461,27 +2523,27 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°', fontsize=fontsize)
             if array_mask and unique(data_np[i, :, :]).shape[0] != 1:
                 # Need at least 1 row filled with values
-                ctf = axes.pcolormesh(data_longitude[:], latitude_np, data_np[i, :, :], norm=norm,
-                                    transform=plate_carree, cmap=cmap, shading='flat')
-                axes.contour(data_longitude[:], latitude_np, data_np_surface[:, :], transform=plate_carree,
-                             cmap='Blues')
+                ctf = axes.pcolormesh(info_netcdf.data_dim.longitude, latitude_np, data_np[i, :, :], norm=norm,
+                                      transform=plate_carree, cmap=cmap, shading='flat')
+                axes.contour(info_netcdf.data_dim.longitude[:], latitude_np, data_np_surface[:, :],
+                             transform=plate_carree, cmap='Blues')
                 if co2_ice_cover:
-                    tmp = mean(tab_co2_ice_cover_np[30*i:30*(i+1), :, :], axis=0)
+                    tmp = mean(tab_co2_ice_cover_np[30 * i:30 * (i + 1), :, :], axis=0)
                     tmp = where(tmp == 1, 1.1, tmp)
                     axes.contour(tab_lon, tab_lat_np, tmp, transform=plate_carree,
                                  colors='black', linestyles='-', levels=[-1, 0, 1., 2.], linewidths=0.5)
                     axes.contourf(tab_lon, tab_lat_np, tmp, transform=plate_carree,
-                                 hatches=[None, '//', '.', '-'], levels=[-1, 0, 1., 2.], alpha=0, colors='none')
+                                  hatches=[None, '//', '.', '-'], levels=[-1, 0, 1., 2.], alpha=0, colors='none')
                 axes.set_global()
                 workaround_gridlines(plate_carree, axes=axes, pole='north')
-                axes.text(1, 1,'135°E', verticalalignment='top', horizontalalignment='right', rotation=45,
+                axes.text(1, 1, '135°E', verticalalignment='top', horizontalalignment='right', rotation=45,
                           transform=axes.transAxes)
-                axes.text(1, 0,'45°E', verticalalignment='bottom', horizontalalignment='right', rotation=-45,
+                axes.text(1, 0, '45°E', verticalalignment='bottom', horizontalalignment='right', rotation=-45,
                           transform=axes.transAxes)
-                axes.text(0, 0,'315°E', verticalalignment='bottom', horizontalalignment='left', rotation=-315,
+                axes.text(0, 0, '315°E', verticalalignment='bottom', horizontalalignment='left', rotation=-315,
                           transform=axes.transAxes)
 
-                axes.text(0, 1,'225°E', verticalalignment='top', horizontalalignment='left', rotation=315,
+                axes.text(0, 1, '225°E', verticalalignment='top', horizontalalignment='left', rotation=315,
                           transform=axes.transAxes)
             else:
                 axes.set_facecolor('white')
@@ -2492,13 +2554,13 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
                         format=ticker.FuncFormatter(lambda x, levels: "%.0e" % x))
     cbar.ax.tick_params(labelsize=fontsize, bottom=False, top=True, labeltop=True, labelbottom=False)
 
-    if len(localtime) == 1:
-        plt.savefig(f'{save_name}_northern_polar_region_{int(localtime[0])}h.png', bbox_inches='tight')
+    if len(info_netcdf.local_time) == 1:
+        plt.savefig(f'{save_name}_northern_polar_region_{int(info_netcdf.local_time[0])}h.png', bbox_inches='tight')
     else:
         plt.savefig(f'{save_name}_northern_polar_region_diurnal_mean.png', bbox_inches='tight')
 
     # South polar region
-    orthographic = crs.Orthographic(central_longitude=0, central_latitude=-90)#, globe=False)
+    orthographic = crs.Orthographic(central_longitude=0, central_latitude=-90)  # , globe=False)
     y_min, y_max = orthographic.y_limits
     orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
@@ -2509,28 +2571,28 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°', fontsize=fontsize)
             print(f'{int(time[i])}° - {int(time[i + 1])}°')
             if array_mask and unique(data_sp[i, :, :]).shape[0] != 1:
-                ctf = axes.pcolormesh(data_longitude[:], latitude_sp, data_sp[i, :, :], norm=norm,
-                                    transform=plate_carree, cmap=cmap, shading='flat')
-                axes.contour(data_longitude[:], latitude_sp, data_sp_surface[:, :], transform=plate_carree,
+                ctf = axes.pcolormesh(info_netcdf.data_dim.longitude, latitude_sp, data_sp[i, :, :], norm=norm,
+                                      transform=plate_carree, cmap=cmap, shading='flat')
+                axes.contour(info_netcdf.data_dim.longitude, latitude_sp, data_sp_surface[:, :], transform=plate_carree,
                              cmap='Blues')
                 if co2_ice_cover:
-                    tmp = mean(tab_co2_ice_cover_sp[30*i:30*(1+i), :, :], axis=0)
+                    tmp = mean(tab_co2_ice_cover_sp[30 * i:30 * (1 + i), :, :], axis=0)
                     tmp = where(tmp == 1, 1.1, tmp)
                     axes.contour(tab_lon, tab_lat_sp, tmp, transform=plate_carree,
                                  colors='black', linestyles='-', levels=[-1, 0, 1, 2], linewidths=0.5)
                     axes.contourf(tab_lon, tab_lat_sp, tmp, transform=plate_carree,
-                                 hatches=[None, '//', '.','-'], levels=[-1, 0, 1, 2], alpha=0, colors='none',
+                                  hatches=[None, '//', '.', '-'], levels=[-1, 0, 1, 2], alpha=0, colors='none',
                                   extend='lower')
                 axes.set_global()
                 workaround_gridlines(plate_carree, axes=axes, pole='south')
-                axes.text(1, 1,'45°E', verticalalignment='top', horizontalalignment='right', rotation=45,
+                axes.text(1, 1, '45°E', verticalalignment='top', horizontalalignment='right', rotation=45,
                           transform=axes.transAxes)
-                axes.text(1, 0,'135°E', verticalalignment='bottom', horizontalalignment='right', rotation=-45,
+                axes.text(1, 0, '135°E', verticalalignment='bottom', horizontalalignment='right', rotation=-45,
                           transform=axes.transAxes)
-                axes.text(0, 0,'225°E', verticalalignment='bottom', horizontalalignment='left', rotation=-315,
+                axes.text(0, 0, '225°E', verticalalignment='bottom', horizontalalignment='left', rotation=-315,
                           transform=axes.transAxes)
 
-                axes.text(0, 1,'315°E', verticalalignment='top', horizontalalignment='left', rotation=315,
+                axes.text(0, 1, '315°E', verticalalignment='top', horizontalalignment='left', rotation=315,
                           transform=axes.transAxes)
             else:
                 axes.set_facecolor('white')
@@ -2541,12 +2603,13 @@ def display_vars_polar_projection_multi_plot(filename, data, time, localtime, vm
                         format=ticker.FuncFormatter(lambda x, levels: "%.0e" % x))
     cbar.ax.tick_params(labelsize=fontsize, bottom=False, top=True, labeltop=True, labelbottom=False)
 
-    if len(localtime) == 1:
-        plt.savefig(f'{save_name}_southern_polar_region_{int(localtime[0])}h.png', bbox_inches='tight')
+    if len(info_netcdf.local_time) == 1:
+        plt.savefig(f'{save_name}_southern_polar_region_{int(info_netcdf.local_time[0])}h.png', bbox_inches='tight')
     else:
         plt.savefig(f'{save_name}_southern_polar_region_diurnal_mean.png', bbox_inches='tight')
 
-    dict_var = [{"data": data_longitude[:], "varname": "Longitude", "units": "deg E", "shortname": "longitude"},
+    dict_var = [{"data": info_netcdf.data_dim.longitude[:], "varname": "Longitude", "units": "deg E", "shortname":
+                "longitude"},
                 {"data": latitude_np[:], "varname": "Northern latitude", "units": "deg N", "shortname": "latitude_np"},
                 {"data": latitude_sp[:], "varname": "Southern latitude", "units": "deg N", "shortname": "latitude_sp"},
                 {"data": arange(0, 360, 30), "varname": "Solar longitde  bin", "units": "deg", "shortname": "time"},
@@ -2568,7 +2631,7 @@ def workaround_gridlines(src_proj, axes, pole):
     from numpy import linspace, zeros
     # Workaround for plotting lines of constant latitude/longitude as gridlines
     # labels not supported for this projection.
-    latitudes = None
+    latitudes, levels = None, None
     longitudes = linspace(0, 360, num=360, endpoint=False)
     if pole == 'north':
         latitudes = linspace(59, 90, num=31, endpoint=True)
@@ -2584,11 +2647,11 @@ def workaround_gridlines(src_proj, axes, pole):
     lona = longitudes + yn.reshape(len(latitudes), 1)
     cs2 = axes.contour(longitudes, latitudes, lona, 10, transform=src_proj, colors='grey', linestyles='--',
                        levels=arange(45, 495, 90), linewidths=1)
-#    axes.clabel(cs2, fontsize=12, inline=True, fmt='%1.0f', inline_spacing=10,  colors='blue',
-#                )
+    #    axes.clabel(cs2, fontsize=12, inline=True, fmt='%1.0f', inline_spacing=10,  colors='blue',
+    #                )
 
     yt = zeros(len(longitudes))
     contour_latitude = latitudes.reshape(len(latitudes), 1) + yt
     cs = axes.contour(longitudes, latitudes, contour_latitude, 10, transform=src_proj, colors='grey',
                       linestyles='--', levels=levels, linewidths=1)
-    #axes.clabel(cs, fontsize=12, inline=True, fmt='%1.0f', inline_spacing=20, colors='grey')
+    # axes.clabel(cs, fontsize=12, inline=True, fmt='%1.0f', inline_spacing=20, colors='grey')

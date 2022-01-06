@@ -4,17 +4,17 @@ from .constant_parameter import *
 
 
 # correct very low values of co2/h2o mmr
-def correction_value(data, operator, threshold):
+def correction_value(data, operator, value):
     from numpy import ma
 
     if operator == 'inf':
-        data = ma.masked_where(data <= threshold, data, False)
+        data = ma.masked_where(data <= value, data, False)
     elif operator == 'inf_strict':
-        data = ma.masked_where(data < threshold, data, False)
+        data = ma.masked_where(data < value, data, False)
     elif operator == 'sup':
-        data = ma.masked_where(data >= threshold, data, False)
+        data = ma.masked_where(data >= value, data, False)
     elif operator == 'eq':
-        data = ma.masked_values(data, threshold)
+        data = ma.masked_values(data, value)
 
     return data
 
@@ -102,88 +102,95 @@ def convert_sols_to_ls():
     return time_grid_ls
 
 
-def compute_column_density(filename, data):
-    from numpy import zeros, sum, max
+def compute_column_density(info_netcdf):
+    from numpy import zeros, sum
 
-    data_altitude, list_var = get_data(filename, target='altitude')
-
-    if data_altitude.units in ['m', 'km']:
-        data_pressure, list_var = get_data(filename, target='pressure')
+    if info_netcdf.data_dim.altitude.units in ['m', 'km']:
+        data_pressure, list_var = get_data(info_netcdf.filename, target='pressure')
     else:
-        data_pressure = data_altitude
+        data_pressure = info_netcdf.data_dim.altitude
 
     altitude_limit = input('Do you want perform the computation on the entire column(Y/n)? ')
 
     if altitude_limit.lower() == 'n':
-        if data_altitude.units in ['m', 'km']:
-            print(f'Altitude range (km): {data_altitude[0]:.3f} {data_altitude[-1]:.3f}')
+        if info_netcdf.data_dim.altitude.units in ['m', 'km']:
+            print(f'Altitude range (km): {info_netcdf.data_dim.altitude[0]:.3f}'
+                  f' {info_netcdf.data_dim.altitude[-1]:.3f}')
             altitude_min = float(input('Start altitude (km): '))
             altitude_max = float(input('End altitude (km): '))
         else:
-            print(f'Pressure range (Pa): {data_altitude[0]:.3e} {data_altitude[-1]:.3e}')
+            print(f'Pressure range (Pa): {info_netcdf.data_dim.altitude[0]:.3e}'
+                  f' {info_netcdf.data_dim.altitude[-1]:.3e}')
             altitude_min = float(input('Start altitude (Pa): '))
             altitude_max = float(input('End altitude (Pa): '))
+        data_processed, altitude_idx = slice_data(data=info_netcdf.target_data,
+                                                  idx_dim_slice=info_netcdf.idx_dim.altitude,
+                                                  dimension_slice=info_netcdf.data_dim.altitude,
+                                                  value=[altitude_min, altitude_max])
+        idx_altitude_min = altitude_idx[0]
+        idx_altitude_max = altitude_idx[-1]
     else:
-        altitude_min = data_altitude[0]
-        altitude_max = data_altitude[-1]
+        data_processed = info_netcdf.data_target
+        idx_altitude_min = 0
+        idx_altitude_max = info_netcdf.data_dim.altitude.shape[0] - 1
 
-    data, altitude_idx = slice_data(data=data, dimension_data=data_altitude, value=[altitude_min, altitude_max])
+    shape_data = data_processed.shape
+    data_column = zeros(shape=shape_data)
 
-    shape_data = data.shape
-    data_column = zeros(shape_data)
+    if data_processed.ndim == 4:
+        if info_netcdf.data_dim.altitude.units in ['m', 'km']:
+            for alt in range(data_processed.shape[1] - 1):
+                data_column[:, alt, :, :] = data_processed[:, idx_altitude_min + alt, :, :] * \
+                                            (data_pressure[:, idx_altitude_min + alt, :, :] -
+                                             data_pressure[:, idx_altitude_min + alt + 1, :, :]) / 3.711  # g
+            data_column[:, -1, :, :] = data_processed[:, idx_altitude_max, :, :] * \
+                                       data_pressure[:, idx_altitude_max, :, :] / 3.711
 
-    alt = 0
-    if data.ndim == 4:
-        if data_altitude.units in ['m', 'km']:
-            for alt in range(data.shape[1] - 1):
-                data_column[:, alt, :, :] = data[:, alt, :, :] * \
-                                            (data_pressure[:, alt, :, :] - data_pressure[:, alt + 1, :, :]) / 3.711  # g
-            data_column[:, -1, :, :] = data[:, -1, :, :] * data_pressure[:, -1, :, :] / 3.711
         else:
-            for alt in range(data.shape[1] - 1):
-                data_column[:, alt, :, :] = data[:, alt, :, :] * \
-                                            (data_altitude[altitude_idx[0] + alt] - data_altitude[
-                                                altitude_idx[0] + alt + 1]) / 3.711  # g
-            data_column[:, -1, :, :] = data[:, -1, :, :] * data_altitude[altitude_idx[0] + alt + 1] / 3.711
-    elif data.ndim == 3:
-        if data_altitude.units in ['m', 'km']:
-            for alt in range(data.shape[1] - 1):
-                data_column[:, alt, :] = data[:, alt, :] * \
-                                         (data_pressure[:, alt, :] - data_pressure[:, alt + 1, :]) / 3.711  # g
-            data_column[:, -1, :] = data[:, -1, :] * data_pressure[:, -1, :] / 3.711
-        else:
-            for alt in range(data.shape[1] - 1):
-                data_column[:, alt, :] = data[:, alt, :] * \
-                                         (data_altitude[altitude_idx[0] + alt] - data_altitude[
-                                             altitude_idx[0] + alt + 1]) / 3.711  # g
-            data_column[:, -1, :] = data[:, -1, :] * data_altitude[altitude_idx[0] + alt + 1] / 3.711
+            for alt in range(data_processed.shape[1] - 1):
+                data_column[:, alt, :, :] = data_processed[:, alt, :, :] * \
+                                            (data_pressure[idx_altitude_min + alt] - data_pressure[
+                                                idx_altitude_min + alt + 1]) / 3.711  # g
+#            data_column[:, -1, :, :] = data_processed[:, -1, :, :] * data_pressure[altitude_max + 1] / 3.711
     else:
-        print(f'Data has {data.ndim} dimension, need 3 or 4!')
+        print(f'Data has {data_processed.ndim} dimension, need 4!')
         exit()
 
-    data_column = correction_value(data_column, 'inf', threshold=1e-13)
+    data_column = correction_value(data_column, 'inf', value=1e-13)
     data_column = sum(data_column, axis=1)
-    data_column = correction_value(data_column, 'inf', threshold=1e-13)
+    info_netcdf.data_target = correction_value(data_column, 'inf', value=1e-13)
 
-    return data_column, altitude_limit, altitude_min, altitude_max, data_altitude.units
+    return altitude_limit, idx_altitude_min, idx_altitude_max
 
 
-def extract_at_a_local_time(filename, data, local_time=None):
-    data_time, list_var = get_data(filename=filename, target='Time')
+def extract_at_a_local_time(info_netcdf, data=None):
+    data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
+                                                        selected_time=info_netcdf.local_time)
 
-    data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=local_time)
-
-    if idx is not None:
-        local_time = [data_local_time[idx]]
-        if data.ndim == 4:
-            data_processed = data[idx::len(data_local_time), :, :, :]
-        elif data.ndim == 3:
-            data_processed = data[idx::len(data_local_time), :, :]
+    if data:
+        if idx is not None:
+            local_time = [data_local_time[idx]]
+            if data.ndim == 4:
+                data_processed = info_netcdf.data_target[idx::len(data_local_time), :, :, :]
+            elif data.ndim == 3:
+                data_processed = info_netcdf.data_target[idx::len(data_local_time), :, :]
+            else:
+                data_processed = info_netcdf.data_target[idx::len(data_local_time)]
         else:
-            data_processed = data[idx::len(data_local_time)]
+            local_time = data_local_time
+            data_processed = info_netcdf.data_target
     else:
-        local_time = data_local_time
-        data_processed = data
+        if idx is not None:
+            local_time = [data_local_time[idx]]
+            if data.ndim == 4:
+                data_processed = data[idx::len(data_local_time), :, :, :]
+            elif data.ndim == 3:
+                data_processed = data[idx::len(data_local_time), :, :]
+            else:
+                data_processed = data[idx::len(data_local_time)]
+        else:
+            local_time = data_local_time
+            data_processed = data
 
     return data_processed, local_time
 
@@ -211,12 +218,12 @@ def extract_at_max_co2_ice(data, x, y, shape_big_data):
     return data_max
 
 
-def extract_where_co2_ice(filename, data):
+def extract_where_co2_ice(info_netcdf):
     from numpy import nan, ma
 
     # extract co2_ice data
-    data_co2_ice, list_var = get_data(filename, target='co2_ice')
-    data_where_co2_ice = ma.masked_where(data_co2_ice[:, :, :, :] < threshold, data, nan)
+    data_co2_ice, list_var = get_data(filename=info_netcdf.filename, target='co2_ice')
+    data_where_co2_ice = ma.masked_where(data_co2_ice[:, :, :, :] < threshold, info_netcdf.data_target, nan)
     del data_co2_ice
 
     return data_where_co2_ice
@@ -400,8 +407,9 @@ def get_mean_index_altitude(data_altitude, value, dimension):
 def linearize_ls(data, data_ls):
     from numpy import arange
     from scipy.interpolate import interp2d, interp1d
+    from math import ceil
 
-    interp_time = arange(360)
+    interp_time = arange(ceil(data_ls[-1]))  # 360
 
     # interpolation to get linear Ls
     if data.ndim == 2:
@@ -462,21 +470,21 @@ def save_figure_data(list_dict_var, savename):
     primary = fits.PrimaryHDU(header=hdr)
     hdul = fits.HDUList([primary])
 
-#    for x in range(len(list_dict_var)):
-#        if list_dict_var[x]["data"].ndim == 1:
-#            list_col = fits.Column(name=list_dict_var[x]["varname"], array=list_dict_var[x]["data"], format='E',
-#                             unit=list_dict_var[x]["units"])
-#            hdu = fits.BinTableHDU.from_columns(columns=[list_col], name=list_dict_var[x]['shortname'][:10])
-#            hdul.append(hdu=hdu)
-#        elif list_dict_var[x]["data"].ndim == 2:
-#            hdr_x = fits.Header()
-#            hdr_x['unit'] = list_dict_var[x]["units"]
-#            hdr_x['title'] = list_dict_var[x]["varname"]
-#            hdu = fits.ImageHDU(list_dict_var[x]["data"], header=hdr_x, name=list_dict_var[x]['shortname'][:10])
-#            hdul.append(hdu=hdu)
-#        else:
-#            print(f'{list_dict_var[x]["varname"]} has more than 2 dimensions')
-#    hdul.writeto(filename)
+    #    for x in range(len(list_dict_var)):
+    #        if list_dict_var[x]["data"].ndim == 1:
+    #            list_col = fits.Column(name=list_dict_var[x]["varname"], array=list_dict_var[x]["data"], format='E',
+    #                             unit=list_dict_var[x]["units"])
+    #            hdu = fits.BinTableHDU.from_columns(columns=[list_col], name=list_dict_var[x]['shortname'][:10])
+    #            hdul.append(hdu=hdu)
+    #        elif list_dict_var[x]["data"].ndim == 2:
+    #            hdr_x = fits.Header()
+    #            hdr_x['unit'] = list_dict_var[x]["units"]
+    #            hdr_x['title'] = list_dict_var[x]["varname"]
+    #            hdu = fits.ImageHDU(list_dict_var[x]["data"], header=hdr_x, name=list_dict_var[x]['shortname'][:10])
+    #            hdul.append(hdu=hdu)
+    #        else:
+    #            print(f'{list_dict_var[x]["varname"]} has more than 2 dimensions')
+    #    hdul.writeto(filename)
 
     # Case in netCDF format
     filename = folder + savename + '.nc'
@@ -523,36 +531,23 @@ def save_figure_data(list_dict_var, savename):
     f.close()
 
 
-def slice_data(data, dimension_data, value):
-    idx, idx1, idx2, idx_dim = None, None, None, None
-
-    # Select the dimension where the slice will be done
-    # TODO: check if 2 dim have the same length ....
-    for i in range(data.ndim):
-        if data.shape[i] == dimension_data.shape[0]:
-            idx_dim = dimension_data.shape[0]
-
-    # Ensure we know what we do
-    if idx_dim is None:
-        print('Issue with the data and dimension')
-        print(f'data.shape: {data.shape}')
-        print(f'dimension.shape: {dimension_data.shape}')
-        exit()
+def slice_data(data, dimension_slice, idx_dim_slice, value):
+    idx, idx1, idx2 = None, None, None
 
     # From the dimension, get the index(es) of the slice
     if (isinstance(value, float) is True) or (isinstance(value, int) is True):
-        idx = (abs(dimension_data[:] - value)).argmin()
+        idx = (abs(dimension_slice[:] - value)).argmin()
         selected_idx = idx
 
     elif len(value) == 2:
-        idx1 = (abs(dimension_data[:] - value[0])).argmin()
-        idx2 = (abs(dimension_data[:] - value[1])).argmin()
+        idx1 = (abs(dimension_slice[:] - value[0])).argmin()
+        idx2 = (abs(dimension_slice[:] - value[1])).argmin()
         if idx1 > idx2:
             tmp = idx1
             idx1 = idx2
             idx2 = tmp
 
-        if idx2 == dimension_data.shape[0] and dimension_data[idx2 - 1] > 0:  # Deals with boundaries
+        if idx2 == dimension_slice.shape[0] and dimension_slice[idx2 - 1] > 0:  # Deals with boundaries
             idx2 -= 1
 
         selected_idx = [idx1, idx2]
@@ -567,73 +562,73 @@ def slice_data(data, dimension_data, value):
         if idx is not None:
             data = data[idx]
         else:
-            data = data[idx1:idx2+1]
+            data = data[idx1:idx2 + 1]
 
     elif data.ndim == 2:
         # 1st dimension
-        if dimension_data.shape[0] == data.shape[0]:
+        if idx_dim_slice == 0:
             if idx is not None:
                 data = data[idx, :]
             else:
-                data = data[idx1:idx2+1, :]
+                data = data[idx1:idx2 + 1, :]
 
         # 2nd dimension
-        elif dimension_data.shape[0] == data.shape[1]:
+        elif idx_dim_slice == 1:
             if idx is not None:
                 data = data[:, idx]
             else:
-                data = data[:, idx1:idx2+1]
+                data = data[:, idx1:idx2 + 1]
 
     elif data.ndim == 3:
         # 1st dimension
-        if dimension_data.shape[0] == data.shape[0]:
+        if idx_dim_slice == 0:
             if idx is not None:
                 data = data[idx, :, :]
             else:
-                data = data[idx1:idx2+1, :, :]
+                data = data[idx1:idx2 + 1, :, :]
 
         # 2nd dimension
-        elif dimension_data.shape[0] == data.shape[1]:
+        elif idx_dim_slice == 1:
             if idx is not None:
                 data = data[:, idx, :]
             else:
-                data = data[:, idx1:idx2+1, :]
+                data = data[:, idx1:idx2 + 1, :]
 
         # 3rd dimension
-        elif dimension_data.shape[0] == data.shape[2]:
+        elif idx_dim_slice == 2:
             if idx is not None:
                 data = data[:, :, idx]
             else:
-                data = data[:, :, idx1:idx2+1]
+                data = data[:, :, idx1:idx2 + 1]
 
     elif data.ndim == 4:
         # 1st dimension
-        if dimension_data.shape[0] == data.shape[0]:
+        if idx_dim_slice == 0:
             if idx is not None:
                 data = data[idx, :, :, :]
             else:
-                data = data[idx1:idx2+1, :, :, :]
+                data = data[idx1:idx2 + 1, :, :, :]
 
         # 2nd dimension
-        elif dimension_data.shape[0] == data.shape[1]:
+        elif idx_dim_slice == 1:
             if idx is not None:
                 data = data[:, idx, :, :]
             else:
-                data = data[:, idx1:idx2+1, :, :]
+                data = data[:, idx1:idx2 + 1, :, :]
 
         # 3rd dimension
-        elif dimension_data.shape[0] == data.shape[2]:
+        elif idx_dim_slice == 2:
             if idx is not None:
                 data = data[:, :, idx, :]
             else:
-                data = data[:, :, idx1:idx2+1, :]
+                data = data[:, :, idx1:idx2 + 1, :]
 
         # 4th dimension
-        elif dimension_data.shape[0] == data.shape[3]:
+        elif idx_dim_slice == 3:
             if idx is not None:
                 data = data[:, :, :, idx]
             else:
-                data = data[:, :, :, idx1:idx2+1]
+                data = data[:, :, :, idx1:idx2 + 1]
         else:
             print('The dimension of data exceed dimension 4 !')
             exit()

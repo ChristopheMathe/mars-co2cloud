@@ -66,13 +66,13 @@ def extract_data(data, mvals):
         data_co2ice = data.variables['co2ice'][idx::len(data_local_time), :, :]
 
     # correct data
-    data_h2o_ice_s = correction_value(data=data_h2o_ice_s, operator='inf', threshold=1e-13)
-    data_icetot = correction_value(data=data_icetot, operator='inf', threshold=1e-13)
-    data_tau_tes = correction_value(data=data_tau_tes, operator='inf', threshold=1e-13)
-    data_mtot = correction_value(data=data_mtot, operator='inf', threshold=1e-13)
-    data_ps = correction_value(data=data_ps, operator='inf', threshold=1e-13)
-    data_tsurf = correction_value(data=data_tsurf, operator='inf', threshold=1e-13)
-    data_co2ice = correction_value(data=data_co2ice, operator='inf', threshold=1e-13)
+    data_h2o_ice_s = correction_value(data=data_h2o_ice_s, operator='inf', value=1e-13)
+    data_icetot = correction_value(data=data_icetot, operator='inf', value=1e-13)
+    data_tau_tes = correction_value(data=data_tau_tes, operator='inf', value=1e-13)
+    data_mtot = correction_value(data=data_mtot, operator='inf', value=1e-13)
+    data_ps = correction_value(data=data_ps, operator='inf', value=1e-13)
+    data_tsurf = correction_value(data=data_tsurf, operator='inf', value=1e-13)
+    data_co2ice = correction_value(data=data_co2ice, operator='inf', value=1e-13)
 
     # compute zonal mean
     data_h2o_ice_s = mean(data_h2o_ice_s, axis=2)
@@ -430,9 +430,9 @@ def main():
         one_year_time = data_pfs_time[idx1:idx2 + 1] - 360 * j
         print('\t', one_year_time[0], one_year_time[-1])
         one_year_data = data_pfs_tauice[idx1:idx2 + 1, :, :]
-        one_year_data = correction_value(data=one_year_data, operator='inf', threshold=1e-13)
+        one_year_data = correction_value(data=one_year_data, operator='inf', value=1e-13)
         one_year_data = mean(one_year_data, axis=2)
-        one_year_data = correction_value(data=one_year_data, operator='inf', threshold=1e-13)
+        one_year_data = correction_value(data=one_year_data, operator='inf', value=1e-13)
         for i in range(359):
             mask = masked_inside(one_year_time, i, i + 1)
             if mask.mask.any():
@@ -445,7 +445,7 @@ def main():
             del mask
         del one_year_time, one_year_data
 
-    zonal_mean = correction_value(data=zonal_mean, operator='inf', threshold=1e-13)
+    zonal_mean = correction_value(data=zonal_mean, operator='inf', value=1e-13)
     zonal_mean_final = mean(zonal_mean, axis=0)
 
     # FIRST PLOTS: TAU-TES

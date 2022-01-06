@@ -290,6 +290,8 @@ def mesospheric_clouds_observed():
 
 def mesospheric_clouds_altitude_localtime_observed(instrument):
     from numpy import zeros
+    data_ls, data_lat, data_lon, data_lt, data_alt, data_alt_min, data_alt_max = None, None, None, None, None, None, \
+                                                                                 None
     folder = '/home/mathe/Documents/owncloud/GCM/observation_mesocloud/CO2clouds_altitude_localtime_files/'
     if instrument == 'HRSC':
         # nro2, alti2, velo2, lat2, long2, loctime2, ls2
@@ -342,7 +344,8 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
         data_alt_min = zeros(data_alt.shape[0])
         data_alt_max = zeros(data_alt.shape[0])
     elif instrument == 'NOMAD':
-        # UT time, LS, Lat, E Lon, Local_time, Altitude (min, highest CO2 ice, max), CO2 ice max [ppmv], Radius [um], Criteria (T=temp. profile, H=highres)
+        # UT time, LS, Lat, E Lon, Local_time, Altitude (min, highest CO2 ice, max), CO2 ice max [ppmv], Radius [um],
+        # Criteria (T=temp. profile, H=highres)
         data = loadtxt(folder + 'nomad_liuzzi2021.txt', usecols=(1, 2, 3, 4, 5, 6, 7), skiprows=2, delimiter=',')
         data_ls = data[:, 0]
         data_lat = data[:, 1]
@@ -435,15 +438,15 @@ def viking_lander(lander, mcd):
 
     path = ''
     if mcd:
-        if lander ==1:
+        if lander == 1:
             path = '/home/mathe/Documents/owncloud/GCM/Viking_lander/viking_lander1_pression_mcd.dat'
-        elif lander ==2:
+        elif lander == 2:
             path = '/home/mathe/Documents/owncloud/GCM/Viking_lander/viking_lander2_pression_mcd.dat'
         else:
             print('wrong lander number')
             exit()
-        data_sols_unique = loadtxt(path)[:,0]
-        data_pressure_annual = loadtxt(path)[:,1]
+        data_sols_unique = loadtxt(path)[:, 0]
+        data_pressure_annual = loadtxt(path)[:, 1]
     else:
         sols_0 = 0
         if lander == 1:
@@ -485,10 +488,10 @@ def viking_lander(lander, mcd):
 
 
 def boundaries_seasonal_caps():
-    '''
+    """
     Data from Hu et al. (2012) paper. Inferred from MCS data.
     These is related to CO2 ice in the atmosphere
-    '''
+    """
     from numpy import arange, array
     north_ls = arange(185, 360, 5)
     north_boundaries = array([90.00, 75.51, 74.07, 81.85, 78.17, 74.53, 74.52, 71.84, 68.74, 73.28, 71.54, 71.80, 69.71,

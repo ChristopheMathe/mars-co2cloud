@@ -4,7 +4,7 @@ from netCDF4 import Dataset
 from os import listdir
 
 
-def get_argument(*argv):
+def get_argument(*argv, info_netcdf):
     arg_file = None
     arg_target = None
     arg_view_mode = None
@@ -16,10 +16,9 @@ def get_argument(*argv):
             arg_view_mode = int(argv[3])
 
     files = listdir('.')
-    directory_store = []
     try:
         directory_store = [x for x in files if 'occigen' in x or 'simu' in x][0] + '/'
-    except:
+    except FileNotFoundError:
         directory_store = None
 
     if directory_store is None:
@@ -29,10 +28,36 @@ def get_argument(*argv):
 
     filename = getfilename(files, selection=arg_file)
     filename = directory_store + filename
+    info_netcdf.filename = filename
 
     data_target, list_var = get_data(filename, target=arg_target)
+    if data_target.ndim == 4:
+        info_netcdf.data_target = data_target[:, :, :, :]
+    elif data_target.ndim == 3:
+        info_netcdf.data_target = data_target[:, :, :]
+    elif data_target.ndim == 2:
+        info_netcdf.data_target = data_target[:, :]
+    elif data_target.ndim == 1:
+        info_netcdf.data_target = data_target[:]
+    else:
+        print('Wrong dimension!')
+        exit()
+
+    info_netcdf.target_name = data_target.name
+
     print(f'You have selected the variable: {data_target.name}')
-    return files, directory_store, filename, data_target.name, data_target, arg_view_mode
+
+    info_netcdf.idx_dim.time = data_target.dimensions.index('Time')
+    info_netcdf.idx_dim.altitude = data_target.dimensions.index('altitude')
+    info_netcdf.idx_dim.latitude = data_target.dimensions.index('latitude')
+    info_netcdf.idx_dim.longitude = data_target.dimensions.index('longitude')
+
+    info_netcdf.data_dim.time, list_var = get_data(filename, target='Time')
+    info_netcdf.data_dim.altitude, list_var = get_data(filename, target='altitude')
+    info_netcdf.data_dim.latitude, list_var = get_data(filename, target='latitude')
+    info_netcdf.data_dim.longitude, list_var = get_data(filename, target='longitude')
+
+    return files, directory_store, arg_view_mode
 
 
 def getfilename(files, selection=None):
