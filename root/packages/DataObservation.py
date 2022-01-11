@@ -306,13 +306,13 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
     elif instrument == 'OMEGAlimb':
         # nro4, lat4, long4, ls4, loctime4, alti4
         data = loadtxt(folder + 'altilista_OMEGAlimb.txt')
-        data_lat = data[1]
-        data_lon = data[2]
-        data_lt = data[4]
-        data_ls = data[3]
-        data_alt = data[5]
-        data_alt_min = 0
-        data_alt_max = 0
+        data_lat = [data[1]]
+        data_lon = [data[2]]
+        data_lt = [data[4]]
+        data_ls = [data[3]]
+        data_alt = [data[5]]
+        data_alt_min = [0]
+        data_alt_max = [0]
     elif instrument == 'OMEGAnadir':
         # nro1, lat1, long1, ls1, loctime1, alti1
         data = loadtxt(folder + 'altilista_OMEGA_nadir.txt')

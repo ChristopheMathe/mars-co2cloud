@@ -123,7 +123,7 @@ def compute_column_density(info_netcdf):
                   f' {info_netcdf.data_dim.altitude[-1]:.3e}')
             altitude_min = float(input('Start altitude (Pa): '))
             altitude_max = float(input('End altitude (Pa): '))
-        data_processed, altitude_idx = slice_data(data=info_netcdf.target_data,
+        data_processed, altitude_idx = slice_data(data=info_netcdf.data_target,
                                                   idx_dim_slice=info_netcdf.idx_dim.altitude,
                                                   dimension_slice=info_netcdf.data_dim.altitude,
                                                   value=[altitude_min, altitude_max])
@@ -164,10 +164,14 @@ def compute_column_density(info_netcdf):
 
 
 def extract_at_a_local_time(info_netcdf, data=None):
-    data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
-                                                        selected_time=info_netcdf.local_time)
+    try:
+        data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
+                                                            selected_time=info_netcdf.local_time)
+    except ValueError:
+        data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
+                                                            selected_time=None)
 
-    if data:
+    if data is None:
         if idx is not None:
             local_time = [data_local_time[idx]]
             if data.ndim == 4:
@@ -533,9 +537,13 @@ def save_figure_data(list_dict_var, savename):
 
 def slice_data(data, dimension_slice, idx_dim_slice, value):
     idx, idx1, idx2 = None, None, None
+    try:
+        test = len(value)
+    except TypeError:
+        value = [value]
 
     # From the dimension, get the index(es) of the slice
-    if (isinstance(value, float) is True) or (isinstance(value, int) is True):
+    if len(value) == 1:
         idx = (abs(dimension_slice[:] - value)).argmin()
         selected_idx = idx
 

@@ -157,10 +157,10 @@ def co2ice_cloud_localtime_along_ls(info_netcdf):
                                                    dimension_slice=info_netcdf.data_dim.latitude,
                                                    value=[latitude_min, latitude_max])
 
-    info_netcdf.data_target, altitude_limit, altitude_min, altitude_max, altitude_units = \
-        compute_column_density(info_netcdf=info_netcdf)
+    altitude_limit, altitude_min, altitude_max = compute_column_density(info_netcdf=info_netcdf)
     info_netcdf.data_target = mean(info_netcdf.data_target, axis=2)
     info_netcdf.data_target = mean(info_netcdf.data_target, axis=1)
+
     # Reshape every localtime for one year!
     if len(info_netcdf.local_time) > 12:
         nb_sol = 0
@@ -292,7 +292,7 @@ def co2ice_coverage(info_netcdf):
     nlat = info_netcdf.data_dim.latitude.shape[0]
     nlon = info_netcdf.data_dim.longitude.shape[0]
 
-    idx_10pa = (abs(info_netcdf.data_dim.altitude - 10)).argmin()
+    idx_10pa = (abs(info_netcdf.data_dim.altitude[:] - 10)).argmin()
 
     data_co2ice_coverage = zeros((nlat, nlon))
     data_co2ice_coverage_meso = zeros((nlat, nlon))
@@ -300,9 +300,9 @@ def co2ice_coverage(info_netcdf):
     for lat in range(nlat):
         for lon in range(nlon):
             for ls in range(ntime):  # time
-                if any(info_netcdf.data_target[ls, :, lat, lon].mask is True):  # There at least one cell with co2_ice
+                if not all(info_netcdf.data_target[ls, :, lat, lon].mask):  # There at least one cell with co2_ice
                     data_co2ice_coverage[lat, lon] += 1
-                    if any(info_netcdf.data_target[ls, idx_10pa:, lat, lon] is True):  # There at least one cell
+                    if not all(info_netcdf.data_target[ls, idx_10pa:, lat, lon].mask):  # There at least one cell
                         data_co2ice_coverage_meso[lat, lon] = 1                        # with co2_ice in mesosphere
 
     data_co2ice_coverage = correction_value(data=data_co2ice_coverage, operator='eq', value=0)
@@ -365,7 +365,7 @@ def h2o_ice_alt_ls_with_co2_ice(info_netcdf, directory, files):
     if len(latitude.split(',')) > 1:
         latitude = array(latitude.split(','), dtype=float)
     else:
-        latitude = float(latitude)
+        latitude = [float(latitude)]
 
     data, idx_latitude_selected = slice_data(data=info_netcdf.data_target,
                                              dimension_slice=info_netcdf.data_dim.latitude,
@@ -407,7 +407,7 @@ def h2o_ice_alt_ls_with_co2_ice(info_netcdf, directory, files):
     info_netcdf.data_target = 0
     del data, data_co2_ice
 
-    return zonal_mean, zonal_mean_co2_ice, info_netcdf.data_dim.latitude[idx_latitude_selected]
+    return zonal_mean, zonal_mean_co2_ice, [info_netcdf.data_dim.latitude[idx_latitude_selected]]
 
 
 def ps_at_viking(info_netcdf):
@@ -1679,6 +1679,7 @@ def vars_ls_longitude(info_netcdf, latitude, altitude):
         info_netcdf.data_target = info_netcdf.data_target.reshape(nb_sols, nb_lt,
                                                                   info_netcdf.data_dim.longitude.shape[0])
         info_netcdf.data_target = mean(info_netcdf.data_target, axis=1).T
+    info_netcdf.data_target = info_netcdf.data_target.T
     return
 
 

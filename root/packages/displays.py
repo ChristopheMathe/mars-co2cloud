@@ -535,7 +535,7 @@ def display_co2_ice_density_column_evolution_polar_region(info_netcdf, time, lat
 
 def display_co2_ice_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, norm, vmin, vmax, save_name):
     from matplotlib.colors import LogNorm, Normalize
-    from numpy.ma import masked_outside
+    from numpy.ma import masked_inside
 
     if norm == 'log':
         norm = LogNorm(vmin=vmin, vmax=vmax)
@@ -584,8 +584,8 @@ def display_co2_ice_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, nor
         data_ls, data_lat, data_lon, data_lt, data_alt, data_alt_min, data_alt_max = \
             mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
 
-        mask = masked_outside(data_lat, lat_min, lat_max)
-        ax.scatter(data_ls[mask], data_lt[mask], color=list_colors[i], marker=list_marker[i], label=value_i)
+        mask = masked_inside(data_lat, lat_min, lat_max) # mask inside but we want mask.mask = True
+        ax.scatter(data_ls[mask.mask], data_lt[mask.mask], color=list_colors[i], marker=list_marker[i], label=value_i)
 
     ax.legend(loc=0)
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
@@ -1796,8 +1796,8 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
         norm_2 = Normalize(vmin=vmin_2, vmax=vmax_2)
 
     longitude, idx_longitude = slice_data(data=info_netcdf.data_dim.longitude,
-                                          dimension_slice=info_netcdf.data_dim.longitude,
                                           idx_dim_slice=0,
+                                          dimension_slice=info_netcdf.data_dim.longitude,
                                           value=0)
 
     if info_netcdf.data_dim.altitude.units == 'm':
@@ -1828,19 +1828,19 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
     data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
     if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
         if info_netcdf.data_dim.time.units != 'deg':
-            data_time = data_ls[idx::len(data_local_time)]
+            data_ls = data_ls[idx::len(data_local_time)]
         else:
-            data_time = info_netcdf.data_dim.time[idx::len(data_local_time)]
+            data_ls = info_netcdf.data_dim.time[idx::len(data_local_time)]
 
-        data_1, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
-        if data_2:
-            data_2, data_time = linearize_ls(data=data_2, data_ls=data_time)
+        data_1, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_ls)
+        if isinstance(data_2, ndarray):
+            data_2, data_time = linearize_ls(data=data_2, data_ls=data_ls)
         ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
     else:
         data_ls = data_ls[:info_netcdf.data_dim.time.shape[0]]
         data_time = data_ls[idx::len(data_local_time)]
         data_1, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
-        if data_2:
+        if isinstance(data_2, ndarray):
             data_2, data_time = linearize_ls(data=data_2, data_ls=data_time)
         ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time, tab_ls=data_time[::20])
 
@@ -1853,7 +1853,7 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
     fig, axes = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
     cb = axes.pcolormesh(data_time[:], info_netcdf.data_dim.altitude[:], data_1, norm=norm, cmap='inferno',
                          shading='auto')  # autumn
-    if data_2 is not None:
+    if isinstance(data_2, ndarray):
         cb2 = axes.pcolormesh(data_time[:], info_netcdf.data_dim.altitude[:], data_2, norm=norm_2, cmap='winter',
                               shading='auto')
         cbar2 = plt.colorbar(cb2, ax=axes)
@@ -1883,14 +1883,11 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
         axes.hlines(info_netcdf.data_dim.altitude[index_10], data_time[0], data_time[-1], ls='--', color='black')
         axes.hlines(info_netcdf.data_dim.altitude[index_40], data_time[0], data_time[-1], ls='--', color='black')
         axes.hlines(info_netcdf.data_dim.altitude[index_80], data_time[0], data_time[-1], ls='--', color='black')
-        axes.text(300, info_netcdf.data_dim.altitude[index_10], '10 km',
-                  verticalalignment='bottom',
+        axes.text(300, info_netcdf.data_dim.altitude[index_10], '10 km', verticalalignment='bottom',
                   horizontalalignment='left', color='black', fontsize=12, weight='bold')
-        axes.text(300, info_netcdf.data_dim.altitude[index_40], '40 km',
-                  verticalalignment='bottom',
+        axes.text(300, info_netcdf.data_dim.altitude[index_40], '40 km', verticalalignment='bottom',
                   horizontalalignment='left', color='black', fontsize=12, weight='bold')
-        axes.text(300, info_netcdf.data_dim.altitude[index_80], '80 km',
-                  verticalalignment='bottom',
+        axes.text(300, info_netcdf.data_dim.altitude[index_80], '80 km',  verticalalignment='bottom',
                   horizontalalignment='left', color='black', fontsize=12, weight='bold')
     # observation
     list_instrument = ['HRSC', 'OMEGAlimb', 'OMEGAnadir', 'SPICAM', 'THEMIS', 'NOMAD']
@@ -1899,13 +1896,13 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
     for i, value_i in enumerate(list_instrument):
         data_ls, data_lat, data_lon, data_lt, data_alt, data_alt_min, data_alt_max = \
             mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
-
         mask = masked_outside(data_lat, latitude[0], latitude[-1])
-        for j in range(data_alt[mask].shape[0]):
-            if data_alt[mask][j] != 0:
-                index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j] * 1e3).argmin()
-                axes.scatter(data_ls[mask][j], info_netcdf.data_dim.altitude[index], color=list_colors[i],
-                             marker=list_marker[i], label=value_i, s=64)
+        if not all(mask.mask):
+            for j in range(data_alt[mask].shape[0]):
+                if data_alt[mask][j] != 0:
+                    index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j] * 1e3).argmin()
+                    axes.scatter(data_ls[mask][j], info_netcdf.data_dim.altitude[index], color=list_colors[i],
+                                 marker=list_marker[i], label=value_i, s=64)
 
     fig.savefig(f'{save_name}.png', bbox_inches='tight')
 
@@ -1919,7 +1916,7 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
                          'varname': f"altitude index [10, 40, 80] km above local surface", 'units': "km",
                          'shortname': "idx_km"})
 
-    if data_2:
+    if isinstance(data_2, ndarray):
         dict_var.append({'data': data_2, 'varname': f"{varname_2}", 'units': f"{unit}", 'shortname': f"{shortname_2}"})
 
     save_figure_data(list_dict_var=dict_var, savename=save_name)
@@ -2210,7 +2207,6 @@ def display_vars_ls_longitude(info_netcdf, norm, vmin, vmax, unit, title, save_n
 
     data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
     data_time = data_ls[idx::len(data_local_time)]
-    print(info_netcdf.data_target.shape, data_time.shape, len(data_local_time), idx)
     info_netcdf.data_target, interp_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)

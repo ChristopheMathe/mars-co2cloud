@@ -97,7 +97,6 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
     print('     5: cloud evolution with satuco2/temperature/radius (fig: alt-lat, gif)')
     print('     6: mmr structure at a given latitude (fig: alt-ls)')
     print('     7: Density column evolution in polar region, polar projection (fig: lon-lat)')
-    print('     8: h2o_ice profile with co2_ice presence (fig: alt-ls)')
     print('     9: localtime co2_ice column density, zonal mean, [XX-YY]°N (fig: loc-ls)')
     print('        901: localtime co2_ice at 0.5 Pa, 0°N, zonal mean (loc-ls)')
     print('    10: co2_ice column density along longitude and localtime at 0.5 Pa and 0°N (fig: hl-lon)')
@@ -105,6 +104,8 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
     print('    12: co2_ice structure along longitude at 0°N (year mean) (fig: alt-lon)')
     print('    13: stationary wave, at 0°N and -45°E (fig: alt-ls)')
     print('    14: Polar plot every 30° ls mean, column density, lat=60°-90° (fig: lat-ls)')
+    if info_netcdf.target_name == 'h2o_ice':
+        print('     8: h2o_ice profile with co2_ice presence (fig: alt-ls)')
     print('')
 
     if view_mode is None:
@@ -253,8 +254,8 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
             vmax_2 = 1e-6
             if len(latitude_selected) == 1:
                 title = f'Zonal mean of H$_2$O ice mmr (yellowish) and\n CO$_2$ ice mmr (greenish), ' \
-                        f'at {int(latitude_selected)}°N ({int(info_netcdf.local_time[0])} h)'
-                save_name = f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected)}N_' \
+                        f'at {int(latitude_selected[0])}°N ({int(info_netcdf.local_time[0])} h)'
+                save_name = f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected[0])}N_' \
                             f'{int(info_netcdf.local_time[0])}h'
             else:
                 title = f'Zonal mean of H$_2$O ice mmr (yellowish) and CO$_2$ ice\nmmr (greenish), ' \
@@ -266,8 +267,8 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
             vmax_2 = 1e-6
             if len(latitude_selected) == 1:
                 title = f'Zonal and diurnal mean of H$_2$O ice (yellowish) and \n CO$_2$ ice (greenish) mmr, ' \
-                        f'at {int(latitude_selected)}°N'
-                save_name = f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected)}N_diurnal_mean'
+                        f'at {int(latitude_selected[0])}°N'
+                save_name = f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected[0])}N_diurnal_mean'
             else:
                 title = f'Zonal and diurnal mean of H$_2$O ice (yellowish) and\nCO$_2$ ice (greenish) mmr, ' \
                         f'between [{int(latitude_selected[0])}:{int(latitude_selected[-1])}]°N'
@@ -306,7 +307,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
 
     elif view_mode == 10:
         print('Processing data:')
-        vars_localtime_longitude(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
+        info_netcdf.data_target = vars_localtime_longitude(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
 
         print('Display:')
         display_vars_localtime_longitude(info_netcdf=info_netcdf, norm='log', vmin=1e-13, vmax=1e-7, unit='kg/kg',
@@ -879,10 +880,9 @@ def temp(info_netcdf, view_mode):
 
     elif view_mode == 10:
         print('Processing data:')
-        data_processed = vars_localtime_longitude(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
+        info_netcdf.data_target = vars_localtime_longitude(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
 
         print('Display:')
-        print(min(data_processed), max(data_processed))
         display_vars_localtime_longitude(info_netcdf=info_netcdf, norm='linear', vmin=120, vmax=165,
                                          unit='K', title=f'Temperature at 0°N and 0.5 Pa',
                                          save_name=f'temp_local_time_longitude_0N_0p5Pa')
@@ -965,7 +965,8 @@ def main():
         del data_watercap
 
     info_netcdf.data_target, info_netcdf.local_time = extract_at_a_local_time(info_netcdf=info_netcdf,
-                                                                              data=info_netcdf.data_target)
+                                                                              data=info_netcdf.data_target,
+                                                                              )
 
     if info_netcdf.data_dim.time[-1] > 669:
         info_netcdf.data_dim.time, tmp = slice_data(data=info_netcdf.data_dim.time,
