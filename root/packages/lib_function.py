@@ -416,40 +416,15 @@ def get_mean_index_altitude(data_altitude, value, dimension):
 
 
 def linearize_ls(data, data_ls):
-    from numpy import arange, mgrid, array, meshgrid, linspace
-    from scipy.interpolate import interp2d, interp1d, griddata
+    from numpy import arange
+    from scipy.interpolate import interp2d, interp1d
     from math import ceil
 
     interp_time = arange(ceil(data_ls[-1]))  # 360
 
     # interpolation to get linear Ls
     if data.ndim == 2:
-#        x, y = mgrid[0:data.shape[0], 0:data.shape[1]]
-#        x1 = x[~data.mask]
-#        y1 = y[~data.mask]
-#        x1 = data_ls[~data.mask]
-#        y1 = arange(data.shape[0])[~data.mask]
-#        z1 = data[~data.mask]
-#        f = interp2d(x=x1, y=y1, z=z1, kind='linear')(arange(data.shape[0]), arange(data.shape[1]))
-
-#        points = meshgrid(data_ls, arange(data.shape[0]))
-#        points = zip(points[0].flatten(), points[1].flatten())
-#        xi = meshgrid(interp_time, arange(data.shape[0]))
-#        xi = zip(xi[0].flatten(), xi[1].flatten())
-#        tck = griddata(array(points), data.flatten(), array(xi), method='nearest')
-#        data = tck.reshape((1200, 1200))
-
-#        f = interp2d(x=data_ls, y=arange(data.shape[0]), z=data.filled(fill_value=1e-13), kind='linear')
         f = interp2d(x=data_ls, y=arange(data.shape[0]), z=data, kind='linear')
-        #x = data_ls
-        #y = arange(data.shape[0])
-#        f = interp2d(x=x, y=y, z=data, kind='linear')
-
-       # x1, y1 = meshgrid(x, y)
-       # x1 = x1[~data.mask]
-       # y1 = y1[~data.mask]
-       # z1 = data[~data.mask]
-       # f = interp2d(x1, y1, z1, kind='linear')
         data = f(interp_time, arange(data.shape[0]))
     elif data.ndim == 1:
         f = interp1d(data_ls, data[~data.mask], bounds_error=False)
