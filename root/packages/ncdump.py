@@ -46,14 +46,20 @@ def get_argument(*argv, info_netcdf):
     info_netcdf.target_name = data_target.name
 
     print(f'You have selected the variable: {data_target.name}')
+    dim_3d = False
 
     info_netcdf.idx_dim.time = data_target.dimensions.index('Time')
-    info_netcdf.idx_dim.altitude = data_target.dimensions.index('altitude')
+    try:
+        info_netcdf.idx_dim.altitude = data_target.dimensions.index('altitude')
+    except ValueError:
+        dim_3d = True
+
     info_netcdf.idx_dim.latitude = data_target.dimensions.index('latitude')
     info_netcdf.idx_dim.longitude = data_target.dimensions.index('longitude')
 
     info_netcdf.data_dim.time, list_var = get_data(filename, target='Time')
-    info_netcdf.data_dim.altitude, list_var = get_data(filename, target='altitude')
+    if not dim_3d:
+        info_netcdf.data_dim.altitude, list_var = get_data(filename, target='altitude')
     info_netcdf.data_dim.latitude, list_var = get_data(filename, target='latitude')
     info_netcdf.data_dim.longitude, list_var = get_data(filename, target='longitude')
 

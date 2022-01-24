@@ -1,4 +1,4 @@
-from numpy import mean, abs, min, max, zeros, where, arange, unravel_index, argmin, argmax, array, ndarray,\
+from numpy import mean, abs, min, max, zeros, where, arange, unravel_index, argmin, argmax, array, ndarray, \
     count_nonzero, std, append, asarray, power, ma, reshape, swapaxes, log, exp, concatenate, amin, amax, diff
 from .lib_function import *
 from .ncdump import get_data, getfilename
@@ -107,46 +107,40 @@ def co2ice_polar_cloud_distribution(info_netcdf, normalization):
 
 
 def co2ice_cloud_evolution(info_netcdf):
-    print('Select the latitude region (°N):')
-    lat_1 = float(input('   latitude 1: '))
-    lat_2 = float(input('   latitude 2: '))
+    lat_1 = -15
+    lat_2 = 15
 
-    data, latitude_selected = slice_data(data=info_netcdf.data_target,
-                                         idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                         dimension_slice=info_netcdf.data_dim.latitude,
-                                         value=[lat_1, lat_2])
+    info_netcdf.data_target, latitude_selected = slice_data(data=info_netcdf.data_target,
+                                                            idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                            dimension_slice=info_netcdf.data_dim.latitude,
+                                                            value=[lat_1, lat_2])
 
-    idx_max = unravel_index(argmax(data[:, :, :, :], axis=None), data[:, :, :, :].shape)
-    idx_max = asarray(idx_max)
-    data = data[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
+#    data_satuco2, list_var = get_data(filename=info_netcdf.filename, target='satuco2')
+#    data_satuco2, latitude_selected = slice_data(data=data_satuco2,
+#                                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
+#                                                 dimension_slice=info_netcdf.data_dim.latitude,
+#                                                 value=[lat_1, lat_2])
 
-    data_satuco2, list_var = get_data(filename=info_netcdf.filename, target='satuco2')
-    data_satuco2, latitude_selected = slice_data(data=data_satuco2,
-                                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                                 dimension_slice=info_netcdf.data_dim.latitude,
-                                                 value=[lat_1, lat_2])
+#    data_temp, list_var = get_data(filename=info_netcdf.filename, target='temp')
+#    data_temp, latitude_selected = slice_data(data=data_temp,
+#                                              idx_dim_slice=info_netcdf.idx_dim.latitude,
+#                                              dimension_slice=info_netcdf.data_dim.latitude,
+#                                              value=[lat_1, lat_2])
 
-    data_satuco2 = data_satuco2[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
+#    data_riceco2, list_var = get_data(filename=info_netcdf.filename, target='riceco2')
+#    data_riceco2, latitude_selected = slice_data(data=data_riceco2,
+#                                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
+#                                                 dimension_slice=info_netcdf.data_dim.latitude,
+#                                                 value=[lat_1, lat_2])
 
-    data_temp, list_var = get_data(filename=info_netcdf.filename, target='temp')
-    data_temp, latitude_selected = slice_data(data=data_temp,
-                                              idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                              dimension_slice=info_netcdf.data_dim.latitude,
-                                              value=[lat_1, lat_2])
-    data_temp = data_temp[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
-
-    data_riceco2, list_var = get_data(filename=info_netcdf.filename, target='riceco2')
-    data_riceco2, latitude_selected = slice_data(data=data_riceco2,
-                                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                                 dimension_slice=info_netcdf.data_dim.latitude,
-                                                 value=[lat_1, lat_2])
-
-    data_riceco2 = data_riceco2[idx_max[0] - 9:idx_max[0] + 3, :, :, idx_max[3]]
-
-    data_time, list_var = get_data(info_netcdf.filename, target='Time')
-    print(f'the maximum is at: {data_time[idx_max[0]] * 24 % 24}h local time.')
-
-    return data, data_satuco2, data_temp, data_riceco2, idx_max, latitude_selected
+#    data_ccnco2, list_var = get_data(filename=info_netcdf.filename, target='ccnNco2')
+#    data_ccnco2, latitude_selected = slice_data(data=data_ccnco2,
+#                                                idx_dim_slice=info_netcdf.idx_dim.latitude,
+#                                                dimension_slice=info_netcdf.data_dim.latitude,
+#                                                value=[lat_1, lat_2])
+    data_satuco2, data_temp, data_riceco2, data_ccnco2 = 0,0,0,0
+    latitudes = info_netcdf.data_dim.latitude[latitude_selected[0]: latitude_selected[1]+1]
+    return data_satuco2, data_temp, data_riceco2, data_ccnco2, latitudes
 
 
 def co2ice_cloud_localtime_along_ls(info_netcdf):
@@ -303,7 +297,7 @@ def co2ice_coverage(info_netcdf):
                 if not all(info_netcdf.data_target[ls, :, lat, lon].mask):  # There at least one cell with co2_ice
                     data_co2ice_coverage[lat, lon] += 1
                     if not all(info_netcdf.data_target[ls, idx_10pa:, lat, lon].mask):  # There at least one cell
-                        data_co2ice_coverage_meso[lat, lon] = 1                        # with co2_ice in mesosphere
+                        data_co2ice_coverage_meso[lat, lon] = 1  # with co2_ice in mesosphere
 
     data_co2ice_coverage = correction_value(data=data_co2ice_coverage, operator='eq', value=0)
     data_co2ice_coverage_meso = correction_value(data=data_co2ice_coverage_meso, operator='eq', value=0)
@@ -1358,6 +1352,12 @@ def vars_extract_at_grid_point(info_netcdf, latitude, longitude):
 
 
 def vars_max_value_with_others(info_netcdf):
+    # Do not perform diurnal mean
+    if len(info_netcdf.local_time) > 1:
+        print('There is too much local time')
+    else:
+
+
     shape_data_target = info_netcdf.data_target.shape
 
     print(f'Get max value of {info_netcdf.target_name} in progress...')
@@ -1365,34 +1365,45 @@ def vars_max_value_with_others(info_netcdf):
     print('Extract other variable at co2_ice max value:')
 
     print(' (1) Temperature')
-    data_temperature, list_var = get_data(filename=info_netcdf.filename, target='temp')[:, :, :, :]
+    data_temperature, list_var = get_data(filename=info_netcdf.filename, target='temp')
+    data_temperature, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_temperature)
     max_temp = extract_at_max_co2_ice(data_temperature, x, y, shape_data_target)
     del data_temperature
 
     print(' (2) Saturation')
-    data_satuco2, list_var = get_data(filename=info_netcdf.filename, target='satuco2')[:, :, :, :]
+    data_satuco2, list_var = get_data(filename=info_netcdf.filename, target='satuco2')
+    data_satuco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_satuco2)
     max_satu = extract_at_max_co2_ice(data_satuco2, x, y, shape_data_target)
     del data_satuco2
 
     print(' (3) CCN radius')
-    data_riceco2, list_var = get_data(filename=info_netcdf.filename, target='riceco2')[:, :, :, :]
+    data_riceco2, list_var = get_data(filename=info_netcdf.filename, target='riceco2')
+    data_riceco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_riceco2)
     max_radius = extract_at_max_co2_ice(data_riceco2, x, y, shape_data_target)
     del data_riceco2
 
     print(' (4) CCN number')
-    data_ccn_nco2, list_var = get_data(filename=info_netcdf.filename, target='ccnNco2')[:, :, :, :]
+    data_ccn_nco2, list_var = get_data(filename=info_netcdf.filename, target='ccnNco2')
+    data_ccn_nco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_ccn_nco2)
     max_ccn_n = extract_at_max_co2_ice(data_ccn_nco2, x, y, shape_data_target)
     del data_ccn_nco2
 
-    print(' (5) Altitude')
-    data_altitude, list_var = get_data(filename=info_netcdf.filename, target='altitude')
-    max_alt = extract_at_max_co2_ice(data_altitude, x, y, shape_data_target)
+    print(' (5) Altitude')  # 1 dim !
+    max_alt = extract_at_max_co2_ice(info_netcdf.data_dim.altitude, x, y, shape_data_target)
 
     print('Reshape data in progress...')
     max_mmr, max_temp, max_satu, max_radius, max_ccn_n, max_alt = rotate_data(max_mmr, max_temp, max_satu,
                                                                               max_radius, max_ccn_n, max_alt,
                                                                               do_flip=True)
 
+    max_mmr = correction_value(data=max_mmr, operator='invalide')
+    max_temp = correction_value(data=max_temp, operator='invalide')
+    max_satu = correction_value(data=max_satu, operator='invalide')
+    max_radius = correction_value(data=max_radius, operator='invalide')
+    max_ccn_n = correction_value(data=max_ccn_n, operator='invalide')
+    max_alt = correction_value(data=max_alt, operator='invalide')
+
+    print('processing:', min(max_radius), max(max_radius))
     return max_mmr, max_temp, max_satu, max_radius, max_ccn_n, max_alt
 
 
@@ -1488,7 +1499,8 @@ def vars_zonal_mean(data_input, layer=None, flip=None):
 
     # Diurnal mean
     if len(data_input.local_time) > 1:
-        zonal_mean = zonal_mean.reshape(shape=(669, 12, zonal_mean.shape[1]))
+        print(zonal_mean.shape, zonal_mean)
+        zonal_mean = zonal_mean.reshape((669, 12, zonal_mean.shape[1]))
         zonal_mean = mean(zonal_mean, axis=1)
 
     if flip is None:

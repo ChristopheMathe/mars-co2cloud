@@ -4,7 +4,7 @@ from .constant_parameter import *
 
 
 # correct very low values of co2/h2o mmr
-def correction_value(data, operator, value):
+def correction_value(data, operator, value=None):
     from numpy import ma
 
     if operator == 'inf':
@@ -15,7 +15,12 @@ def correction_value(data, operator, value):
         data = ma.masked_where(data >= value, data, False)
     elif operator == 'eq':
         data = ma.masked_values(data, value)
-
+    elif operator == 'invalide':
+        data = ma.masked_invalid(data)
+        data = data.filled(fill_value=False)
+    else:
+        print(f'Wrong operateur "{operator}"')
+        exit()
     return data
 
 
@@ -218,7 +223,7 @@ def extract_at_max_co2_ice(data, x, y, shape_big_data):
         print('Wrong dimension or taken into account')
         data_max = 0
         exit()
-
+    data_max = correction_value(data=data_max, operator='invalide', value=threshold)
     return data_max
 
 
@@ -269,23 +274,25 @@ def gcm_surface_local(data_zareoid=None):
 
 
 def get_extrema_in_alt_lon(data, extrema):
-    from numpy import swapaxes, unravel_index, asarray, reshape
+    from numpy import swapaxes, unravel_index, asarray, reshape, min, max
     # get max value along altitude and longitude
     # axis: 0 = Time, 1 = altitude, 2 = latitude, 3 = longitude
-    print('In get_extrema')
     data_swap_axes = swapaxes(data, 1, 2)
     max_idx = None
     if extrema == 'max':
         max_idx = data_swap_axes.reshape((data_swap_axes.shape[0], data_swap_axes.shape[1], -1)).argmax(2)
     elif extrema == 'min':
         max_idx = data_swap_axes.reshape((data_swap_axes.shape[0], data_swap_axes.shape[1], -1)).argmin(2)
+    else:
+        print(f'Wrong input of extrema: {extrema}')
+        exit()
 
     x, y = unravel_index(max_idx, data_swap_axes[0, 0, :].shape)
     data_max = [data_swap_axes[i, j, x[i, j], y[i, j]] for i in range(data_swap_axes.shape[0]) for j in
                 range(data_swap_axes.shape[1])]
     data_max = asarray(data_max)
     data_max = reshape(data_max, (data.shape[0], data.shape[2]))
-
+    data_max = correction_value(data=data_max, operator='invalide', value=threshold)
     return data_max, x, y
 
 
@@ -409,22 +416,46 @@ def get_mean_index_altitude(data_altitude, value, dimension):
 
 
 def linearize_ls(data, data_ls):
-    from numpy import arange
-    from scipy.interpolate import interp2d, interp1d
+    from numpy import arange, mgrid, array, meshgrid, linspace
+    from scipy.interpolate import interp2d, interp1d, griddata
     from math import ceil
 
     interp_time = arange(ceil(data_ls[-1]))  # 360
 
     # interpolation to get linear Ls
     if data.ndim == 2:
+#        x, y = mgrid[0:data.shape[0], 0:data.shape[1]]
+#        x1 = x[~data.mask]
+#        y1 = y[~data.mask]
+#        x1 = data_ls[~data.mask]
+#        y1 = arange(data.shape[0])[~data.mask]
+#        z1 = data[~data.mask]
+#        f = interp2d(x=x1, y=y1, z=z1, kind='linear')(arange(data.shape[0]), arange(data.shape[1]))
+
+#        points = meshgrid(data_ls, arange(data.shape[0]))
+#        points = zip(points[0].flatten(), points[1].flatten())
+#        xi = meshgrid(interp_time, arange(data.shape[0]))
+#        xi = zip(xi[0].flatten(), xi[1].flatten())
+#        tck = griddata(array(points), data.flatten(), array(xi), method='nearest')
+#        data = tck.reshape((1200, 1200))
+
+#        f = interp2d(x=data_ls, y=arange(data.shape[0]), z=data.filled(fill_value=1e-13), kind='linear')
         f = interp2d(x=data_ls, y=arange(data.shape[0]), z=data, kind='linear')
+        #x = data_ls
+        #y = arange(data.shape[0])
+#        f = interp2d(x=x, y=y, z=data, kind='linear')
+
+       # x1, y1 = meshgrid(x, y)
+       # x1 = x1[~data.mask]
+       # y1 = y1[~data.mask]
+       # z1 = data[~data.mask]
+       # f = interp2d(x1, y1, z1, kind='linear')
         data = f(interp_time, arange(data.shape[0]))
     elif data.ndim == 1:
-        print('data_ls', data_ls)
-        print('new_data', interp_time)
-        f = interp1d(data_ls, data, bounds_error=False)
+        f = interp1d(data_ls, data[~data.mask], bounds_error=False)
         data = f(interp_time)
 
+    data = correction_value(data=data, operator='inf', value=threshold)
     return data, interp_time
 
 

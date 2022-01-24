@@ -94,7 +94,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
     print('        202: adapted for Anni paper')
     print('     3: co2_ice coverage (fig: lat-lon)')
     print('     4: polar cloud distribution to compare with Fig.8 of Neumann+2003 (fig: #clouds-lat)')
-    print('     5: cloud evolution with satuco2/temperature/radius (fig: alt-lat, gif)')
+    print('     5: cloud evolution with satuco2/temperature/radius for each sols (fig: alt-lat, gif)')
     print('     6: mmr structure at a given latitude (fig: alt-ls)')
     print('     7: Density column evolution in polar region, polar projection (fig: lon-lat)')
     print('     9: localtime co2_ice column density, zonal mean, [XX-YY]°N (fig: loc-ls)')
@@ -206,19 +206,12 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
 
     elif view_mode == 5:
         print('Processing data:')
-        data_target, data_satuco2, data_temp, data_riceco2, idx_max, latitude_selected = \
+        data_satuco2, data_temp, data_riceco2, data_ccnco2, latitude_selected = \
             co2ice_cloud_evolution(info_netcdf)
 
         print('Display:')
-        filenames = []
-        for nb in range(-9, 3):
-            filenames.append(display_co2_ice_cloud_evolution_latitude(info_netcdf, data_target, data_satuco2,
-                                                                      data_temp, data_riceco2, idx_max, nb,
-                                                                      latitude_selected))
-
-        make_gif = input('Do you want create a gif (Y/n)?: ')
-        if make_gif.lower() == 'y':
-            create_gif(filenames)
+        display_co2_ice_cloud_evolution_latitude(info_netcdf, data_satuco2, data_temp, data_riceco2,
+                                                 data_ccnco2, latitude_selected)
 
     elif view_mode == 6:
         latitude = float(input('Enter a latitude (°N): '))
@@ -687,7 +680,7 @@ def tau(info_netcdf, view_mode):
 
     if view_mode == 1:
         print('Processing data:')
-        info_netcdf.data_target, tmp = vars_zonal_mean(data_input=info_netcdf)
+        info_netcdf.data_target, tmp = vars_zonal_mean(data_input=info_netcdf, flip=True)
 
         print('Display:')
         display_vars_latitude_ls(info_netcdf=info_netcdf, unit='', norm='set', vmin=0., vmax=2, observation=False,
@@ -706,7 +699,7 @@ def tau1mic(info_netcdf, view_mode):
 
     if view_mode == 1:
         print('Processing data:')
-        info_netcdf.data_target, tmp = vars_zonal_mean(data_input=info_netcdf)
+        info_netcdf.data_target, tmp = vars_zonal_mean(data_input=info_netcdf, flip=True)
 
         print('Display:')
         if len(info_netcdf.local_time) > 1:
@@ -1006,6 +999,9 @@ def main():
 
     elif info_netcdf.target_name in ['fluxtop_lw', 'fluxtop_sw', 'fluxsurf_lw', 'fluxsurf_sw']:
         fluxwave(info_netcdf=info_netcdf, view_mode=view_mode)
+
+    elif info_netcdf.target_name == 'tau1mic':
+        tau1mic(info_netcdf=info_netcdf, view_mode=view_mode)
 
     return
 

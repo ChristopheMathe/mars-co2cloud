@@ -52,7 +52,7 @@ def main():
     else:
         idx_longitude = 0
 
-    directory_output = f'profiles_{filename[:-3]}_sols{data_time[idx_ls]}_lat{data_latitude[idx_latitude]}+N/'
+    directory_output = f'profiles_{filename[:-3]}_sols{data_time[idx_ls]:.0f}_lat{data_latitude[idx_latitude]:.0f}+N/'
 
     if path.isdir(directory_output):
         print('Be careful, the folder already exist')
