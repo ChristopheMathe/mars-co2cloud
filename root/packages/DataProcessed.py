@@ -1352,11 +1352,10 @@ def vars_extract_at_grid_point(info_netcdf, latitude, longitude):
 
 
 def vars_max_value_with_others(info_netcdf):
-    # Do not perform diurnal mean
+    diurnal_mean = False
     if len(info_netcdf.local_time) > 1:
-        print('There is too much local time')
-    else:
-
+        diurnal_mean = True
+        info_netcdf.data_target = compute_diurnal_mean(info_netcdf=info_netcdf, data=info_netcdf.data_target)
 
     shape_data_target = info_netcdf.data_target.shape
 
@@ -1366,25 +1365,37 @@ def vars_max_value_with_others(info_netcdf):
 
     print(' (1) Temperature')
     data_temperature, list_var = get_data(filename=info_netcdf.filename, target='temp')
-    data_temperature, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_temperature)
+    if diurnal_mean:
+        data_temperature = compute_diurnal_mean(info_netcdf=info_netcdf, data=data_temperature[:, :, :, :])
+    else:
+        data_temperature, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_temperature)
     max_temp = extract_at_max_co2_ice(data_temperature, x, y, shape_data_target)
     del data_temperature
 
     print(' (2) Saturation')
     data_satuco2, list_var = get_data(filename=info_netcdf.filename, target='satuco2')
-    data_satuco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_satuco2)
+    if diurnal_mean:
+        data_satuco2 = compute_diurnal_mean(info_netcdf=info_netcdf, data=data_satuco2[:, :, :, :])
+    else:
+        data_satuco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_satuco2)
     max_satu = extract_at_max_co2_ice(data_satuco2, x, y, shape_data_target)
     del data_satuco2
 
     print(' (3) CCN radius')
     data_riceco2, list_var = get_data(filename=info_netcdf.filename, target='riceco2')
-    data_riceco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_riceco2)
+    if diurnal_mean:
+        data_riceco2 = compute_diurnal_mean(info_netcdf=info_netcdf, data=data_riceco2[:, :, :, :])
+    else:
+        data_riceco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_riceco2)
     max_radius = extract_at_max_co2_ice(data_riceco2, x, y, shape_data_target)
     del data_riceco2
 
     print(' (4) CCN number')
     data_ccn_nco2, list_var = get_data(filename=info_netcdf.filename, target='ccnNco2')
-    data_ccn_nco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_ccn_nco2)
+    if diurnal_mean:
+        data_ccn_nco2 = compute_diurnal_mean(info_netcdf=info_netcdf, data=data_ccn_nco2[:, :, :, :])
+    else:
+        data_ccn_nco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_ccn_nco2)
     max_ccn_n = extract_at_max_co2_ice(data_ccn_nco2, x, y, shape_data_target)
     del data_ccn_nco2
 
@@ -1684,14 +1695,7 @@ def vars_ls_longitude(info_netcdf, latitude, altitude):
                                                        dimension_slice=info_netcdf.data_dim.altitude,
                                                        idx_dim_slice=info_netcdf.idx_dim.altitude,
                                                        value=altitude)
-    # Diurnal mean
-    nb_lt = len(info_netcdf.local_time)
-    if nb_lt > 1:
-        nb_sols = int(info_netcdf.data_dim.time.shape[0] / nb_lt)
-        info_netcdf.data_target = info_netcdf.data_target.reshape(nb_sols, nb_lt,
-                                                                  info_netcdf.data_dim.longitude.shape[0])
-        info_netcdf.data_target = mean(info_netcdf.data_target, axis=1).T
-    info_netcdf.data_target = info_netcdf.data_target.T
+    compute_diurnal_mean(info_netcdf=info_netcdf)
     return
 
 

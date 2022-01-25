@@ -168,6 +168,21 @@ def compute_column_density(info_netcdf):
     return altitude_limit, idx_altitude_min, idx_altitude_max
 
 
+def compute_diurnal_mean(info_netcdf, data):
+    from numpy import mean
+
+    nb_lt = len(info_netcdf.local_time)
+    if nb_lt > 1:
+        nb_sols = int(info_netcdf.data_dim.time.shape[0] / nb_lt)
+        print(data.shape)
+        data = data.reshape(nb_sols, nb_lt, info_netcdf.data_dim.altitude.shape[0],
+                            info_netcdf.data_dim.latitude.shape[0],
+                            info_netcdf.data_dim.longitude.shape[0])
+        data = mean(data, axis=1)
+    print(data.shape)
+    return data
+
+
 def extract_at_a_local_time(info_netcdf, data=None):
     try:
         data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
