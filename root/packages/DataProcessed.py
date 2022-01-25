@@ -282,7 +282,14 @@ def co2ice_density_column_evolution(info_netcdf):
 
 
 def co2ice_coverage(info_netcdf):
-    ntime = info_netcdf.data_dim.time.shape[0]
+    if len(info_netcdf.local_time) == 1:
+        data_local_time, idx, tmp = check_local_time(data_time=info_netcdf.data_dim.time,
+                                                     selected_time=info_netcdf.local_time)
+        ntime = info_netcdf.data_dim.time[idx::len(data_local_time)].shape[0]
+
+    else:
+        ntime = info_netcdf.data_dim.time.shape[0]
+
     nlat = info_netcdf.data_dim.latitude.shape[0]
     nlon = info_netcdf.data_dim.longitude.shape[0]
 

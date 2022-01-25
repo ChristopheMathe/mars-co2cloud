@@ -195,7 +195,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
             display_vars_latitude_longitude(info_netcdf=info_netcdf, unit='%', norm=None, vmin=0, vmax=70,
                                             title=f'Percentage of Martian year with presence of CO2 clouds '
                                                   f'({info_netcdf.local_time} h)',
-                                            save_name=f'co2_ice_coverage_{info_netcdf.local_time}h')
+                                            save_name=f'co2_ice_coverage_{int(info_netcdf.local_time[0])}h')
         else:
             display_vars_latitude_longitude(info_netcdf=info_netcdf, unit='%', norm=None, vmin=0, vmax=70,
                                             title=f'Percentage of Martian year with presence of CO2 clouds '
