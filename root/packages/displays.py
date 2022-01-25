@@ -292,27 +292,50 @@ def display_co2_ice_mola(info_netcdf):
     from matplotlib.colors import LogNorm
     from numpy import logspace
 
+    data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
+                                                        selected_time=info_netcdf.local_time)
+
+    data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+    if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
+        if info_netcdf.data_dim.time.units != 'deg':
+            data_time = data_ls[idx::len(data_local_time)]
+        else:
+            data_time = info_netcdf.data_dim.time[idx::len(data_local_time)]
+
+        info_netcdf.data_target, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
+        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+    else:
+        data_ls = data_ls[:info_netcdf.data_dim.time.shape[0]]
+        data_time = data_ls[idx::len(data_local_time)]
+        info_netcdf.data_target, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
+        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time, tab_ls=data_time[::20])
+
     mola_latitude, mola_ls, mola_altitude = observation_mola()
     mola_altitude = correction_value(mola_altitude, operator='inf', value=0)
     mola_altitude = correction_value(mola_altitude, operator='sup', value=1e4)
 
     fig, ax = plt.subplots(ncols=2, figsize=figsize_1graph)
     ax[0].set_title('Zonal mean of column density \n of CO$_2$ ice (kg.m$^{-2}$)', loc='center')
-    ctf = ax[0].contourf(info_netcdf.data_dim.time, info_netcdf.data_dim.latitude, info_netcdf.data_target,
-                         norm=LogNorm(), levels=logspace(-9, 2, 12), cmap='inferno')
+    ctf = ax[0].contourf(data_time, info_netcdf.data_dim.latitude[:], info_netcdf.data_target,
+                         norm=LogNorm(), levels=logspace(-13, 2, 16), cmap='inferno')
     plt.colorbar(ctf, ax=ax[0])
 
     ax[1].set_title('Top altitude of the CO$_2$ cloud \nobserved from MOLA (km)')
-    ctf2 = ax[1].contourf(mola_ls[:], mola_latitude[:], mola_altitude[:, :] / 1e3, levels=arange(11), cmap='inferno')
+    ctf2 = ax[1].contourf(mola_ls[:], mola_latitude[:], mola_altitude[:, :], levels=arange(-4, 11), cmap='inferno')
     plt.colorbar(ctf2, ax=ax[1])
 
-    ax[0].set_xlim(0, 360)
-    ax[1].set_xlim(0, 360)
-
-    ax[0].set_ylabel('Latitude (°N)')
-    fig.text(0.5, 0.03, u'Solar longitude (°)', ha='center', va='center', fontsize=12)
+    for axes in ax.reshape(-1):
+        axes.set_xlim(0, 360)
+        axes.set_ylim(-90, 90)
+        axes.set_xticks(ticks=ndx)
+        axes.set_xticklabels(axis_ls, fontsize=fontsize)
+        axes.set_yticks(ticks=info_netcdf.data_dim.latitude[::4])
+        axes.set_yticklabels(labels=[str(int(x)) for x in info_netcdf.data_dim.latitude[::4]], fontsize=fontsize)
+        axes.set_ylabel('Latitude (°N)')
+        axes.set_xlabel('Solar longitude (°)')
     plt.savefig('DARI_co2_ice_density_column_MOLA.png', bbox_inches='tight')
     plt.show()
+    return
 
 
 def display_co2_ice_distribution_altitude_latitude_polar(info_netcdf, distribution_north, distribution_south,

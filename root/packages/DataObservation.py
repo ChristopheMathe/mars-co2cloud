@@ -4,6 +4,8 @@ from numpy import loadtxt
 
 
 def observation_mola(only_location=None):
+    from numpy import max, min, append, array, nan
+    from numpy.ma import masked_invalid
     """
     dimensions:
         x = 361 ;
@@ -27,7 +29,6 @@ def observation_mola(only_location=None):
     mola_ls, list_var = get_data(filename=path, target='Ls')
     mola_altitude, list_var = get_data(filename=path, target='Altitude')
     mola_altitude = mola_altitude[:, :] / 1e3  # m to km
-    from numpy import max, min, append, array, nan
 
     if only_location:
         tmp_lat = array([])
@@ -35,18 +36,14 @@ def observation_mola(only_location=None):
         for i in range(mola_altitude.shape[0]):
             for j in range(mola_altitude.shape[1]):
                 if mola_altitude[i, j] != mola_altitude[i, j]:
-                    mola_altitude[i, j] = None
+                    mola_altitude[i, j] = nan
                 else:
                     tmp_lat = append(tmp_lat, mola_latitude[i])
                     tmp_ls = append(tmp_ls, mola_ls[j])
         mola_ls = tmp_ls
         mola_latitude = tmp_lat
     else:
-        for i in range(mola_altitude.shape[0]):
-            for j in range(mola_altitude.shape[1]):
-                if mola_altitude[i, j] != mola_altitude[i, j]:
-                    mola_altitude[i, j] = nan
-        print(max(mola_altitude), min(mola_altitude))
+        mola_altitude = masked_invalid(mola_altitude)
 
     return mola_latitude, mola_ls, mola_altitude
 
