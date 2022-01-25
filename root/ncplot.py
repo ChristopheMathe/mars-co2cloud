@@ -131,18 +131,32 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
                 vmin, vmax = 1e-13, 10
             else:
                 vmin, vmax = 1e-7, 1e-1
-            display_vars_latitude_ls(info_netcdf=info_netcdf, unit='kg/m$^2$', norm='log', vmin=vmin, vmax=vmax,
-                                     cmap='coolwarm', observation=True, latitude_selected=None,
-                                     title=f'Zonal mean column density of {info_netcdf.name_target}\n between'
-                                           f' {info_netcdf.data_dim.altitude[idx_altitude_min]:.1e} and'
-                                           f' {info_netcdf.data_dim.altitude[idx_altitude_max]:.1e}'
-                                           f' {info_netcdf.data_dim.altitude.units}, {info_netcdf.local_time} h',
-                                     tes=None, mvals=None, layer=None,
-                                     save_name=f'zonal_mean_density_column_{info_netcdf.name_target}_'
-                                               f'{info_netcdf.data_dim.altitude[idx_altitude_min]:.1e}_'
-                                               f'{info_netcdf.data_dim.altitude[idx_altitude_max]:.1e}_'
-                                               f'{info_netcdf.data_dim.altitude.units}_{info_netcdf.local_time}h')
-
+            if len(info_netcdf.local_time) == 1:
+                display_vars_latitude_ls(info_netcdf=info_netcdf, unit='kg/m$^2$', norm='log', vmin=vmin, vmax=vmax,
+                                         cmap='coolwarm', observation=True, latitude_selected=None,
+                                         title=f'Zonal mean column density of {info_netcdf.target_name}\n between'
+                                               f' {info_netcdf.data_dim.altitude[idx_altitude_min]:.1e} and'
+                                               f' {info_netcdf.data_dim.altitude[idx_altitude_max]:.1e}'
+                                               f' {info_netcdf.data_dim.altitude.units}, '
+                                               f'{int(info_netcdf.local_time[0])} h',
+                                         tes=None, mvals=None, layer=None,
+                                         save_name=f'zonal_mean_density_column_{info_netcdf.target_name}_'
+                                                   f'{info_netcdf.data_dim.altitude[idx_altitude_min]:.1e}_'
+                                                   f'{info_netcdf.data_dim.altitude[idx_altitude_max]:.1e}_'
+                                                   f'{info_netcdf.data_dim.altitude.units}_'
+                                                   f'{int(info_netcdf.local_time[0])}h')
+            else:
+                display_vars_latitude_ls(info_netcdf=info_netcdf, unit='kg/m$^2$', norm='log', vmin=vmin, vmax=vmax,
+                                         cmap='coolwarm', observation=True, latitude_selected=None,
+                                         title=f'Zonal mean column density of {info_netcdf.target_name}\n between'
+                                               f' {info_netcdf.data_dim.altitude[idx_altitude_min]:.1e} and'
+                                               f' {info_netcdf.data_dim.altitude[idx_altitude_max]:.1e}'
+                                               f' {info_netcdf.data_dim.altitude.units}, diurnal mean',
+                                         tes=None, mvals=None, layer=None,
+                                         save_name=f'zonal_mean_density_column_{info_netcdf.target_name}_'
+                                                   f'{info_netcdf.data_dim.altitude[idx_altitude_min]:.1e}_'
+                                                   f'{info_netcdf.data_dim.altitude[idx_altitude_max]:.1e}_'
+                                                   f'{info_netcdf.data_dim.altitude.units}_diurnal_mean')
         elif view_mode == 201:
             display_co2_ice_mola(info_netcdf=info_netcdf)
 
