@@ -107,6 +107,7 @@ def co2ice_polar_cloud_distribution(info_netcdf, normalization):
 
 
 def co2ice_cloud_evolution(info_netcdf):
+    from numpy import ma
     lat_1 = -15
     lat_2 = 15
 
@@ -115,32 +116,68 @@ def co2ice_cloud_evolution(info_netcdf):
                                                             dimension_slice=info_netcdf.data_dim.latitude,
                                                             value=[lat_1, lat_2])
 
-#    data_satuco2, list_var = get_data(filename=info_netcdf.filename, target='satuco2')
-#    data_satuco2, latitude_selected = slice_data(data=data_satuco2,
-#                                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
-#                                                 dimension_slice=info_netcdf.data_dim.latitude,
-#                                                 value=[lat_1, lat_2])
+    # Saturation
+    data_satuco2, list_var = get_data(filename=info_netcdf.filename, target='satuco2')
+    if len(info_netcdf.local_time) == 1:
+        data_satuco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_satuco2[:, :, :, :])
+    data_satuco2, latitude_selected = slice_data(data=data_satuco2,
+                                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                 dimension_slice=info_netcdf.data_dim.latitude,
+                                                 value=[lat_1, lat_2])
+    data_satuco2 = correction_value(data=data_satuco2, operator='inf', value=1)
 
-#    data_temp, list_var = get_data(filename=info_netcdf.filename, target='temp')
-#    data_temp, latitude_selected = slice_data(data=data_temp,
-#                                              idx_dim_slice=info_netcdf.idx_dim.latitude,
-#                                              dimension_slice=info_netcdf.data_dim.latitude,
-#                                              value=[lat_1, lat_2])
+    # Temperature
+    data_temp, list_var = get_data(filename=info_netcdf.filename, target='temp')
 
-#    data_riceco2, list_var = get_data(filename=info_netcdf.filename, target='riceco2')
-#    data_riceco2, latitude_selected = slice_data(data=data_riceco2,
-#                                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
-#                                                 dimension_slice=info_netcdf.data_dim.latitude,
-#                                                 value=[lat_1, lat_2])
+    if len(info_netcdf.local_time) == 1:
+        data_temp, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_temp[:, :, :, :])
+    data_temp, latitude_selected = slice_data(data=data_temp,
+                                              idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                              dimension_slice=info_netcdf.data_dim.latitude,
+                                              value=[lat_1, lat_2])
+    data_temp = correction_value(data=data_temp, operator='inf', value=threshold)
 
-#    data_ccnco2, list_var = get_data(filename=info_netcdf.filename, target='ccnNco2')
-#    data_ccnco2, latitude_selected = slice_data(data=data_ccnco2,
-#                                                idx_dim_slice=info_netcdf.idx_dim.latitude,
-#                                                dimension_slice=info_netcdf.data_dim.latitude,
-#                                                value=[lat_1, lat_2])
-    data_satuco2, data_temp, data_riceco2, data_ccnco2 = 0,0,0,0
+    # Radius
+    data_riceco2, list_var = get_data(filename=info_netcdf.filename, target='riceco2')
+    if len(info_netcdf.local_time) == 1:
+        data_riceco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_riceco2[:, :, :, :])
+    data_riceco2, latitude_selected = slice_data(data=data_riceco2,
+                                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                 dimension_slice=info_netcdf.data_dim.latitude,
+                                                 value=[lat_1, lat_2])
+    data_riceco2 = correction_value(data=data_riceco2, operator='inf', value=threshold)
+
+    # CCNCO2
+    data_ccnco2, list_var = get_data(filename=info_netcdf.filename, target='ccnNco2')
+    if len(info_netcdf.local_time) == 1:
+        data_ccnco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_ccnco2[:, :, :, :])
+    data_ccnco2, latitude_selected = slice_data(data=data_ccnco2,
+                                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                 dimension_slice=info_netcdf.data_dim.latitude,
+                                                 value=[lat_1, lat_2])
+    data_ccnco2 = correction_value(data=data_ccnco2, operator='inf', value=threshold)
+
+    # h2o ice
+    data_h2o_ice, list_var = get_data(filename=info_netcdf.filename, target='h2o_ice')
+    if len(info_netcdf.local_time) == 1:
+        data_h2o_ice, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_h2o_ice[:, :, :, :])
+    data_h2o_ice, latitude_selected = slice_data(data=data_h2o_ice,
+                                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                 dimension_slice=info_netcdf.data_dim.latitude,
+                                                 value=[lat_1, lat_2])
+    data_h2o_ice = correction_value(data=data_h2o_ice, operator='inf', value=threshold)
+
     latitudes = info_netcdf.data_dim.latitude[latitude_selected[0]: latitude_selected[1]+1]
-    return data_satuco2, data_temp, data_riceco2, data_ccnco2, latitudes
+
+    # zonal mean
+    info_netcdf.data_target = ma.mean(info_netcdf.data_target, axis=3)
+    data_satuco2 = ma.mean(data_satuco2, axis=3)
+    data_temp = ma.mean(data_temp, axis=3)
+    data_riceco2 = ma.mean(data_riceco2, axis=3)
+    data_ccnco2 = ma.mean(data_ccnco2, axis=3)
+    data_h2o_ice = ma.mean(data_h2o_ice, axis=3)
+
+    return data_satuco2, data_temp, data_riceco2, data_ccnco2, data_h2o_ice, latitudes
 
 
 def co2ice_cloud_localtime_along_ls(info_netcdf):

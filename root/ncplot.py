@@ -94,7 +94,8 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
     print('        202: adapted for Anni paper')
     print('     3: co2_ice coverage (fig: lat-lon)')
     print('     4: polar cloud distribution to compare with Fig.8 of Neumann+2003 (fig: #clouds-lat)')
-    print('     5: cloud evolution with satuco2/temperature/radius for each sols (fig: alt-lat, gif)')
+    print('     5: cloud evolution with satuco2/temperature/radius/CCNCO2/h2o_ice for each time, lat[-15:15]°N (fig: '
+                   'alt-lat)')
     print('     6: mmr structure at a given latitude (fig: alt-ls)')
     print('     7: Density column evolution in polar region, polar projection (fig: lon-lat)')
     print('     9: localtime co2_ice column density, zonal mean, [XX-YY]°N (fig: loc-ls)')
@@ -220,12 +221,12 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
 
     elif view_mode == 5:
         print('Processing data:')
-        data_satuco2, data_temp, data_riceco2, data_ccnco2, latitude_selected = \
+        data_satuco2, data_temp, data_riceco2, data_ccnco2, data_h2o_ice, latitude_selected =\
             co2ice_cloud_evolution(info_netcdf)
 
         print('Display:')
-        display_co2_ice_cloud_evolution_latitude(info_netcdf, data_satuco2, data_temp, data_riceco2,
-                                                 data_ccnco2, latitude_selected)
+        display_co2_ice_cloud_evolution_latitude(info_netcdf, data_satuco2, data_temp, data_riceco2, data_ccnco2,
+                                                 data_h2o_ice, latitude_selected)
 
     elif view_mode == 6:
         latitude = float(input('Enter a latitude (°N): '))
