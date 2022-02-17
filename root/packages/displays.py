@@ -1896,6 +1896,7 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
                                                           dimension_slice=info_netcdf.data_dim.latitude,
                                                           idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                           value=latitude)
+                latitude = info_netcdf.data_dim.latitude[latitude-1: latitude+2]
 
     data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
                                                         selected_time=info_netcdf.local_time)
@@ -1905,7 +1906,6 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
             data_ls = data_ls[idx::len(data_local_time)]
         else:
             data_ls = info_netcdf.data_dim.time[idx::len(data_local_time)]
-
         data_1, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_ls)
         if isinstance(data_2, ndarray):
             data_2, data_time = linearize_ls(data=data_2, data_ls=data_ls)
@@ -1972,10 +1972,10 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
             mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
         mask = masked_outside(data_lat, latitude[0], latitude[-1])
         if not all(mask.mask):
-            for j in range(data_alt[mask].shape[0]):
-                if data_alt[mask][j] != 0:
-                    index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask][j] * 1e3).argmin()
-                    axes.scatter(data_ls[mask][j], info_netcdf.data_dim.altitude[index], color=list_colors[i],
+            for j in range(data_alt[mask.mask].shape[0]):
+                if data_alt[mask.mask][j] != 0:
+                    index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask.mask][j] * 1e3).argmin()
+                    axes.scatter(data_ls[mask.mask][j], info_netcdf.data_dim.altitude[index], color=list_colors[i],
                                  marker=list_marker[i], label=value_i, s=64)
 
     fig.savefig(f'{save_name}.png', bbox_inches='tight')

@@ -232,16 +232,25 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
         latitude = float(input('Enter a latitude (°N): '))
 
         print('Processing data:')
-        info_netcdf.data_target, latitude = vars_altitude_ls(info_netcdf=info_netcdf, latitude=latitude)
+        vars_altitude_ls(info_netcdf=info_netcdf, latitude=latitude)
 
         print('Display:')
-        display_vars_altitude_ls(info_netcdf=info_netcdf, altitude_min=None, altitude_max=None,
-                                 latitude=latitude, shortname_1='co2_ice', varname_1='CO$_2$ ice mmr',
-                                 alti_line=True, norm='log', unit='kg/kg', vmin=1e-13, vmax=1e-4,
-                                 title=f'{info_netcdf.name_target} mmr at {latitude}'
-                                       f' ({info_netcdf.local_time[0]:.0f} h), DS: MY28',
-                                 save_name=f'{info_netcdf.name_target}_zonal_mean_{latitude}N_'
-                                           f'{info_netcdf.local_time[0]:.0f}h')
+        if len(info_netcdf.local_time) == 1:
+            display_vars_altitude_ls(info_netcdf=info_netcdf, altitude_min=None, altitude_max=None,
+                                     latitude=[latitude], shortname_1='co2_ice', varname_1='CO$_2$ ice mmr',
+                                     alti_line=True, norm='log', unit='kg/kg', vmin=1e-13, vmax=1e-4,
+                                     title=f'{info_netcdf.target_name} mmr at {latitude}'
+                                           f' ({info_netcdf.local_time[0]:.0f} h), DS: MY28',
+                                     save_name=f'{info_netcdf.target_name}_zonal_mean_{latitude}N_'
+                                               f'{info_netcdf.local_time[0]:.0f}h')
+        else:
+            display_vars_altitude_ls(info_netcdf=info_netcdf, altitude_min=None, altitude_max=None,
+                                     latitude=[latitude], shortname_1='co2_ice', varname_1='CO$_2$ ice mmr',
+                                     alti_line=True, norm='log', unit='kg/kg', vmin=1e-13, vmax=1e-4,
+                                     title=f'{info_netcdf.target_name} mmr at {latitude}'
+                                           f' (diurnal mean), DS: MY28',
+                                     save_name=f'{info_netcdf.target_name}_zonal_mean_{latitude}N_'
+                                               f'diurnal_mean')
 
     elif view_mode == 7:
         print('Processing data:')

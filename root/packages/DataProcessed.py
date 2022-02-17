@@ -1368,6 +1368,16 @@ def temp_cold_pocket(info_netcdf):
 
 
 def vars_altitude_ls(info_netcdf, latitude):
+    # Diurnal mean
+    nb_lt = len(info_netcdf.local_time)
+    nb_sols = int(info_netcdf.data_dim.time.shape[0] / nb_lt)
+    if nb_lt > 1:
+        info_netcdf.data_target = info_netcdf.data_target.reshape(nb_sols, nb_lt,
+                                                                  info_netcdf.data_dim.altitude.shape[0],
+                                                                  info_netcdf.data_dim.latitude.shape[0],
+                                                                  info_netcdf.data_dim.longitude.shape[0])
+        info_netcdf.data_target = mean(info_netcdf.data_target, axis=1)
+
     # zonal mean
     info_netcdf.data_target = mean(info_netcdf.data_target, axis=info_netcdf.idx_dim.longitude)
 
@@ -1377,8 +1387,9 @@ def vars_altitude_ls(info_netcdf, latitude):
                                                   idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                   value=latitude)
     # latitudinal mean
-    info_netcdf.data_target = mean(info_netcdf.data_target, axis=2).T
-
+    if not isinstance(latitude, float):
+        info_netcdf.data_target = mean(info_netcdf.data_target, axis=2)
+    info_netcdf.data_target = info_netcdf.data_target.T
     return
 
 

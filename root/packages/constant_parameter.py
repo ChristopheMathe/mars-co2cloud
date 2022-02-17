@@ -14,4 +14,4 @@ fontsize = 18
 cst_stefan = 5.67e-8
 
 # Miscellaneous parameters
-threshold = 1e-13
+threshold = 1e-30#1e-13
