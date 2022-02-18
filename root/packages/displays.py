@@ -561,46 +561,59 @@ def display_co2_ice_density_column_evolution_polar_region(info_netcdf, time, lat
     from numpy import logspace
     from math import floor
     from matplotlib import cm
-    from matplotlib.colors import LogNorm
+    from matplotlib.colors import BoundaryNorm
     import cartopy.crs as crs
+    from os import mkdir
+    from matplotlib.ticker import FuncFormatter
 
     plate_carree = crs.PlateCarree(central_longitude=0)
 
     if latitude[0] > 0:
-        orthographic = crs.Orthographic(central_longitude=0, central_latitude=90, globe=False)
+        orthographic = crs.Orthographic(central_longitude=0, central_latitude=90)
         title = 'North polar region'
         pole = 'north'
+        dir_name = 'co2_ice_density_column_evolution_northern_polar_region/'
     else:
-        orthographic = crs.Orthographic(central_longitude=0, central_latitude=-90, globe=False)
+        orthographic = crs.Orthographic(central_longitude=0, central_latitude=-90)
         title = 'South polar region'
         pole = 'south'
+        dir_name = 'co2_ice_density_column_evolution_southern_polar_region/'
+
+    try:
+        mkdir(dir_name)
+    except FileExistsError:
+        pass
 
     y_min, y_max = orthographic.y_limits
     orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
 
-    levels = logspace(-13, 1, 15)
     cmap = cm.get_cmap('inferno')
     cmap.set_under('w')
+    levels = logspace(-13, 1, 15)
+    norm = BoundaryNorm(levels, ncolors=cmap.N, clip=False)
 
-    norm = LogNorm()
     save_name = list([])
 
     # PLOT
-    for i in range(info_netcdf.data_dim.time.shape[0]):
-        fig, ax = plt.subplots(nrows=1, ncols=1, subplot_kw={'projection': orthographic}, figsize=figsize_1graph,
-                               facecolor='white')
-        ax.set_title(title + f', sols {floor(time[i]):.0f} LT {time[i] * 24 % 24:.0f}')
-        ax.set_facecolor('white')
-        ctf = ax.contourf(info_netcdf.data_dim.longitude, latitude, info_netcdf.data_target[i, :, :], norm=norm,
-                          levels=levels, transform=plate_carree, cmap=cmap)
-        workaround_gridlines(plate_carree, axes=ax, pole=pole)
-        ax.set_global()
-        cbar = fig.colorbar(ctf)
-        cbar.ax.set_title('kg.m$^{-2}$')
-        save_name.append(f'co2_ice_density_column_evolution_{i}.png')
-        plt.savefig(save_name[i], bbox_inches='tight')
-        plt.close(fig)
+    for i in range(time.shape[0]):
+        if not info_netcdf.data_target[i, :, :].mask.all():
+            fig, ax = plt.subplots(nrows=1, ncols=1, subplot_kw={'projection': orthographic}, figsize=figsize_1graph,
+                                   facecolor='white')
+            ax.set_title(title + f', sols {floor(time[i]):.0f} LT {time[i] * 24 % 24:.0f}')
+            ax.set_facecolor('white')
+
+            ctf = ax.pcolormesh(info_netcdf.data_dim.longitude[:], latitude, info_netcdf.data_target[i, :, :], norm=norm,
+                                transform=plate_carree, cmap=cmap)
+            ax.set_global()
+            workaround_gridlines(plate_carree, axes=ax, pole=pole)
+            cbar = fig.colorbar(ctf, format=FuncFormatter(lambda x, levels: "%.0e" % x))
+            cbar.ax.set_title('kg.m$^{-2}$')
+            savename = f'{dir_name}co2_ice_density_column_evolution_sols_{floor(time[i]):.0f}_LT' \
+                       f'_{time[i] * 24 % 24:.0f}.png'
+            save_name.append(savename)
+            plt.savefig(savename, bbox_inches='tight')
+            plt.close(fig)
 
     # create the gif
     create_gif(save_name)

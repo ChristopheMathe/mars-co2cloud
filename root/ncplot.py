@@ -254,7 +254,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
 
     elif view_mode == 7:
         print('Processing data:')
-        info_netcdf.data_target, time, latitude = co2ice_density_column_evolution(info_netcdf=info_netcdf)
+        time, latitude = co2ice_density_column_evolution(info_netcdf=info_netcdf)
 
         print('Display:')
         display_co2_ice_density_column_evolution_polar_region(info_netcdf=info_netcdf, time=time, latitude=latitude)

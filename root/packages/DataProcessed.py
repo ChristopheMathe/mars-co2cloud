@@ -152,9 +152,9 @@ def co2ice_cloud_evolution(info_netcdf):
     if len(info_netcdf.local_time) == 1:
         data_ccnco2, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_ccnco2[:, :, :, :])
     data_ccnco2, latitude_selected = slice_data(data=data_ccnco2,
-                                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                                 dimension_slice=info_netcdf.data_dim.latitude,
-                                                 value=[lat_1, lat_2])
+                                                idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                dimension_slice=info_netcdf.data_dim.latitude,
+                                                value=[lat_1, lat_2])
     data_ccnco2 = correction_value(data=data_ccnco2, operator='inf', value=threshold)
 
     # h2o ice
@@ -167,7 +167,7 @@ def co2ice_cloud_evolution(info_netcdf):
                                                  value=[lat_1, lat_2])
     data_h2o_ice = correction_value(data=data_h2o_ice, operator='inf', value=threshold)
 
-    latitudes = info_netcdf.data_dim.latitude[latitude_selected[0]: latitude_selected[1]+1]
+    latitudes = info_netcdf.data_dim.latitude[latitude_selected[0]: latitude_selected[1] + 1]
 
     # zonal mean
     info_netcdf.data_target = ma.mean(info_netcdf.data_target, axis=3)
@@ -286,36 +286,45 @@ def co2ice_density_column_evolution(info_netcdf):
         exit()
 
     # Slice in time:
-    print(f'Select the time range in sols ({floor(info_netcdf.data_dim.time[0])} : '
-          f'{int(info_netcdf.data_dim.time[-1])})')
+    if len(info_netcdf.local_time) == 1:
+        data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
+                                                            selected_time=info_netcdf.local_time)
+        times = info_netcdf.data_dim.time[idx::len(data_local_time)]
+        print(f'Select the time range in sols ({floor(times[0])} : {int(times[-1])})')
+    else:
+        print(f'Select the time range in sols ({floor(info_netcdf.data_dim.time[0])} : '
+              f'{int(info_netcdf.data_dim.time[-1])})')
+        times = info_netcdf.data_dim.time
+
     time_begin = float(input('Start time: '))
     time_end = float(input('End time: '))
-    data, time_range = slice_data(data=info_netcdf.data_target,
-                                  idx_dim_slice=info_netcdf.idx_dim.time,
-                                  dimension_slice=info_netcdf.data_dim.time,
-                                  value=[time_begin, time_end])
+    info_netcdf.data_target, time_range = slice_data(data=info_netcdf.data_target,
+                                                     idx_dim_slice=info_netcdf.idx_dim.time,
+                                                     dimension_slice=times,
+                                                     value=[time_begin, time_end])
+    time_range = times[time_range[0]:time_range[-1]+1]
 
     # Slice data in polar region:
     pole = input('Select the polar region (N/S):')
     if pole.lower() == 'n':
         info_netcdf.data_target, latitude = slice_data(data=info_netcdf.data_target,
-                                                       idx_dim_slice=info_netcdf.idx_dim.latitude - 1,
+                                                       idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                        dimension_slice=info_netcdf.data_dim.latitude,
                                                        value=[60, 90])
+        latitudes = info_netcdf.data_dim.latitude[latitude[0]:latitude[-1]+1]
     elif pole.lower() == 's':
         info_netcdf.data_target, latitude = slice_data(data=info_netcdf.data_target,
-                                                       idx_dim_slice=info_netcdf.idx_dim.latitude - 1,
+                                                       idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                        dimension_slice=info_netcdf.data_dim.latitude,
                                                        value=[-60, -90])
+        latitudes = info_netcdf.data_dim.latitude[latitude[0]:latitude[-1]+1]
     else:
-        latitude = None
+        latitudes = None
         print('Wrong selection')
         exit()
 
-    info_netcdf.data_target, altitude_limit, altitude_min, altitude_max, altitude_unit = \
-        compute_column_density(info_netcdf=info_netcdf)
-
-    return data, time_range, latitude
+    altitude_limit, idx_altitude_min, idx_altitude_max = compute_column_density(info_netcdf=info_netcdf)
+    return time_range, latitudes
 
 
 def co2ice_coverage(info_netcdf):
