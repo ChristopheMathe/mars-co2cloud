@@ -99,9 +99,9 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
     print('     6: mmr structure at a given latitude (fig: alt-ls)')
     print('     7: Density column evolution in polar region, polar projection (fig: lon-lat)')
     if len(info_netcdf.local_time) > 1:
-        print('     9: localtime co2_ice column density, zonal mean, [XX-YY]°N (fig: loc-ls)')
-        print('        901: localtime co2_ice at 0.5 Pa, 0°N, zonal mean (loc-ls)')
-    print('    10: co2_ice column density along longitude and localtime at 0.5 Pa and 0°N (fig: hl-lon)')
+        print('     9: localtime co2_ice column density, zonal mean, [XX-YY]°N (fig: hl-ls)')
+        print('        901: localtime co2_ice at 0.5 Pa, 0°N, zonal mean (hl-ls)')
+        print('    10: co2_ice column density along longitude and localtime at 0.5 Pa and 0°N (fig: hl-lon)')
     print('    11: co2_ice column density along longitude and solar longitude at 0.5 Pa and 0°N (fig: ls-lon)')
     print('    12: co2_ice structure along longitude at 0°N (year mean) (fig: alt-lon)')
     print('    13: stationary wave, at 0°N and -45°E (fig: alt-ls)')
@@ -328,6 +328,10 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
                                          save_name='co2_ice_zonal_mean_localtime_ls_0N_0p5Pa')
 
     elif view_mode == 10:
+        if len(info_netcdf.local_time) == 1:
+            print('There is one local time selected! Please select at least 2 local times')
+            exit()
+
         print('Processing data:')
         info_netcdf.data_target = vars_localtime_longitude(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
 

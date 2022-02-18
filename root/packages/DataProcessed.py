@@ -1759,7 +1759,8 @@ def vars_ls_longitude(info_netcdf, latitude, altitude):
                                                        dimension_slice=info_netcdf.data_dim.altitude,
                                                        idx_dim_slice=info_netcdf.idx_dim.altitude,
                                                        value=altitude)
-    compute_diurnal_mean(info_netcdf=info_netcdf)
+
+    info_netcdf.data_target = compute_diurnal_mean(info_netcdf=info_netcdf, data=info_netcdf.data_target)
     return
 
 
