@@ -283,7 +283,7 @@ def gcm_surface_local(data_zareoid=None):
     if data_zareoid is None:
         data_surface_local = data_phisinit[:, :] / 3.711
     else:
-        data_surface_local = data_zareoid - data_phisinit[:, :] / 3.711
+        data_surface_local = data_zareoid[:, :, :, :] - data_phisinit[:, :] / 3.711
 
     return data_surface_local
 

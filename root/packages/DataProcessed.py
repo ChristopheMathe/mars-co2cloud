@@ -1403,6 +1403,9 @@ def vars_altitude_ls(info_netcdf, latitude):
 
 
 def vars_extract_at_grid_point(info_netcdf, latitude, longitude):
+    if len(info_netcdf.local_time) > 1:
+        info_netcdf.data_target = compute_diurnal_mean(info_netcdf=info_netcdf, data=info_netcdf.data_target)
+
     data, latitudes = slice_data(data=info_netcdf.data_target,
                                  idx_dim_slice=info_netcdf.idx_dim.latitude,
                                  dimension_slice=info_netcdf.data_dim.latitude,

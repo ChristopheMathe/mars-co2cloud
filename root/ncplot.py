@@ -379,11 +379,18 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
         info_netcdf.data_target = vars_extract_at_grid_point(info_netcdf=info_netcdf, latitude=0, longitude=-45)
 
         print('Display:')
-        display_vars_altitude_ls(info_netcdf=info_netcdf, shortname_1='co2_ice', varname_1='CO$_2$ ice mmr',
-                                 altitude_min=None, altitude_max=None, norm='log', unit='kg.kg-1', vmin=1e-13,
-                                 vmax=1e-6, latitude=0,
-                                 title=f'CO2 ice at [0°N, -45°E] ({info_netcdf.local_time[0]}h) ',
-                                 save_name=f'co2_ice_altitude_ls_0N_-45E_{info_netcdf.local_time[0]}h')
+        if len(info_netcdf.local_time) == 1:
+            display_vars_altitude_ls(info_netcdf=info_netcdf, shortname_1='co2_ice', varname_1='CO$_2$ ice mmr',
+                                     latitude=[0], altitude_min=None, altitude_max=None, norm='log', unit='kg.kg-1',
+                                     vmin=1e-13, vmax=1e-6, alti_line=None, data_2=None,
+                                     title=f'CO2 ice at [0°N, -45°E] ({info_netcdf.local_time[0]:.0f}h) ',
+                                     save_name=f'co2_ice_altitude_ls_0N_-45E_{info_netcdf.local_time[0]:.0f}h')
+        else:
+            display_vars_altitude_ls(info_netcdf=info_netcdf, shortname_1='co2_ice', varname_1='CO$_2$ ice mmr',
+                                     latitude=[0], altitude_min=None, altitude_max=None, norm='log', unit='kg.kg-1',
+                                     vmin=1e-13, vmax=1e-6, alti_line=None, data_2=None,
+                                     title=f'CO2 ice at [0°N, -45°E] (diurnal mean)',
+                                     save_name=f'co2_ice_altitude_ls_0N_-45E_diurnal_mean')
 
     elif view_mode == 14:
         print('Processing data:')
