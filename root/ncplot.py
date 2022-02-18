@@ -362,10 +362,17 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
         info_netcdf.data_target = mean(data, axis=0)
 
         print('Display:')
-        display_vars_altitude_longitude(info_netcdf=info_netcdf, unit='kg.kg-1', norm='log', vmin=1e-13, vcenter=None,
-                                        vmax=1e-6,
-                                        title=f'CO2 ice at 0°N, averaged over 1 year ({info_netcdf.local_time[0]}h) ',
-                                        save_name=f'co2_ice_altitude_longitude_0N_{info_netcdf.local_time[0]}h')
+        if len(info_netcdf.local_time) == 1:
+            display_vars_altitude_longitude(info_netcdf=info_netcdf, unit='kg.kg-1', norm='log', vmin=1e-13,
+                                            vcenter=None, vmax=1e-6,
+                                            title=f'CO2 ice at 0°N, averaged over 1 year'
+                                                  f' ({info_netcdf.local_time[0]}h)',
+                                            save_name=f'co2_ice_altitude_longitude_0N_{info_netcdf.local_time[0]}h')
+        else:
+            display_vars_altitude_longitude(info_netcdf=info_netcdf, unit='kg.kg-1', norm='log', vmin=1e-13,
+                                            vcenter=None, vmax=1e-6,
+                                            title=f'CO2 ice at 0°N, averaged over 1 year (diurnal mean) ',
+                                            save_name=f'co2_ice_altitude_longitude_0N_diurnal_mean')
 
     elif view_mode == 13:
         print('Processing data:')
