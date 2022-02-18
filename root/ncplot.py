@@ -345,9 +345,14 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
         vars_ls_longitude(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
 
         print('Display:')
-        display_vars_ls_longitude(info_netcdf=info_netcdf, norm='log', vmin=1e-13, vmax=1e-7, unit='kg/kg',
-                                  title=f'CO$_2$ ice mmr at 0°N and 0.5 Pa ({info_netcdf.local_time[0]:.0f}h)',
-                                  save_name=f'co2_ice_ls_longitude_0N_0p5Pa_{info_netcdf.local_time[0]:.0f}h')
+        if len(info_netcdf.local_time) == 1:
+            display_vars_ls_longitude(info_netcdf=info_netcdf, norm='log', vmin=1e-13, vmax=1e-7, unit='kg/kg',
+                                      title=f'CO$_2$ ice mmr at 0°N and 0.5 Pa ({info_netcdf.local_time[0]:.0f}h)',
+                                      save_name=f'co2_ice_ls_longitude_0N_0p5Pa_{info_netcdf.local_time[0]:.0f}h')
+        else:
+            display_vars_ls_longitude(info_netcdf=info_netcdf, norm='log', vmin=1e-13, vmax=1e-7, unit='kg/kg',
+                                      title=f'CO$_2$ ice mmr at 0°N and 0.5 Pa (diurnal mean)',
+                                      save_name=f'co2_ice_ls_longitude_0N_0p5Pa_diurnal_mean')
 
     elif view_mode == 12:
         print('Processing data:')

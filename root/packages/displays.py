@@ -2291,20 +2291,24 @@ def display_vars_ls_longitude(info_netcdf, norm, vmin, vmax, unit, title, save_n
     data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time,
                                                    selected_time=info_netcdf.local_time)
 
-    data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
-    data_time = data_ls[idx::len(data_local_time)]
-    info_netcdf.data_target, interp_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
+    if info_netcdf.data_dim.time.units != 'deg':
+        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_time = data_ls[idx::len(data_local_time)]
+        print(info_netcdf.data_target.shape, data_time.shape, data_local_time.shape, idx)
+        info_netcdf.data_target, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
+    else:
+        data_time = info_netcdf.data_dim.time
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
 
-    pcm = ax.pcolormesh(info_netcdf.data_dim.longitude, interp_time[:], info_netcdf.data_target.T, norm=norm,
+    pcm = ax.pcolormesh(info_netcdf.data_dim.longitude, data_time[:], info_netcdf.data_target.T, norm=norm,
                         cmap='plasma', shading='auto')
     cbar = fig.colorbar(pcm)
     cbar.ax.set_title(unit, fontsize=fontsize)
     cbar.ax.tick_params(labelsize=fontsize)
     ax.set_title(title, fontsize=fontsize)
-    ax.set_yticks(interp_time[::45])
-    ax.set_yticklabels(interp_time[::45], fontsize=fontsize)
+    ax.set_yticks(data_time[::45])
+    ax.set_yticklabels(data_time[::45], fontsize=fontsize)
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
     ax.set_ylabel('Solar longitude (°)', fontsize=fontsize)
     ax.set_xlabel('Longitude (°E)', fontsize=fontsize)

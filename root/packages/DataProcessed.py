@@ -1750,6 +1750,8 @@ def vars_localtime_longitude(info_netcdf, latitude, altitude):
 
 
 def vars_ls_longitude(info_netcdf, latitude, altitude):
+    info_netcdf.data_target = compute_diurnal_mean(info_netcdf=info_netcdf, data=info_netcdf.data_target)
+
     info_netcdf.data_target, idx_latitude = slice_data(data=info_netcdf.data_target,
                                                        dimension_slice=info_netcdf.data_dim.latitude,
                                                        idx_dim_slice=info_netcdf.idx_dim.latitude,
@@ -1760,7 +1762,7 @@ def vars_ls_longitude(info_netcdf, latitude, altitude):
                                                        idx_dim_slice=info_netcdf.idx_dim.altitude,
                                                        value=altitude)
 
-    info_netcdf.data_target = compute_diurnal_mean(info_netcdf=info_netcdf, data=info_netcdf.data_target)
+    info_netcdf.data_target = info_netcdf.data_target.T
     return
 
 
