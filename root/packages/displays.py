@@ -2573,11 +2573,11 @@ def display_vars_polar_projection_multi_plot(info_netcdf, time, vmin, vmax, norm
                               dimension_slice=info_netcdf.data_dim.latitude,
                               value=[-90, -60])
     data_np_surface, tmp = slice_data(data=data_surface_local[:, :],
-                                      idx_dim_slice=1,
+                                      idx_dim_slice=0,
                                       dimension_slice=info_netcdf.data_dim.latitude,
                                       value=[60, 90])
-    data_sp_surface, tmp = slice_data(data_surface_local[:, :],
-                                      idx_dim_slice=1,
+    data_sp_surface, tmp = slice_data(data=data_surface_local[:, :],
+                                      idx_dim_slice=0,
                                       dimension_slice=info_netcdf.data_dim.latitude,
                                       value=[-90, -60])
     data_np = correction_value(data=data_np, operator='inf', value=threshold)
@@ -2618,7 +2618,7 @@ def display_vars_polar_projection_multi_plot(info_netcdf, time, vmin, vmax, norm
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°', fontsize=fontsize)
             if array_mask and unique(data_np[i, :, :]).shape[0] != 1:
                 # Need at least 1 row filled with values
-                ctf = axes.pcolormesh(info_netcdf.data_dim.longitude, latitude_np, data_np[i, :, :], norm=norm,
+                ctf = axes.pcolormesh(info_netcdf.data_dim.longitude[:], latitude_np, data_np[i, :, :], norm=norm,
                                       transform=plate_carree, cmap=cmap, shading='flat')
                 axes.contour(info_netcdf.data_dim.longitude[:], latitude_np, data_np_surface[:, :],
                              transform=plate_carree, cmap='Blues')
@@ -2664,12 +2664,11 @@ def display_vars_polar_projection_multi_plot(info_netcdf, time, vmin, vmax, norm
     for i, axes in enumerate(ax.reshape(-1)):
         if i < 24:
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°', fontsize=fontsize)
-            print(f'{int(time[i])}° - {int(time[i + 1])}°')
             if array_mask and unique(data_sp[i, :, :]).shape[0] != 1:
-                ctf = axes.pcolormesh(info_netcdf.data_dim.longitude, latitude_sp, data_sp[i, :, :], norm=norm,
+                ctf = axes.pcolormesh(info_netcdf.data_dim.longitude[:], latitude_sp, data_sp[i, :, :], norm=norm,
                                       transform=plate_carree, cmap=cmap, shading='flat')
-                axes.contour(info_netcdf.data_dim.longitude, latitude_sp, data_sp_surface[:, :], transform=plate_carree,
-                             cmap='Blues')
+                axes.contour(info_netcdf.data_dim.longitude[:], latitude_sp, data_sp_surface[:, :],
+                             transform=plate_carree, cmap='Blues')
                 if co2_ice_cover:
                     tmp = mean(tab_co2_ice_cover_sp[30 * i:30 * (1 + i), :, :], axis=0)
                     tmp = where(tmp == 1, 1.1, tmp)

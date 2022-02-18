@@ -397,11 +397,19 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
         time_bin = co2ice_time_mean(info_netcdf=info_netcdf, duration=30, column=True)
 
         print('Display:')
-        display_vars_polar_projection_multi_plot(info_netcdf=info_netcdf, time=time_bin, vmin=None,
-                                                 vmax=None, norm='nonlinear', cmap='inferno', unit='kg/m$^2$',
-                                                 levels=[1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1, 5e-1, 1],
-                                                 title='density column of CO$_2$',
-                                                 save_name=f'co2_ice_density_column_15ls_mean')
+        if len(info_netcdf.local_time) == 1:
+            display_vars_polar_projection_multi_plot(info_netcdf=info_netcdf, time=time_bin, vmin=None,
+                                                     vmax=None, norm='nonlinear', cmap='inferno', unit='kg/m$^2$',
+                                                     levels=[1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1, 5e-1, 1],
+                                                     title=f'density column of CO$_2$'
+                                                           f' ({info_netcdf.local_time[0]:.0f}h)',
+                                                     save_name=f'co2_ice_density_column_15ls_mean')
+        else:
+            display_vars_polar_projection_multi_plot(info_netcdf=info_netcdf, time=time_bin, vmin=None,
+                                                     vmax=None, norm='nonlinear', cmap='inferno', unit='kg/m$^2$',
+                                                     levels=[1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e-1, 5e-1, 1],
+                                                     title='density column of CO$_2$ (diurnal mean)',
+                                                     save_name=f'co2_ice_density_column_15ls_mean')
 
     else:
         print('Wrong value')

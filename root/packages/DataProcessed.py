@@ -270,9 +270,9 @@ def co2ice_time_mean(info_netcdf, duration, column=None):
     info_netcdf.data_target = correction_value(data=info_netcdf.data_target, operator='inf', value=threshold)
 
     if column:
-        info_netcdf.data_target, altitude_limit, altitude_min, altitude_max, altitude_units = \
-            compute_column_density(info_netcdf=info_netcdf)
-
+        altitude_limit, altitude_min, altitude_max = compute_column_density(info_netcdf=info_netcdf)
+        info_netcdf.idx_dim.latitude -= 1
+        info_netcdf.idx_dim.longitude -= 1
     return time
 
 
