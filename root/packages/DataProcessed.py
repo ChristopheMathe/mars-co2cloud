@@ -453,8 +453,12 @@ def h2o_ice_alt_ls_with_co2_ice(info_netcdf, directory, files):
 
     info_netcdf.data_target = 0
     del data, data_co2_ice
+    if len(latitude) == 1:
+        latitude_out = array([info_netcdf.data_dim.latitude[idx_latitude_selected]])
+    else:
+        latitude_out = info_netcdf.data_dim.latitude[idx_latitude_selected]
 
-    return zonal_mean, zonal_mean_co2_ice, [info_netcdf.data_dim.latitude[idx_latitude_selected]]
+    return zonal_mean, zonal_mean_co2_ice, latitude_out
 
 
 def ps_at_viking(info_netcdf):

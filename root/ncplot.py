@@ -6,6 +6,7 @@ from numpy import mean, arange, linspace, min, max
 from sys import argv
 from packages.constant_parameter import threshold
 from packages.create_infofile import InfoFile
+from math import ceil, log10
 
 
 def ccnco2_number(info_netcdf, view_mode):
@@ -268,34 +269,34 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
                                                                                                )
 
         print('Display:')
+        print(latitude_selected)
         if len(info_netcdf.local_time) == 1:
-            vmax_2 = 1e-6
             if len(latitude_selected) == 1:
-                title = f'Zonal mean of H$_2$O ice mmr (yellowish) and\n CO$_2$ ice mmr (greenish), ' \
-                        f'at {int(latitude_selected[0])}°N ({int(info_netcdf.local_time[0])} h)'
-                save_name = f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected[0])}N_' \
-                            f'{int(info_netcdf.local_time[0])}h'
+                title = f'Zonal mean of H$_2$O ice mmr (bluish) and\n CO$_2$ ice mmr (reddish), ' \
+                        f'at {latitude_selected[0]:.0f}°N ({info_netcdf.local_time[0]:.0f} h)'
+                save_name = f'h2o_ice_zonal_mean_with_co2_ice_{latitude_selected[0]:.0f}N_' \
+                            f'{info_netcdf.local_time[0]:.0f}h'
             else:
-                title = f'Zonal mean of H$_2$O ice mmr (yellowish) and CO$_2$ ice\nmmr (greenish), ' \
-                        f'between [{int(latitude_selected[0])}:{int(latitude_selected[-1])}]°N ' \
-                        f'({int(info_netcdf.local_time[0])}h)'
-                save_name = f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected[0])}_' \
-                            f'{int(latitude_selected[-1])}N_{int(info_netcdf.local_time[0])}h'
+                title = f'Zonal mean of H$_2$O ice mmr (bluish) and CO$_2$ ice\nmmr (reddish), ' \
+                        f'between [{latitude_selected[0]:.0f}:{latitude_selected[-1]:.0f}]°N ' \
+                        f'({info_netcdf.local_time[0]:.0f}h)'
+                save_name = f'h2o_ice_zonal_mean_with_co2_ice_{latitude_selected[0]:.0f}_' \
+                            f'{latitude_selected[-1]:.0f}N_{info_netcdf.local_time[0]:.0f}h'
         else:
-            vmax_2 = 1e-6
             if len(latitude_selected) == 1:
-                title = f'Zonal and diurnal mean of H$_2$O ice (yellowish) and \n CO$_2$ ice (greenish) mmr, ' \
-                        f'at {int(latitude_selected[0])}°N'
-                save_name = f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected[0])}N_diurnal_mean'
+                title = f'Zonal and diurnal mean of H$_2$O ice (bluish) and \n CO$_2$ ice (reddish) mmr, ' \
+                        f'at {latitude_selected[0]:.0f}°N'
+                save_name = f'h2o_ice_zonal_mean_with_co2_ice_{latitude_selected[0]:.0f}N_diurnal_mean'
             else:
-                title = f'Zonal and diurnal mean of H$_2$O ice (yellowish) and\nCO$_2$ ice (greenish) mmr, ' \
-                        f'between [{int(latitude_selected[0])}:{int(latitude_selected[-1])}]°N'
-                save_name = f'h2o_ice_zonal_mean_with_co2_ice_{int(latitude_selected[0])}_' \
-                            f'{int(latitude_selected[-1])}N_diurnal_mean'
-
-        display_vars_altitude_ls(info_netcdf=info_netcdf, altitude_min=None, altitude_max=1e-3,
+                title = f'Zonal and diurnal mean of H$_2$O ice (bluish) and\nCO$_2$ ice (reddish) mmr, ' \
+                        f'between [{latitude_selected[0]:.0f}:{latitude_selected[-1]:.0f}]°N'
+                save_name = f'h2o_ice_zonal_mean_with_co2_ice_{latitude_selected[0]:.0f}_' \
+                            f'{latitude_selected[-1]:.0f}N_diurnal_mean'
+        vmax = 10**ceil(log10(max(info_netcdf.data_target)))
+        vmax_2 = 10**ceil(log10(max(data_co2_ice)))
+        display_vars_altitude_ls(info_netcdf=info_netcdf, altitude_min=None, altitude_max=1e-3, alti_line=True,
                                  varname_1='H2O ice mmr in atmospheric layer', shortname_1='h2o_ice',
-                                 latitude=latitude_selected, norm='log', vmin=1e-13, vmax=1e-3, unit='kg/kg',
+                                 latitude=latitude_selected, norm='log', vmin=1e-13, vmax=vmax, unit='kg/kg',
                                  title=title, save_name=save_name, data_2=data_co2_ice, norm_2='log',
                                  vmin_2=1e-13, vmax_2=vmax_2, varname_2='CO2 ice mmr in atmospheric layer',
                                  shortname_2='co2_ice')
