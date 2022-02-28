@@ -376,7 +376,14 @@ def display_co2_ice_cloud_evolution_latitude(info_netcdf, data_satuco2, data_tem
                                              data_h2o_ice, latitude_selected):
     from numpy import arange, logspace, array
     from matplotlib.colors import LogNorm, Normalize
+    from os import mkdir
+
     dirsave = 'cloud_evolution/'
+
+    try:
+        mkdir(dirsave)
+    except FileExistsError:
+        pass
 
     cpt = 0
     for i, value_i in enumerate(info_netcdf.data_dim.time):
@@ -388,7 +395,7 @@ def display_co2_ice_cloud_evolution_latitude(info_netcdf, data_satuco2, data_tem
             fig.subplots_adjust(wspace=0.4)
             fig.suptitle(f'Sols: {value_i:.0f}, local time: {value_i * 24 % 24:.0f} h, zonal mean', fontsize=fontsize)
 
-            ax[0, 0].title.set_text('CO$_2$ ice mmr', fontsize=fontsize)
+            ax[0, 0].set_title('CO$_2$ ice mmr', fontsize=fontsize)
             pc0 = ax[0, 0].contourf(latitude_selected, info_netcdf.data_dim.altitude[:],
                                     info_netcdf.data_target[i, :, :], norm=LogNorm(vmin=1e-13, vmax=1),
                                     levels=logspace(-13, 0, 14), cmap='inferno')
@@ -396,14 +403,14 @@ def display_co2_ice_cloud_evolution_latitude(info_netcdf, data_satuco2, data_tem
             cbar0.ax.set_title('kg.kg$^{-1}$', fontsize=fontsize)
             cbar0.ax.tick_params(labelsize=fontsize)
 
-            ax[0, 1].title.set_text('Temperature', fontsize=fontsize)
+            ax[0, 1].set_title('Temperature', fontsize=fontsize)
             pc1 = ax[0, 1].contourf(latitude_selected, info_netcdf.data_dim.altitude[:], data_temp[i, :, :],
                                     vmin=80, vmax=240, levels=arange(80, 260, 20), cmap='inferno')
             cbar1 = plt.colorbar(pc1, ax=ax[0, 1])
             cbar1.ax.set_title('K', fontsize=fontsize)
             cbar1.ax.tick_params(labelsize=fontsize)
 
-            ax[1, 0].title.set_text('Saturation of CO$_2$ ice', fontsize=fontsize)
+            ax[1, 0].set_title('Saturation of CO$_2$ ice', fontsize=fontsize)
             pc2 = ax[1, 0].contourf(latitude_selected, info_netcdf.data_dim.altitude[:], data_satuco2[i, :, :],
                                     norm=Normalize(vmin=1, vmax=1000),
                                     levels=array([1, 5, 10, 25, 50, 75, 100, 500, 1000]), cmap='inferno', extend='max')
@@ -411,14 +418,14 @@ def display_co2_ice_cloud_evolution_latitude(info_netcdf, data_satuco2, data_tem
             cbar2.ax.set_title('')
             cbar2.ax.tick_params(labelsize=fontsize)
 
-            ax[1, 1].title.set_text('Radius of CO$_2$ ice', fontsize=fontsize)
+            ax[1, 1].set_title('Radius of CO$_2$ ice', fontsize=fontsize)
             pc3 = ax[1, 1].contourf(latitude_selected, info_netcdf.data_dim.altitude[:], data_riceco2[i, :, :] * 1e6,
                                     norm=LogNorm(vmin=1e-3, vmax=1e3), levels=logspace(-3, 3, 7), cmap='inferno')
             cbar3 = plt.colorbar(pc3, ax=ax[1, 1])
             cbar3.ax.set_title('µm', fontsize=fontsize)
             cbar3.ax.tick_params(labelsize=fontsize)
 
-            ax[0, 2].title.set_text('Number of\ncondensation nuclei', fontsize=fontsize)
+            ax[0, 2].set_title('Number of\ncondensation nuclei', fontsize=fontsize)
             pc4 = ax[0, 2].contourf(latitude_selected, info_netcdf.data_dim.altitude[:], data_ccnco2[i, :, :],
                                     norm=LogNorm(vmin=1, vmax=1e10), levels=logspace(0, 10, 11), cmap='inferno',
                                     extend='max')
@@ -426,7 +433,7 @@ def display_co2_ice_cloud_evolution_latitude(info_netcdf, data_satuco2, data_tem
             cbar4.ax.set_title('#.m$^{-3}$', fontsize=fontsize)
             cbar4.ax.tick_params(labelsize=fontsize)
 
-            ax[1, 2].title.set_text('H2O ice mmr', fontsize=fontsize)
+            ax[1, 2].set_title('H2O ice mmr', fontsize=fontsize)
             pc5 = ax[1, 2].contourf(latitude_selected, info_netcdf.data_dim.altitude[:], data_h2o_ice[i, :, :],
                                     norm=LogNorm(vmin=1e-13, vmax=1), levels=logspace(-13, 0, 14), cmap='inferno')
             cbar5 = plt.colorbar(pc5, ax=ax[1, 2])

@@ -1485,8 +1485,7 @@ def vars_max_value_with_others(info_netcdf):
     max_ccn_n = correction_value(data=max_ccn_n, operator='invalide')
     max_alt = correction_value(data=max_alt, operator='invalide')
 
-    print('processing:', min(max_radius), max(max_radius))
-    return max_mmr, max_temp, max_satu, max_radius, max_ccn_n, max_alt
+    return max_mmr, max_temp, max_satu, max_radius*1e6, max_ccn_n, max_alt
 
 
 def vars_time_mean(info_netcdf, duration):
