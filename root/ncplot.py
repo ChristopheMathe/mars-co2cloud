@@ -448,10 +448,15 @@ def emis(info_netcdf, view_mode):
                                                      norm=None, cmap='inferno', unit='', title='',
                                                      save_name=f'emis_15ls_mean_{info_netcdf.local_time[0]}h')
         if view_mode == 201:
-            display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf=info_netcdf, time=time_bin,
-                                                                  levels=linspace(0.55, 1., 100), cmap='inferno',
-                                                                  save_name=f'emis_15ls_mean_'
-                                                                            f'{info_netcdf.local_time[0]}h')
+            if len(info_netcdf.local_time) == 1:
+                display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf=info_netcdf, time=time_bin,
+                                                                      levels=linspace(0.55, 1., 100), cmap='inferno',
+                                                                      save_name=f'emis_15ls_mean_'
+                                                                                f'{info_netcdf.local_time[0]}h')
+            else:
+                display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf=info_netcdf, time=time_bin,
+                                                                      levels=linspace(0.55, 1., 100), cmap='inferno',
+                                                                      save_name=f'emis_15ls_mean_diurnalmean_')
 
     if view_mode == 3:
         print('Processing data:')
@@ -1064,6 +1069,26 @@ def main():
     elif info_netcdf.target_name == 'tau1mic':
         tau1mic(info_netcdf=info_netcdf, view_mode=view_mode)
 
+    elif info_netcdf.target_name == 'emis':
+        emis(info_netcdf=info_netcdf, view_mode=view_mode)
+
+    elif info_netcdf.target_name == 'co2ice':
+        co2ice(info_netcdf=info_netcdf, view_mode=view_mode)
+
+    elif info_netcdf.target_name == 'ps':
+        ps(info_netcdf=info_netcdf, view_mode=view_mode)
+
+    elif info_netcdf.target_name == 'tsurf':
+        tsurf(info_netcdf=info_netcdf, view_mode=view_mode)
+
+    elif info_netcdf.target_name == 'tauTES':
+        tauTES(info_netcdf=info_netcdf, view_mode=view_mode)
+
+    elif info_netcdf.target_name == 'tau':
+        tau(info_netcdf=info_netcdf, view_mode=view_mode)
+
+    elif info_netcdf.target_name == 'h2o_ice_s':
+        h2o_ice_s(info_netcdf=info_netcdf, view_mode=view_mode)
     return
 
 
