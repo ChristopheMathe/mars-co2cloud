@@ -763,7 +763,7 @@ def display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf, time, lev
     data_sp = data_sp[0:12, :, :]
 
     # North polar region
-    orthographic = crs.Orthographic(central_longitude=0, central_latitude=90, globe=False)
+    orthographic = crs.Orthographic(central_longitude=0, central_latitude=90)
     y_min, y_max = orthographic.y_limits
     orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
@@ -774,13 +774,13 @@ def display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf, time, lev
     for i, axes in enumerate(ax.reshape(-1)):
         axes.set_title(f'{int(time[i] + 180)}° - {int(time[i + 1] + 180)}°')
         if array_mask:
-            ctf = axes.contourf(info_netcdf.data_dim.longitude, latitude_np, data_np[i, :, :], levels=levels,
+            ctf = axes.contourf(info_netcdf.data_dim.longitude[:], latitude_np, data_np[i, :, :], levels=levels,
                                 transform=plate_carree, cmap=cmap)
         else:
             if data_np[i, :, :].mask.all():
                 continue
             else:
-                ctf = axes.contourf(info_netcdf.data_dim.longitude, latitude_np, data_np[i, :, :], levels=levels,
+                ctf = axes.contourf(info_netcdf.data_dim.longitude[:], latitude_np, data_np[i, :, :], levels=levels,
                                     transform=plate_carree, cmap=cmap)
         axes.set_global()
         workaround_gridlines(plate_carree, axes=axes, pole='north')
@@ -792,7 +792,7 @@ def display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf, time, lev
     plt.savefig(save_name + 'northern_polar_region_as_fig11_gary-bicas2020.png', bbox_inches='tight')
 
     # South polar region
-    orthographic = crs.Orthographic(central_longitude=0, central_latitude=-90, globe=False)
+    orthographic = crs.Orthographic(central_longitude=0, central_latitude=-90)
     y_min, y_max = orthographic.y_limits
     orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
@@ -803,13 +803,13 @@ def display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf, time, lev
         if i < 12:
             axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°')
             if array_mask:
-                ctf = axes.contourf(info_netcdf.data_dim.longitude, latitude_sp, data_sp[i, :, :], levels=levels,
+                ctf = axes.contourf(info_netcdf.data_dim.longitude[:], latitude_sp, data_sp[i, :, :], levels=levels,
                                     transform=plate_carree, cmap=cmap)
             else:
                 if data_sp[i, :, :].mask.all():
                     continue
                 else:
-                    ctf = axes.contourf(info_netcdf.data_dim.longitude, latitude_sp, data_sp[i, :, :], levels=levels,
+                    ctf = axes.contourf(info_netcdf.data_dim.longitude[:], latitude_sp, data_sp[i, :, :], levels=levels,
                                         transform=plate_carree, cmap=cmap)
             workaround_gridlines(plate_carree, axes=axes, pole='south')
             axes.set_global()

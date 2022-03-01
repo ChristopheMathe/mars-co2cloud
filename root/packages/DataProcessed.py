@@ -1520,7 +1520,7 @@ def vars_time_mean(info_netcdf, duration):
         nbin = ceil(data_time[-1] / duration)
         time_bin = arange(0, data_time[-1] + duration, duration)
         if info_netcdf.data_target.ndim == 3:
-            data_mean = zeros((nbin, info_netcdf.data_dim.altitude.shape[0], info_netcdf.data_dim.latitude.shape[0]))
+            data_mean = zeros((nbin, info_netcdf.data_dim.latitude.shape[0], info_netcdf.data_dim.longitude.shape[0]))
             for i in range(nbin):
                 data_sliced, time = slice_data(data=info_netcdf.data_target,
                                                idx_dim_slice=info_netcdf.idx_dim.time,
