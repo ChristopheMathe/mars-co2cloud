@@ -707,8 +707,9 @@ def riceco2_zonal_mean_co2ice_exists(info_netcdf):
 
 
 def riceco2_polar_latitudes(info_netcdf):
+    from scipy.stats import tmean, tsem
     data = extract_where_co2_ice(info_netcdf=info_netcdf)
-
+    data = data * 1e6
     data_north, idx_latitude_north = slice_data(data=data,
                                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                 dimension_slice=info_netcdf.data_dim.latitude,
@@ -720,16 +721,25 @@ def riceco2_polar_latitudes(info_netcdf):
     del data
 
     data_north = swapaxes(data_north, axis1=0, axis2=2)
-    data_north = data_north.reshape(shape=(data_north.shape[0], data_north.shape[1], -1))
-    data_zonal_mean_north = exp(mean(log(data_north), axis=2))
-    stddev_north = exp(std(log(data_north), axis=2))
+    data_north = data_north.reshape(data_north.shape[0], data_north.shape[1], -1)
+
+    data_zonal_mean_north = zeros(shape=(data_north.shape[0:2]))
+    stddev_north = zeros(shape=(data_north.shape[0:2]))
+    for i in range(data_north.shape[0]):
+        for j in range(data_north.shape[1]):
+            data_zonal_mean_north[i,j] = tmean(data_north[i,j,:][~data_north[i,j,:].mask])
+            stddev_north[i,j] = tsem(data_north[i,j,:][~data_north[i,j,:].mask])
 
     data_south = swapaxes(data_south, axis1=0, axis2=2)
-    data_south = data_south.reshape(shape=(data_south.shape[0], data_south.shape[1], -1))
-    data_zonal_mean_south = exp(mean(log(data_south), axis=2))
-    stddev_south = exp(std(log(data_south), axis=2))
+    data_south = data_south.reshape(data_south.shape[0], data_south.shape[1], -1)
+    data_zonal_mean_south = zeros(shape=(data_south.shape[0:2]))
+    stddev_south = zeros(shape=(data_south.shape[0:2]))
+    for i in range(data_south.shape[0]):
+        for j in range(data_south.shape[1]):
+            data_zonal_mean_south[i,j] = tmean(data_south[i,j,:][~data_south[i,j,:].mask])
+            stddev_south[i,j] = tsem(data_south[i,j,:][~data_south[i,j,:].mask])
 
-    return data_zonal_mean_north.T * 1e6, data_zonal_mean_south.T * 1e6, stddev_north.T, stddev_south.T
+    return data_zonal_mean_north.T, data_zonal_mean_south.T, stddev_north.T, stddev_south.T
 
 
 def satuco2_zonal_mean_with_co2_ice(info_netcdf):

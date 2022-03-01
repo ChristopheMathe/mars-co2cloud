@@ -943,12 +943,13 @@ def display_riceco2_polar_latitudes(info_netcdf, data_north, data_stddev_north, 
     data_surface_local = gcm_surface_local(data_zareoid[::12, :, :, :])
     data_surface_local, latitude = slice_data(data=data_surface_local[:, :, :, :],
                                               idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                              dimension_slice=info_netcdf.data_dim.data_latitude,
+                                              dimension_slice=info_netcdf.data_dim.latitude,
                                               value=75)
     longitude, idx_longitude = slice_data(data=info_netcdf.data_dim.longitude,
                                           idx_dim_slice=1,
                                           dimension_slice=info_netcdf.data_dim.longitude,
                                           value=0)
+
     if info_netcdf.data_dim.altitude.units == 'Pa':
         index_10 = abs(data_surface_local[0, :, idx_longitude] - 10e3).argmin()
         index_40 = abs(data_surface_local[0, :, idx_longitude] - 40e3).argmin()
@@ -964,30 +965,24 @@ def display_riceco2_polar_latitudes(info_netcdf, data_north, data_stddev_north, 
     ax[0].set_title('Northern polar region', fontsize=fontsize)
     for i in range(latitude_north.shape[0]):
         part = (i % data_north.shape[1]) / data_north.shape[1]
-        ax[0].plot(data_north[:, i], info_netcdf.data_dim.altitude, label=latitude_north[i], color=cmap(part))
-        ax[0].errorbar(data_north[:, i], info_netcdf.data_dim.altitude,
-                       xerr=[data_north[:, i] * (1 - 1 / data_stddev_north[:, i]),
-                             data_north[:, i] * (1 + 1 * data_stddev_north[:, i])],
+        ax[0].plot(data_north[:, i], info_netcdf.data_dim.altitude[:], label=latitude_north[i], color=cmap(part))
+        ax[0].errorbar(data_north[:, i], info_netcdf.data_dim.altitude[:],
+                       xerr=data_stddev_north[:, i],
                        color=cmap(part))
     ax[0].set_yscale('log')
     ax[0].set_xscale('log')
-    ax[0].hlines(info_netcdf.data_dim.altitude[index_10], 1e-4, 1e3, ls='--', color='black')
-    ax[0].hlines(info_netcdf.data_dim.altitude[index_40], 1e-4, 1e3, ls='--', color='black')
-    ax[0].hlines(info_netcdf.data_dim.altitude[index_80], 1e-4, 1e3, ls='--', color='black')
-    ax[0].text(1e-4, info_netcdf.data_dim.altitude[index_10], '10 km',
+    ax[0].hlines(info_netcdf.data_dim.altitude[index_10], 1e-2, 1e3, ls='--', color='black')
+    ax[0].hlines(info_netcdf.data_dim.altitude[index_40], 1e-2, 1e3, ls='--', color='black')
+    ax[0].hlines(info_netcdf.data_dim.altitude[index_80], 1e-2, 1e3, ls='--', color='black')
+    ax[0].text(1e-2, info_netcdf.data_dim.altitude[index_10], '10 km',
                verticalalignment='bottom',
                horizontalalignment='left', color='black', fontsize=10)
-    ax[0].text(1e-4, info_netcdf.data_dim.altitude[index_40], '40 km',
+    ax[0].text(1e-2, info_netcdf.data_dim.altitude[index_40], '40 km',
                verticalalignment='bottom',
                horizontalalignment='left', color='black', fontsize=10)
-    ax[0].text(1e-4, info_netcdf.data_dim.altitude[index_80], '80 km',
+    ax[0].text(1e-2, info_netcdf.data_dim.altitude[index_80], '80 km',
                verticalalignment='bottom',
                horizontalalignment='left', color='black', fontsize=10)
-    ax[0].set_ylim(1e3, 1e-2)
-    ax[0].set_xlim(1e-4, 1e3)
-    ax[0].grid()
-    ax[0].legend(loc='best', fontsize=fontsize)
-    ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
 
     # southern polar region
     ax[1].set_title('Southern polar region', fontsize=fontsize)
@@ -1010,31 +1005,31 @@ def display_riceco2_polar_latitudes(info_netcdf, data_north, data_stddev_north, 
 
     for i in range(latitude_south.shape[0]):
         part = (i % data_south.shape[1]) / data_south.shape[1]
-        ax[1].plot(data_south[:, i], info_netcdf.data_dim.altitude, label=latitude_south[i], color=cmap(part))
-        ax[1].errorbar(data_south[:, i], info_netcdf.data_dim.altitude,
-                       xerr=[data_south[:, i] * (1 - 1 / data_stddev_south[:, i]),
-                             data_south[:, i] * (1 + 1 * data_stddev_south[:, i])],
+        ax[1].plot(data_south[:, i], info_netcdf.data_dim.altitude[:], label=latitude_south[i], color=cmap(part))
+        ax[1].errorbar(data_south[:, i], info_netcdf.data_dim.altitude[:],
+                       xerr=data_stddev_south[:, i],
                        color=cmap(part))
     ax[1].set_yscale('log')
     ax[1].set_xscale('log')
-    ax[1].hlines(info_netcdf.data_dim.altitude[index_10], 1e-4, 1e3, ls='--', color='black')
-    ax[1].hlines(info_netcdf.data_dim.altitude[index_40], 1e-4, 1e3, ls='--', color='black')
-    ax[1].hlines(info_netcdf.data_dim.altitude[index_80], 1e-4, 1e3, ls='--', color='black')
-    ax[1].text(1e-4, info_netcdf.data_dim.altitude[index_10], '10 km',
+    ax[1].hlines(info_netcdf.data_dim.altitude[index_10], 1e-2, 1e3, ls='--', color='black')
+    ax[1].hlines(info_netcdf.data_dim.altitude[index_40], 1e-2, 1e3, ls='--', color='black')
+    ax[1].hlines(info_netcdf.data_dim.altitude[index_80], 1e-2, 1e3, ls='--', color='black')
+    ax[1].text(1e-2, info_netcdf.data_dim.altitude[index_10], '10 km',
                verticalalignment='bottom',
                horizontalalignment='left', color='black', fontsize=10)
-    ax[1].text(1e-4, info_netcdf.data_dim.altitude[index_40], '40 km',
+    ax[1].text(1e-2, info_netcdf.data_dim.altitude[index_40], '40 km',
                verticalalignment='bottom',
                horizontalalignment='left', color='black', fontsize=10)
-    ax[1].text(1e-4, info_netcdf.data_dim.altitude[index_80], '80 km',
+    ax[1].text(1e-2, info_netcdf.data_dim.altitude[index_80], '80 km',
                verticalalignment='bottom',
                horizontalalignment='left', color='black', fontsize=10)
 
-    ax[1].set_ylim(1e3, 1e-2)
-    ax[1].set_xlim(1e-4, 1e3)
-    ax[1].grid()
-    ax[1].legend(loc='best', fontsize=fontsize)
-    ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
+    for axes in ax.reshape(-1):
+        axes.set_ylim(1e3, 1e-2)
+        axes.set_xlim(1e-2, 1e2)
+        axes.grid()
+        axes.legend(loc='best', fontsize=fontsize)
+        axes.tick_params(axis='both', which='major', labelsize=fontsize)
 
     fig.text(0.5, 0.06, 'Radius size (µm)', ha='center', va='center', fontsize=fontsize)
     fig.text(0.03, 0.5, 'Altitude (Pa)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
