@@ -525,12 +525,12 @@ def riceco2_mean_local_time_evolution(info_netcdf):
     from scipy.stats import tmean, tsem
     data = extract_where_co2_ice(info_netcdf=info_netcdf)
     data = data * 1e6
-    data_latitude, list_var = get_data(filename=info_netcdf.filename, target='latitude')
+    latitude_input = float(input('Select a latitude (°N):'))
     data, idx_latitudes = slice_data(data=data,
                                      idx_dim_slice=info_netcdf.idx_dim.latitude,
                                      dimension_slice=info_netcdf.data_dim.latitude,
-                                     value=0)
-    latitudes = data_latitude[idx_latitudes]
+                                     value=latitude_input)
+    latitudes = info_netcdf.data_dim.latitude[idx_latitudes]
 
     data = mean(data, axis=2)  # zonal mean
 

@@ -915,14 +915,14 @@ def display_riceco2_mean_local_time_evolution(info_netcdf, data_min_radius, data
     ax2.tick_params(axis='both', which='major', labelsize=fontsize)
     ax2.tick_params(axis='y', colors='red')
 
-    ax.set_title(f'Radius of CO2 ice particles at {latitude}N\n with their location (red)', fontsize=fontsize)
+    ax.set_title(f'Radius of CO2 ice particles at {latitude:.2f}N\n with their location (red)', fontsize=fontsize)
     ax.set_ylabel(f'Radius particle (µm)', fontsize=fontsize)
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
     ax.legend(loc=0)
     ax.set_xlabel('Local time (h)', fontsize=fontsize)
     ax.set_xticks(info_netcdf.local_time)
     ax.set_xticklabels(info_netcdf.local_time, fontsize=fontsize)
-    plt.savefig(f'riceco2_max_localtime_evolution_{latitude}N.png', bbox_inches='tight')
+    plt.savefig(f'riceco2_max_localtime_evolution_{latitude:.0f}N.png', bbox_inches='tight')
     return
 
 
