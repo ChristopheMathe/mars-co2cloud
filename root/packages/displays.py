@@ -2493,22 +2493,22 @@ def display_vars_polar_projection(info_netcdf, data_np, data_sp, levels, unit, c
     import cartopy.crs as crs
 
     latitude_np, tmp = slice_data(data=info_netcdf.data_dim.latitude,
-                                  idx_dim_slice=1,
+                                  idx_dim_slice=0,
                                   dimension_slice=info_netcdf.data_dim.latitude,
                                   value=[60, 90])
     latitude_sp, tmp = slice_data(data=info_netcdf.data_dim.latitude,
-                                  idx_dim_slice=1,
+                                  idx_dim_slice=0,
                                   dimension_slice=info_netcdf.data_dim.latitude,
                                   value=[-60, -90])
 
     plate_carree = crs.PlateCarree(central_longitude=0)
 
-    orthographic_north = crs.Orthographic(central_longitude=0, central_latitude=90, globe=False)
+    orthographic_north = crs.Orthographic(central_longitude=0, central_latitude=90)
     y_min, y_max = orthographic_north.y_limits
     orthographic_north._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic_north._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
 
-    orthographic_south = crs.Orthographic(central_longitude=0, central_latitude=-90, globe=False)
+    orthographic_south = crs.Orthographic(central_longitude=0, central_latitude=-90)
     y_min, y_max = orthographic_south.y_limits
     orthographic_south._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic_south._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
@@ -2521,14 +2521,14 @@ def display_vars_polar_projection(info_netcdf, data_np, data_sp, levels, unit, c
 
     # South polar region
     ax1.set_title('South polar region', fontsize=fontsize)
-    ctf = ax1.contourf(info_netcdf.data_dim.longitude, latitude_sp, data_sp, levels=levels, transform=plate_carree,
+    ctf = ax1.contourf(info_netcdf.data_dim.longitude[:], latitude_sp, data_sp, levels=levels, transform=plate_carree,
                        cmap=cmap)
     workaround_gridlines(plate_carree, axes=ax1, pole='south')
     ax1.set_global()
 
     # North polar region
     ax2.set_title('North polar region', fontsize=fontsize)
-    ax2.contourf(info_netcdf.data_dim.longitude, latitude_np, data_np, levels=levels, transform=plate_carree,
+    ax2.contourf(info_netcdf.data_dim.longitude[:], latitude_np, data_np, levels=levels, transform=plate_carree,
                  cmap=cmap)
     workaround_gridlines(plate_carree, axes=ax2, pole='north')
     ax2.set_global()
@@ -2537,7 +2537,7 @@ def display_vars_polar_projection(info_netcdf, data_np, data_sp, levels, unit, c
     fig.subplots_adjust(right=0.9)
     cbar_ax = fig.add_axes([pos1, ax2.get_position().y0, 0.03, ax2.get_position().height])
     cbar = fig.colorbar(ctf, cax=cbar_ax)
-    cbar.ax.set_title(unit, fontsize)
+    cbar.ax.set_title(unit, fontsize=fontsize)
 
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
     return

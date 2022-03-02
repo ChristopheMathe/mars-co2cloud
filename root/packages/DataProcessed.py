@@ -385,11 +385,11 @@ def emis_polar_winter_gg2020_fig13(info_netcdf):
 
     # Slice in latitude > 60°
     data_np, latitude = slice_data(data=data_np,
-                                   idx_dim_slice=info_netcdf.idx_dim.latitude - 1,
+                                   idx_dim_slice=info_netcdf.idx_dim.latitude,
                                    dimension_slice=info_netcdf.data_dim.latitude,
                                    value=[60, 90])
     data_sp, latitude = slice_data(data=data_sp,
-                                   idx_dim_slice=info_netcdf.idx_dim.latitude - 1,
+                                   idx_dim_slice=info_netcdf.idx_dim.latitude,
                                    dimension_slice=info_netcdf.data_dim.latitude,
                                    value=[-60, -90])
 
