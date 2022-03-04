@@ -2226,7 +2226,6 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
                          "units": "deg", "shortname": "LsScap"})
         dict_var.append({"data": south_cap_boundaries, "varname": "Latitude boundaries of southern polar caps",
                          "units": "deg N", "shortname": "LatScap"})
-        print(dict_var)
 
     if info_netcdf.target_name == 'temp':
         if i_subplot == 0:
