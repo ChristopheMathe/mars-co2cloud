@@ -1618,7 +1618,8 @@ def vars_zonal_mean_column_density(info_netcdf):
 
     # compute zonal mean column density
     if info_netcdf.data_target.ndim == 3:
-        info_netcdf.data_target = mean(info_netcdf.data_target, axis=2)  # Ls function of lat
+        # Ls function of lat, we remove the doublet longitude band -180°/180°E
+        info_netcdf.data_target = mean(info_netcdf.data_target[:, :, :-1], axis=2)
     else:
         print('Stop wrong ndim !')
         exit()

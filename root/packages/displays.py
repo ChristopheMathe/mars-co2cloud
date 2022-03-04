@@ -2059,6 +2059,13 @@ def display_vars_latitude_longitude(info_netcdf, unit, norm, vmin, vmax, title, 
     cbar.ax.tick_params(labelsize=fontsize)
     ax.grid()
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
+    dict_var = [{'data': info_netcdf.data_dim.longitude[:], 'varname': 'Longitude', 'units': 'deg E',
+                 'shortname': 'Longitude'},
+                {'data': info_netcdf.data_dim.latitude[:], 'varname': "Latitude", 'units': "deg N",
+                 'shortname': "Latitude"},
+                {'data': info_netcdf.data_target, 'varname': title, 'units': "%", 'shortname': "coverage"},
+                ]
+    save_figure_data(list_dict_var=dict_var, savename=save_name)
     return
 
 
