@@ -472,7 +472,7 @@ def emis(info_netcdf, view_mode):
 def fluxwave(info_netcdf, view_mode):
     print('What do you wanna do?')
     print('     1: zonal mean (fig: ls-lat)')
-    print('     2: Polar plot every 15° ls mean, lat=60°-90° (fig: lat-ls)')
+    print('     2: Polar plot every 30° ls mean, lat=60°-90° (fig: lat-ls)')
     print('     3: Apparent temperature (fig:ls-lat)')
     print('')
     if view_mode is None:
@@ -480,28 +480,38 @@ def fluxwave(info_netcdf, view_mode):
 
     if view_mode == 1:
         print('Processing:')
-        info_netcdf.data_target, layer_selected = vars_zonal_mean(data_input=info_netcdf)
+        info_netcdf.data_target, layer_selected = vars_zonal_mean(data_input=info_netcdf, flip=True)
 
         print('Display:')
         vmax = 160
         if info_netcdf.target_name == 'fluxtop_lw':
-            vmax = 100
+            vmax = 200
+        if len(info_netcdf.local_time) == 1:
+            title = f'Zonal mean of {info_netcdf.target_name}, at {info_netcdf.local_time[0]}h'
+            save_name = f'{info_netcdf.target_name}_zonal_mean_{info_netcdf.local_time[0]}h'
+        else:
+            title = f'Zonal mean of {info_netcdf.target_name} (diurnal mean)'
+            save_name = f'{info_netcdf.target_name}_zonal_mean_diurnal_mean'
 
         display_vars_latitude_ls(info_netcdf=info_netcdf, unit='W.m$^{-2}$',
                                  norm=None, vmin=0, vmax=vmax, observation=False, cmap='inferno',
                                  latitude_selected=layer_selected, tes=None, mvals=None, layer=None,
-                                 title=f'Zonal mean of {info_netcdf.name_target}, at {info_netcdf.local_time[0]}h',
-                                 save_name=f'{info_netcdf.name_target}_zonal_mean_{info_netcdf.local_time[0]}h')
+                                 title=title, save_name=save_name)
 
     elif view_mode == 2:
         print('Processing data:')
-        info_netcdf.data_target, time_bin = vars_time_mean(info_netcdf=info_netcdf, duration=15)
+        info_netcdf.data_target, time_bin = vars_time_mean(info_netcdf=info_netcdf, duration=30)
 
         print('Display:')
+        if len(info_netcdf.local_time) == 1:
+            save_name = f'{info_netcdf.target_name}_30ls_mean_{info_netcdf.local_time[0]}h'
+        else:
+            save_name = f'{info_netcdf.target_name}_30ls_mean'
+        print(min(info_netcdf.data_target), max(info_netcdf.data_target))
         display_vars_polar_projection_multi_plot(info_netcdf=info_netcdf, vmin=None, vmax=None, time=time_bin,
-                                                 norm=None, levels=arange(0, 450, 25), cmap='inferno',
+                                                 norm=None, levels=arange(0, 220), cmap='inferno',
                                                  unit='W.m$^{-2}$', title='',
-                                                 save_name=f'{info_netcdf.target_name}_15ls_mean_')
+                                                 save_name=save_name)
 
     elif view_mode == 3:
         print('Processing:')

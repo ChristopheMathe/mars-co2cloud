@@ -1880,7 +1880,7 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
     cmap = cm.get_cmap('Blues')
     if norm == 'log':
         nb = int(log10(vmax) - log10(vmin)) + 1
-        levels = 10**linspace(log10(vmin), log10(vmax), nb)
+        levels = 10 ** linspace(log10(vmin), log10(vmax), nb)
         norm = BoundaryNorm(levels, ncolors=cmap.N, clip=False)
     else:
         norm = Normalize(vmin=vmin, vmax=vmax)
@@ -1888,7 +1888,7 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
     cmap_2 = cm.get_cmap('inferno')
     if norm_2 == 'log':
         nb = int(log10(vmax_2) - log10(vmin_2)) + 1
-        levels_2 = 10**linspace(log10(vmin_2), log10(vmax_2), nb)
+        levels_2 = 10 ** linspace(log10(vmin_2), log10(vmax_2), nb)
         norm_2 = BoundaryNorm(levels_2, ncolors=cmap_2.N, clip=False)
     else:
         norm_2 = Normalize(vmin=vmin_2, vmax=vmax_2)
@@ -1962,8 +1962,8 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
     tmp = array([1e-9, 1e-7, 1e-5])
     cbc = axes.contour(data_time[:], info_netcdf.data_dim.altitude[:], data_1, colors='black', norm=norm, levels=tmp,
                        linestyles=['solid', 'dashed', 'dotted'],
-                             alpha=0.5)  # autumn
-#    axes.clabel(cbc, inline=True, colors='black', fontsize=15, fmt=FuncFormatter(lambda x, tmp: "%.0e" % x))
+                       alpha=0.5)  # autumn
+    #    axes.clabel(cbc, inline=True, colors='black', fontsize=15, fmt=FuncFormatter(lambda x, tmp: "%.0e" % x))
 
     if isinstance(data_2, ndarray):
         cb2 = axes.pcolormesh(data_time[:], info_netcdf.data_dim.altitude[:], data_2, norm=norm_2, cmap=cmap_2,
@@ -2202,8 +2202,15 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
                             shading='flat', zorder=10)
     else:
         ctf = ax[i_subplot].pcolormesh(data_time[:], data_latitude[:], info_netcdf.data_target, norm=norm, cmap=cmap,
-                                       shading='flat',
-                                       zorder=10)
+                                       shading='flat', zorder=10)
+
+    dict_var = [{"data": data_time[:], "varname": "Solar longitude", "units": "deg", "shortname": "Ls"},
+                {"data": data_latitude[:], "varname": "Latitude", "units": "deg N", "shortname": "Latitude"},
+                {"data": info_netcdf.data_target,
+                 "varname": f"Zonal mean of density column of {info_netcdf.target_name}",
+                 "units": "kg.m-2", "shortname": f"{info_netcdf.target_name}"}
+                ]
+
     ax.set_xlim(0, 360)
     # Seasonal boundaries caps
     north_cap_ls, north_cap_boundaries, north_cap_boundaries_error, south_cap_ls, south_cap_boundaries, \
@@ -2211,6 +2218,15 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
     if i_subplot == 0:
         ax.plot(north_cap_ls, north_cap_boundaries, color='black', zorder=11)
         ax.plot(south_cap_ls, south_cap_boundaries, color='black', zorder=11)
+        dict_var.append({"data": north_cap_ls, "varname": "Solar longitude boundaries of northern polar cap",
+                         "units": "deg", "shortname": "LsNcap"})
+        dict_var.append({"data": north_cap_boundaries, "varname": "Latitude boundaries of northern polar caps",
+                         "units": "deg N", "shortname": "LatNcap"})
+        dict_var.append({"data": south_cap_ls, "varname": "Solar longitude boundaries of northern polar cap",
+                         "units": "deg", "shortname": "LsScap"})
+        dict_var.append({"data": south_cap_boundaries, "varname": "Latitude boundaries of southern polar caps",
+                         "units": "deg N", "shortname": "LatScap"})
+        print(dict_var)
 
     if info_netcdf.target_name == 'temp':
         if i_subplot == 0:
@@ -2232,12 +2248,21 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
 
         list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
                     data_spicam, data_tesmoc, data_themis, data_nomad]  # data_maven_limb
+        name_obs = ['crism_limb', 'crism_nadir', 'omega', 'pfs_eye', 'pfs_stats', 'hrsc', 'iuvs',
+                    'spicam', 'tesmoc', 'themis', 'nomad']
+
         for j, value in enumerate(list_obs):
-            data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(value, 'latitude', data_latitude,
-                                                                         [latitude_selected[0], latitude_selected[-1]])
+            data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(data_obs=value, dim='latitude',
+                                                                         data_dim=data_latitude,
+                                                                         value=[latitude_selected[0],
+                                                                                latitude_selected[-1]])
             if data_obs_ls.shape[0] != 0:
                 plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='o', s=3, zorder=10000,
                             label='Meso')
+                dict_var.append({"data": data_obs_ls, "varname": f"{name_obs[j]} solar longitude", "units": "deg",
+                                 "shortname": f"{name_obs[j]}_Ls"})
+                dict_var.append({"data": data_obs_latitude, "varname": f"{name_obs[j]} latitude", "units": "deg N",
+                                 "shortname": f"{name_obs[j]}_Lat"})
 
     #        mola_latitude, mola_ls, mola_altitude = observation_mola(only_location=True)
     #        plt.scatter(mola_ls, mola_latitude, color='red', marker='o', zorder=10000, s=3, label='Tropo')
@@ -2248,7 +2273,6 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
             axes.set_xticks(ticks=axis_ls)
         fig.text(0.02, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
         fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=fontsize)
-        #        fig.suptitle(title, fontsize=fontsize)
         pos0 = ax[0].get_position()
         cb_axes = fig.add_axes([pos0.x0, 0.95, pos0.x1 - pos0.x0, 0.025])
         cbar = plt.colorbar(ctf, cax=cb_axes, orientation="horizontal")
@@ -2267,12 +2291,6 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
         cbar.ax.set_title(unit, fontsize=fontsize)
         cbar.ax.tick_params(labelsize=fontsize)
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
-    dict_var = [{"data": data_time, "varname": "Solar longitude", "units": "deg", "shortname": "Ls"},
-                {"data": data_latitude, "varname": "Latitude", "units": "deg N", "shortname": "Latitude"},
-                {"data": info_netcdf.data_target,
-                 "varname": f"Zonal mean of density column of {info_netcdf.target_name}",
-                 "units": "kg.m-2", "shortname": f"{info_netcdf.target_name}"}
-                ]
 
     save_figure_data(dict_var, savename=save_name)
     return

@@ -348,10 +348,6 @@ def get_nearest_clouds_observed(data_obs, dim, data_dim, value):
             mask = (data_obs[:, 1] >= latitude_range[0]) & (data_obs[:, 1] <= latitude_range[-1])
         # Case for both hemisphere latitudes
         else:
-            if latitude_range[0] > latitude_range[-1]:
-                tmp = latitude_range[0]
-                latitude_range[0] = latitude_range[-1]
-                latitude_range[-1] = tmp
             mask = (data_obs[:, 1] >= latitude_range[0]) & (data_obs[:, 1] <= latitude_range[-1])
 
         data_ls = data_obs[:, 0][mask]
