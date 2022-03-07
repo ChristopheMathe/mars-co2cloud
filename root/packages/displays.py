@@ -1033,7 +1033,27 @@ def display_riceco2_polar_latitudes(info_netcdf, data_north, data_stddev_north, 
 
     fig.text(0.5, 0.06, 'Radius size (µm)', ha='center', va='center', fontsize=fontsize)
     fig.text(0.03, 0.5, 'Altitude (Pa)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
-    fig.savefig('riceco2_polar_latitudes_structure.png', bbox_inches='tight')
+    savename = 'riceco2_polar_latitudes_structure'
+    fig.savefig(savename + '.png', bbox_inches='tight')
+    fig.savefig(savename + '.eps', bbox_inches='tight')
+    fig.savefig(savename + '.png', bbox_inches='tight')
+
+    dict_var = [
+        {"data": info_netcdf.data_dim.altitude[:], "varname": "Pressure", "units": "Pa", "shortname": "altitude"},
+        {"data": latitude_north[:], "varname": "Northern latitude", "units": "deg°N", "shortname": "lat_north"},
+        {"data": latitude_south[:], "varname": "Southern latitude", "units": "deg°N", "shortname": "lat_south"},
+        {"data": data_north[:, :], "varname": f"Zonal and diurnal mean of CO2 radius particles (northern latitudes)",
+         "units": "µm", "shortname": "radius_north"},
+        {"data": data_stddev_north[:, :], "varname": f"Standard deviation of mean radius (northern latitudes)",
+         "units": "µm", "shortname": "stddev_radius_north"},
+        {"data": data_south[:, :], "varname": f"Zonal and diurnal mean of CO2 radius particles (southern latitudes)",
+         "units": "µm", "shortname": "radius_south"},
+        {"data": data_stddev_south[:, :], "varname": f"Standard deviation of mean radius (southern latitudes)",
+         "units": "µm", "shortname": "stddev_radius_south"},
+        {"data": array([index_10, index_40, index_80]), "varname": "Altitude index [10, 40, 80] km above local surface",
+         "units": "km", "shortname": "idx_km"}
+    ]
+    save_figure_data(list_dict_var=dict_var, savename=savename)
     return
 
 
