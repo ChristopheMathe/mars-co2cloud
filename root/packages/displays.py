@@ -1093,10 +1093,10 @@ def display_riceco2_top_cloud_altitude(info_netcdf, top_cloud, mola=False):
             savename = 'top_cloud_altitude_diurnal_mean_compared_to_mola'
             ax[0].set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
             plt.savefig(f'{savename}.png', bbox_inches='tight')
-        dict_var = [{'data':interp_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Time'},
+        dict_var = [{'data': interp_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Time'},
                     {'data': info_netcdf.data_dim.latitude[:], 'varname': "Latitude", 'units': "deg N",
                      'shortname': "latitude"},
-                    {'data': top_cloud[:,:], 'varname': "Zonal mean of top cloud altitude", 'units': "km",
+                    {'data': top_cloud[:, :], 'varname': "Zonal mean of top cloud altitude", 'units': "km",
                      'shortname': "topcloud"},
                     {'data': mola_ls[:], 'varname': 'Solar longitude of MOLA observation', 'units': 'deg',
                      'shortname': 'MOLA_time'},
@@ -1134,7 +1134,7 @@ def display_riceco2_top_cloud_altitude(info_netcdf, top_cloud, mola=False):
             savename = 'top_cloud_altitude_comparable_to_mola_diurnal_mean'
             ax.set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
             plt.savefig(f'{savename}.png', bbox_inches='tight')
-        dict_var = [{'data':interp_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Time'},
+        dict_var = [{'data': interp_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Time'},
                     {'data': info_netcdf.data_dim.latitude[:], 'varname': "Latitude", 'units': "deg N",
                      'shortname': "latitude"},
                     {'data': top_cloud, 'varname': "Zonal mean of top cloud altitude", 'units': "km",
@@ -1145,9 +1145,9 @@ def display_riceco2_top_cloud_altitude(info_netcdf, top_cloud, mola=False):
     return
 
 
-def display_satuco2_thickness_atm_layer(info_netcdf, data_std, save_name):
+def display_satuco2_thickness_atm_layer(data, data_std, save_name):
     from numpy import arange, ma, array
-    data = ma.masked_where(info_netcdf.data_target == 0, info_netcdf.data_target)
+    data = ma.masked_where(data[:, :] == 0, data[:, :])
 
     # data from Fig 9 in Hu et al., 2012
 
@@ -1289,8 +1289,39 @@ def display_satuco2_thickness_atm_layer(info_netcdf, data_std, save_name):
     fig.text(0.06, 0.5, 'Thickness (km)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
     fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=fontsize)
 
-    plt.savefig(save_name, bbox_inches='tight')
+    plt.savefig(save_name + '.png', bbox_inches='tight')
+    plt.savefig(save_name + '.eps', bbox_inches='tight')
+    plt.savefig(save_name + '.pdf', bbox_inches='tight')
     plt.show()
+    dict_var = [{'data': arange(data.shape[1]) * 5, 'varname': 'Solar longitude bin', 'units': 'deg',
+                 'shortname': 'Time'},
+                {'data': data[0, :] / 1e3, 'varname': 'Atmospheric layer thickness above 60°N', 'units': 'km',
+                 'shortname': 'Thickness_northpole'},
+                {'data': data_std[0, :] / 1e3,
+                 'varname': 'Standard deviation for atmospheric layer thickness above 60°N',
+                 'units': 'km', 'shortname': 'std_thickness_northpole'},
+                {'data': data[1, :] / 1e3, 'varname': 'Atmospheric layer thickness above 60°S', 'units': 'km',
+                 'shortname': 'Thickness_southpole'},
+                {'data': data_std[1, :] / 1e3,
+                 'varname': 'Standard deviation for atmospheric layer thickness above 60°S',
+                 'units': 'km', 'shortname': 'std_thickness_southpole'},
+                # Hu et al 2012
+                {'data': north_pole_ls_my29, 'varname': 'Solar longitude from MY29 in Hu et al. 2012',
+                 'units': 'deg', 'shortname': 'time_northpole_my29'},
+                {'data': north_pole_my29[:, 1], 'varname': 'Atmospheric layer thickness from MY29 in Hu et al. 2012',
+                 'units': 'km', 'shortname': 'thickness_northpole_my29'},
+                {'data': north_pole_my29[:, 2], 'varname': 'Standard deviation for atmospheric layer thickness from '
+                                                           'MY29 in Hu et al. 2012',
+                 'units': 'km', 'shortname': 'std_thickness_northpole_my29'},
+                {'data': south_pole_ls_my29, 'varname': 'Solar longitude from MY29 in Hu et al. 2012',
+                 'units': 'deg', 'shortname': 'time_southpole_my29'},
+                {'data': south_pole_my29[:, 1], 'varname': 'Atmospheric layer thickness from MY29 in Hu et al. 2012',
+                 'units': 'km', 'shortname': 'thickness_southpole_my29'},
+                {'data': south_pole_my29[:, 2], 'varname': 'Standard deviation for atmospheric layer thickness from '
+                                                           'MY29 in Hu et al. 2012',
+                 'units': 'km', 'shortname': 'std_thickness_southpole_my29'},
+                ]
+    save_figure_data(list_dict_var=dict_var, savename=save_name)
     return
 
 

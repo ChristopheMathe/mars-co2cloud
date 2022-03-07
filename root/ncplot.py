@@ -714,10 +714,10 @@ def satuco2(info_netcdf, view_mode):
         if len(info_netcdf.local_time) == 1:
             display_satuco2_thickness_atm_layer(data_ice_layer, data_ice_layer_std,
                                                 save_name=f'satuco2_thickness_polar_region_'
-                                                          f'{info_netcdf.local_time[0]}h.png')
+                                                          f'{info_netcdf.local_time[0]:.0f}h')
         else:
             display_satuco2_thickness_atm_layer(data_ice_layer, data_ice_layer_std,
-                                                save_name=f'satuco2_thickness_polar_region_diurnal_mean.png')
+                                                save_name=f'satuco2_thickness_polar_region_diurnal_mean')
 
     elif view_mode == 5:
         print('Processing data:')

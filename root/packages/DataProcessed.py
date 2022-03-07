@@ -1054,6 +1054,7 @@ def satuco2_hu2012_fig9(info_netcdf):
                                                       idx_dim_slice=info_netcdf.idx_dim.time,
                                                       dimension_slice=data_time[:],
                                                       value=[BIN * 5, (BIN + 1) * 5])
+        print()
         data_binned_south, time_selected = slice_data(data=data_south,
                                                       idx_dim_slice=info_netcdf.idx_dim.time,
                                                       dimension_slice=data_time[:],
@@ -1068,13 +1069,13 @@ def satuco2_hu2012_fig9(info_netcdf):
 
                 # For northern polar region
                 for latitude_north in range(data_binned_north.shape[2]):
-                    a = data_altitude[data_binned_north[ls, :, latitude_north, longitude].mask is False]
+                    a = data_altitude[data_binned_north[ls, :, latitude_north, longitude].mask == False]
                     if len(a) != 0:
                         tmp_north = append(tmp_north, abs(a[-1] - a[0]))
 
                 # For southern polar region
                 for latitude_south in range(data_binned_south.shape[2]):
-                    a = data_altitude[data_binned_south[ls, :, latitude_south, longitude].mask is False]
+                    a = data_altitude[data_binned_south[ls, :, latitude_south, longitude].mask == False]
                     if len(a) != 0:
                         tmp_south = append(tmp_south, abs(a[-1] - a[0]))
         tmp_north = correction_value(tmp_north, 'inf', value=0)
