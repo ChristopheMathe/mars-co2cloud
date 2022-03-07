@@ -625,9 +625,10 @@ def riceco2_top_cloud_altitude(info_netcdf):
     data_ccn_nco2 = correction_value(data_ccn_nco2[:, :, :, :], operator='inf', value=threshold)
     data_rho = correction_value(data_rho[:, :, :, :], operator='inf', value=threshold)
 
-    data_target = mean(info_netcdf.data_target[:, :, :, :], axis=3)
-    data_ccn_nco2 = mean(data_ccn_nco2[:, :, :, :], axis=3)
-    data_rho = mean(data_rho[:, :, :, :], axis=3)
+    # zonal mean remove the longitude doublet
+    data_target = mean(info_netcdf.data_target[:, :, :, :-1], axis=3)
+    data_ccn_nco2 = mean(data_ccn_nco2[:, :, :, :-1], axis=3)
+    data_rho = mean(data_rho[:, :, :, :-1], axis=3)
 
     data_target, tmp = slice_data(data=data_target,
                                   idx_dim_slice=info_netcdf.idx_dim.altitude,

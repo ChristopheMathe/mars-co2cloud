@@ -1086,11 +1086,25 @@ def display_riceco2_top_cloud_altitude(info_netcdf, top_cloud, mola=False):
         fig.text(0.06, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
 
         if len(info_netcdf.local_time) == 1:
+            savename = f'top_cloud_altitude_compared_to_mola_{info_netcdf.local_time:0.f}h'
             ax[0].set_title(f'Zonal mean of top cloud altitude, at {info_netcdf.local_time:0.f}h', fontsize=fontsize)
-            plt.savefig(f'top_cloud_altitude_compared_to_mola_{info_netcdf.local_time:0.f}h.png', bbox_inches='tight')
+            plt.savefig(f'{savename}.png', bbox_inches='tight')
         else:
+            savename = 'top_cloud_altitude_diurnal_mean_compared_to_mola'
             ax[0].set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
-            plt.savefig(f'top_cloud_altitude_diurnal_mean_compared_to_mola.png', bbox_inches='tight')
+            plt.savefig(f'{savename}.png', bbox_inches='tight')
+        dict_var = [{'data':interp_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Time'},
+                    {'data': info_netcdf.data_dim.latitude[:], 'varname': "Latitude", 'units': "deg N",
+                     'shortname': "latitude"},
+                    {'data': top_cloud[:,:], 'varname': "Zonal mean of top cloud altitude", 'units': "km",
+                     'shortname': "topcloud"},
+                    {'data': mola_ls[:], 'varname': 'Solar longitude of MOLA observation', 'units': 'deg',
+                     'shortname': 'MOLA_time'},
+                    {'data': mola_latitude[:], 'varname': "Latitude of MOLA observation", 'units': "deg N",
+                     'shortname': "MOLA_latitude"},
+                    {'data': mola_altitude[:], 'varname': "Top cloud altitude from MOLA observation", 'units': "km",
+                     'shortname': "MOLA_topcloud"}
+                    ]
     else:
         cmap = colormap_idl_rainbow_plus_white()
         cmap.set_over("grey")
@@ -1113,12 +1127,21 @@ def display_riceco2_top_cloud_altitude(info_netcdf, top_cloud, mola=False):
         ax.set_ylabel('Latitude (°N)', fontsize=fontsize)
 
         if len(info_netcdf.local_time) == 1:
+            savename = f'top_cloud_altitude_comparable_to_mola_{info_netcdf.local_time:0.f}h'
             ax.set_title(f'Zonal mean of top cloud altitude, at {info_netcdf.local_time:0.f}h', fontsize=fontsize)
-            plt.savefig(f'top_cloud_altitude_comparable_to_mola_{info_netcdf.local_time:0.f}h.png', bbox_inches='tight')
+            plt.savefig(f'{savename}.png', bbox_inches='tight')
         else:
+            savename = 'top_cloud_altitude_comparable_to_mola_diurnal_mean'
             ax.set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
-            plt.savefig(f'top_cloud_altitude_comparable_to_mola_diurnal_mean.png', bbox_inches='tight')
+            plt.savefig(f'{savename}.png', bbox_inches='tight')
+        dict_var = [{'data':interp_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Time'},
+                    {'data': info_netcdf.data_dim.latitude[:], 'varname': "Latitude", 'units': "deg N",
+                     'shortname': "latitude"},
+                    {'data': top_cloud, 'varname': "Zonal mean of top cloud altitude", 'units': "km",
+                     'shortname': "topcloud"}
+                    ]
     plt.show()
+    save_figure_data(list_dict_var=dict_var, savename=savename)
     return
 
 
