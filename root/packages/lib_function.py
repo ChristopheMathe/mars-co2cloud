@@ -519,12 +519,23 @@ def save_figure_data(list_dict_var, savename):
     for x in range(len(list_dict_var)):
         print(list_dict_var[x]["varname"])
         if list_dict_var[x]["data"].ndim == 1:
-            f.createDimension(list_dict_var[x]["shortname"], list_dict_var[x]["data"].shape[0])
-            dim = f.createVariable(list_dict_var[x]["shortname"], 'f4', (list_dict_var[x]["shortname"]))
-            dim.standard_name = list_dict_var[x]["shortname"]
-            dim.long_name = list_dict_var[x]["varname"]
-            dim.units = list_dict_var[x]["units"]
-            dim[:] = list_dict_var[x]["data"]
+            if list_dict_var[x]["dimension"]:
+                f.createDimension(list_dict_var[x]["shortname"], list_dict_var[x]["data"].shape[0])
+                dim = f.createVariable(list_dict_var[x]["shortname"], 'f4', (list_dict_var[x]["shortname"]))
+                dim.standard_name = list_dict_var[x]["shortname"]
+                dim.long_name = list_dict_var[x]["varname"]
+                dim.units = list_dict_var[x]["units"]
+                dim[:] = list_dict_var[x]["data"]
+            else:
+                list_dim = [list_dict_var[y]["data"].shape if list_dict_var[y]["data"].ndim == 1 else array([0]) for y
+                            in range(x)]
+                list_dim = array(list_dim).reshape(-1)
+                ix = where(list_dict_var[x]["data"].shape[0] == list_dim)[0][0]
+                dim = f.createVariable(list_dict_var[x]["shortname"], 'f4', (list_dict_var[ix]["shortname"]))
+                dim.standard_name = list_dict_var[x]["shortname"]
+                dim.long_name = list_dict_var[x]["varname"]
+                dim.units = list_dict_var[x]["units"]
+                dim[:] = list_dict_var[x]["data"]
 
         elif list_dict_var[x]["data"].ndim == 2:
             list_dim = [list_dict_var[y]["data"].shape if list_dict_var[y]["data"].ndim == 1 else array([0]) for y in

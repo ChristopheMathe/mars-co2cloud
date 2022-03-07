@@ -703,14 +703,14 @@ def display_co2ice_cumulative_mass_polar_region(info_netcdf, data_co2_ice_north,
     ax[1].set_yscale('symlog')
     ax[0].set_title(u'Northern polar region, diurnal mean, lat=[60:90]°N', fontsize=fontsize)
     ax[0].plot(data_time[1:], data_co2_ice_north, color='black', label='Total co2 ice')
-    ax[0].plot(data_time[:], data_precip_co2_ice_north, color='blue', label='Precipitation')
+    ax[0].plot(data_time[1:], data_precip_co2_ice_north[:-1], color='blue', label='Precipitation')
     ax[0].plot(data_time[1:], data_direct_condco2_north, color='red', label='Direct condensation')
     ax[0].hlines(0, xmin=0, xmax=360, color='grey')
     ax[0].legend(loc='best')
 
     ax[1].set_title(u'Southern polar region, diurnal mean, lat=[60:90]°S', fontsize=fontsize)
     ax[1].plot(data_time[1:], data_co2_ice_south, color='black', label='Total co2 ice')
-    ax[1].plot(data_time[:], data_precip_co2_ice_south * 10, color='blue', label='Precipitation')
+    ax[1].plot(data_time[1:], data_precip_co2_ice_south[:-1], color='blue', label='Precipitation')
     ax[1].plot(data_time[1:], data_direct_condco2_south, color='red', label='Direct condensation')
     ax[1].hlines(0, xmin=0, xmax=360, color='grey')
     ax[1].legend(loc='best')
@@ -718,13 +718,33 @@ def display_co2ice_cumulative_mass_polar_region(info_netcdf, data_co2_ice_north,
     ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
     ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
     ax[0].set_xlim(0, 360)
-    #    ax[0].set_ylim(-1e-10, 1e6)
 
     fig.text(0.05, 0.5, 'Flux (kg/m2)', ha='center', va='center', rotation='vertical',
              fontsize=fontsize)
     fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=fontsize)
 
-    fig.savefig(f'co2ice_cumulative_mass_polar_region_diurnal_mean.png', bbox_inches='tight')
+    savename = 'co2ice_cumulative_mass_polar_region_diurnal_mean'
+    fig.savefig(f'{savename}.png', bbox_inches='tight')
+    fig.savefig(f'{savename}.eps', bbox_inches='tight')
+    fig.savefig(f'{savename}.pdf', bbox_inches='tight')
+
+    dict_var = [{"data": data_time[1:], "varname": "Solar longitude", "units": "deg", "shortname": "Time",
+                 "dimension": True},
+                {"data": data_co2_ice_north, "varname": "Flux total of CO2 ice toward the surface",
+                 "units": "kg.m-2", "shortname": "north_co2_total", "dimension": False},
+                {"data": data_precip_co2_ice_north[:-1], "varname": "Precipitation flux of CO2 ice toward the surface",
+                 "units": "kg.m-2", "shortname": "north_co2_precip", "dimension": False},
+                {"data": data_direct_condco2_north, "varname": "Direct condensation flux of CO2 ice toward the surface",
+                 "units": "kg.m-2", "shortname": "north_co2_dcondens", "dimension": False},
+                {"data": data_co2_ice_south, "varname": "Flux total of CO2 ice toward the surface", "units": "kg.m-2",
+                 "shortname": "south_co2_total", "dimension": False},
+                {"data": data_precip_co2_ice_south[:-1], "varname": "Precipitation flux of CO2 ice toward the surface",
+                 "units": "kg.m-2", "shortname": "south_co2_precip", "dimension": False},
+                {"data": data_direct_condco2_south, "varname": "Direct condensation flux of CO2 ice toward the surface",
+                 "units": "kg.m-2", "shortname": "south_co2_dcondens", "dimension": False}
+                ]
+
+    save_figure_data(list_dict_var=dict_var, savename=savename)
     return
 
 
