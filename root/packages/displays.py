@@ -456,7 +456,7 @@ def display_co2_ice_cloud_evolution_latitude(info_netcdf, data_satuco2, data_tem
 
 def display_co2_ice_max_longitude_altitude(info_netcdf, max_mmr, max_alt, max_temp, max_satu, max_radius, max_ccn_n,
                                            unit):
-    from matplotlib.colors import LogNorm, DivergingNorm, Normalize, BoundaryNorm
+    from matplotlib.colors import LogNorm, TwoSlopeNorm, Normalize, BoundaryNorm
     from numpy import arange, logspace, max, min
     from math import log10
 
@@ -521,7 +521,7 @@ def display_co2_ice_max_longitude_altitude(info_netcdf, max_mmr, max_alt, max_te
     # plot 4
     cmap_satu = plt.get_cmap('coolwarm')
     ax[1, 0].set_title('Saturation at co2_ice mmr max', fontsize=fontsize)
-    pc4 = ax[1, 0].pcolormesh(max_satu, norm=DivergingNorm(vmin=0, vcenter=1, vmax=5), cmap=cmap_satu, shading='flat')
+    pc4 = ax[1, 0].pcolormesh(max_satu, norm=TwoSlopeNorm(vmin=0, vcenter=1, vmax=5), cmap=cmap_satu, shading='flat')
     ax[1, 0].set_facecolor('white')
     cbar4 = plt.colorbar(pc4, ax=ax[1, 0])
     cbar4.ax.set_title(' ')
@@ -1078,7 +1078,7 @@ def display_riceco2_polar_latitudes(info_netcdf, data_north, data_stddev_north, 
 
 
 def display_riceco2_top_cloud_altitude(info_netcdf, top_cloud, mola=False):
-    from matplotlib.colors import Normalize, DivergingNorm
+    from matplotlib.colors import Normalize, TwoSlopeNorm
 
     if info_netcdf.data_dim.time.units != 'deg':
         data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
@@ -1096,7 +1096,7 @@ def display_riceco2_top_cloud_altitude(info_netcdf, top_cloud, mola=False):
     if mola:
         cmap = 'Spectral'
         # norm = Normalize(vmin=0, vmax=40)
-        norm = DivergingNorm(vmin=0, vcenter=10, vmax=40)
+        norm = TwoSlopeNorm(vmin=0, vcenter=10, vmax=40)
         fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_2graph_rows)
         fig.subplots_adjust(right=0.8, hspace=0.05)
         cb = ax[0].pcolormesh(interp_time[:], info_netcdf.data_dim.latitude[:], top_cloud, norm=norm, cmap=cmap)
@@ -2167,7 +2167,7 @@ def display_vars_latitude_longitude(info_netcdf, unit, norm, vmin, vmax, title, 
 def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observation=False,
                              latitude_selected=None, title=None, tes=None, mvals=None,
                              layer=None, save_name='test'):
-    from matplotlib.colors import LogNorm, Normalize, DivergingNorm, BoundaryNorm
+    from matplotlib.colors import LogNorm, Normalize, BoundaryNorm, TwoSlopeNorm
     from matplotlib import cm
     idx1, idx2 = None, None
 
@@ -2184,7 +2184,7 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
         norm = LogNorm(vmin=vmin, vmax=vmax)
         extend = False
     elif norm == 'div':
-        norm = DivergingNorm(vmin=vmin, vmax=vmax)
+        norm = TwoSlopeNorm(vmin=vmin, vmax=vmax)
         extend = False
     elif norm == 'set':
         norm = BoundaryNorm([0, 0.1, 0.2, 0.3, 0.4, 0.5, 1, 2], ncolors=cmap.N, clip=False)
@@ -2306,8 +2306,10 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
         ctf = ax[i_subplot].pcolormesh(data_time[:], data_latitude[:], info_netcdf.data_target, norm=norm, cmap=cmap,
                                        shading='flat', zorder=10)
 
-    dict_var = [{"data": data_time[:], "varname": "Solar longitude", "units": "deg", "shortname": "Ls"},
-                {"data": data_latitude[:], "varname": "Latitude", "units": "deg N", "shortname": "Latitude"},
+    dict_var = [{"data": data_time[:], "varname": "Solar longitude", "units": "deg", "shortname": "Ls",
+                 "dimension": True},
+                {"data": data_latitude[:], "varname": "Latitude", "units": "deg N", "shortname": "Latitude",
+                 "dimension": True},
                 {"data": info_netcdf.data_target,
                  "varname": f"Zonal mean of density column of {info_netcdf.target_name}",
                  "units": "kg.m-2", "shortname": f"{info_netcdf.target_name}"}
@@ -2321,13 +2323,13 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
         ax.plot(north_cap_ls, north_cap_boundaries, color='black', zorder=11)
         ax.plot(south_cap_ls, south_cap_boundaries, color='black', zorder=11)
         dict_var.append({"data": north_cap_ls, "varname": "Solar longitude boundaries of northern polar cap",
-                         "units": "deg", "shortname": "LsNcap"})
+                         "units": "deg", "shortname": "LsNcap", "dimension": True})
         dict_var.append({"data": north_cap_boundaries, "varname": "Latitude boundaries of northern polar caps",
-                         "units": "deg N", "shortname": "LatNcap"})
+                         "units": "deg N", "shortname": "LatNcap", "dimension": False})
         dict_var.append({"data": south_cap_ls, "varname": "Solar longitude boundaries of northern polar cap",
-                         "units": "deg", "shortname": "LsScap"})
+                         "units": "deg", "shortname": "LsScap", "dimension": True})
         dict_var.append({"data": south_cap_boundaries, "varname": "Latitude boundaries of southern polar caps",
-                         "units": "deg N", "shortname": "LatScap"})
+                         "units": "deg N", "shortname": "LatScap", "dimension": False})
 
     if info_netcdf.target_name == 'temp':
         if i_subplot == 0:
@@ -2361,9 +2363,9 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
                 plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='o', s=3, zorder=10000,
                             label='Meso')
                 dict_var.append({"data": data_obs_ls, "varname": f"{name_obs[j]} solar longitude", "units": "deg",
-                                 "shortname": f"{name_obs[j]}_Ls"})
+                                 "shortname": f"{name_obs[j]}_Ls", "dimension": True})
                 dict_var.append({"data": data_obs_latitude, "varname": f"{name_obs[j]} latitude", "units": "deg N",
-                                 "shortname": f"{name_obs[j]}_Lat"})
+                                 "shortname": f"{name_obs[j]}_Lat", "dimension": False})
 
     #        mola_latitude, mola_ls, mola_altitude = observation_mola(only_location=True)
     #        plt.scatter(mola_ls, mola_latitude, color='red', marker='o', zorder=10000, s=3, label='Tropo')
