@@ -671,6 +671,13 @@ def display_co2_ice_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, nor
     ax.set_yticks(data_local_time)
     ax.set_yticklabels(data_local_time, fontsize=fontsize)
 
+    dict_var = [{'data': data_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Ls',
+                 'dimension': True},
+                {'data': data_local_time[:], 'varname': 'Local time', 'units': 'h', 'shortname': 'Local_time',
+                 'dimension': True},
+                {'data': data[:, :], 'varname': f'{title}', 'units': f'{unit}', 'shortname': 'co2_ice'},
+                ]
+
     # observation
     list_instrument = ['HRSC', 'OMEGAlimb', 'OMEGAnadir', 'SPICAM', 'THEMIS', 'NOMAD']
     list_marker = ['s', 'o', 'v', 'P', 'X', '1']
@@ -680,10 +687,17 @@ def display_co2_ice_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, nor
             mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
 
         mask = masked_inside(data_lat, lat_min, lat_max)  # mask inside but we want mask.mask = True
-        ax.scatter(data_ls[mask.mask], data_lt[mask.mask], color=list_colors[i], marker=list_marker[i], label=value_i)
+        if mask.mask.any():
+            ax.scatter(data_ls[mask.mask], data_lt[mask.mask], color=list_colors[i], marker=list_marker[i], label=value_i)
+            dict_var.append({'data': data_ls[mask.mask], 'varname': f'Solar longitude ({value_i})', 'units': 'deg',
+                             'shortname': f'Ls_{value_i}', 'dimension': True})
+            dict_var.append({'data': data_lt[mask.mask], 'varname': f'Local time ({value_i})', 'units': 'h',
+                             'shortname': f'Local_time_{value_i}', 'dimension': False})
 
     ax.legend(loc=0)
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
+
+    save_figure_data(list_dict_var=dict_var, savename=save_name)
     return
 
 

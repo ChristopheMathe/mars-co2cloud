@@ -317,7 +317,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
                                                f' above {altitude_min:.0e}Pa, between [{latitude_min:.0f}:'
                                                f'{latitude_max:.0f}]°N',
                                          save_name=f'co2_ice_zonal_mean_localtime_ls_{latitude_min:.0f}_'
-                                                   f'{latitude_max:.0f}N_above{altitude_min:.0e}Pa')
+                                                   f'{latitude_max:.0f}N_above_{altitude_min:.0e}Pa_')
 
         else:
             print('Processing data:')
