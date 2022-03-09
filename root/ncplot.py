@@ -75,7 +75,7 @@ def co2ice(info_netcdf, view_mode):
         print('Display:')
         display_vars_polar_projection_multi_plot(info_netcdf=info_netcdf, time=time_bin, vmin=1e-5,
                                                  vmax=1e4, norm='nonlinear', cmap='inferno', unit='kg/m$^2$',
-                                                 title='CO$_2$ ice at the surface', save_name=f'co2ice_15ls_mean',
+                                                 title='CO$_2$ ice at the surface', save_name=f'co2ice_30ls_mean',
                                                  levels=[1e-6, 1e-3, 1e-2, 1e-1, 1, 1e1, 1e2, 1e3, 1e4],
                                                  co2_ice_cover=True)
 

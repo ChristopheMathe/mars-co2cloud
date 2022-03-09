@@ -2112,15 +2112,16 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
 
     fig.savefig(f'{save_name}.png', bbox_inches='tight')
 
-    dict_var = [{'data': data_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'TIME'},
+    dict_var = [{'data': data_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'TIME',
+                 'dimension': True},
                 {'data': info_netcdf.data_dim.altitude[:], 'varname': f"{altitude_name}", 'units': f"{unit_altitude}",
-                 'shortname': "ALTITUDE"},
+                 'shortname': "ALTITUDE", 'dimension': True},
                 {'data': data_1, 'varname': f"{varname_1}", 'units': f"{unit}", 'shortname': f"{shortname_1}"},
                 ]
     if alti_line:
         dict_var.append({'data': array([index_10, index_40, index_80]),
                          'varname': f"altitude index [10, 40, 80] km above local surface", 'units': "km",
-                         'shortname': "idx_km"})
+                         'shortname': "idx_km",  'dimension': True})
 
     if isinstance(data_2, ndarray):
         dict_var.append({'data': data_2, 'varname': f"{varname_2}", 'units': f"{unit}", 'shortname': f"{shortname_2}"})
