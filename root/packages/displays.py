@@ -2440,7 +2440,7 @@ def display_vars_localtime_longitude(info_netcdf, norm, vmin, vmax, unit, title,
     return
 
 
-def display_vars_ls_longitude(info_netcdf, norm, vmin, vmax, unit, title, save_name):
+def display_vars_ls_longitude(info_netcdf, norm, vmin, vmax, unit, shortname, title, save_name):
     from matplotlib.colors import Normalize, LogNorm
 
     if norm == 'log':
@@ -2473,6 +2473,14 @@ def display_vars_ls_longitude(info_netcdf, norm, vmin, vmax, unit, title, save_n
     ax.set_ylabel('Solar longitude (°)', fontsize=fontsize)
     ax.set_xlabel('Longitude (°E)', fontsize=fontsize)
     fig.savefig(f'{save_name}.png', bbox_inches='tight')
+    dict_var = [
+        {"data": data_time[:], "varname": "Solar longitude", "units": "deg", "shortname": "Time", "dimension": True},
+        {"data": info_netcdf.data_dim.longitude[:], "varname": "Longitude", "units": "deg E", "shortname": "Longitude",
+         "dimension": True},
+        {"data": info_netcdf.data_target.T, "varname": f"{title}", "units": f"{unit}", "shortname": f"{shortname}"}
+    ]
+
+    save_figure_data(list_dict_var=dict_var, savename=save_name)
     return
 
 
