@@ -338,6 +338,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
 
         print('Display:')
         display_vars_localtime_longitude(info_netcdf=info_netcdf, norm='log', vmin=1e-13, vmax=1e-7, unit='kg/kg',
+                                         short_name=info_netcdf.target_name,
                                          title=f'CO$_2$ ice mmr at 0°N and 0.5 Pa',
                                          save_name=f'co2_ice_local_time_longitude_0N_0p5Pa')
 
@@ -955,6 +956,7 @@ def temp(info_netcdf, view_mode):
 
         print('Display:')
         display_vars_localtime_longitude(info_netcdf=info_netcdf, norm='linear', vmin=120, vmax=165,
+                                         short_name=info_netcdf.target_name,
                                          unit='K', title=f'Temperature at 0°N and 0.5 Pa',
                                          save_name=f'temp_local_time_longitude_0N_0p5Pa')
 

@@ -2413,7 +2413,7 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
     return
 
 
-def display_vars_localtime_longitude(info_netcdf, norm, vmin, vmax, unit, title, save_name):
+def display_vars_localtime_longitude(info_netcdf, norm, vmin, vmax, unit, short_name, title, save_name):
     from matplotlib.colors import Normalize, LogNorm
 
     if norm == 'log':
@@ -2437,6 +2437,15 @@ def display_vars_localtime_longitude(info_netcdf, norm, vmin, vmax, unit, title,
     ax.set_ylabel('Local time (h)', fontsize=fontsize)
     ax.set_xlabel('Longitude (°E)', fontsize=fontsize)
     fig.savefig(f'{save_name}.png', bbox_inches='tight')
+
+    dict_var = [
+        {"data": data_local_time[:], "varname": "Local time", "units": "h", "shortname": "Time", "dimension": True},
+        {"data": info_netcdf.data_dim.longitude[:], "varname": "Longitude", "units": "deg E", "shortname": "Longitude",
+         "dimension": True},
+        {"data": info_netcdf.data_target, "varname": f"{title}", "units": f"{unit}", "shortname": f"{short_name}"}
+    ]
+
+    save_figure_data(list_dict_var=dict_var, savename=save_name)
     return
 
 
