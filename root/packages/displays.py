@@ -1028,16 +1028,16 @@ def display_riceco2_polar_latitudes(info_netcdf, data_north, data_stddev_north, 
                        color=cmap(part))
     ax[0].set_yscale('log')
     ax[0].set_xscale('log')
-    ax[0].hlines(info_netcdf.data_dim.altitude[index_10], 1e-2, 1e3, ls='--', color='black')
-    ax[0].hlines(info_netcdf.data_dim.altitude[index_40], 1e-2, 1e3, ls='--', color='black')
-    ax[0].hlines(info_netcdf.data_dim.altitude[index_80], 1e-2, 1e3, ls='--', color='black')
-    ax[0].text(1e-2, info_netcdf.data_dim.altitude[index_10], '10 km',
+    ax[0].hlines(info_netcdf.data_dim.altitude[index_10], 1e-3, 1e3, ls='--', color='black')
+    ax[0].hlines(info_netcdf.data_dim.altitude[index_40], 1e-3, 1e3, ls='--', color='black')
+    ax[0].hlines(info_netcdf.data_dim.altitude[index_80], 1e-3, 1e3, ls='--', color='black')
+    ax[0].text(1e-3, info_netcdf.data_dim.altitude[index_10], '10 km',
                verticalalignment='bottom',
                horizontalalignment='left', color='black', fontsize=10)
-    ax[0].text(1e-2, info_netcdf.data_dim.altitude[index_40], '40 km',
+    ax[0].text(1e-3, info_netcdf.data_dim.altitude[index_40], '40 km',
                verticalalignment='bottom',
                horizontalalignment='left', color='black', fontsize=10)
-    ax[0].text(1e-2, info_netcdf.data_dim.altitude[index_80], '80 km',
+    ax[0].text(1e-3, info_netcdf.data_dim.altitude[index_80], '80 km',
                verticalalignment='bottom',
                horizontalalignment='left', color='black', fontsize=10)
 
@@ -1068,9 +1068,9 @@ def display_riceco2_polar_latitudes(info_netcdf, data_north, data_stddev_north, 
                        color=cmap(part))
     ax[1].set_yscale('log')
     ax[1].set_xscale('log')
-    ax[1].hlines(info_netcdf.data_dim.altitude[index_10], 1e-2, 1e3, ls='--', color='black')
-    ax[1].hlines(info_netcdf.data_dim.altitude[index_40], 1e-2, 1e3, ls='--', color='black')
-    ax[1].hlines(info_netcdf.data_dim.altitude[index_80], 1e-2, 1e3, ls='--', color='black')
+    ax[1].hlines(info_netcdf.data_dim.altitude[index_10], 1e-3, 1e3, ls='--', color='black')
+    ax[1].hlines(info_netcdf.data_dim.altitude[index_40], 1e-3, 1e3, ls='--', color='black')
+    ax[1].hlines(info_netcdf.data_dim.altitude[index_80], 1e-3, 1e3, ls='--', color='black')
     ax[1].text(1e-2, info_netcdf.data_dim.altitude[index_10], '10 km',
                verticalalignment='bottom',
                horizontalalignment='left', color='black', fontsize=10)
@@ -1083,7 +1083,7 @@ def display_riceco2_polar_latitudes(info_netcdf, data_north, data_stddev_north, 
 
     for axes in ax.reshape(-1):
         axes.set_ylim(1e3, 1e-2)
-        axes.set_xlim(1e-2, 1e2)
+        axes.set_xlim(1e-3, 1e3)
         axes.grid()
         axes.legend(loc='best', fontsize=fontsize)
         axes.tick_params(axis='both', which='major', labelsize=fontsize)
@@ -1093,12 +1093,15 @@ def display_riceco2_polar_latitudes(info_netcdf, data_north, data_stddev_north, 
     savename = 'riceco2_polar_latitudes_structure'
     fig.savefig(savename + '.png', bbox_inches='tight')
     fig.savefig(savename + '.eps', bbox_inches='tight')
-    fig.savefig(savename + '.png', bbox_inches='tight')
+    fig.savefig(savename + '.pdf', bbox_inches='tight')
 
     dict_var = [
-        {"data": info_netcdf.data_dim.altitude[:], "varname": "Pressure", "units": "Pa", "shortname": "altitude"},
-        {"data": latitude_north[:], "varname": "Northern latitude", "units": "deg°N", "shortname": "lat_north"},
-        {"data": latitude_south[:], "varname": "Southern latitude", "units": "deg°N", "shortname": "lat_south"},
+        {"data": info_netcdf.data_dim.altitude[:], "varname": "Pressure", "units": "Pa", "shortname": "altitude",
+         "dimension": True},
+        {"data": latitude_north[:], "varname": "Northern latitude", "units": "deg°N", "shortname": "lat_north",
+         "dimension": True},
+        {"data": latitude_south[:], "varname": "Southern latitude", "units": "deg°N", "shortname": "lat_south",
+         "dimension": True},
         {"data": data_north[:, :], "varname": f"Zonal and diurnal mean of CO2 radius particles (northern latitudes)",
          "units": "µm", "shortname": "radius_north"},
         {"data": data_stddev_north[:, :], "varname": f"Standard deviation of mean radius (northern latitudes)",
@@ -1108,7 +1111,7 @@ def display_riceco2_polar_latitudes(info_netcdf, data_north, data_stddev_north, 
         {"data": data_stddev_south[:, :], "varname": f"Standard deviation of mean radius (southern latitudes)",
          "units": "µm", "shortname": "stddev_radius_south"},
         {"data": array([index_10, index_40, index_80]), "varname": "Altitude index [10, 40, 80] km above local surface",
-         "units": "km", "shortname": "idx_km"}
+         "units": "km", "shortname": "idx_km", "dimension": True}
     ]
     save_figure_data(list_dict_var=dict_var, savename=savename)
     return
@@ -2397,6 +2400,7 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
                                                                          value=[latitude_selected[0],
                                                                                 latitude_selected[-1]])
             if data_obs_ls.shape[0] != 0:
+                print(f'{name_obs[j]} observations observed {data_obs_ls.shape[0]:d} mesospheric clouds')
                 plt.scatter(data_obs_ls, data_obs_latitude, color='black', marker='o', s=3, zorder=10000,
                             label='Meso')
                 dict_var.append({"data": data_obs_ls, "varname": f"{name_obs[j]} solar longitude", "units": "deg",
