@@ -688,7 +688,8 @@ def display_co2_ice_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, nor
 
         mask = masked_inside(data_lat, lat_min, lat_max)  # mask inside but we want mask.mask = True
         if mask.mask.any():
-            ax.scatter(data_ls[mask.mask], data_lt[mask.mask], color=list_colors[i], marker=list_marker[i], label=value_i)
+            ax.scatter(data_ls[mask.mask], data_lt[mask.mask], color=list_colors[i], marker=list_marker[i],
+                       label=value_i)
             dict_var.append({'data': data_ls[mask.mask], 'varname': f'Solar longitude ({value_i})', 'units': 'deg',
                              'shortname': f'Ls_{value_i}', 'dimension': True})
             dict_var.append({'data': data_lt[mask.mask], 'varname': f'Local time ({value_i})', 'units': 'h',
@@ -949,14 +950,36 @@ def display_riceco2_mean_local_time_evolution(info_netcdf, data_min_radius, data
     ax2.tick_params(axis='both', which='major', labelsize=fontsize)
     ax2.tick_params(axis='y', colors='red')
 
-    ax.set_title(f'Radius of CO2 ice particles at {latitude:.2f}N\n with their location (red)', fontsize=fontsize)
+    ax.set_title(f'Radius of CO2 ice particles at {latitude:.0f}°N\n with their location (red)', fontsize=fontsize)
     ax.set_ylabel(f'Radius particle (µm)', fontsize=fontsize)
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
     ax.legend(loc=0)
     ax.set_xlabel('Local time (h)', fontsize=fontsize)
     ax.set_xticks(info_netcdf.local_time)
     ax.set_xticklabels(info_netcdf.local_time, fontsize=fontsize)
-    plt.savefig(f'riceco2_max_localtime_evolution_{latitude:.0f}N.png', bbox_inches='tight')
+
+    savename = f'riceco2_mean_local_time_evolution_{latitude:.0f}N'
+    plt.savefig(f'{savename}.png', bbox_inches='tight')
+
+    dict_var = [{"data": info_netcdf.local_time[:], "varname": "Local time", "units": "h", "shortname": "Time",
+                 "dimension": True},
+                {"data": data_mean_radius, "varname": "Mean radius of CO2 ice particles", "units": "µm",
+                 "shortname": "radius_mean", "dimension": False},
+                {"data": data_std_radius, "varname": "1-sigma uncertainties on mean radius", "units": "µm",
+                 "shortname": "radius_std", "dimension": False},
+                {"data": data_min_radius, "varname": "Minimum radius", "units": "µm",
+                 "shortname": "radius_min", "dimension": False},
+                {"data": data_max_radius, "varname": "Maximum radius", "units": "µm",
+                 "shortname": "radius_max", "dimension": False},
+                {"data": data_mean_alt, "varname": "Altitude mean: alt_max - alt_min", "units": "Pa",
+                 "shortname": "alt_mean", "dimension": False},
+                {"data": data_min_alt, "varname": "Minimum altitude with CO2 ice particles", "units": "Pa",
+                 "shortname": "alt_min", "dimension": False},
+                {"data": data_max_alt, "varname": "Maximum altitude with CO2 ice particles", "units": "Pa",
+                 "shortname": "alt_max", "dimension": False},
+                ]
+
+    save_figure_data(list_dict_var=dict_var, savename=savename)
     return
 
 
@@ -2135,7 +2158,7 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
     if alti_line:
         dict_var.append({'data': array([index_10, index_40, index_80]),
                          'varname': f"altitude index [10, 40, 80] km above local surface", 'units': "km",
-                         'shortname': "idx_km",  'dimension': True})
+                         'shortname': "idx_km", 'dimension': True})
 
     if isinstance(data_2, ndarray):
         dict_var.append({'data': data_2, 'varname': f"{varname_2}", 'units': f"{unit}", 'shortname': f"{shortname_2}"})
