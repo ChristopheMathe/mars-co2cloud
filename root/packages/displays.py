@@ -696,6 +696,8 @@ def display_co2_ice_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, nor
                              'shortname': f'Local_time_{value_i}', 'dimension': False})
 
     ax.legend(loc=0)
+    plt.savefig(f'{save_name}.eps', bbox_inches='tight')
+    plt.savefig(f'{save_name}.pdf', bbox_inches='tight')
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
 
     save_figure_data(list_dict_var=dict_var, savename=save_name)
@@ -959,6 +961,8 @@ def display_riceco2_mean_local_time_evolution(info_netcdf, data_min_radius, data
     ax.set_xticklabels(info_netcdf.local_time, fontsize=fontsize)
 
     savename = f'riceco2_mean_local_time_evolution_{latitude:.0f}N'
+    plt.savefig(f'{savename}.eps', bbox_inches='tight')
+    plt.savefig(f'{savename}.pdf', bbox_inches='tight')
     plt.savefig(f'{savename}.png', bbox_inches='tight')
 
     dict_var = [{"data": info_netcdf.local_time[:], "varname": "Local time", "units": "h", "shortname": "Time",
@@ -1168,22 +1172,27 @@ def display_riceco2_top_cloud_altitude(info_netcdf, top_cloud, mola=False):
         if len(info_netcdf.local_time) == 1:
             savename = f'top_cloud_altitude_compared_to_mola_{info_netcdf.local_time:0.f}h'
             ax[0].set_title(f'Zonal mean of top cloud altitude, at {info_netcdf.local_time:0.f}h', fontsize=fontsize)
+            plt.savefig(f'{savename}.eps', bbox_inches='tight')
+            plt.savefig(f'{savename}.pdf', bbox_inches='tight')
             plt.savefig(f'{savename}.png', bbox_inches='tight')
         else:
             savename = 'top_cloud_altitude_diurnal_mean_compared_to_mola'
             ax[0].set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
+            plt.savefig(f'{savename}.eps', bbox_inches='tight')
+            plt.savefig(f'{savename}.pdf', bbox_inches='tight')
             plt.savefig(f'{savename}.png', bbox_inches='tight')
-        dict_var = [{'data': interp_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Time'},
+        dict_var = [{'data': interp_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Time',
+                     'dimension': True},
                     {'data': info_netcdf.data_dim.latitude[:], 'varname': "Latitude", 'units': "deg N",
-                     'shortname': "latitude"},
+                     'shortname': "latitude", 'dimension': True},
                     {'data': top_cloud[:, :], 'varname': "Zonal mean of top cloud altitude", 'units': "km",
                      'shortname': "topcloud"},
                     {'data': mola_ls[:], 'varname': 'Solar longitude of MOLA observation', 'units': 'deg',
-                     'shortname': 'MOLA_time'},
+                     'shortname': 'MOLA_time', 'dimension': True},
                     {'data': mola_latitude[:], 'varname': "Latitude of MOLA observation", 'units': "deg N",
-                     'shortname': "MOLA_latitude"},
-                    {'data': mola_altitude[:], 'varname': "Top cloud altitude from MOLA observation", 'units': "km",
-                     'shortname': "MOLA_topcloud"}
+                     'shortname': "MOLA_latitude", 'dimension': True},
+                    {'data': mola_altitude[:, :], 'varname': "Top cloud altitude from MOLA observation", 'units': "km",
+                     'shortname': "MOLA_topcloud", 'dimension': False}
                     ]
     else:
         cmap = colormap_idl_rainbow_plus_white()
@@ -1209,14 +1218,19 @@ def display_riceco2_top_cloud_altitude(info_netcdf, top_cloud, mola=False):
         if len(info_netcdf.local_time) == 1:
             savename = f'top_cloud_altitude_comparable_to_mola_{info_netcdf.local_time:0.f}h'
             ax.set_title(f'Zonal mean of top cloud altitude, at {info_netcdf.local_time:0.f}h', fontsize=fontsize)
+            plt.savefig(f'{savename}.eps', bbox_inches='tight')
+            plt.savefig(f'{savename}.pdf', bbox_inches='tight')
             plt.savefig(f'{savename}.png', bbox_inches='tight')
         else:
             savename = 'top_cloud_altitude_comparable_to_mola_diurnal_mean'
             ax.set_title(f'Zonal mean of top cloud altitude, diurnal mean', fontsize=fontsize)
+            plt.savefig(f'{savename}.eps', bbox_inches='tight')
+            plt.savefig(f'{savename}.pdf', bbox_inches='tight')
             plt.savefig(f'{savename}.png', bbox_inches='tight')
-        dict_var = [{'data': interp_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Time'},
+        dict_var = [{'data': interp_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Time',
+                     'dimension': True},
                     {'data': info_netcdf.data_dim.latitude[:], 'varname': "Latitude", 'units': "deg N",
-                     'shortname': "latitude"},
+                     'shortname': "latitude", 'dimension': True},
                     {'data': top_cloud, 'varname': "Zonal mean of top cloud altitude", 'units': "km",
                      'shortname': "topcloud"}
                     ]
@@ -2150,6 +2164,8 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
                     axes.scatter(data_ls[mask.mask][j], info_netcdf.data_dim.altitude[index], color='black',
                                  edgecolors='white', marker=list_marker[i], label=value_i, s=80)
 
+    fig.savefig(f'{save_name}.eps', bbox_inches='tight')
+    fig.savefig(f'{save_name}.pdf', bbox_inches='tight')
     fig.savefig(f'{save_name}.png', bbox_inches='tight')
 
     dict_var = [{'data': data_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'TIME',
@@ -2194,10 +2210,12 @@ def display_vars_latitude_longitude(info_netcdf, unit, norm, vmin, vmax, title, 
     cbar.ax.tick_params(labelsize=fontsize)
     ax.grid()
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
+    plt.savefig(f'{save_name}.eps', bbox_inches='tight')
+    plt.savefig(f'{save_name}.pdf', bbox_inches='tight')
     dict_var = [{'data': info_netcdf.data_dim.longitude[:], 'varname': 'Longitude', 'units': 'deg E',
-                 'shortname': 'Longitude'},
+                 'shortname': 'Longitude', 'dimension': True},
                 {'data': info_netcdf.data_dim.latitude[:], 'varname': "Latitude", 'units': "deg N",
-                 'shortname': "Latitude"},
+                 'shortname': "Latitude", 'dimension': True},
                 {'data': info_netcdf.data_target, 'varname': title, 'units': "%", 'shortname': "coverage"},
                 ]
     save_figure_data(list_dict_var=dict_var, savename=save_name)
@@ -2434,6 +2452,8 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
             cbar = plt.colorbar(ctf)
         cbar.ax.set_title(unit, fontsize=fontsize)
         cbar.ax.tick_params(labelsize=fontsize)
+    plt.savefig(f'{save_name}.eps', bbox_inches='tight')
+    plt.savefig(f'{save_name}.pdf', bbox_inches='tight')
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
 
     save_figure_data(dict_var, savename=save_name)
