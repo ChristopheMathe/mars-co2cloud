@@ -2150,6 +2150,13 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
         axes.text(300, info_netcdf.data_dim.altitude[index_80], '80 km', verticalalignment='bottom',
                   horizontalalignment='left', color=color_line, fontsize=12, weight='bold')
 
+    dict_var = [{'data': data_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'TIME',
+                 'dimension': True},
+                {'data': info_netcdf.data_dim.altitude[:], 'varname': f"{altitude_name}", 'units': f"{unit_altitude}",
+                 'shortname': "ALTITUDE", 'dimension': True},
+                {'data': data_1, 'varname': f"{varname_1}", 'units': f"{unit}", 'shortname': f"{shortname_1}"},
+                ]
+
     # observation
     list_instrument = ['HRSC', 'OMEGAlimb', 'OMEGAnadir', 'SPICAM', 'THEMIS', 'NOMAD']
     list_marker = ['s', 'o', 'v', 'P', 'X', '*']
@@ -2158,22 +2165,28 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
             mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
         mask = masked_inside(data_lat, latitude[0], latitude[-1])
         if mask.mask.any():
+            tmp_alt = array([])
+            tmp_ls = array([])
             for j in range(data_alt[mask.mask].shape[0]):
                 if data_alt[mask.mask][j] != 0:
                     index = abs(data_surface_local[0, :, idx_longitude] - data_alt[mask.mask][j] * 1e3).argmin()
+                    tmp_alt = append(tmp_alt, info_netcdf.data_dim.altitude[index])
+                    tmp_ls = append(tmp_ls, data_ls[mask.mask][j])
                     axes.scatter(data_ls[mask.mask][j], info_netcdf.data_dim.altitude[index], color='black',
                                  edgecolors='white', marker=list_marker[i], label=value_i, s=80)
+            print(value_i)
+            print(tmp_alt.shape, tmp_ls.shape)
+            dict_var.append({'data': tmp_ls,
+                             'varname': f"Solar longitude of {value_i} observation", 'units': "deg",
+                             'shortname': f"ls_{value_i}", 'dimension': True})
+            dict_var.append({'data': tmp_alt,
+                             'varname': f"Altitude of {value_i} observation", 'units': "Pa",
+                             'shortname': f"alt_{value_i}", 'dimension': False})
 
     fig.savefig(f'{save_name}.eps', bbox_inches='tight')
     fig.savefig(f'{save_name}.pdf', bbox_inches='tight')
     fig.savefig(f'{save_name}.png', bbox_inches='tight')
 
-    dict_var = [{'data': data_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'TIME',
-                 'dimension': True},
-                {'data': info_netcdf.data_dim.altitude[:], 'varname': f"{altitude_name}", 'units': f"{unit_altitude}",
-                 'shortname': "ALTITUDE", 'dimension': True},
-                {'data': data_1, 'varname': f"{varname_1}", 'units': f"{unit}", 'shortname': f"{shortname_1}"},
-                ]
     if alti_line:
         dict_var.append({'data': array([index_10, index_40, index_80]),
                          'varname': f"altitude index [10, 40, 80] km above local surface", 'units': "km",
@@ -2918,17 +2931,20 @@ def display_vars_polar_projection_multi_plot(info_netcdf, time, vmin, vmax, norm
         plt.savefig(f'{save_name}_southern_polar_region_diurnal_mean.png', bbox_inches='tight')
 
     dict_var = [{"data": info_netcdf.data_dim.longitude[:], "varname": "Longitude", "units": "deg E", "shortname":
-        "longitude"},
-                {"data": latitude_np[:], "varname": "Northern latitude", "units": "deg N", "shortname": "latitude_np"},
-                {"data": latitude_sp[:], "varname": "Southern latitude", "units": "deg N", "shortname": "latitude_sp"},
-                {"data": arange(0, 360, 30), "varname": "Solar longitde  bin", "units": "deg", "shortname": "time"},
-                {"data": data_np, "varname": "CO2 ice mass at the surface", "units": "kg", "shortname":
+        "longitude", "dimension": True},
+                {"data": latitude_np[:], "varname": "Northern latitude", "units": "deg N", "shortname": "latitude_np",
+                 "dimension": True},
+                {"data": latitude_sp[:], "varname": "Southern latitude", "units": "deg N", "shortname": "latitude_sp",
+                 "dimension": True},
+                {"data": arange(0, 360, 30), "varname": "Solar longitde  bin", "units": "deg", "shortname": "time",
+                 "dimension": True},
+                {"data": data_np[:, :, :], "varname": "CO2 ice mass at the surface", "units": "kg", "shortname":
                     "co2_ice_north"},
-                {"data": data_sp, "varname": "CO2 ice mass at the surface", "units": "kg", "shortname":
+                {"data": data_sp[:, :, :], "varname": "CO2 ice mass at the surface", "units": "kg", "shortname":
                     "co2_ice_south"},
-                {"data": data_np_surface[:], "varname": "Northern topology", "units": "km", "shortname":
+                {"data": data_np_surface[:, :], "varname": "Northern topology", "units": "km", "shortname":
                     "topo_north"},
-                {"data": data_sp_surface[:], "varname": "Southern topology", "units": "km", "shortname":
+                {"data": data_sp_surface[:, :], "varname": "Southern topology", "units": "km", "shortname":
                     "topo_south"}
                 ]
 
