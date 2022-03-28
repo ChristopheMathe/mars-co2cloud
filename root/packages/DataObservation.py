@@ -105,7 +105,9 @@ def observation_tes(target, year=None):
     return data
 
 
-def observation_pfs(target):
+def observation_pfs(target, year=None):
+    from numpy.ma import masked_outside
+    from numpy import unique, where, zeros, append, arange, array
     '''
     ========================================================================================================================
                                                   PFS OBSERVATIONS INFORMATION
@@ -246,9 +248,88 @@ def observation_pfs(target):
                        obtained by request. Please contact the PFS PI at the following address: marco.giuranna@inaf.it
     '''
 
-    data = get_data(f'{root_dir}/data/obs_pfs/PFS_data.nc', target=target)
+    # 1-D
+    data_lat = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='lat')  # Latitude
+    data_lon = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='lon')  # Longitude
+    data_pressure = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='Pressures')  # Pressure
 
-    return data
+    # 3-D: (Time, latitude, longitude)
+    if target in ['loct', 'T_surf', 'p_surf', 'h_surf', 'dust', 'dust_norm', 'ice']:
+        # loct: Solar local time
+        # T_surf: Surface temperature
+        # p_surf: Surface pressure
+        # h_surf: Surface altitude wrt Mars aeroid
+        # dust: Column dust optical depth at 1075 cm-1
+        # dust_norm: Column dust optical depth at 1075 cm-1, normalised to Psurf = 6.1 mbar
+        # ice: Column ice optical depth at 825 cm-1
+        data = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target=target)
+    # 4-D: (Time, pressure, latitude, longitude)
+    elif target in ['Temperature', 'Altitude']:
+        # Temperature: Temperature profile (N_level, N_measure)
+        # Altitude: Altitude above the aeroid of Mars for the temperature profile
+        data = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target=target)
+    else:
+        data = None
+        print(f'Wrong target {target} for PFS data.')
+        exit()
+
+    if year:
+        start_year = 26
+        end_year = 34
+        if (year >= start_year) and (year <= end_year):
+            iyear = year - start_year
+        else:
+            iyear = None
+            print(f'Wrong year {year}. Must be between {start_year} and {end_year}!')
+        data_ls = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='ls_MY')  # Ls incremented
+        data_ls = masked_outside(data_ls, 360 * iyear, 360 * (iyear + 1))
+    else:
+        data_ls = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='ls')  # Ls
+
+    # Create the 3-D or 4-D array
+    ls_unique = unique(data_ls)
+    latitude_bin = arange(-90, 91, 1)  # bin data in lat = 1°
+    longitude_bin = arange(-180, 181, 1)  # bin data in lon = 1°
+    big_data = None
+    for i, value_ls in enumerate(ls_unique):
+        print('{:.2f}%'.format(i / ls_unique.shape[0] * 100))
+
+        # On a l'ensemble des points à la même date ls_MY
+        idx = where(value_ls == data_ls)
+        lats = data_lat[idx]
+        lons = data_lon[idx]
+
+        # Mask latitude did not observed
+        idx_lat = array([], dtype=int)
+        for l in lats:
+            idx_lat = append(idx_lat, abs(latitude_bin - l).argmin())
+
+        # Mask longitude did not observed
+        idx_lon = array([], dtype=int)
+        for l in lons:
+            idx_lon = append(idx_lon, abs(longitude_bin - l).argmin())
+
+        data_tmp = data[idx]
+        # Check qu'on a pas 2 points au même endroits avec différentes valeurs, si oui, faire la moyenne ! car sinon
+        # il prend la dernière valeur
+        if unique(lats).shape[0] != lats.shape[0] and unique(lons).shape[0] != lons.shape[0]:
+            for j in unique(lats):
+                a = where(j == lats)
+                if a[0].shape[0] > 1:
+                    if unique(lons[a]).shape[0] != lons[a].shape[0]:
+                        if unique(data_tmp[a].shape[0]) != data[a].shape[0]:
+                            print(data_tmp[a])
+                            exit()
+
+        big_data = zeros((latitude_bin.shape[0], longitude_bin.shape[0]))
+        big_data[idx_lat, idx_lon] = data_tmp
+
+        if target in ['Temperature', 'Altitude']:
+            big_data = zeros((data_pressure.shape[0], latitude_bin.shape[0], longitude_bin.shape[0]))
+            for i in range(idx[0].shape[0]):
+                big_data[:, idx_lat[i], idx_lon[i]] = data_tmp[idx[0][i], :]
+
+    return big_data
 
 
 def mesospheric_clouds_observed():
