@@ -302,7 +302,7 @@ def co2ice_density_column_evolution(info_netcdf):
                                                      idx_dim_slice=info_netcdf.idx_dim.time,
                                                      dimension_slice=times,
                                                      value=[time_begin, time_end])
-    time_range = times[time_range[0]:time_range[-1]+1]
+    time_range = times[time_range[0]:time_range[-1] + 1]
 
     # Slice data in polar region:
     pole = input('Select the polar region (N/S):')
@@ -311,13 +311,13 @@ def co2ice_density_column_evolution(info_netcdf):
                                                        idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                        dimension_slice=info_netcdf.data_dim.latitude,
                                                        value=[60, 90])
-        latitudes = info_netcdf.data_dim.latitude[latitude[0]:latitude[-1]+1]
+        latitudes = info_netcdf.data_dim.latitude[latitude[0]:latitude[-1] + 1]
     elif pole.lower() == 's':
         info_netcdf.data_target, latitude = slice_data(data=info_netcdf.data_target,
                                                        idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                        dimension_slice=info_netcdf.data_dim.latitude,
                                                        value=[-60, -90])
-        latitudes = info_netcdf.data_dim.latitude[latitude[0]:latitude[-1]+1]
+        latitudes = info_netcdf.data_dim.latitude[latitude[0]:latitude[-1] + 1]
     else:
         latitudes = None
         print('Wrong selection')
@@ -625,15 +625,10 @@ def riceco2_top_cloud_altitude(info_netcdf):
     data_ccn_nco2 = correction_value(data_ccn_nco2[:, :, :, :], operator='inf', value=threshold)
     data_rho = correction_value(data_rho[:, :, :, :], operator='inf', value=threshold)
 
-    # zonal mean remove the longitude doublet
-    data_target = mean(info_netcdf.data_target[:, :, :, :-1], axis=3)
-    data_ccn_nco2 = mean(data_ccn_nco2[:, :, :, :-1], axis=3)
-    data_rho = mean(data_rho[:, :, :, :-1], axis=3)
-
-    data_target, tmp = slice_data(data=data_target,
-                                  idx_dim_slice=info_netcdf.idx_dim.altitude,
-                                  dimension_slice=info_netcdf.data_dim.altitude,
-                                  value=[0, 4e4])
+    info_netcdf.data_target, tmp = slice_data(data=info_netcdf.data_target,
+                                              idx_dim_slice=info_netcdf.idx_dim.altitude,
+                                              dimension_slice=info_netcdf.data_dim.altitude,
+                                              value=[0, 4e4])
     data_ccn_nco2, tmp = slice_data(data=data_ccn_nco2,
                                     idx_dim_slice=info_netcdf.idx_dim.altitude,
                                     dimension_slice=info_netcdf.data_dim.altitude,
@@ -643,24 +638,29 @@ def riceco2_top_cloud_altitude(info_netcdf):
                                dimension_slice=info_netcdf.data_dim.altitude,
                                value=[0, 4e4])
 
+    # zonal mean remove the longitude doublet
+    info_netcdf.data_target = mean(info_netcdf.data_target[:, :, :, :-1], axis=3)
+    data_ccn_nco2 = mean(data_ccn_nco2[:, :, :, :-1], axis=3)
+    data_rho = mean(data_rho[:, :, :, :-1], axis=3)
+
     if len(info_netcdf.local_time) == 1:
         data_ccn_nco2, local_time = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_ccn_nco2)
         data_rho, local_time = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_rho)
-        nb_time = data_target.shape[0]
-        nb_alt = data_target.shape[1]
-        nb_lat = data_target.shape[2]
+        nb_time = info_netcdf.data_target.shape[0]
+        nb_alt = info_netcdf.data_target.shape[1]
+        nb_lat = info_netcdf.data_target.shape[2]
     else:
         # diurnal mean: data (8028 => 669,12)
-        nb_alt = data_target.shape[1]
-        nb_lat = data_target.shape[2]
-        data_target = mean(data_target.reshape((669, 12, nb_alt, nb_lat)), axis=1)
+        nb_alt = info_netcdf.data_target.shape[1]
+        nb_lat = info_netcdf.data_target.shape[2]
+        info_netcdf.data_target = mean(info_netcdf.data_target.reshape((669, 12, nb_alt, nb_lat)), axis=1)
         data_ccn_nco2 = mean(data_ccn_nco2.reshape((669, 12, nb_alt, nb_lat)), axis=1)
         data_rho = mean(data_rho.reshape((669, 12, nb_alt, nb_lat)), axis=1)
-        nb_time = data_target.shape[0]
+        nb_time = info_netcdf.data_target.shape[0]
 
-    n_reflect = 2e-8 * power(data_target * 1e6, -2)  # from Tobie et al. 2003
+    n_reflect = 2e-8 * power(info_netcdf.data_target * 1e6, -2)  # from Tobie et al. 2003
     n_part = data_rho * data_ccn_nco2
-    del [data_target, data_ccn_nco2, data_rho]
+    del [info_netcdf.data_target, data_ccn_nco2, data_rho]
 
     a = (abs(info_netcdf.data_dim.latitude[:] - 45)).argmin() + 1
     polar_latitude = concatenate((arange(a), arange(nb_lat - a, nb_lat)))
@@ -728,8 +728,8 @@ def riceco2_polar_latitudes(info_netcdf):
     stddev_north = zeros(shape=(data_north.shape[0:2]))
     for i in range(data_north.shape[0]):
         for j in range(data_north.shape[1]):
-            data_zonal_mean_north[i,j] = tmean(data_north[i,j,:][~data_north[i,j,:].mask])
-            stddev_north[i,j] = tsem(data_north[i,j,:][~data_north[i,j,:].mask])
+            data_zonal_mean_north[i, j] = tmean(data_north[i, j, :][~data_north[i, j, :].mask])
+            stddev_north[i, j] = tsem(data_north[i, j, :][~data_north[i, j, :].mask])
 
     data_south = swapaxes(data_south, axis1=0, axis2=2)
     data_south = data_south.reshape(data_south.shape[0], data_south.shape[1], -1)
@@ -737,8 +737,8 @@ def riceco2_polar_latitudes(info_netcdf):
     stddev_south = zeros(shape=(data_south.shape[0:2]))
     for i in range(data_south.shape[0]):
         for j in range(data_south.shape[1]):
-            data_zonal_mean_south[i,j] = tmean(data_south[i,j,:][~data_south[i,j,:].mask])
-            stddev_south[i,j] = tsem(data_south[i,j,:][~data_south[i,j,:].mask])
+            data_zonal_mean_south[i, j] = tmean(data_south[i, j, :][~data_south[i, j, :].mask])
+            stddev_south[i, j] = tsem(data_south[i, j, :][~data_south[i, j, :].mask])
 
     return data_zonal_mean_north.T, data_zonal_mean_south.T, stddev_north.T, stddev_south.T
 
@@ -1497,7 +1497,7 @@ def vars_max_value_with_others(info_netcdf):
     max_ccn_n = correction_value(data=max_ccn_n, operator='invalide')
     max_alt = correction_value(data=max_alt, operator='invalide')
 
-    return max_mmr, max_temp, max_satu, max_radius*1e6, max_ccn_n, max_alt
+    return max_mmr, max_temp, max_satu, max_radius * 1e6, max_ccn_n, max_alt
 
 
 def vars_time_mean(info_netcdf, duration):
