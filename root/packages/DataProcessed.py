@@ -666,7 +666,7 @@ def riceco2_top_cloud_altitude(info_netcdf):
         data_rho = mean(data_rho.reshape((669, 12, nb_alt, nb_lat)), axis=1)
         nb_time = info_netcdf.data_target.shape[0]
 
-    n_reflect = 2e-8 * power(info_netcdf.data_target * 1e6, -2)  # from Tobie et al. 2003
+    n_reflect = 2e-8 * power(info_netcdf.data_target, -2)  # from Tobie et al. 2003
     n_part = data_rho * data_ccn_nco2
     del [info_netcdf.data_target, data_ccn_nco2, data_rho]
 
