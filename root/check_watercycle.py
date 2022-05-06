@@ -2,7 +2,7 @@
 from packages.lib_function import *
 from packages.ncdump import *
 from netCDF4 import Dataset
-from matplotlib.colors import DivergingNorm, LinearSegmentedColormap
+from matplotlib.colors import TwoSlopeNorm, LinearSegmentedColormap
 from numpy.ma import masked_inside
 from os import listdir
 from pylab import *
@@ -113,7 +113,7 @@ def plot_figure(data_ref, data, delta, levels, sup_title, unit, fmt, ndx, data_l
     ax[1].set_facecolor('white')
 
     ax[2].set_title('Relative change (simu - ref)')
-    pc2 = ax[2].contourf(delta, norm=DivergingNorm(vmin=-100, vcenter=0, vmax=100), levels=arange(-10, 12, 2) * 10,
+    pc2 = ax[2].contourf(delta, norm=TwoSlopeNorm(vmin=-100, vcenter=0, vmax=100), levels=arange(-10, 12, 2) * 10,
                          cmap='seismic')
 
     ax[0].set_yticks(ticks=arange(0, len(data_latitude), 6))

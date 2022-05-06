@@ -688,12 +688,18 @@ def display_co2_ice_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, nor
 
         mask = masked_inside(data_lat, lat_min, lat_max)  # mask inside but we want mask.mask = True
         if mask.mask.any():
-            ax.scatter(data_ls[mask.mask], data_lt[mask.mask], color=list_colors[i], marker=list_marker[i],
-                       label=value_i)
-            dict_var.append({'data': data_ls[mask.mask], 'varname': f'Solar longitude ({value_i})', 'units': 'deg',
-                             'shortname': f'Ls_{value_i}', 'dimension': True})
-            dict_var.append({'data': data_lt[mask.mask], 'varname': f'Local time ({value_i})', 'units': 'h',
-                             'shortname': f'Local_time_{value_i}', 'dimension': False})
+            tmp_alt = array([])
+            tmp_ls = array([])
+            for j in range(data_alt[mask.mask].shape[0]):
+                if data_alt[mask.mask][j] != 0:
+                    tmp_alt = append(tmp_alt, data_lt[mask.mask][j])
+                    tmp_ls = append(tmp_ls, data_ls[mask.mask][j])
+                    ax.scatter(data_ls[mask.mask][j], data_lt[mask.mask][j], color=list_colors[i], marker=list_marker[i],
+                               label=value_i)
+                dict_var.append({'data': tmp_ls, 'varname': f'Solar longitude ({value_i})', 'units': 'deg',
+                                 'shortname': f'Ls_{value_i}', 'dimension': True})
+                dict_var.append({'data': tmp_alt, 'varname': f'Local time ({value_i})', 'units': 'h',
+                                 'shortname': f'Local_time_{value_i}', 'dimension': False})
 
     ax.legend(loc=0)
     plt.savefig(f'{save_name}.eps', bbox_inches='tight')
@@ -952,7 +958,11 @@ def display_riceco2_mean_local_time_evolution(info_netcdf, data_min_radius, data
     ax2.tick_params(axis='both', which='major', labelsize=fontsize)
     ax2.tick_params(axis='y', colors='red')
 
-    ax.set_title(f'Radius of CO2 ice particles at {latitude:.0f}°N\n with their location (red)', fontsize=fontsize)
+    if len(latitude) > 1:
+        ax.set_title(f'Radius of CO2 ice particles between {latitude[0]:.0f}°N and {latitude[1]:.0f}°N'
+                     f'\n with their location (red)', fontsize=fontsize)
+    else:
+        ax.set_title(f'Radius of CO2 ice particles at {latitude:.0f}°N\n with their location (red)', fontsize=fontsize)
     ax.set_ylabel(f'Radius particle (µm)', fontsize=fontsize)
     ax.tick_params(axis='both', which='major', labelsize=fontsize)
     ax.legend(loc=0)
@@ -960,7 +970,10 @@ def display_riceco2_mean_local_time_evolution(info_netcdf, data_min_radius, data
     ax.set_xticks(info_netcdf.local_time)
     ax.set_xticklabels(info_netcdf.local_time, fontsize=fontsize)
 
-    savename = f'riceco2_mean_local_time_evolution_{latitude:.0f}N'
+    if len(latitude) > 1:
+        savename = f'riceco2_mean_local_time_evolution_{latitude[0]:.0f}N_{latitude[1]:.0f}N'
+    else:
+        savename = f'riceco2_mean_local_time_evolution_{latitude:.0f}N'
     plt.savefig(f'{savename}.eps', bbox_inches='tight')
     plt.savefig(f'{savename}.pdf', bbox_inches='tight')
     plt.savefig(f'{savename}.png', bbox_inches='tight')
@@ -1388,32 +1401,32 @@ def display_satuco2_thickness_atm_layer(data, data_std, save_name):
     plt.savefig(save_name + '.pdf', bbox_inches='tight')
     plt.show()
     dict_var = [{'data': arange(data.shape[1]) * 5, 'varname': 'Solar longitude bin', 'units': 'deg',
-                 'shortname': 'Time'},
+                 'shortname': 'Time', "dimension": True},
                 {'data': data[0, :] / 1e3, 'varname': 'Atmospheric layer thickness above 60°N', 'units': 'km',
-                 'shortname': 'Thickness_northpole'},
+                 'shortname': 'Thickness_northpole', "dimension": False},
                 {'data': data_std[0, :] / 1e3,
                  'varname': 'Standard deviation for atmospheric layer thickness above 60°N',
-                 'units': 'km', 'shortname': 'std_thickness_northpole'},
+                 'units': 'km', 'shortname': 'std_thickness_northpole', "dimension": False},
                 {'data': data[1, :] / 1e3, 'varname': 'Atmospheric layer thickness above 60°S', 'units': 'km',
-                 'shortname': 'Thickness_southpole'},
+                 'shortname': 'Thickness_southpole', "dimension": False},
                 {'data': data_std[1, :] / 1e3,
                  'varname': 'Standard deviation for atmospheric layer thickness above 60°S',
-                 'units': 'km', 'shortname': 'std_thickness_southpole'},
+                 'units': 'km', 'shortname': 'std_thickness_southpole', "dimension": False},
                 # Hu et al 2012
                 {'data': north_pole_ls_my29, 'varname': 'Solar longitude from MY29 in Hu et al. 2012',
-                 'units': 'deg', 'shortname': 'time_northpole_my29'},
+                 'units': 'deg', 'shortname': 'time_northpole_my29', "dimension": True},
                 {'data': north_pole_my29[:, 1], 'varname': 'Atmospheric layer thickness from MY29 in Hu et al. 2012',
-                 'units': 'km', 'shortname': 'thickness_northpole_my29'},
+                 'units': 'km', 'shortname': 'thickness_northpole_my29', "dimension": False},
                 {'data': north_pole_my29[:, 2], 'varname': 'Standard deviation for atmospheric layer thickness from '
                                                            'MY29 in Hu et al. 2012',
-                 'units': 'km', 'shortname': 'std_thickness_northpole_my29'},
+                 'units': 'km', 'shortname': 'std_thickness_northpole_my29', "dimension": False},
                 {'data': south_pole_ls_my29, 'varname': 'Solar longitude from MY29 in Hu et al. 2012',
-                 'units': 'deg', 'shortname': 'time_southpole_my29'},
+                 'units': 'deg', 'shortname': 'time_southpole_my29', "dimension": True},
                 {'data': south_pole_my29[:, 1], 'varname': 'Atmospheric layer thickness from MY29 in Hu et al. 2012',
-                 'units': 'km', 'shortname': 'thickness_southpole_my29'},
+                 'units': 'km', 'shortname': 'thickness_southpole_my29', "dimension": False},
                 {'data': south_pole_my29[:, 2], 'varname': 'Standard deviation for atmospheric layer thickness from '
                                                            'MY29 in Hu et al. 2012',
-                 'units': 'km', 'shortname': 'std_thickness_southpole_my29'},
+                 'units': 'km', 'shortname': 'std_thickness_southpole_my29', "dimension": False}
                 ]
     save_figure_data(list_dict_var=dict_var, savename=save_name)
     return
@@ -1551,24 +1564,23 @@ def display_satuco2_with_co2_ice_altitude_ls(info_netcdf, data_satuco2_north, da
     return
 
 
-def display_satuco2_with_co2_ice_altitude_longitude(info_netcdf, data_satuco2_north, data_satuco2_south,
-                                                    data_co2ice_north,
-                                                    data_co2ice_south, latitude_north, latitude_south, binned):
+def display_satuco2_with_co2_ice_altitude_longitude(info_netcdf, data_satuco2_north, data_satuco2_eq,
+                                                    data_satuco2_south, data_co2ice_north, data_co2ice_eq,
+                                                    data_co2ice_south, latitude_north, latitude_eq, latitude_south):
     from numpy import array, round, ones
 
     # Info latitude
-    list_latitudes = [latitude_north, latitude_south]
-
-    list_time_range = array(([270, 300], [0, 30]))
+    list_latitudes = [latitude_north, latitude_eq, latitude_south]
+    list_time_range = array(([270, 300], [0, 30], [0, 30]))
 
     # Info longitude
 
     # Get latitude range between value-1 et value+1
     data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-    data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
+    data_maven_limb, data_spicam, data_tesmoc, data_themis, data_nomad = mesospheric_clouds_observed()
 
     list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
-                data_maven_limb, data_spicam, data_tesmoc, data_themis]
+                data_maven_limb, data_spicam, data_tesmoc, data_themis, data_nomad]
 
     data_surface_local, ticks_altitude = None, None
 
@@ -1588,31 +1600,37 @@ def display_satuco2_with_co2_ice_altitude_longitude(info_netcdf, data_satuco2_no
         data_surface_local = gcm_surface_local(data_zareoid[:, :, :, :])
 
     norm_satu, levels_co2 = None, None
-    levels_satu = array([1, 10, 20, 50, 100])
-
-    fig, ax = plt.subplots(nrows=2, ncols=1, figsize=figsize_1graph)
-    ax[0].set_title(f'{latitude_north}°N', fontsize=fontsize)
-    ax[0].contourf(info_netcdf.data_dim.longitude, info_netcdf.data_dim.altitude, data_satuco2_north, norm=norm_satu,
-                   cmap='coolwarm', levels=levels_satu, extend='max')
-    ax[0].contour(info_netcdf.data_dim.longitude, info_netcdf.data_dim.altitude, data_co2ice_north, norm=None,
+#    levels_satu = array([1, 2, 3, 10, 20, 50, 100])
+    levels_satu = None
+    fig, ax = plt.subplots(nrows=3, ncols=1, figsize=figsize_3graph_rows)
+    ax[0].set_title(f'{latitude_north}°N, diurnal mean between [270:300]° Ls', fontsize=fontsize)
+    ax[0].contourf(info_netcdf.data_dim.longitude[:], info_netcdf.data_dim.altitude[:], data_satuco2_north, norm=norm_satu,
+                   cmap='plasma', levels=levels_satu, extend='max')
+    ax[0].contour(info_netcdf.data_dim.longitude[:], info_netcdf.data_dim.altitude[:], data_co2ice_north, norm=None,
                   levels=levels_co2, colors='black')
 
-    ax[1].set_title(f'{abs(latitude_south)}°S', fontsize=fontsize)
-    cb = ax[1].contourf(info_netcdf.data_dim.longitude, info_netcdf.data_dim.altitude, data_satuco2_south,
-                        norm=norm_satu, cmap='coolwarm', levels=levels_satu, extend='max')
-    ax[1].contour(info_netcdf.data_dim.longitude, info_netcdf.data_dim.altitude, data_co2ice_south, norm=None,
+    ax[1].set_title(f'{latitude_eq}°N, diurnal mean between [0:360]° Ls', fontsize=fontsize)
+    ax[1].contourf(info_netcdf.data_dim.longitude[:], info_netcdf.data_dim.altitude[:], data_satuco2_eq, norm=norm_satu,
+                   cmap='plasma', levels=levels_satu, extend='max')
+    ax[1].contour(info_netcdf.data_dim.longitude[:], info_netcdf.data_dim.altitude[:], data_co2ice_eq, norm=None,
+                  levels=levels_co2, colors='black')
+
+    ax[2].set_title(f'{abs(latitude_south)}°S, diurnal mean between [0:30]° Ls', fontsize=fontsize)
+    cb = ax[2].contourf(info_netcdf.data_dim.longitude[:], info_netcdf.data_dim.altitude[:], data_satuco2_south,
+                        norm=norm_satu, cmap='plasma', levels=levels_satu, extend='max')
+    ax[2].contour(info_netcdf.data_dim.longitude[:], info_netcdf.data_dim.altitude[:], data_co2ice_south, norm=None,
                   levels=levels_co2, colors='black')
 
     for i, axe in enumerate(ax):
         axe.set_ylim(1e-3, 1e3)
 
-        for j, value in enumerate(list_obs):
-            data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(data_obs=value, dim='latitude',
-                                                                         data_dim=info_netcdf.data_dim.latitude,
-                                                                         value=list_latitudes[i])
-            if data_obs_ls.shape[0] != 0:
-                axe.quiver(data_obs_ls, ones(data_obs_ls.shape[0]) * 1e-3, zeros(data_obs_ls.shape[0]),
-                           -ones(data_obs_ls.shape[0]) * 3, color='black')
+#        for j, value in enumerate(list_obs):
+#            data_obs_ls, data_obs_latitude = get_nearest_clouds_observed(data_obs=value, dim='latitude',
+#                                                                         data_dim=info_netcdf.data_dim.latitude,
+#                                                                         value=list_latitudes[i])
+#           if data_obs_ls.shape[0] != 0:
+#                axe.quiver(data_obs_ls, ones(data_obs_ls.shape[0]) * 1e-3, zeros(data_obs_ls.shape[0]),
+#                           -ones(data_obs_ls.shape[0]) * 3, color='black')
 
         if altitude_unit == 'Pa':
             data_surface_local_sliced, tmp = slice_data(data=data_surface_local,
@@ -1631,21 +1649,21 @@ def display_satuco2_with_co2_ice_altitude_longitude(info_netcdf, data_satuco2_no
             lines_altitudes_80km = get_mean_index_altitude(data_surface_local_sliced, value=8e4, dimension='longitude')
             del data_surface_local_sliced
 
-            axe.plot(info_netcdf.data_dim.altitude[lines_altitudes_0km], '-', color='grey', linewidth=0.5)
-            axe.plot(info_netcdf.data_dim.altitude[lines_altitudes_10km], '-', color='grey', linewidth=0.5)
-            axe.plot(info_netcdf.data_dim.altitude[lines_altitudes_40km], '-', color='grey', linewidth=0.5)
-            axe.plot(info_netcdf.data_dim.altitude[lines_altitudes_80km], '-', color='grey', linewidth=0.5)
+            axe.plot(info_netcdf.data_dim.longitude[:], info_netcdf.data_dim.altitude[lines_altitudes_0km], '-', color='grey', linewidth=0.5)
+            axe.plot(info_netcdf.data_dim.longitude[:], info_netcdf.data_dim.altitude[lines_altitudes_10km], '-', color='grey', linewidth=0.5)
+            axe.plot(info_netcdf.data_dim.longitude[:], info_netcdf.data_dim.altitude[lines_altitudes_40km], '-', color='grey', linewidth=0.5)
+            axe.plot(info_netcdf.data_dim.longitude[:], info_netcdf.data_dim.altitude[lines_altitudes_80km], '-', color='grey', linewidth=0.5)
 
-            axe.text(0, info_netcdf.data_dim.altitude[lines_altitudes_0km[0]], '0 km',
+            axe.text(info_netcdf.data_dim.longitude[0], info_netcdf.data_dim.altitude[lines_altitudes_0km[0]], '0 km',
                      verticalalignment='bottom',
                      horizontalalignment='left', color='grey', fontsize=6)
-            axe.text(0, info_netcdf.data_dim.altitude[lines_altitudes_10km[0]], '10 km',
+            axe.text(info_netcdf.data_dim.longitude[0], info_netcdf.data_dim.altitude[lines_altitudes_10km[0]], '10 km',
                      verticalalignment='bottom',
                      horizontalalignment='left', color='grey', fontsize=6)
-            axe.text(0, info_netcdf.data_dim.altitude[lines_altitudes_40km[0]], '40 km',
+            axe.text(info_netcdf.data_dim.longitude[0], info_netcdf.data_dim.altitude[lines_altitudes_40km[0]], '40 km',
                      verticalalignment='bottom',
                      horizontalalignment='left', color='grey', fontsize=6)
-            axe.text(0, info_netcdf.data_dim.altitude[lines_altitudes_80km[0]], '80 km',
+            axe.text(info_netcdf.data_dim.longitude[0], info_netcdf.data_dim.altitude[lines_altitudes_80km[0]], '80 km',
                      verticalalignment='bottom',
                      horizontalalignment='left', color='grey', fontsize=6)
 
@@ -1661,11 +1679,9 @@ def display_satuco2_with_co2_ice_altitude_longitude(info_netcdf, data_satuco2_no
 
     fig.text(0.02, 0.5, f'{altitude_name} ({altitude_unit})', ha='center', va='center', rotation='vertical',
              fontsize=fontsize)
-    fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=fontsize)
+    fig.text(0.5, 0.06, 'Longitude (°E)', ha='center', va='center', fontsize=fontsize)
 
-    save_name = f'satuco2_time_mean_with_co2ice_at_{latitude_north}N_{latitude_south}N'
-    if binned.lower() == 'y':
-        save_name = f'{save_name}_binned'
+    save_name = f'satuco2_time_mean_with_co2ice_at_{latitude_north}N_{latitude_eq}N_{latitude_south}N'
 
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
     plt.show()
@@ -1711,12 +1727,13 @@ def display_satuco2_zonal_mean_day_night(data_satuco2_day, data_satuco2_night, d
 
 
 def display_satuco2_maxval_with_maxalt(info_netcdf, data_maxval, data_altval):
-    from matplotlib.colors import LogNorm
-    cmap = plt.get_cmap('inferno')
+    from matplotlib.colors import LogNorm, BoundaryNorm, TwoSlopeNorm
+    cmap = plt.get_cmap('coolwarm')
     cmap.set_under('white')
     cmap_revert = plt.get_cmap('inferno_r')
     cmap_revert.set_under('white')
-    norm_val = LogNorm(vmin=1e0, vmax=1e6)
+    levels = array([1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 5, 10, 25, 50, 1e2, 1e3, 1e4, 1e5])
+    norm_val = BoundaryNorm(levels, ncolors=cmap.N, clip=False)
     norm_alt = LogNorm(vmin=1e-3, vmax=1e3)
 
     data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
@@ -1742,7 +1759,7 @@ def display_satuco2_maxval_with_maxalt(info_netcdf, data_maxval, data_altval):
     fig, axes = plt.subplots(nrows=1, ncols=2, figsize=figsize_2graph_cols)
     axes[0].set_title('Max value of CO$_2$ saturation\n(zonal and diurnal mean)')
     pc1 = axes[0].pcolormesh(data_time, info_netcdf.data_dim.latitude, data_maxval, norm=norm_val, cmap=cmap)
-    cb1 = plt.colorbar(pc1, ax=axes[0])
+    cb1 = plt.colorbar(pc1, ax=axes[0], ticks=levels, format="%.1f")
     cb1.ax.tick_params(labelsize=fontsize)
 
     axes[1].set_title('Altitude corresponding')
@@ -2174,8 +2191,6 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
                     tmp_ls = append(tmp_ls, data_ls[mask.mask][j])
                     axes.scatter(data_ls[mask.mask][j], info_netcdf.data_dim.altitude[index], color='black',
                                  edgecolors='white', marker=list_marker[i], label=value_i, s=80)
-            print(value_i)
-            print(tmp_alt.shape, tmp_ls.shape)
             dict_var.append({'data': tmp_ls,
                              'varname': f"Solar longitude of {value_i} observation", 'units': "deg",
                              'shortname': f"ls_{value_i}", 'dimension': True})
@@ -2300,7 +2315,7 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
     if tes:
         # Extract TES data
         print('Takes TES data')
-        if info_netcdf.name_target == 'tsurf':
+        if info_netcdf.target_name == 'tsurf':
             data_time_tes = observation_tes(target='time', year=None)  # None == climatology
             data_latitude_tes = observation_tes(target='latitude', year=None)
 
@@ -2338,8 +2353,9 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
             data_latitude_tes = observation_tes(target='latitude', year=None)
             data_tes = None
             print('No case for TES, to be check!')
-
-        ax[i_subplot].pcolormesh(data_time_tes, data_latitude_tes[:], data_tes[:, idx1:idx2], norm=norm,
+        data_tes = correction_value(data=data_tes[:, idx1:idx2], operator='inf', value=1)
+        cmap.set_bad('Grey')
+        ax[i_subplot].pcolormesh(data_time_tes, data_latitude_tes[:], data_tes, norm=norm,
                                  shading='flat', cmap=cmap)
         i_subplot += 1
 
@@ -2382,25 +2398,28 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
                 {"data": data_latitude[:], "varname": "Latitude", "units": "deg N", "shortname": "Latitude",
                  "dimension": True},
                 {"data": info_netcdf.data_target,
-                 "varname": f"Zonal mean of density column of {info_netcdf.target_name}",
-                 "units": "kg.m-2", "shortname": f"{info_netcdf.target_name}"}
+                 "varname": f"Zonal mean of {info_netcdf.target_name}",
+                 "units": f"{unit}", "shortname": f"{info_netcdf.target_name}"}
                 ]
 
-    ax.set_xlim(0, 360)
     # Seasonal boundaries caps
     north_cap_ls, north_cap_boundaries, north_cap_boundaries_error, south_cap_ls, south_cap_boundaries, \
     south_cap_boundaries_error = boundaries_seasonal_caps()
     if i_subplot == 0:
         ax.plot(north_cap_ls, north_cap_boundaries, color='black', zorder=11)
         ax.plot(south_cap_ls, south_cap_boundaries, color='black', zorder=11)
-        dict_var.append({"data": north_cap_ls, "varname": "Solar longitude boundaries of northern polar cap",
-                         "units": "deg", "shortname": "LsNcap", "dimension": True})
-        dict_var.append({"data": north_cap_boundaries, "varname": "Latitude boundaries of northern polar caps",
-                         "units": "deg N", "shortname": "LatNcap", "dimension": False})
-        dict_var.append({"data": south_cap_ls, "varname": "Solar longitude boundaries of northern polar cap",
-                         "units": "deg", "shortname": "LsScap", "dimension": True})
-        dict_var.append({"data": south_cap_boundaries, "varname": "Latitude boundaries of southern polar caps",
-                         "units": "deg N", "shortname": "LatScap", "dimension": False})
+    else:
+        for axes in ax.reshape(-1):
+            axes.plot(north_cap_ls, north_cap_boundaries, color='black', zorder=11)
+            axes.plot(south_cap_ls, south_cap_boundaries, color='black', zorder=11)
+    dict_var.append({"data": north_cap_ls, "varname": "Solar longitude boundaries of northern polar cap",
+                     "units": "deg", "shortname": "LsNcap", "dimension": True})
+    dict_var.append({"data": north_cap_boundaries, "varname": "Latitude boundaries of northern polar caps",
+                     "units": "deg N", "shortname": "LatNcap", "dimension": False})
+    dict_var.append({"data": south_cap_ls, "varname": "Solar longitude boundaries of northern polar cap",
+                     "units": "deg", "shortname": "LsScap", "dimension": True})
+    dict_var.append({"data": south_cap_boundaries, "varname": "Latitude boundaries of southern polar caps",
+                     "units": "deg N", "shortname": "LatScap", "dimension": False})
 
     if info_netcdf.target_name == 'temp':
         if i_subplot == 0:
@@ -2444,6 +2463,7 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
 
     if i_subplot != 0:
         for axes in ax.reshape(-1):
+            axes.set_xlim(0, 360)
             axes.set_facecolor('white')
             axes.set_xticks(ticks=axis_ls)
         fig.text(0.02, 0.5, 'Latitude (°N)', ha='center', va='center', rotation='vertical', fontsize=fontsize)
@@ -2453,6 +2473,7 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
         cbar = plt.colorbar(ctf, cax=cb_axes, orientation="horizontal")
         cbar.ax.set_title(unit)
     else:
+        ax.set_xlim(0, 360)
         ax.set_xticks(ticks=ndx)
         ax.set_xticklabels(axis_ls, fontsize=fontsize)
         ax.set_yticks(ticks=data_latitude[::4])
@@ -2469,6 +2490,13 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
     plt.savefig(f'{save_name}.pdf', bbox_inches='tight')
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
 
+    if tes:
+        dict_var.append({"data": data_time_tes[:], "varname": "Solar longitude of TES observations", "units": "deg",
+                         "shortname": "tes_ls", "dimension": True})
+        dict_var.append({"data": data_latitude_tes[:], "varname": "latitude of TES observations", "units": "deg N",
+                         "shortname": "tes_lat", "dimension": True})
+        dict_var.append({"data": data_tes[:, :], "varname": f"Zonal mean of surface temperature from TES observations",
+                         "units": "K", "shortname": f"tes_tsurf", "dimension": False})
     save_figure_data(dict_var, savename=save_name)
     return
 
@@ -2530,7 +2558,7 @@ def display_vars_ls_longitude(info_netcdf, norm, vmin, vmax, unit, shortname, ti
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
 
-    pcm = ax.pcolormesh(info_netcdf.data_dim.longitude, data_time[:], info_netcdf.data_target.T, norm=norm,
+    pcm = ax.pcolormesh(info_netcdf.data_dim.longitude[:], data_time[:], info_netcdf.data_target.T, norm=norm,
                         cmap='plasma', shading='auto')
     cbar = fig.colorbar(pcm)
     cbar.ax.set_title(unit, fontsize=fontsize)
@@ -3010,7 +3038,7 @@ def projection_3D_co2_ice():
             plt.savefig(dirsave + save_name, bbox_inches='tight')
             plt.close()
 
-    altitude_limit, idx_altitude_min, idx_altitude_max = compute_column_density(info_netcdf=info_netcdf)
+    idx_altitude_min, idx_altitude_max = compute_column_density(info_netcdf=info_netcdf)
     for i, value_i in enumerate(info_netcdf.data_dim.time):
         if not info_netcdf.data_target[i, :, :].mask.all():
             fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)

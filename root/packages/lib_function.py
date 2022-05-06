@@ -107,7 +107,7 @@ def convert_sols_to_ls():
     return time_grid_ls
 
 
-def compute_column_density(info_netcdf):
+def compute_column_density(info_netcdf, altitude=None):
     from numpy import zeros, sum
 
     if info_netcdf.data_dim.altitude.units in ['m', 'km']:
@@ -115,29 +115,38 @@ def compute_column_density(info_netcdf):
     else:
         data_pressure = info_netcdf.data_dim.altitude
 
-    altitude_limit = input('Do you want perform the computation on the entire column(Y/n)? ')
+    if altitude is None:
+        altitude_limit = input('Do you want perform the computation on the entire column(Y/n)? ')
 
-    if altitude_limit.lower() == 'n':
-        if info_netcdf.data_dim.altitude.units in ['m', 'km']:
-            print(f'Altitude range (km): {info_netcdf.data_dim.altitude[0]:.3f}'
-                  f' {info_netcdf.data_dim.altitude[-1]:.3f}')
-            altitude_min = float(input('Start altitude (km): '))
-            altitude_max = float(input('End altitude (km): '))
+        if altitude_limit.lower() == 'n':
+            if info_netcdf.data_dim.altitude.units in ['m', 'km']:
+                print(f'Altitude range (km): {info_netcdf.data_dim.altitude[0]:.3f}'
+                      f' {info_netcdf.data_dim.altitude[-1]:.3f}')
+                altitude_min = float(input('Start altitude (km): '))
+                altitude_max = float(input('End altitude (km): '))
+            else:
+                print(f'Pressure range (Pa): {info_netcdf.data_dim.altitude[0]:.3e}'
+                      f' {info_netcdf.data_dim.altitude[-1]:.3e}')
+                altitude_min = float(input('Start altitude (Pa): '))
+                altitude_max = float(input('End altitude (Pa): '))
+            data_processed, altitude_idx = slice_data(data=info_netcdf.data_target,
+                                                      idx_dim_slice=info_netcdf.idx_dim.altitude,
+                                                      dimension_slice=info_netcdf.data_dim.altitude,
+                                                      value=[altitude_min, altitude_max])
+            idx_altitude_min = altitude_idx[0]
+            idx_altitude_max = altitude_idx[-1]
         else:
-            print(f'Pressure range (Pa): {info_netcdf.data_dim.altitude[0]:.3e}'
-                  f' {info_netcdf.data_dim.altitude[-1]:.3e}')
-            altitude_min = float(input('Start altitude (Pa): '))
-            altitude_max = float(input('End altitude (Pa): '))
-        data_processed, altitude_idx = slice_data(data=info_netcdf.data_target,
-                                                  idx_dim_slice=info_netcdf.idx_dim.altitude,
-                                                  dimension_slice=info_netcdf.data_dim.altitude,
-                                                  value=[altitude_min, altitude_max])
+            data_processed = info_netcdf.data_target
+            idx_altitude_min = 0
+            idx_altitude_max = info_netcdf.data_dim.altitude.shape[0] - 1
+    else:
+        tmp, altitude_idx = slice_data(data=info_netcdf.data_dim.altitude,
+                                       idx_dim_slice=0,
+                                       dimension_slice=info_netcdf.data_dim.altitude,
+                                       value=altitude)
+        data_processed = info_netcdf.data_target
         idx_altitude_min = altitude_idx[0]
         idx_altitude_max = altitude_idx[-1]
-    else:
-        data_processed = info_netcdf.data_target
-        idx_altitude_min = 0
-        idx_altitude_max = info_netcdf.data_dim.altitude.shape[0] - 1
 
     shape_data = data_processed.shape
     data_column = zeros(shape=shape_data)
@@ -156,7 +165,7 @@ def compute_column_density(info_netcdf):
                 data_column[:, alt, :, :] = data_processed[:, alt, :, :] * \
                                             (data_pressure[idx_altitude_min + alt] - data_pressure[
                                                 idx_altitude_min + alt + 1]) / 3.711  # g
-#            data_column[:, -1, :, :] = data_processed[:, -1, :, :] * data_pressure[altitude_max + 1] / 3.711
+    #            data_column[:, -1, :, :] = data_processed[:, -1, :, :] * data_pressure[altitude_max + 1] / 3.711
     else:
         print(f'Data has {data_processed.ndim} dimension, need 4!')
         exit()
@@ -165,7 +174,7 @@ def compute_column_density(info_netcdf):
     data_column = sum(data_column, axis=1)
     info_netcdf.data_target = correction_value(data_column, 'inf', value=1e-13)
 
-    return altitude_limit, idx_altitude_min, idx_altitude_max
+    return idx_altitude_min, idx_altitude_max
 
 
 def compute_diurnal_mean(info_netcdf, data):
@@ -174,12 +183,18 @@ def compute_diurnal_mean(info_netcdf, data):
     nb_lt = len(info_netcdf.local_time)
     if nb_lt > 1:
         nb_sols = int(info_netcdf.data_dim.time.shape[0] / nb_lt)
-        print(data.shape)
-        data = data.reshape(nb_sols, nb_lt, info_netcdf.data_dim.altitude.shape[0],
-                            info_netcdf.data_dim.latitude.shape[0],
-                            info_netcdf.data_dim.longitude.shape[0])
+        if data.ndim == 3:
+            data = data.reshape(nb_sols, nb_lt,
+                                info_netcdf.data_dim.latitude.shape[0],
+                                info_netcdf.data_dim.longitude.shape[0])
+        elif data.ndim == 4:
+            data = data.reshape(nb_sols, nb_lt, info_netcdf.data_dim.altitude.shape[0],
+                                info_netcdf.data_dim.latitude.shape[0],
+                                info_netcdf.data_dim.longitude.shape[0])
+        else:
+            print(f'Data has not 3 or 4 dimensions (current:{data.ndim})')
+            exit()
         data = mean(data, axis=1)
-    print(data.shape)
     return data
 
 

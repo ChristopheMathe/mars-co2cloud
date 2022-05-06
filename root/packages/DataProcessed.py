@@ -188,7 +188,7 @@ def co2ice_cloud_localtime_along_ls(info_netcdf):
                                                    dimension_slice=info_netcdf.data_dim.latitude,
                                                    value=[latitude_min, latitude_max])
 
-    altitude_limit, altitude_min, altitude_max = compute_column_density(info_netcdf=info_netcdf)
+    altitude_min, altitude_max = compute_column_density(info_netcdf=info_netcdf)
     info_netcdf.data_target = mean(info_netcdf.data_target, axis=2)
     info_netcdf.data_target = mean(info_netcdf.data_target, axis=1)
 
@@ -270,7 +270,7 @@ def co2ice_time_mean(info_netcdf, duration, column=None):
     info_netcdf.data_target = correction_value(data=info_netcdf.data_target, operator='inf', value=threshold)
 
     if column:
-        altitude_limit, altitude_min, altitude_max = compute_column_density(info_netcdf=info_netcdf)
+        altitude_min, altitude_max = compute_column_density(info_netcdf=info_netcdf)
         info_netcdf.idx_dim.latitude -= 1
         info_netcdf.idx_dim.longitude -= 1
     return time
@@ -323,7 +323,7 @@ def co2ice_density_column_evolution(info_netcdf):
         print('Wrong selection')
         exit()
 
-    altitude_limit, idx_altitude_min, idx_altitude_max = compute_column_density(info_netcdf=info_netcdf)
+    idx_altitude_min, idx_altitude_max = compute_column_density(info_netcdf=info_netcdf)
     return time_range, latitudes
 
 
@@ -402,8 +402,11 @@ def emis_polar_winter_gg2020_fig13(info_netcdf):
 
 def flux_lw_apparent_temperature_zonal_mean(info_netcdf):
     # Flux = sigma T^4
+    if len(info_netcdf.local_time) > 1:
+        info_netcdf.data_target = compute_diurnal_mean(info_netcdf=info_netcdf, data=info_netcdf.data_target)
     temperature_apparent = power(info_netcdf.data_target / cst_stefan, 1 / 4)
     temperature_apparent = mean(temperature_apparent, axis=2).T
+    print(min(info_netcdf.data_target), max(info_netcdf.data_target))
     return temperature_apparent
 
 
@@ -525,14 +528,19 @@ def riceco2_mean_local_time_evolution(info_netcdf):
     from scipy.stats import tmean, tsem
     data = extract_where_co2_ice(info_netcdf=info_netcdf)
     data = data * 1e6
-    latitude_input = float(input('Select a latitude (°N):'))
+    latitude_input = input('Select a latitude or boundaries separated by a coma:(°N):').split(',')
+    latitude_input = [float(i) for i in latitude_input]
     data, idx_latitudes = slice_data(data=data,
                                      idx_dim_slice=info_netcdf.idx_dim.latitude,
                                      dimension_slice=info_netcdf.data_dim.latitude,
                                      value=latitude_input)
     latitudes = info_netcdf.data_dim.latitude[idx_latitudes]
+    info_netcdf.idx_dim.longitude = info_netcdf.idx_dim.longitude - 1
+    print(latitudes)
+    if len(latitudes) > 1:
+        data = mean(data, axis=info_netcdf.idx_dim.latitude)
 
-    data = mean(data, axis=2)  # zonal mean
+    data = mean(data, axis=info_netcdf.idx_dim.longitude)  # zonal mean
 
     # Reshape every localtime for one year!
     if data.shape[0] % 12 != 0:
@@ -874,43 +882,60 @@ def satuco2_zonal_mean_with_co2_ice(info_netcdf):
 def satuco2_time_mean_with_co2_ice(info_netcdf):
     # Select the three latitudes
     north = 80
+    equator = 0
     south = -80
     print('Latitude selected:')
     print(f'\tNorth = {north}°N')
+    print(f'\tEquator = {equator}°N')
     print(f'\tSouth = {abs(south)}°S')
 
     # Slice data for the three latitudes
-    data_satuco2_north, north_latitude_selected = slice_data(data=info_netcdf.data_target,
-                                                             idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                                             dimension_slice=info_netcdf.data_dim.latitude,
-                                                             value=north)
-    data_satuco2_south, south_latitude_selected = slice_data(data=info_netcdf.data_target,
-                                                             idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                                             dimension_slice=info_netcdf.data_dim.latitude,
-                                                             value=south)
+    data_satuco2_north, idx = slice_data(data=info_netcdf.data_target,
+                                         idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                         dimension_slice=info_netcdf.data_dim.latitude,
+                                         value=north)
+    data_satuco2_eq, idx = slice_data(data=info_netcdf.data_target,
+                                      idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                      dimension_slice=info_netcdf.data_dim.latitude,
+                                      value=equator)
+    data_satuco2_south, idx = slice_data(data=info_netcdf.data_target,
+                                         idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                         dimension_slice=info_netcdf.data_dim.latitude,
+                                         value=south)
 
-    north_winter = [270, 300]
+    del info_netcdf.data_target
+
+    north_winter = [270, 360]
+    eq_ls = [0, 360]
     south_winter = [0, 30]
     print('Time selected:')
     print(f'\tNorth = {north_winter}°Ls')
     print(f'\tSouth = {south_winter}°Ls')
     if info_netcdf.data_dim.time[-1] > 360:
-        data_time, tmp = get_data(filename='../concat_Ls.nc', target='Time')
+        data_time, tmp = get_data(filename='../concat_Ls.nc', target='Ls')
         # TODO: check if many local time used => mean
     else:
         data_time = info_netcdf.data_dim.time
+
     # Slice data in time
-    data_satuco2_north, north_winter_time = slice_data(data_satuco2_north,
-                                                       idx_dim_slice=info_netcdf.idx_dim.time,
-                                                       dimension_slice=data_time,
-                                                       value=north_winter)
-    data_satuco2_south, south_winter_time = slice_data(data_satuco2_south,
-                                                       idx_dim_slice=info_netcdf.idx_dim.time,
-                                                       dimension_slice=data_time,
-                                                       value=south_winter)
+    data_satuco2_north, idx = slice_data(data=data_satuco2_north,
+                                         idx_dim_slice=info_netcdf.idx_dim.time,
+                                         dimension_slice=data_time[:],
+                                         value=north_winter)
+
+    data_satuco2_eq, idx = slice_data(data=data_satuco2_eq,
+                                      idx_dim_slice=info_netcdf.idx_dim.time,
+                                      dimension_slice=data_time[:],
+                                      value=eq_ls)
+
+    data_satuco2_south, idx = slice_data(data=data_satuco2_south,
+                                         idx_dim_slice=info_netcdf.idx_dim.time,
+                                         dimension_slice=data_time,
+                                         value=south_winter)
 
     # Compute time mean
     data_satuco2_north = mean(data_satuco2_north, axis=0)
+    data_satuco2_eq = mean(data_satuco2_eq, axis=0)
     data_satuco2_south = mean(data_satuco2_south, axis=0)
 
     # Get co2 ice mmr
@@ -918,84 +943,41 @@ def satuco2_time_mean_with_co2_ice(info_netcdf):
     data_co2ice = correction_value(data_co2ice[:, :, :, :], operator='inf', value=1e-13)
 
     # Slice co2 ice mmr at these 3 latitudes
-    data_co2ice_north, north_latitude_selected = slice_data(data=data_co2ice,
-                                                            idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                                            dimension_slice=info_netcdf.data_dim.latitude,
-                                                            value=north)
-    data_co2ice_south, south_latitude_selected = slice_data(data=data_co2ice,
-                                                            idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                                            dimension_slice=info_netcdf.data_dim.latitude,
-                                                            value=south)
+    data_co2ice_north, idx = slice_data(data=data_co2ice,
+                                        idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                        dimension_slice=info_netcdf.data_dim.latitude,
+                                        value=north)
+    data_co2ice_eq, idx = slice_data(data=data_co2ice,
+                                     idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                     dimension_slice=info_netcdf.data_dim.latitude,
+                                     value=equator)
+    data_co2ice_south, idx = slice_data(data=data_co2ice,
+                                        idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                        dimension_slice=info_netcdf.data_dim.latitude,
+                                        value=south)
+    del data_co2ice
 
     # Slice data in time
-    data_co2ice_north, north_winter_time = slice_data(data=data_co2ice_north,
-                                                      idx_dim_slice=info_netcdf.idx_dim.time,
-                                                      dimension_slice=data_time,
-                                                      value=north_winter)
-    data_co2ice_south, south_winter_time = slice_data(data=data_co2ice_south,
-                                                      idx_dim_slice=info_netcdf.idx_dim.time,
-                                                      dimension_slice=data_time,
-                                                      value=south_winter)
+    data_co2ice_north, idx = slice_data(data=data_co2ice_north,
+                                        idx_dim_slice=info_netcdf.idx_dim.time,
+                                        dimension_slice=data_time,
+                                        value=north_winter)
+    data_co2ice_eq, idx = slice_data(data=data_co2ice_eq,
+                                     idx_dim_slice=info_netcdf.idx_dim.time,
+                                     dimension_slice=data_time,
+                                     value=eq_ls)
+    data_co2ice_south, idx = slice_data(data=data_co2ice_south,
+                                        idx_dim_slice=info_netcdf.idx_dim.time,
+                                        dimension_slice=data_time,
+                                        value=south_winter)
 
     # Compute Time mean
     data_co2ice_north = mean(data_co2ice_north, axis=0)
+    data_co2ice_eq = mean(data_co2ice_eq, axis=0)
     data_co2ice_south = mean(data_co2ice_south, axis=0)
-    del data_co2ice
 
-    binned = input('Do you want bin data (Y/n)? ')
-    if binned.lower() == 'y':
-        # Bin time in 5° Ls
-        data_time, list_var = get_data(filename=info_netcdf.filename, target='Time')
-        if max(data_time) > 360:
-            time_grid_ls = convert_sols_to_ls()
-            nb_bin = time_grid_ls.shape[0]
-
-            data_satuco2_north_binned = zeros((nb_bin, data_satuco2_north.shape[1]))
-            data_satuco2_south_binned = zeros((nb_bin, data_satuco2_south.shape[1]))
-            data_co2ice_north_binned = zeros((nb_bin, data_co2ice_north.shape[1]))
-            data_co2ice_south_binned = zeros((nb_bin, data_co2ice_south.shape[1]))
-
-            for i in range(nb_bin - 1):
-                idx_ls_1 = (abs(data_time[:] - time_grid_ls[i])).argmin()
-                idx_ls_2 = (abs(data_time[:] - time_grid_ls[i + 1])).argmin() + 1
-
-                data_satuco2_north_binned[i, :] = mean(data_satuco2_north[idx_ls_1:idx_ls_2, :], axis=0)
-                data_satuco2_south_binned[i, :] = mean(data_satuco2_south[idx_ls_1:idx_ls_2, :], axis=0)
-                data_co2ice_north_binned[i, :] = mean(data_co2ice_north[idx_ls_1:idx_ls_2, :], axis=0)
-                data_co2ice_south_binned[i, :] = mean(data_co2ice_south[idx_ls_1:idx_ls_2, :], axis=0)
-        else:
-            if data_time.shape[0] % 60 == 0:
-                print(f'Test 5°Ls binning: {data_time[0]} - {data_time[60]}')
-            else:
-                print('The data will not be binned in 5°Ls, need to work here')
-
-            nb_bin = int(data_time.shape[0] / 60)
-            data_satuco2_north_binned = zeros((nb_bin, data_satuco2_north.shape[1]))
-            data_satuco2_south_binned = zeros((nb_bin, data_satuco2_south.shape[1]))
-            data_co2ice_north_binned = zeros((nb_bin, data_co2ice_north.shape[1]))
-            data_co2ice_south_binned = zeros((nb_bin, data_co2ice_south.shape[1]))
-
-            for i in range(nb_bin):
-                data_satuco2_north_binned[i, :] = mean(data_satuco2_north[i * 60:(i + 1) * 60, :], axis=0)
-                data_satuco2_south_binned[i, :] = mean(data_satuco2_south[i * 60:(i + 1) * 60, :], axis=0)
-                data_co2ice_north_binned[i, :] = mean(data_co2ice_north[i * 60:(i + 1) * 60, :], axis=0)
-                data_co2ice_south_binned[i, :] = mean(data_co2ice_south[i * 60:(i + 1) * 60, :], axis=0)
-            print(min(data_satuco2_north_binned))
-
-        del data_satuco2_north, data_satuco2_south, data_co2ice_north, data_co2ice_south
-
-        data_satuco2_north = correction_value(data_satuco2_north_binned, operator='inf', value=1e-13)
-        data_satuco2_south = correction_value(data_satuco2_south_binned, operator='inf', value=1e-13)
-        data_co2ice_north = correction_value(data_co2ice_north_binned, operator='inf', value=1e-13)
-        data_co2ice_south = correction_value(data_co2ice_south_binned, operator='inf', value=1e-13)
-
-        del data_satuco2_north_binned, data_satuco2_south_binned, data_co2ice_north_binned, data_co2ice_south_binned
-    # No binning
-    else:
-        pass
-
-    return [data_satuco2_north, data_satuco2_south, data_co2ice_north, data_co2ice_south, north_latitude_selected,
-            south_latitude_selected, binned]
+    return data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, \
+           data_co2ice_south, north, equator, south
 
 
 def satuco2_hu2012_fig9(info_netcdf):
@@ -1616,7 +1598,7 @@ def vars_zonal_mean_column_density(info_netcdf):
                                                                   info_netcdf.data_dim.longitude.shape[0])
         info_netcdf.data_target = mean(info_netcdf.data_target, axis=1)
 
-    altitude_limit, idx_altitude_min, idx_altitude_max = compute_column_density(info_netcdf=info_netcdf)
+    idx_altitude_min, idx_altitude_max = compute_column_density(info_netcdf=info_netcdf)
 
     # compute zonal mean column density
     if info_netcdf.data_target.ndim == 3:
@@ -1627,7 +1609,7 @@ def vars_zonal_mean_column_density(info_netcdf):
         exit()
     info_netcdf.data_target = rotate_data(info_netcdf.data_target, do_flip=False)[0]
 
-    return altitude_limit, idx_altitude_min, idx_altitude_max
+    return idx_altitude_min, idx_altitude_max
 
 
 def vars_zonal_mean_where_co2ice_exists(info_netcdf, polar_region):
@@ -1752,34 +1734,55 @@ def vars_zonal_mean_in_time_co2ice_exists(info_netcdf):
     return list_data, filenames, latitude_selected, list_time_selected
 
 
-def vars_localtime_longitude(info_netcdf, latitude, altitude):
-    data, idx_latitude = slice_data(data=info_netcdf.data_target,
-                                    idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                    dimension_slice=info_netcdf.data_dim.latitude,
-                                    value=latitude)
-    data, idx_altitude = slice_data(data=data,
-                                    idx_dim_slice=info_netcdf.idx_dim.altitude,
-                                    dimension_slice=info_netcdf.data_dim.altitude,
-                                    value=altitude)
+def vars_localtime_longitude(info_netcdf, latitude, altitude, density=None):
+    info_netcdf.data_target, idx_altitude = slice_data(data=info_netcdf.data_target,
+                                                       idx_dim_slice=info_netcdf.idx_dim.altitude,
+                                                       dimension_slice=info_netcdf.data_dim.altitude,
+                                                       value=altitude)
+    if len(altitude) > 1:
+        if density:
+            idx_altitude_min, idx_altitude_max = compute_column_density(info_netcdf=info_netcdf, altitude=altitude)
+        else:
+            info_netcdf.data_target = mean(info_netcdf.data_target, axis=info_netcdf.idx_dim.altitude)
+        idx_shift = -1
+        info_netcdf.idx_dim.latitude += idx_shift
+        info_netcdf.idx_dim.longitude += idx_shift
 
-    data_mean = zeros((12, data.shape[1]))
+    info_netcdf.data_target, idx_latitude = slice_data(data=info_netcdf.data_target,
+                                                       idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                       dimension_slice=info_netcdf.data_dim.latitude,
+                                                       value=latitude)
+    if len(latitude) > 1:
+        info_netcdf.data_target = mean(info_netcdf.data_target, axis=info_netcdf.idx_dim.latitude)
+
+    data_mean = zeros((12, info_netcdf.data_target.shape[1]))
     for i in range(12):
-        data_mean[i, :] = mean(data[i::12, :], axis=0)
+        data_mean[i, :] = mean(info_netcdf.data_target[i::12, :], axis=0)
     return data_mean
 
 
-def vars_ls_longitude(info_netcdf, latitude, altitude):
+def vars_ls_longitude(info_netcdf, latitude, altitude, density=None):
     info_netcdf.data_target = compute_diurnal_mean(info_netcdf=info_netcdf, data=info_netcdf.data_target)
+    if altitude:
+        info_netcdf.data_target, idx_altitude = slice_data(data=info_netcdf.data_target,
+                                                           dimension_slice=info_netcdf.data_dim.altitude,
+                                                           idx_dim_slice=info_netcdf.idx_dim.altitude,
+                                                           value=altitude)
+        if len(altitude) > 1:
+            if density:
+                idx_altitude_min, idx_altitude_max = compute_column_density(info_netcdf=info_netcdf, altitude=altitude)
+            else:
+                info_netcdf.data_target = mean(info_netcdf.data_target, axis=info_netcdf.idx_dim.altitude)
+        idx_shift = -1
+        info_netcdf.idx_dim.latitude += idx_shift
+        info_netcdf.idx_dim.longitude += idx_shift
 
     info_netcdf.data_target, idx_latitude = slice_data(data=info_netcdf.data_target,
                                                        dimension_slice=info_netcdf.data_dim.latitude,
                                                        idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                        value=latitude)
-
-    info_netcdf.data_target, idx_altitude = slice_data(data=info_netcdf.data_target,
-                                                       dimension_slice=info_netcdf.data_dim.altitude,
-                                                       idx_dim_slice=info_netcdf.idx_dim.altitude,
-                                                       value=altitude)
+    if len(latitude) > 1:
+        info_netcdf.data_target = mean(info_netcdf.data_target, axis=info_netcdf.idx_dim.latitude)
 
     info_netcdf.data_target = info_netcdf.data_target.T
     return

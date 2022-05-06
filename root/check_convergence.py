@@ -129,11 +129,14 @@ def main():
     plt.savefig('check_converge_total_mass_h2o.png')
 
     # save data
-    dict_var = [{'data': arange(669*total_nb_year), 'varname': 'Time', 'units': 'sols', 'shortname': 'TIME'},
-                {'data': data_ps, 'varname': 'Surface pressure, global mean', 'units': 'Pa', 'shortname': 'ps'},
-                {'data': data_tsurf, 'varname': 'Surface temperature, global mean', 'units': 'K', 'shortname':
-                    'tsurf'},
-                {'data': data_co2ice, 'varname': 'Total surface CO2 ice', 'units': '(kg)', 'shortname': 'co2ice'}
+    dict_var = [{'data': arange(669*total_nb_year), 'varname': 'Time', 'units': 'sols', 'shortname': 'TIME',
+                 'dimension': True},
+                {'data': data_ps[:669*total_nb_year], 'varname': 'Surface pressure, global mean', 'units': 'Pa', 'shortname': 'ps',
+                 'dimension': False},
+                {'data': data_tsurf[:669*total_nb_year], 'varname': 'Surface temperature, global mean', 'units': 'K', 'shortname':
+                    'tsurf', 'dimension': False},
+                {'data': data_co2ice[:669*total_nb_year], 'varname': 'Total surface CO2 ice', 'units': '(kg)', 'shortname': 'co2ice',
+                 'dimension': False}
                 ]
     save_figure_data(list_dict_var=dict_var, savename=f"convergence_of_{total_nb_year:.0f}_year")
 

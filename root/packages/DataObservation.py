@@ -347,7 +347,7 @@ def mesospheric_clouds_observed():
                  'Mesocloud_obs_SPICAM.txt',
                  'Mesocloud_obs_TES-MOC.txt',
                  'Mesocloud_obs_THEMIS.txt',
-                 'CO2clouds_altitude_localtime_files/nomad_liuzzi2021.txt']
+                 'nomad_liuzzi2021.txt']
 
     # column:  1 = ls, 2 = lat (°N), 3 = lon (°E)
     data_crism_limb = loadtxt(directory + filenames[0], skiprows=1)

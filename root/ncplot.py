@@ -38,6 +38,7 @@ def co2ice(info_netcdf, view_mode):
     print('     2: cumulative masses in polar cap region, to compare with fig.10 of Hu+2012 (fig: g-ls)')
     print('     3: Polar plot every 30° ls mean, lat=60°-90° (fig: lat-ls)')
     print('     4: CO2 ice at Viking lander site along the year (fig: g-sols)')
+    print('     5: CO2 ice at the surface along longitude and solar longitude (fig: ls-lon)')
     print('')
 
     if view_mode is None:
@@ -45,13 +46,22 @@ def co2ice(info_netcdf, view_mode):
 
     if view_mode == 1:
         print('Processing:')
-        zonal_mean, layer_selected = vars_zonal_mean(data_input=info_netcdf)
+        info_netcdf.data_target, layer_selected = vars_zonal_mean(data_input=info_netcdf, flip=True)
 
+        title = f'Zonal mean of {info_netcdf.target_name}'
+        save_name = f'{info_netcdf.target_name}_zonal_mean'
         print('Display:')
+        if len(info_netcdf.local_time) == 1:
+            title = f"{title}, at {info_netcdf.local_time}h"
+            save_name = f"{save_name}_{info_netcdf.local_time}"
+        else:
+            title = f"{title} (diurnal mean)"
+            save_name = f"{save_name}_diurnalmean"
+
         display_vars_latitude_ls(info_netcdf=info_netcdf, unit='', norm=None, vmin=None, vmax=None, observation=False,
                                  latitude_selected=layer_selected, tes=None, mvals=None, layer=None, cmap='inferno',
-                                 title=f'Zonal mean of {info_netcdf.name_target}, at {info_netcdf.local_time}h',
-                                 save_name=f'{info_netcdf.name_target}_zonal_mean_{info_netcdf.local_time}')
+                                 title=title,
+                                 save_name=save_name)
 
     if view_mode == 2:
         print('Processing data:')
@@ -86,6 +96,35 @@ def co2ice(info_netcdf, view_mode):
         print('Display:')
         display_co2ice_at_viking_lander_site(data_at_vk1=data_at_vk1, data_at_vk2=data_at_vk2, data_time=data_time)
 
+    elif view_mode == 5:
+        title, save_name, latitude = None, None, None
+        latitude = input("Select a latitude or boundaries separated by a coma:")
+        if len(latitude.split(',')) > 1:
+            latitude = array(latitude.split(','), dtype=float)
+        else:
+            latitude = [float(latitude)]
+        if len(latitude) > 1:
+            title = f'CO$_2$ ice at the surface between {latitude[0]:.0f}°N and {latitude[1]:.0f}°N'
+            save_name = f'co2ice_ls_longitude_{latitude[0]:.0f}N_{latitude[1]:.0f}N'
+        else:
+            title = f'CO$_2$ ice at the surface at {latitude[0]:.0f}°N'
+            save_name = f'co2ice_ls_longitude_{latitude[0]:.0f}N'
+
+        if len(info_netcdf.local_time) == 1:
+            title = f'{title} ({info_netcdf.local_time[0]:.0f}h)'
+            save_name = f'{save_name}_{info_netcdf.local_time[0]:.0f}h'
+        else:
+            title = f'{title} (diurnal mean)'
+            save_name = f'{save_name}_diurnal_mean'
+
+        print('Processing data:')
+        vars_ls_longitude(info_netcdf=info_netcdf, latitude=latitude, altitude=None, density=False)
+
+        print('Display:')
+        print(max(info_netcdf.data_target), min(info_netcdf.data_target))
+        display_vars_ls_longitude(info_netcdf=info_netcdf, norm='log', vmin=1e-4, vmax=1e4, unit='kg.m$^{-2}$',
+                                  shortname=info_netcdf.target_name, title=title, save_name=save_name)
+
 
 def co2_ice(info_netcdf, view_mode, files, directory_store):
     print('What do you wanna do?')
@@ -102,8 +141,12 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
     if len(info_netcdf.local_time) > 1:
         print('     9: localtime co2_ice column density, zonal mean, [XX-YY]°N (fig: hl-ls)')
         print('        901: localtime co2_ice at 0.5 Pa, 0°N, zonal mean (hl-ls)')
-        print('    10: co2_ice column density along longitude and localtime at 0.5 Pa and 0°N (fig: hl-lon)')
-    print('    11: co2_ice column density along longitude and solar longitude at 0.5 Pa and 0°N (fig: ls-lon)')
+        print('    10: co2_ice mmr/column density along longitude and localtime (fig: hl-lon)')
+        print('        101: co2_ice mmr at 0.5 Pa and 0°N (fig: hl-lon)')
+        print('        102: co2_ice column density between 15°S and 15°N, above 10 Pa (mean) (fig: hl-lon)')
+    print('    11: co2_ice mmr/column density along longitude and solar longitude (fig: ls-lon)')
+    print('        111: co2_ice mmr at 0.5 Pa and 0°N (fig: hl-lon)')
+    print('        112: co2_ice column density between 15°S and 15°N, above 10 Pa (mean) (fig: hl-lon)')
     print('    12: co2_ice structure along longitude at 0°N (year mean) (fig: alt-lon)')
     print('    13: stationary wave, at 0°N and -45°E (fig: alt-ls)')
     print('    14: Polar plot every 30° ls mean, column density, lat=60°-90° (fig: lat-ls)')
@@ -126,7 +169,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
 
     elif view_mode in [2, 201, 202]:
         print('Processing data:')
-        altitude_limit, idx_altitude_min, idx_altitude_max = vars_zonal_mean_column_density(info_netcdf=info_netcdf)
+        idx_altitude_min, idx_altitude_max = vars_zonal_mean_column_density(info_netcdf=info_netcdf)
 
         print('Display:')
         if view_mode == 2:
@@ -328,35 +371,105 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
                                          vmin=1e-13, vmax=1e-9, title='CO2 ice mmr at 0°N and 0.5 Pa',
                                          save_name='co2_ice_zonal_mean_localtime_ls_0N_0p5Pa')
 
-    elif view_mode == 10:
+    elif view_mode in [10, 101, 102]:
         if len(info_netcdf.local_time) == 1:
             print('There is one local time selected! Please select at least 2 local times')
             exit()
+        title, save_name, altitude, latitude = None, None, None, None
+        if view_mode == 10:
+            latitude = input("Select a latitude or boundaries separeted by a coma:")
+            altitude = input("Select an altitude or boundaries separeted by a coma:")
+            if len(latitude) > 1 and len(altitude) == 1:
+                title = f'CO$_2$ ice mmr between {latitude[0]:.0f}°N and {latitude[1]:.0f}°N and {altitude:.2e} Pa'
+                save_name = f'co2_ice_local_time_longitude_{latitude[0]:.0f}N_{latitude[1]:.0f}_{altitude:.2e}Pa'
+            elif len(latitude) == 1 and len(altitude) > 1:
+                title = f'CO$_2$ ice mmr at {latitude:.0f}°N and between {altitude[0]:.2e} Pa and {altitude:.2e} Pa'
+                save_name = f'co2_ice_local_time_longitude_{latitude:.0f}N_{altitude:.2e}Pa_{altitude:.2e}Pa'
+            elif len(latitude) > 1 and len(altitude) > 1:
+                title = f'CO$_2$ ice mmr between {latitude[0]:.0f}°N and {latitude[1]:.0f} and between ' \
+                        f'{altitude[0]:.2e} Pa and {altitude[1]:.2e} Pa'
+                save_name = f'co2_ice_local_time_longitude_{latitude[0]:.0f}N_{latitude[1]:.0f}N_{altitude[0]:.2e}Pa_' \
+                            f'{altitude[1]:.2e}Pa'
+            else:
+                title = f'CO$_2$ ice mmr at {latitude:.0f}°N and {altitude:.2e} Pa'
+                save_name = f'co2_ice_local_time_longitude_{latitude:.0f}N_{altitude:.2e}Pa'
+        elif view_mode == 101:
+            latitude = 0  # °N
+            altitude = 0.5  # Pa
+            title = f'CO$_2$ ice mmr at 0°N and 0.5 Pa'
+            save_name = f'co2_ice_local_time_longitude_0N_0p5Pa'
+        elif view_mode == 102:
+            latitude = [-15, 15]  # °N
+            altitude = [10, 1e-3]  # Pa
+            title = f'CO$_2$ ice mmr between 15°S and 15°N and above 10 Pa'
+            save_name = f'co2_ice_local_time_longitude_15S_15N_above_10pa'
 
         print('Processing data:')
-        info_netcdf.data_target = vars_localtime_longitude(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
+        info_netcdf.data_target = vars_localtime_longitude(info_netcdf=info_netcdf, latitude=latitude,
+                                                           altitude=altitude, density=True)
 
         print('Display:')
         display_vars_localtime_longitude(info_netcdf=info_netcdf, norm='log', vmin=1e-13, vmax=1e-7, unit='kg/kg',
-                                         short_name=info_netcdf.target_name,
-                                         title=f'CO$_2$ ice mmr at 0°N and 0.5 Pa',
-                                         save_name=f'co2_ice_local_time_longitude_0N_0p5Pa')
+                                         short_name=info_netcdf.target_name, title=title, save_name=save_name)
 
-    elif view_mode == 11:
+    elif view_mode in [11, 111, 112]:
+        title, save_name, latitude, altitude = None, None, None, None
+        vmax = 1e-7
+        if view_mode == 11:
+            latitude = input("Select a latitude or boundaries separated by a coma:")
+            if len(latitude.split(',')) > 1:
+                latitude = array(latitude.split(','), dtype=float)
+            else:
+                latitude = [float(latitude)]
+            altitude = input("Select an altitude or boundaries separated by a coma:")
+            if len(altitude.split(',')) > 1:
+                altitude = array(altitude.split(','), dtype=float)
+                unit = u'kg.m$^{2}$'
+            else:
+                altitude = [float(altitude)]
+                unit = u'kg.kg$^{-1}$'
+
+            if len(latitude) > 1 and len(altitude) == 1:
+                title = f'CO$_2$ ice mmr between {latitude[0]:.0f}°N and {latitude[1]:.0f}°N and {altitude[0]:.2e} Pa'
+                save_name = f'co2_ice_ls_longitude_{latitude[0]:.0f}N_{latitude[1]:.0f}_{altitude[0]:.2e}Pa'
+            elif len(latitude) == 1 and len(altitude) > 1:
+                title = f'CO$_2$ ice density column at {latitude[0]:.0f}°N and between {altitude[0]:.2e} Pa and' \
+                        f' {altitude[1]:.2e} Pa'
+                save_name = f'co2_ice_ls_longitude_{latitude[0]:.0f}N_{altitude[0]:.2e}Pa_{altitude[1]:.2e}Pa'
+            elif len(latitude) > 1 and len(altitude) > 1:
+                title = f'CO$_2$ ice density column between {latitude[0]:.0f}°N and {latitude[1]:.0f} and\n between ' \
+                        f'{altitude[0]:.2e} Pa and {altitude[1]:.2e} Pa'
+                save_name = f'co2_ice_ls_longitude_{latitude[0]:.0f}N_{latitude[1]:.0f}N_{altitude[0]:.2e}Pa_' \
+                            f'{altitude[1]:.2e}Pa'
+                vmax = 1e1
+            else:
+                title = f'CO$_2$ ice mmr at {latitude[0]:.0f}°N and\n {altitude[0]:.2e} Pa'
+                save_name = f'co2_ice_ls_longitude_{latitude[0]:.0f}N_{altitude[0]:.2e}Pa'
+                vmax = 1e1
+        elif view_mode == 111:
+            latitude = 0
+            altitude = 0.5
+            title = f'CO$_2$ ice mmr at 0°N and 0.5 Pa'
+            save_name = f'co2_ice_ls_longitude_0N_0p5Pa'
+        elif view_mode == 112:
+            latitude = [-15, 15]
+            altitude = [10, 1e-3]
+            title = f'CO$_2$ ice density column between 15°S and 15°N\nand above 10 Pa'
+            save_name = f'co2_ice_ls_longitude_15S_15N_above10Pa'
+
+        if len(info_netcdf.local_time) == 1:
+            title = f'{title} ({info_netcdf.local_time[0]:.0f}h)'
+            save_name = f'{save_name}_{info_netcdf.local_time[0]:.0f}h'
+        else:
+            title = f'{title} (diurnal mean)'
+            save_name = f'{save_name}_diurnal_mean'
+
         print('Processing data:')
-        vars_ls_longitude(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
+        vars_ls_longitude(info_netcdf=info_netcdf, latitude=latitude, altitude=altitude, density=True)
 
         print('Display:')
-        if len(info_netcdf.local_time) == 1:
-            display_vars_ls_longitude(info_netcdf=info_netcdf, norm='log', vmin=1e-13, vmax=1e-7, unit='kg/kg',
-                                      shortname=info_netcdf.target_name,
-                                      title=f'CO$_2$ ice mmr at 0°N and 0.5 Pa ({info_netcdf.local_time[0]:.0f}h)',
-                                      save_name=f'co2_ice_ls_longitude_0N_0p5Pa_{info_netcdf.local_time[0]:.0f}h')
-        else:
-            display_vars_ls_longitude(info_netcdf=info_netcdf, norm='log', vmin=1e-13, vmax=1e-7, unit='kg/kg',
-                                      shortname=info_netcdf.target_name,
-                                      title=f'CO$_2$ ice mmr at 0°N and 0.5 Pa (diurnal mean)',
-                                      save_name=f'co2_ice_ls_longitude_0N_0p5Pa_diurnal_mean')
+        display_vars_ls_longitude(info_netcdf=info_netcdf, norm='log', vmin=1e-13, vmax=vmax, unit=unit,
+                                  shortname=info_netcdf.target_name, title=title, save_name=save_name)
 
     elif view_mode == 12:
         print('Processing data:')
@@ -486,6 +599,8 @@ def fluxwave(info_netcdf, view_mode):
         info_netcdf.data_target, layer_selected = vars_zonal_mean(data_input=info_netcdf, flip=True)
 
         print('Display:')
+        print(min(info_netcdf.data_target), max(info_netcdf.data_target))
+        vmin = 1
         vmax = 160
         if info_netcdf.target_name == 'fluxtop_lw':
             vmax = 200
@@ -497,7 +612,7 @@ def fluxwave(info_netcdf, view_mode):
             save_name = f'{info_netcdf.target_name}_zonal_mean_diurnal_mean'
 
         display_vars_latitude_ls(info_netcdf=info_netcdf, unit='W.m$^{-2}$',
-                                 norm=None, vmin=0, vmax=vmax, observation=False, cmap='inferno',
+                                 norm='log', vmin=vmin, vmax=vmax, observation=False, cmap='Spectral_r',
                                  latitude_selected=layer_selected, tes=None, mvals=None, layer=None,
                                  title=title, save_name=save_name)
 
@@ -518,13 +633,19 @@ def fluxwave(info_netcdf, view_mode):
 
     elif view_mode == 3:
         print('Processing:')
-        info_netcdf.data_target = flux_lw_apparent_temperature_zonal_mean(info_netcdf.data_target)
+        info_netcdf.data_target = flux_lw_apparent_temperature_zonal_mean(info_netcdf=info_netcdf)
 
         print('Display:')
-        display_vars_latitude_ls(info_netcdf=info_netcdf, unit='K', norm=None, vmin=130, vmax=220, observation=False,
-                                 cmap='inferno', latitude_selected=None, tes=None, mvals=None, layer=None,
-                                 title=f'Zonal mean of apparent temperature, at {info_netcdf.local_time[0]}h',
-                                 save_name=f'apparent_temperature_zonal_mean_{info_netcdf.local_time[0]}h')
+        if len(info_netcdf.local_time) == 1:
+            title = f'Zonal mean of apparent temperature\nat the top of the atmosphere, at {info_netcdf.local_time[0]}h'
+            savename = f'flux_lw_apparent_temperature_zonal_mean_{info_netcdf.local_time[0]}h'
+        else:
+            title = f'Zonal adn diurnal mean of apparent temperature\nat the top of the atmosphere'
+            savename = f'flux_lw_apparent_temperature_zonal_diurnal_mean'
+
+        display_vars_latitude_ls(info_netcdf=info_netcdf, unit='K', norm=None, vmin=80, vmax=200, observation=False,
+                                 cmap='Spectral_r', latitude_selected=None, tes=None, mvals=None, layer=None,
+                                 title=title, save_name=savename)
 
 
 def h2o_ice_s(info_netcdf, view_mode):
@@ -583,7 +704,7 @@ def riceco2(info_netcdf, view_mode):
     print('     6: mean radius profile along year, with global mean radius (fig: alt-ls + alt+µm)')
     print('     7: radius structure in polar regions for each latitudes, diurnal mean (fig: alt-µm)')
     print('     8: radius local time evolution at a latitude (fig: alt-µm)')
-    print('     9: max radius local time evolution at 0°N (fig: µm-lt)')
+    print('     9: max radius local time evolution at a latitude (fig: µm-lt)')
     print('')
 
     if view_mode is None:
@@ -670,7 +791,7 @@ def satuco2(info_netcdf, view_mode):
     print('What do you wanna do?')
     print('     1: zonal mean of saturation, for 3 latitudes, with co2ice mmr (fig: alt-ls)')
     print('     2: [TBD] saturation in localtime (fig: lt-alt')
-    print('     3: saturation with co2ice mmr in polar regions, [0:30]°ls SP, [270-300]°ls NP (fig: alt-lon)')
+    print('     3: saturation with co2ice mmr: [0:30]°ls SP, [0:30] EQ, [270-300]°ls NP (fig: alt-lon)')
     print('     4: Thickness atmosphere layer in polar regions (fig: thick-ls) Hu et al. 2012')
     print('     5: Saturation at 0°N along longitude (fig: alt-lon)')
     print('     6: Saturation local time - ls, at 0°N, 0.5 Pa')
@@ -698,16 +819,19 @@ def satuco2(info_netcdf, view_mode):
 
     elif view_mode == 3:
         print('Processing data:')
-        data_satuco2_north, data_satuco2_south, data_co2ice_north, data_co2ice_south, latitude_north, \
-            latitude_south, binned = satuco2_time_mean_with_co2_ice(info_netcdf=info_netcdf)
+        data_satuco2_north, data_satuco2_eq, data_satuco2_south, data_co2ice_north, data_co2ice_eq, data_co2ice_south,\
+            latitude_north, latitude_eq, latitude_south = satuco2_time_mean_with_co2_ice(info_netcdf=info_netcdf)
 
         print('Display:')
         display_satuco2_with_co2_ice_altitude_longitude(info_netcdf=info_netcdf, data_satuco2_north=data_satuco2_north,
+                                                        data_satuco2_eq=data_satuco2_eq,
                                                         data_satuco2_south=data_satuco2_south,
                                                         data_co2ice_north=data_co2ice_north,
+                                                        data_co2ice_eq=data_co2ice_eq,
                                                         data_co2ice_south=data_co2ice_south,
-                                                        latitude_north=latitude_north, latitude_south=latitude_south,
-                                                        binned=binned)
+                                                        latitude_north=latitude_north,
+                                                        latitude_eq=latitude_eq,
+                                                        latitude_south=latitude_south)
 
     elif view_mode == 4:
         print('Processing data:')
@@ -737,8 +861,8 @@ def satuco2(info_netcdf, view_mode):
         info_netcdf.data_target = vars_localtime_ls(info_netcdf, latitude=0, altitude=0.5)
 
         print('Display:')
-        display_co2_ice_localtime_ls(info_netcdf=info_netcdf, unit='', norm='linear', vmin=1, vmax=10, lat_min=None,
-                                     lat_max=None, title='CO2 saturation at 0°N and 0.5 Pa',
+        display_co2_ice_localtime_ls(info_netcdf=info_netcdf, unit='', norm='linear', vmin=1, vmax=10, lat_min=-3,
+                                     lat_max=3, title='CO2 saturation at 0°N and 0.5 Pa',
                                      save_name='satuco2_zonal_mean_localtime_ls_0N_0p5Pa')
 
     elif view_mode == 7:
@@ -825,8 +949,12 @@ def temp(info_netcdf, view_mode):
     print('     7: dT zonal mean and altitude of cold pocket, compared to SPICAM data')
     print('     8: stationary wave, year mean at 0°N (fig: alt-lon)')
     print('     9: stationary wave, at 0°N and -45°E (fig: alt-ls)')
-    print('    10: temperature along longitude and localtime at 0.5 Pa and 0°N (fig: hl-lon)')
-    print('    11: temperature along longitude and solar longitude at 0.5 Pa and 0°N (fig: ls-lon)')
+    print('    10: temperature along longitude and localtime (fig: hl-lon)')
+    print('        101: temperature at 0.5 Pa and 0°N (fig: hl-lon)')
+    print('        102: temperature between 15°S and 15°N, above 10 Pa (mean) (fig: hl-lon)')
+    print('    11: temperature along longitude and solar longitude (fig: ls-lon)')
+    print('        111: temperature at 0.5 Pa and 0°N (fig: hl-lon)')
+    print('        112: temperature between 15°S and 15°N, above 10 Pa (mean) (fig: hl-lon)')
     print('    12: temperature local time - ls, at 0°N, 0.5 Pa')
     print('    13: min, mean, max temperature, zonal mean, above 1 Pa, [-15:15]N (.dat)')
     print('    14: zonal mean of temperature between 15NS at a local time, comparable to TES (fig: alt-ls)')
@@ -950,27 +1078,103 @@ def temp(info_netcdf, view_mode):
                                  title=f'Temperature at [0°N, -45°E] ({info_netcdf.local_time[0]}h)',
                                  save_name=f'temp_altitude_ls_0N_-45E_{info_netcdf.local_time[0]}h')
 
-    elif view_mode == 10:
+    if view_mode in [10, 101, 102]:
+        if len(info_netcdf.local_time) == 1:
+            print('There is one local time selected! Please select at least 2 local times')
+            exit()
+        title, save_name, altitude, latitude = None, None, None, None
+
+        if view_mode == 10:
+            latitude = input("Select a latitude or boundaries separeted by a coma:")
+            altitude = input("Select an altitude or boundaries separeted by a coma:")
+            if len(latitude) > 1 and len(altitude) == 1:
+                title = f'Temperature between {latitude[0]:.0f}°N and {latitude[1]:.0f}°N and {altitude:.2e} Pa'
+                save_name = f'temp_local_time_longitude_{latitude[0]:.0f}N_{latitude[1]:.0f}_{altitude:.2e}Pa'
+            elif len(latitude) == 1 and len(altitude) > 1:
+                title = f'Temperature at {latitude:.0f}°N and between {altitude[0]:.2e} Pa and {altitude:.2e} Pa (mean)'
+                save_name = f'temp_local_time_longitude_{latitude:.0f}N_{altitude:.2e}Pa_{altitude:.2e}Pa_mean'
+            elif len(latitude) > 1 and len(altitude) > 1:
+                title = f'Temperature between {latitude[0]:.0f}°N and {latitude[1]:.0f} and between' \
+                        f'{altitude[0]:.2e} Pa and {altitude[1]:.2e} Pa (mean)'
+                save_name = f'temp_local_time_longitude_{latitude[0]:.0f}N_{latitude[1]:.0f}N_{altitude[0]:.2e}Pa_' \
+                            f'{altitude[1]:.2e}Pa_mean'
+            else:
+                title = f'Temperature at {latitude:.0f}°N and {altitude:.2e} Pa'
+                save_name = f'temp_local_time_longitude_{latitude:.0f}N_{altitude:.2e}Pa'
+        elif view_mode == 101:
+            latitude = 0  # °N
+            altitude = 0.5  # Pa
+            title = f'Temperature at 0°N and 0.5 Pa'
+            save_name = f'temp_local_time_longitude_0N_0p5Pa'
+        elif view_mode == 102:
+            latitude = [-15, 15]  # °N
+            altitude = [10, 1e-3]  # Pa
+            title = f'Temperature between 15°S and 15°N and mean above 10 Pa'
+            save_name = f'temp_local_time_longitude_15S_15N_above_10pa_mean'
+
         print('Processing data:')
-        info_netcdf.data_target = vars_localtime_longitude(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
+        info_netcdf.data_target = vars_localtime_longitude(info_netcdf=info_netcdf, latitude=latitude,
+                                                           altitude=altitude, density=False)
 
         print('Display:')
         display_vars_localtime_longitude(info_netcdf=info_netcdf, norm='linear', vmin=120, vmax=165,
                                          short_name=info_netcdf.target_name,
-                                         unit='K', title=f'Temperature at 0°N and 0.5 Pa',
-                                         save_name=f'temp_local_time_longitude_0N_0p5Pa')
+                                         unit='K', title=title, save_name=save_name)
 
-    elif view_mode == 11:
+    if view_mode in [11, 111, 112]:
+        title, save_name, latitude, altitude = None, None, None, None
+        if view_mode == 11:
+            latitude = input("Select a latitude or boundaries separeted by a coma:")
+            if len(latitude.split(',')) > 1:
+                latitude = array(latitude.split(','), dtype=float)
+            else:
+                latitude = [float(latitude)]
+            altitude = input("Select an altitude or boundaries separated by a coma:")
+            if len(altitude.split(',')) > 1:
+                altitude = array(altitude.split(','), dtype=float)
+            else:
+                altitude = [float(altitude)]
+            if len(latitude) > 1 and len(altitude) == 1:
+                title = f'Temperature between {latitude[0]:.0f}°N and {latitude[1]:.0f}°N and {altitude:.2e} Pa'
+                save_name = f'temp_ls_longitude_{latitude[0]:.0f}N_{latitude[1]:.0f}_{altitude:.2e}Pa'
+            elif len(latitude) == 1 and len(altitude) > 1:
+                title = f'Temperature at {latitude:.0f}°N and between {altitude[0]:.2e} Pa and' \
+                        f' {altitude:.2e} Pa (mean)'
+                save_name = f'temp_ls_longitude_{latitude:.0f}N_{altitude:.2e}Pa_{altitude:.2e}Pa_mean'
+            elif len(latitude) > 1 and len(altitude) > 1:
+                title = f'Temperature between {latitude[0]:.0f}°N and {latitude[1]:.0f} and between ' \
+                        f'{altitude[0]:.2e} Pa and {altitude[1]:.2e} Pa (mean)'
+                save_name = f'temp_ls_longitude_{latitude[0]:.0f}N_{latitude[1]:.0f}N_{altitude[0]:.2e}Pa_' \
+                            f'{altitude[1]:.2e}Pa_mean'
+            else:
+                title = f'Temperature at {latitude[0]:.0f}°N and {altitude[0]:.2e} Pa'
+                save_name = f'temp_ls_longitude_{latitude[0]:.0f}N_{altitude[0]:.2e}Pa'
+        elif view_mode == 111:
+            latitude = 0
+            altitude = 0.5
+            title = f'Temperature at 0°N and 0.5 Pa'
+            save_name = f'temp_ls_longitude_0N_0p5Pa'
+        elif view_mode == 112:
+            latitude = [-15, 15]
+            altitude = [10, 1e-3]
+            title = f'Temperature between 15°S and 15°N\nand above 10 Pa (mean)'
+            save_name = f'temp_ls_longitude_15S_15N_above10Pa_mean'
+
+        if len(info_netcdf.local_time) == 1:
+            title = f'{title} ({info_netcdf.local_time[0]:.0f}h)'
+            save_name = f'{save_name}_{info_netcdf.local_time[0]:.0f}h'
+        else:
+            title = f'{title} (diurnal mean)'
+            save_name = f'{save_name}_diurnal_mean'
+
         print('Processing data:')
-        vars_ls_longitude(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
+        vars_ls_longitude(info_netcdf=info_netcdf, latitude=latitude, altitude=altitude, density=False)
 
         print('Display:')
         display_vars_ls_longitude(info_netcdf=info_netcdf, norm='linear', vmin=90, vmax=180, unit='K',
-                                  shortname=info_netcdf.target_name,
-                                  title=f'Temperature at 0°N and 0.5 Pa ({info_netcdf.local_time[0]:.0f}h)',
-                                  save_name=f'temp_ls_longitude_0N_0p5Pa_{info_netcdf.local_time[0]:.0f}h')
+                                  shortname=info_netcdf.target_name, title=title, save_name=save_name)
 
-    elif view_mode == 12:
+    if view_mode == 12:
         print('Processing data:')
         info_netcdf.data_target = vars_localtime_ls(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
 
@@ -979,14 +1183,14 @@ def temp(info_netcdf, view_mode):
                                      vmax=160, title='Temperature at 0°N and 0.5 Pa',
                                      save_name='temp_zonal_mean_localtime_ls_0N_0p5Pa')
 
-    elif view_mode == 13:
+    if view_mode == 13:
         print('Processing data:')
         vars_min_mean_max(info_netcdf=info_netcdf, latitude=[-15, 15], altitude=[1e2, 1e-1])
 
         print('Display:')
         display_vars_histo(info_netcdf=info_netcdf)
 
-    elif view_mode == 14:
+    if view_mode == 14:
         print('Processing data:')
         vars_altitude_ls(info_netcdf=info_netcdf, latitude=[-15, 15])
 
@@ -1010,11 +1214,11 @@ def tsurf(info_netcdf, view_mode):
 
     if view_mode == 1:
         print('Processing data:')
-        info_netcdf.data_target, tmp = vars_zonal_mean(data_input=info_netcdf)
+        info_netcdf.data_target, tmp = vars_zonal_mean(data_input=info_netcdf, flip=True)
 
         print('Display:')
-        display_vars_latitude_ls(info_netcdf=info_netcdf, unit='K', norm=None, vmin=125, vmax=325, observation=False,
-                                 latitude_selected=None, cmap='inferno', tes=True, mvals=False, layer=None,
+        display_vars_latitude_ls(info_netcdf=info_netcdf, unit='K', norm=None, vmin=140, vmax=200, observation=False,
+                                 latitude_selected=None, cmap='Spectral_r', tes=True, mvals=False, layer=None,
                                  title='Zonal mean of surface temperature', save_name='tsurf_zonal_mean')
 
     if view_mode == 2:
