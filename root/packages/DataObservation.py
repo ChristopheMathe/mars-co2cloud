@@ -443,7 +443,7 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
 def simulation_mvals(target, localtime):
     filename = None
 
-    if target in ['tsurf', 'Time', 'latitude', 'longitude', 'altitude']:
+    if target in ['ps', 'tsurf', 'Time', 'latitude', 'longitude', 'altitude']:
         if localtime == 2:
             filename = f'{root_dir}/data/simu_mvals/concat_vars_3D_LT_2h_Ls.nc'
         if localtime == 14:

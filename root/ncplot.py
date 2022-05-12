@@ -22,14 +22,20 @@ def ccnco2_number(info_netcdf, view_mode):
             vars_zonal_mean_in_time_co2ice_exists(info_netcdf=info_netcdf)
 
         print('Display:')
+        title = f'Zonal mean density of CCN where co2 ice exists\nbetween {latitude_selected[0]:.0f}°N and' \
+                f' {latitude_selected[-1]:.0f}°N'
+        if len(info_netcdf.local_time) == 1:
+            title = f'{title} ({info_netcdf.local_time[0]}h)'
+            list_filename = [f'{f}_{info_netcdf.local_time[0]:.0f}h' for f in list_filename]
+        else:
+            title = f'{title} (diurnal mean)'
+            list_filename = [f'{f}_diurnal_mean' for f in list_filename]
+
         display_vars_1fig_profiles(info_netcdf=info_netcdf, list_data=list_data, latitude_selected=latitude_selected,
-                                   x_min=1e0, x_max=1e10, x_label='density of CCN (#.m$^{-3}$)', x_scale='log',
+                                   x_min=1e0, x_max=1e13, x_label='density of CCN (#.m$^{-3}$)', x_scale='log',
                                    y_scale='log', second_var=None, x_min2=None, x_max2=None, x_label2='None',
-                                   x_scale2='None',
-                                   title=f'Zonal mean density of CCN where co2 ice exists between'
-                                         f' {latitude_selected[0]:.0f} - {latitude_selected[-1]:.0f}°N '
-                                         f'({info_netcdf.local_time[0]}h)',
-                                   save_name=list_filename, title_option=list_time_selected)
+                                   x_scale2='None', title=title, save_name=list_filename,
+                                   title_option=list_time_selected)
 
 
 def co2ice(info_netcdf, view_mode):
@@ -237,16 +243,17 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
         info_netcdf.data_target, data_co2ice_coverage_meso = co2ice_coverage(info_netcdf=info_netcdf)
 
         print('Display:')
+        title = 'Percentage of Martian year with presence of CO2 clouds'
+        save_name = 'co2_ice_coverage'
         if len(info_netcdf.local_time) == 1:
-            display_vars_latitude_longitude(info_netcdf=info_netcdf, unit='%', norm=None, vmin=0, vmax=70,
-                                            title=f'Percentage of Martian year with presence of CO2 clouds '
-                                                  f'({info_netcdf.local_time} h)',
-                                            save_name=f'co2_ice_coverage_{int(info_netcdf.local_time[0])}h')
+            title = f'{title} ({info_netcdf.local_time[0]:.0f} h)'
+            save_name = f'{save_name}_{info_netcdf.local_time[0]:.0f}h'
         else:
-            display_vars_latitude_longitude(info_netcdf=info_netcdf, unit='%', norm=None, vmin=0, vmax=70,
-                                            title=f'Percentage of Martian year with presence of CO2 clouds '
-                                                  f'(diurnal mean)',
-                                            save_name=f'co2_ice_coverage_diurnal_mean')
+            title = f'{title} (diurnal mean)'
+            save_name = f'{save_name}_diurnal_mean'
+
+        display_vars_latitude_longitude(info_netcdf=info_netcdf, unit='%', norm=None, vmin=0, vmax=70, title=title,
+                                        save_name=save_name)
 
     elif view_mode == 4:
         print('Processing data:')
@@ -378,15 +385,27 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
         title, save_name, altitude, latitude = None, None, None, None
         if view_mode == 10:
             latitude = input("Select a latitude or boundaries separeted by a coma:")
+            if len(latitude.split(',')) > 1:
+                latitude = array(latitude.split(','), dtype=float)
+            else:
+                latitude = [float(latitude)]
             altitude = input("Select an altitude or boundaries separeted by a coma:")
+            if len(altitude.split(',')) > 1:
+                altitude = array(altitude.split(','), dtype=float)
+                unit = u'kg.m$^{2}$'
+            else:
+                altitude = [float(altitude)]
+                unit = u'kg.kg$^{-1}$'
+
             if len(latitude) > 1 and len(altitude) == 1:
-                title = f'CO$_2$ ice mmr between {latitude[0]:.0f}°N and {latitude[1]:.0f}°N and {altitude:.2e} Pa'
+                title = f'CO$_2$ ice mmr between {latitude[0]:.0f}°N and {latitude[1]:.0f}°N\nand at {altitude:.2e} Pa'
                 save_name = f'co2_ice_local_time_longitude_{latitude[0]:.0f}N_{latitude[1]:.0f}_{altitude:.2e}Pa'
             elif len(latitude) == 1 and len(altitude) > 1:
-                title = f'CO$_2$ ice mmr at {latitude:.0f}°N and between {altitude[0]:.2e} Pa and {altitude:.2e} Pa'
+                title = f'CO$_2$ ice column density at {latitude:.0f}°N and\nbetween {altitude[0]:.2e} Pa and' \
+                        f' {altitude:.2e} Pa'
                 save_name = f'co2_ice_local_time_longitude_{latitude:.0f}N_{altitude:.2e}Pa_{altitude:.2e}Pa'
             elif len(latitude) > 1 and len(altitude) > 1:
-                title = f'CO$_2$ ice mmr between {latitude[0]:.0f}°N and {latitude[1]:.0f} and between ' \
+                title = f'CO$_2$ ice column density between {latitude[0]:.0f}°N and {latitude[1]:.0f} and\n between ' \
                         f'{altitude[0]:.2e} Pa and {altitude[1]:.2e} Pa'
                 save_name = f'co2_ice_local_time_longitude_{latitude[0]:.0f}N_{latitude[1]:.0f}N_{altitude[0]:.2e}Pa_' \
                             f'{altitude[1]:.2e}Pa'
@@ -394,14 +413,16 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
                 title = f'CO$_2$ ice mmr at {latitude:.0f}°N and {altitude:.2e} Pa'
                 save_name = f'co2_ice_local_time_longitude_{latitude:.0f}N_{altitude:.2e}Pa'
         elif view_mode == 101:
-            latitude = 0  # °N
-            altitude = 0.5  # Pa
+            latitude = [0]  # °N
+            altitude = [0.5]  # Pa
+            unit = u'kg.kg$^{-1}$'
             title = f'CO$_2$ ice mmr at 0°N and 0.5 Pa'
             save_name = f'co2_ice_local_time_longitude_0N_0p5Pa'
         elif view_mode == 102:
             latitude = [-15, 15]  # °N
             altitude = [10, 1e-3]  # Pa
-            title = f'CO$_2$ ice mmr between 15°S and 15°N and above 10 Pa'
+            unit = u'kg.m$^{2}$'
+            title = f'CO$_2$ ice column density between 15°S and 15°N and\n above 10 Pa'
             save_name = f'co2_ice_local_time_longitude_15S_15N_above_10pa'
 
         print('Processing data:')
@@ -409,7 +430,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
                                                            altitude=altitude, density=True)
 
         print('Display:')
-        display_vars_localtime_longitude(info_netcdf=info_netcdf, norm='log', vmin=1e-13, vmax=1e-7, unit='kg/kg',
+        display_vars_localtime_longitude(info_netcdf=info_netcdf, norm='log', vmin=1e-13, vmax=1e-7, unit=unit,
                                          short_name=info_netcdf.target_name, title=title, save_name=save_name)
 
     elif view_mode in [11, 111, 112]:
@@ -447,13 +468,15 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
                 save_name = f'co2_ice_ls_longitude_{latitude[0]:.0f}N_{altitude[0]:.2e}Pa'
                 vmax = 1e1
         elif view_mode == 111:
-            latitude = 0
-            altitude = 0.5
+            latitude = [0]
+            altitude = [0.5]
+            unit = u'kg.kg$^{-1}$'
             title = f'CO$_2$ ice mmr at 0°N and 0.5 Pa'
             save_name = f'co2_ice_ls_longitude_0N_0p5Pa'
         elif view_mode == 112:
             latitude = [-15, 15]
             altitude = [10, 1e-3]
+            unit = u'kg.m$^{2}$'
             title = f'CO$_2$ ice density column between 15°S and 15°N\nand above 10 Pa'
             save_name = f'co2_ice_ls_longitude_15S_15N_above10Pa'
 
@@ -480,16 +503,13 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
 
         print('Display:')
         if len(info_netcdf.local_time) == 1:
-            display_vars_altitude_longitude(info_netcdf=info_netcdf, unit='kg.kg-1', norm='log', vmin=1e-13,
-                                            vcenter=None, vmax=1e-6,
-                                            title=f'CO2 ice at 0°N, averaged over 1 year'
-                                                  f' ({info_netcdf.local_time[0]}h)',
-                                            save_name=f'co2_ice_altitude_longitude_0N_{info_netcdf.local_time[0]}h')
+            title = f'CO2 ice at 0°N, averaged over 1 year ({info_netcdf.local_time[0]:.0f}h)'
+            save_name = f'co2_ice_altitude_longitude_0N_{info_netcdf.local_time[0]:.0f}h'
         else:
-            display_vars_altitude_longitude(info_netcdf=info_netcdf, unit='kg.kg-1', norm='log', vmin=1e-13,
-                                            vcenter=None, vmax=1e-6,
-                                            title=f'CO2 ice at 0°N, averaged over 1 year (diurnal mean) ',
-                                            save_name=f'co2_ice_altitude_longitude_0N_diurnal_mean')
+            title = f'CO2 ice at 0°N, averaged over 1 year (diurnal mean)'
+            save_name = f'co2_ice_altitude_longitude_0N_diurnal_mean'
+        display_vars_altitude_longitude(info_netcdf=info_netcdf, unit='kg.kg$^{-1}$', norm='log', vmin=1e-13,
+                                        vcenter=None, vmax=1e-6, title=title, save_name=save_name)
 
     elif view_mode == 13:
         print('Processing data:')
@@ -546,13 +566,20 @@ def emis(info_netcdf, view_mode):
 
     if view_mode == 1:
         print('Processing:')
-        info_netcdf.data_target, layer_selected = vars_zonal_mean(data_input=info_netcdf)
+        info_netcdf.data_target, layer_selected = vars_zonal_mean(data_input=info_netcdf, flip=True)
 
         print('Display:')
+        title = f'Zonal mean of {info_netcdf.target_name}'
+        save_name = f'{info_netcdf.target_name}_zonal_mean'
+        if len(info_netcdf.local_time) == 1:
+            title = f"{title}, at {info_netcdf.local_time[0]:.0f}h"
+            save_name = f"{save_name}_{info_netcdf.local_time[0]:.0f}h"
+        else:
+            title = f"{title}, diurnal mean"
+            save_name = f"{save_name}_diurnal_mean"
         display_vars_latitude_ls(info_netcdf=info_netcdf, unit='', norm=None, vmin=0.4, vmax=1.0, observation=False,
                                  latitude_selected=layer_selected, tes=None, mvals=None, layer=None, cmap='inferno',
-                                 title=f'Zonal mean of {info_netcdf.name_target}, at {info_netcdf.local_time[0]}h',
-                                 save_name=f'{info_netcdf.name_target}_zonal_mean_{info_netcdf.local_time[0]}h')
+                                 title=title, save_name=save_name)
 
     if view_mode in [2, 201]:
         print('Processing data:')
@@ -560,32 +587,48 @@ def emis(info_netcdf, view_mode):
 
         print('Display:')
         if view_mode == 2:
-            display_vars_polar_projection_multi_plot(info_netcdf=info_netcdf, time=time_bin, vmin=0.55, vmax=1.,
-                                                     norm=None, cmap='inferno', unit='', title='',
-                                                     save_name=f'emis_15ls_mean_{info_netcdf.local_time[0]}h')
-        if view_mode == 201:
+            title = 'Emissity 15°Ls mean'
+            save_name = f'emis_15ls_mean'
             if len(info_netcdf.local_time) == 1:
-                display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf=info_netcdf, time=time_bin,
-                                                                      levels=linspace(0.55, 1., 100), cmap='inferno',
-                                                                      save_name=f'emis_15ls_mean_'
-                                                                                f'{info_netcdf.local_time[0]}h')
+                title = f"{title}, at {info_netcdf.local_time[0]:.0f}h"
+                save_name = f"{save_name}_{info_netcdf.local_time[0]:.0f}h"
             else:
-                display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf=info_netcdf, time=time_bin,
-                                                                      levels=linspace(0.55, 1., 100), cmap='inferno',
-                                                                      save_name=f'emis_15ls_mean_diurnalmean_')
+                title = f"{title}, diurnal mean"
+                save_name = f"{save_name}_diurnal_mean"
 
+            display_vars_polar_projection_multi_plot(info_netcdf=info_netcdf, time=time_bin, vmin=0.55, vmax=1.,
+                                                     norm='linear', cmap='inferno', unit='', title=title,
+                                                     save_name=save_name)
+        if view_mode == 201:
+            save_name = f'emis_15ls_mean'
+            if len(info_netcdf.local_time) == 1:
+                save_name = f'{save_name}_{info_netcdf.local_time[0]}h'
+            else:
+                save_name = f'{save_name}_diurnal_mean'
+
+            display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf=info_netcdf, time=time_bin,
+                                                                  levels=linspace(0.55, 1., 100), cmap='inferno',
+                                                                  save_name=save_name)
     if view_mode == 3:
         print('Processing data:')
         data_mean_np, data_mean_sp = emis_polar_winter_gg2020_fig13(info_netcdf=info_netcdf)
 
         print('Display:')
+        title = 'Surface emissivity mean in time during polar winter'
+        save_name = f'emis_time_mean_gary-bicas2020'
+        if len(info_netcdf.local_time) == 1:
+            title = f'{title} ({info_netcdf.local_time[0]:.0f}'
+            save_name = f'{save_name}_{info_netcdf.local_time[0]:.0f}h'
+        else:
+            title = f'{title} (diurnal mean)'
+            save_name = f'{save_name}_diurnal_mean'
+
         display_vars_polar_projection(info_netcdf=info_netcdf, data_np=data_mean_np, data_sp=data_mean_sp,
                                       levels=linspace(0.55, 1., 100), unit='', cmap='inferno',
-                                      sup_title='Surface emissivity mean in time during polar winter',
-                                      save_name=f'emis_time_mean_gary-bicas2020_{info_netcdf.local_time[0]}h')
+                                      sup_title=title, save_name=save_name)
 
 
-def fluxwave(info_netcdf, view_mode):
+def radflux(info_netcdf, view_mode):
     print('What do you wanna do?')
     print('     1: zonal mean (fig: ls-lat)')
     print('     2: Polar plot every 30° ls mean, lat=60°-90° (fig: lat-ls)')
@@ -605,8 +648,8 @@ def fluxwave(info_netcdf, view_mode):
         if info_netcdf.target_name == 'fluxtop_lw':
             vmax = 200
         if len(info_netcdf.local_time) == 1:
-            title = f'Zonal mean of {info_netcdf.target_name}, at {info_netcdf.local_time[0]}h'
-            save_name = f'{info_netcdf.target_name}_zonal_mean_{info_netcdf.local_time[0]}h'
+            title = f'Zonal mean of {info_netcdf.target_name}, at {info_netcdf.local_time[0]:.0f}h'
+            save_name = f'{info_netcdf.target_name}_zonal_mean_{info_netcdf.local_time[0]:.0f}h'
         else:
             title = f'Zonal mean of {info_netcdf.target_name} (diurnal mean)'
             save_name = f'{info_netcdf.target_name}_zonal_mean_diurnal_mean'
@@ -628,8 +671,7 @@ def fluxwave(info_netcdf, view_mode):
         print(min(info_netcdf.data_target), max(info_netcdf.data_target))
         display_vars_polar_projection_multi_plot(info_netcdf=info_netcdf, vmin=None, vmax=None, time=time_bin,
                                                  norm=None, levels=arange(0, 220), cmap='inferno',
-                                                 unit='W.m$^{-2}$', title='',
-                                                 save_name=save_name)
+                                                 unit='W.m$^{-2}$', title='', save_name=save_name)
 
     elif view_mode == 3:
         print('Processing:')
@@ -637,8 +679,9 @@ def fluxwave(info_netcdf, view_mode):
 
         print('Display:')
         if len(info_netcdf.local_time) == 1:
-            title = f'Zonal mean of apparent temperature\nat the top of the atmosphere, at {info_netcdf.local_time[0]}h'
-            savename = f'flux_lw_apparent_temperature_zonal_mean_{info_netcdf.local_time[0]}h'
+            title = f'Zonal mean of apparent temperature\nat the top of the atmosphere, at ' \
+                    f'{info_netcdf.local_time[0]:.0f}h'
+            savename = f'flux_lw_apparent_temperature_zonal_mean_{info_netcdf.local_time[0]:.0f}h'
         else:
             title = f'Zonal adn diurnal mean of apparent temperature\nat the top of the atmosphere'
             savename = f'flux_lw_apparent_temperature_zonal_diurnal_mean'
@@ -677,21 +720,30 @@ def ps(info_netcdf, view_mode):
 
     if view_mode == 1:
         print('Processing data:')
-        info_netcdf.data_target, tmp = vars_zonal_mean(data_input=info_netcdf)
+        info_netcdf.data_target, tmp = vars_zonal_mean(data_input=info_netcdf, flip=True)
 
         print('Display:')
-        display_vars_latitude_ls(info_netcdf=info_netcdf, unit='K', norm=None, vmin=None, vmax=None, observation=False,
-                                 latitude_selected=None, title=None, tes=True, mvals=True, layer=None, cmap='inferno',
-                                 save_name='ps_zonal_mean')
+        title = 'Surface pressure zonal mean'
+        save_name = 'ps_zonal_mean'
+        if len(info_netcdf.local_time) == 1:
+            title = f"{title}, at {info_netcdf.local_time[0]:.0f} h"
+            save_name = f"{save_name}_{info_netcdf.local_time[0]:.0f}h"
+        else:
+            title = f"{title}, diurnal mean"
+            save_name = f"{save_name}_diurnal_mean"
+
+        display_vars_latitude_ls(info_netcdf=info_netcdf, unit='Pa', norm=None, vmin=None, vmax=None, observation=False,
+                                 latitude_selected=None, title=title, tes=False, mvals=True, layer=None, cmap='inferno',
+                                 save_name=save_name)
 
     if view_mode == 2:
         print('Processing data:')
-        data_pressure_at_viking1, latitude1, longitude1, data_pressure_at_viking2, latitude2, longitude2 = \
+        data_pressure_at_viking1, latitude1, longitude1, data_pressure_at_viking2, latitude2, longitude2, data_ls = \
             ps_at_viking(info_netcdf=info_netcdf)
 
         print('Display:')
-        display_ps_at_viking(data_pressure_at_viking1, latitude1, longitude1, data_pressure_at_viking2, latitude2,
-                             longitude2)
+        display_ps_at_viking(info_netcdf, data_pressure_at_viking1, latitude1, longitude1, data_pressure_at_viking2,
+                             latitude2, longitude2, data_ls)
 
 
 def riceco2(info_netcdf, view_mode):
@@ -712,17 +764,24 @@ def riceco2(info_netcdf, view_mode):
 
     if view_mode == 1:
         print('Processing data:')
+        info_netcdf.data_target = info_netcdf.data_target * 1e6  # m to µm
         list_data, list_filename, latitude_selected, time_selected = \
             vars_zonal_mean_in_time_co2ice_exists(info_netcdf=info_netcdf)
 
         print('Display:')
+        title = f'Mean radius of CO$_2$ ice particles between {latitude_selected[0]:.2f}°N and' \
+                f' {latitude_selected[-1]:.2f}°N'
+        if len(info_netcdf.local_time) == 1:
+            title = f'{title}, at {info_netcdf.local_time[0]:.0f}h'
+            list_filename = [f'{save_name}_{info_netcdf.local_time[0]:.0f}h' for save_name in list_filename]
+        else:
+            title = f'{title}, diurnal mean'
+            list_filename = [f'{save_name}_diurnal_mean' for save_name in list_filename]
+
         display_vars_1fig_profiles(info_netcdf=info_netcdf, list_data=list_data, latitude_selected=latitude_selected,
-                                   x_min=1e-2, x_max=2000, x_label='radius of ice particle (µm)', x_scale='log',
+                                   x_min=1e-3, x_max=1e3, x_label='radius of ice particle (µm)', x_scale='log',
                                    y_scale='log', second_var=None, x_min2=None, x_max2=None, x_label2=None,
-                                   x_scale2=None,
-                                   title=f'Mean radius of ice particle between {latitude_selected[0]:.2f} - '
-                                         f'{latitude_selected[-1]:.2f} °N',
-                                   save_name=list_filename, title_option=time_selected)
+                                   x_scale2=None, title=title, save_name=list_filename, title_option=time_selected)
 
     if view_mode in [3, 301]:
         print('Processing data:')
@@ -1282,7 +1341,7 @@ def main():
         ccnco2_number(info_netcdf=info_netcdf, view_mode=view_mode)
 
     elif info_netcdf.target_name in ['fluxtop_lw', 'fluxtop_sw', 'fluxsurf_lw', 'fluxsurf_sw']:
-        fluxwave(info_netcdf=info_netcdf, view_mode=view_mode)
+        radflux(info_netcdf=info_netcdf, view_mode=view_mode)
 
     elif info_netcdf.target_name == 'tau1mic':
         tau1mic(info_netcdf=info_netcdf, view_mode=view_mode)

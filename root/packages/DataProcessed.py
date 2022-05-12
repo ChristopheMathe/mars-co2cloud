@@ -21,11 +21,11 @@ def co2ice_at_viking_lander_site(info_netcdf):
                                                  dimension_slice=info_netcdf.data_dim.longitude,
                                                  value=-48)
     data_area_at_viking1, idx_latitude1 = slice_data(data=data_area,
-                                                     idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                     idx_dim_slice=info_netcdf.idx_dim.latitude -1, #no time dim
                                                      dimension_slice=info_netcdf.data_dim.latitude,
                                                      value=22)
     data_area_at_viking1, idx_longitude1 = slice_data(data=data_area_at_viking1,
-                                                      idx_dim_slice=info_netcdf.idx_dim.longitude - 1,
+                                                      idx_dim_slice=info_netcdf.idx_dim.longitude - 2,
                                                       dimension_slice=info_netcdf.data_dim.longitude,
                                                       value=-48)
 
@@ -39,18 +39,19 @@ def co2ice_at_viking_lander_site(info_netcdf):
                                                  dimension_slice=info_netcdf.data_dim.longitude,
                                                  value=134)
     data_area_at_viking2, idx_latitude2 = slice_data(data=data_area,
-                                                     idx_dim_slice=info_netcdf.idx_dim.latitude,
+                                                     idx_dim_slice=info_netcdf.idx_dim.latitude - 1,
                                                      dimension_slice=info_netcdf.data_dim.latitude,
                                                      value=48)
     data_area_at_viking2, idx_longitude2 = slice_data(data=data_area_at_viking2,
-                                                      idx_dim_slice=info_netcdf.idx_dim.longitude - 1,
+                                                      idx_dim_slice=info_netcdf.idx_dim.longitude - 2,
                                                       dimension_slice=info_netcdf.data_dim.longitude,
                                                       value=134)
 
     data_at_viking1 = data_at_viking1 * data_area_at_viking1
     data_at_viking2 = data_at_viking2 * data_area_at_viking2
 
-    return data_at_viking1, data_at_viking2
+    data_time = info_netcdf.data_dim.time
+    return data_at_viking1, data_at_viking2, data_time
 
 
 def co2ice_polar_cloud_distribution(info_netcdf, normalization):
@@ -188,7 +189,8 @@ def co2ice_cloud_localtime_along_ls(info_netcdf):
                                                    dimension_slice=info_netcdf.data_dim.latitude,
                                                    value=[latitude_min, latitude_max])
 
-    altitude_min, altitude_max = compute_column_density(info_netcdf=info_netcdf)
+    idx_altitude_min, idx_altitude_max = compute_column_density(info_netcdf=info_netcdf)
+    altitude_min = info_netcdf.data_dim.altitude[idx_altitude_min]
     info_netcdf.data_target = mean(info_netcdf.data_target, axis=2)
     info_netcdf.data_target = mean(info_netcdf.data_target, axis=1)
 
@@ -366,7 +368,7 @@ def emis_polar_winter_gg2020_fig13(info_netcdf):
         data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time,
                                                        selected_time=info_netcdf.local_time)
         data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
-        if idx:
+        if len(info_netcdf.local_time) == 1:
             data_ls = data_ls[idx::len(data_local_time)]
     else:
         data_ls = info_netcdf.data_dim.time
@@ -491,11 +493,16 @@ def ps_at_viking(info_netcdf):
     latitude2 = info_netcdf.data_dim.latitude[idx_latitude2]
     longitude2 = info_netcdf.data_dim.longitude[idx_longitude2]
 
+    data_ls, tmp = get_data(filename='../concat_Ls.nc', target='Ls')
     # Diurnal mean
-    data_pressure_at_viking1 = mean(data_pressure_at_viking1.reshape(669, 12), axis=1)
-    data_pressure_at_viking2 = mean(data_pressure_at_viking2.reshape(669, 12), axis=1)
+    if len(info_netcdf.local_time) > 1:
+        data_pressure_at_viking1 = mean(data_pressure_at_viking1.reshape(669, 12), axis=1)
+        data_pressure_at_viking2 = mean(data_pressure_at_viking2.reshape(669, 12), axis=1)
+        data_ls = data_ls[::12]
+    else:
+        data_ls, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_ls)
 
-    return data_pressure_at_viking1, latitude1, longitude1, data_pressure_at_viking2, latitude2, longitude2
+    return data_pressure_at_viking1, latitude1, longitude1, data_pressure_at_viking2, latitude2, longitude2, data_ls
 
 
 def riceco2_local_time_evolution(info_netcdf, latitude):
@@ -1502,7 +1509,7 @@ def vars_time_mean(info_netcdf, duration):
 
     if duration:
         nbin = ceil(data_time[-1] / duration)
-        time_bin = arange(0, data_time[-1] + duration, duration)
+        time_bin = arange(0, data_time[-1], duration)
         if info_netcdf.data_target.ndim == 3:
             data_mean = zeros((nbin, info_netcdf.data_dim.latitude.shape[0], info_netcdf.data_dim.longitude.shape[0]))
             for i in range(nbin):
@@ -1532,7 +1539,7 @@ def vars_time_mean(info_netcdf, duration):
     return data_mean, time_bin
 
 
-def vars_zonal_mean(data_input, layer=None, flip=None):
+def vars_zonal_mean(data_input, local_time=None, layer=None, flip=None):
     from .create_infofile import InfoFile
     data, layer_selected = None, None
 
@@ -1554,6 +1561,7 @@ def vars_zonal_mean(data_input, layer=None, flip=None):
         else:
             layer_selected = None
             data = data_input.data_target
+            local_time = data_input.local_time
     elif isinstance(data_input, ndarray):
         data = data_input
     else:
@@ -1573,8 +1581,7 @@ def vars_zonal_mean(data_input, layer=None, flip=None):
         exit()
 
     # Diurnal mean
-    if len(data_input.local_time) > 1:
-        print(zonal_mean.shape, zonal_mean)
+    if len(local_time) > 1:
         zonal_mean = zonal_mean.reshape((669, 12, zonal_mean.shape[1]))
         zonal_mean = mean(zonal_mean, axis=1)
 
@@ -1639,8 +1646,11 @@ def vars_zonal_mean_where_co2ice_exists(info_netcdf, polar_region):
 
 
 def vars_zonal_mean_in_time_co2ice_exists(info_netcdf):
-    lat1 = int(input('\t Latitude range 1 (°N): '))
-    lat2 = int(input('\t Latitude range 2 (°N): '))
+    latitude = input("Select a latitude or boundaries separated by a coma:")
+    if len(latitude.split(',')) > 1:
+        latitude = array(latitude.split(','), dtype=float)
+    else:
+        latitude = [float(latitude)]
 
     if info_netcdf.data_dim.time.units != 'deg':
         data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
@@ -1664,23 +1674,23 @@ def vars_zonal_mean_in_time_co2ice_exists(info_netcdf):
     data_sliced_lat, idx_latitude = slice_data(data=info_netcdf.data_target,
                                                idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                dimension_slice=info_netcdf.data_dim.latitude,
-                                               value=[lat1, lat2])
+                                               value=latitude)
     data_co2_ice_sliced_lat, idx_latitude = slice_data(data=data_co2_ice[:, :, :, :],
                                                        idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                        dimension_slice=info_netcdf.data_dim.latitude,
-                                                       value=[lat1, lat2])
+                                                       value=latitude)
 
-    latitude_selected = info_netcdf.data_dim.latitude[idx_latitude[0]:idx_latitude[1]]
+    latitude_selected = info_netcdf.data_dim.latitude[idx_latitude[0]:idx_latitude[1]+1]
     del data_co2_ice
 
     # extract at local time
-    if info_netcdf.local_time is not None:
-        data_co2_ice_sliced_lat = data_co2_ice_sliced_lat[idx::len(data_local_time), :, :, :]
+    if len(info_netcdf.local_time) == 1:
+        data_co2_ice_sliced_lat, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_co2_ice_sliced_lat)
 
     # select the time range
     print('')
     print(f'Time range: {data_time[0]:.2f} - {data_time[-1]:.2f} (°)')
-    breakdown = input('Do you want compute mean radius over all the time (Y/n)?')
+    breakdown = input('Do you want compute mean over all the time (Y/n)?')
 
     if breakdown.lower() in ['y', 'yes']:
         # Mask data where co2ice is inferior to 1e-13, so where co2ice exists
@@ -1690,10 +1700,10 @@ def vars_zonal_mean_in_time_co2ice_exists(info_netcdf):
         data_final = mean(mean(data_final, axis=3), axis=0)  # zonal mean and temporal mean, and m to µm
         list_data = list([data_final])
         filenames = list([f'{info_netcdf.target_name}_mean_{latitude_selected[0]:.0f}N_'
-                          f'{latitude_selected[-1]:.0f}N_0-360Ls'])
-        list_time_selected = list(f'{data_time[0]} - {data_time[1]}')
+                          f'{latitude_selected[-1]:.0f}N_{data_time[0]:.0f}_{data_time[-1]:.0f}Ls'])
+        list_time_selected = list([f'({data_time[0]:.0f} - {data_time[-1]:.0f})°Ls'])
     else:
-        directory_output = f'{info_netcdf.target_name}_mean_radius_{latitude_selected[0]:.0f}N_' \
+        directory_output = f'{info_netcdf.target_name}_mean_{latitude_selected[0]:.0f}N_' \
                            f'{latitude_selected[-1]:.0f}N'
         if not path.exists(directory_output):
             mkdir(directory_output)
@@ -1744,9 +1754,9 @@ def vars_localtime_longitude(info_netcdf, latitude, altitude, density=None):
             idx_altitude_min, idx_altitude_max = compute_column_density(info_netcdf=info_netcdf, altitude=altitude)
         else:
             info_netcdf.data_target = mean(info_netcdf.data_target, axis=info_netcdf.idx_dim.altitude)
-        idx_shift = -1
-        info_netcdf.idx_dim.latitude += idx_shift
-        info_netcdf.idx_dim.longitude += idx_shift
+    idx_shift = -1
+    info_netcdf.idx_dim.latitude += idx_shift
+    info_netcdf.idx_dim.longitude += idx_shift
 
     info_netcdf.data_target, idx_latitude = slice_data(data=info_netcdf.data_target,
                                                        idx_dim_slice=info_netcdf.idx_dim.latitude,
@@ -1763,7 +1773,7 @@ def vars_localtime_longitude(info_netcdf, latitude, altitude, density=None):
 
 def vars_ls_longitude(info_netcdf, latitude, altitude, density=None):
     info_netcdf.data_target = compute_diurnal_mean(info_netcdf=info_netcdf, data=info_netcdf.data_target)
-    if altitude:
+    if altitude is not None:
         info_netcdf.data_target, idx_altitude = slice_data(data=info_netcdf.data_target,
                                                            dimension_slice=info_netcdf.data_dim.altitude,
                                                            idx_dim_slice=info_netcdf.idx_dim.altitude,

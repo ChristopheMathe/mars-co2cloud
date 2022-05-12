@@ -278,11 +278,12 @@ def display_co2ice_at_viking_lander_site(data_at_vk1, data_at_vk2, data_time):
     plt.xlim(0, 669)
     plt.savefig('co2ice_at_viking_lander_site.png', bbox_inches='tight')
 
-    dict_var = [{'data': data_at_vk1, 'varname': 'CO2 ice quantity at the surface at Viking Lander 1 site',
-                 'units': 'kg', 'shortname': 'CO2ICE_VK1'},
+    dict_var = [{'data': data_time[:], 'varname': 'Time in sols', 'units': 'sols', 'shortname': 'TIME', "dimension":
+                    True},
+                {'data': data_at_vk1, 'varname': 'CO2 ice quantity at the surface at Viking Lander 1 site',
+                 'units': 'kg', 'shortname': 'CO2ICE_VK1', "dimension": False},
                 {'data': data_at_vk2, 'varname': 'CO2 ice quantity at the surface at Viking Lander 2 site',
-                 'units': 'kg', 'shortname': 'CO2ICE_VK2'},
-                {'data': data_time[:], 'varname': 'Time in sols', 'units': 'sols', 'shortname': 'TIME'},
+                 'units': 'kg', 'shortname': 'CO2ICE_VK2', "dimension": False},
                 ]
 
     save_figure_data(list_dict_var=dict_var, savename='co2ice_at_viking_lander_site')
@@ -694,12 +695,12 @@ def display_co2_ice_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, nor
                 if data_alt[mask.mask][j] != 0:
                     tmp_alt = append(tmp_alt, data_lt[mask.mask][j])
                     tmp_ls = append(tmp_ls, data_ls[mask.mask][j])
-                    ax.scatter(data_ls[mask.mask][j], data_lt[mask.mask][j], color=list_colors[i], marker=list_marker[i],
-                               label=value_i)
-                dict_var.append({'data': tmp_ls, 'varname': f'Solar longitude ({value_i})', 'units': 'deg',
-                                 'shortname': f'Ls_{value_i}', 'dimension': True})
-                dict_var.append({'data': tmp_alt, 'varname': f'Local time ({value_i})', 'units': 'h',
-                                 'shortname': f'Local_time_{value_i}', 'dimension': False})
+            ax.scatter(tmp_ls, tmp_alt, color=list_colors[i], marker=list_marker[i],
+                       label=value_i)
+            dict_var.append({'data': tmp_ls, 'varname': f'Solar longitude ({value_i})', 'units': 'deg',
+                             'shortname': f'Ls_{value_i}', 'dimension': True})
+            dict_var.append({'data': tmp_alt, 'varname': f'Local time ({value_i})', 'units': 'h',
+                             'shortname': f'Local_time_{value_i}', 'dimension': False})
 
     ax.legend(loc=0)
     plt.savefig(f'{save_name}.eps', bbox_inches='tight')
@@ -832,7 +833,7 @@ def display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf, time, lev
     pos2 = (ax[0, 3].get_position().x0 + ax[0, 3].get_position().width) - pos1
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
     fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
-    plt.savefig(save_name + 'northern_polar_region_as_fig11_gary-bicas2020.png', bbox_inches='tight')
+    plt.savefig(f'{save_name}_northern_polar_region_as_fig11_gary-bicas2020.png', bbox_inches='tight')
 
     # South polar region
     orthographic = crs.Orthographic(central_longitude=0, central_latitude=-90)
@@ -861,7 +862,7 @@ def display_emis_polar_projection_garybicas2020_figs11_12(info_netcdf, time, lev
     pos2 = (ax[0, 3].get_position().x0 + ax[0, 3].get_position().width) - pos1
     cbar_ax = fig.add_axes([pos1, 0.925, pos2, 0.03])
     fig.colorbar(ctf, cax=cbar_ax, orientation='horizontal')
-    plt.savefig(f'{save_name}southern_polar_region_as_fig12_gary-bicas2020.png', bbox_inches='tight')
+    plt.savefig(f'{save_name}_southern_polar_region_as_fig12_gary-bicas2020.png', bbox_inches='tight')
     return
 
 
@@ -2326,7 +2327,7 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
             idx2 = (abs(data_time_tes[:] - 360 * 2)).argmin()
             data_time_tes = data_time_tes[idx1:idx2] - 360
             data_tes = mean(data_tes, axis=2).T
-        elif info_netcdf.name_target == 'temp':
+        elif info_netcdf.target_name == 'temp':
             data_time_tes = observation_tes(target='time', year=25)
             data_latitude_tes = observation_tes(target='latitude', year=25)
             data_altitude_tes = observation_tes(target='altitude', year=25)  # Pa
@@ -2353,6 +2354,7 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
             data_latitude_tes = observation_tes(target='latitude', year=None)
             data_tes = None
             print('No case for TES, to be check!')
+            exit()
         data_tes = correction_value(data=data_tes[:, idx1:idx2], operator='inf', value=1)
         cmap.set_bad('Grey')
         ax[i_subplot].pcolormesh(data_time_tes, data_latitude_tes[:], data_tes, norm=norm,
@@ -2362,10 +2364,10 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
     if mvals:
         # Extract mvals data
         print('Takes M. Vals data')
-        data_mvals = simulation_mvals(target=info_netcdf.name_target, localtime=2)
-        data_time_mvals = simulation_mvals(target='Time', localtime=2)
-        data_latitude_mvals = simulation_mvals(target='latitude', localtime=2)
-        data_altitude_mvals = simulation_mvals(target='altitude', localtime=2)
+        data_mvals, tmp = simulation_mvals(target=info_netcdf.target_name, localtime=2)
+        data_time_mvals, tmp = simulation_mvals(target='Time', localtime=2)
+        data_latitude_mvals, tmp = simulation_mvals(target='latitude', localtime=2)
+        data_altitude_mvals, tmp = simulation_mvals(target='altitude', localtime=2)
         if layer is not None:
             data_mvals = data_mvals[:, layer, :, :]
 
@@ -2375,9 +2377,9 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
             data_mvals = correction_value(data_mvals[:, :, :, :], operator='inf', value=threshold)
 
         # Compute zonal mean
-        data_mvals, tmp = vars_zonal_mean(data_input=data_mvals, layer=layer)
+        data_mvals, tmp = vars_zonal_mean(data_input=data_mvals, local_time=[2], layer=layer, flip=True)
 
-        if info_netcdf.name_target == 'temp':
+        if info_netcdf.target_name == 'temp':
             ax[i_subplot].set_title(f'M. VALS at {data_altitude_mvals[layer]:.2e} {data_altitude_mvals.units}',
                                     fontsize=fontsize)
         else:
@@ -2581,16 +2583,30 @@ def display_vars_ls_longitude(info_netcdf, norm, vmin, vmax, unit, shortname, ti
     return
 
 
-def display_ps_at_viking(data_pressure_at_viking1, latitude1, longitude1, data_pressure_at_viking2, latitude2,
-                         longitude2):
+def display_ps_at_viking(info_netcdf, data_pressure_at_viking1, latitude1, longitude1, data_pressure_at_viking2,
+                         latitude2, longitude2, data_ls):
+    savename = 'ps_at_viking_land_site'
+    if len(info_netcdf.local_time) == 1:
+        diurne = f"and at {info_netcdf.local_time[0]:.0f}h"
+        savename = f"{savename}_{info_netcdf.local_time[0]:.0f}h"
+    else:
+        diurne = 'and diurnal mean'
+        savename = f"{savename}_diurnal_mean"
+
     data_sols_1, data_pressure_viking1 = viking_lander(lander=1, mcd=False)
     data_sols_2, data_pressure_viking2 = viking_lander(lander=2, mcd=False)
-    data_sols_mcd_1, data_pressure_viking1_mcd = viking_lander(lander=1, mcd=True)
-    data_sols_mcd_2, data_pressure_viking2_mcd = viking_lander(lander=2, mcd=True)
+    data_ls_mcd_1, data_pressure_viking1_mcd = viking_lander(lander=1, mcd=True)
+    data_ls_mcd_2, data_pressure_viking2_mcd = viking_lander(lander=2, mcd=True)
+
+    idx, data_sols_mcd_1, ls_lin = get_ls_index(data_ls, tab_ls=data_ls_mcd_1)
+    data_sols_mcd_1 = arange(669)[idx]
+
+    idx, data_sols_mcd_2, ls_lin = get_ls_index(data_ls, tab_ls=data_ls_mcd_2)
+    data_sols_mcd_2 = arange(669)[idx]
 
     fig, ax = plt.subplots(ncols=2, figsize=figsize_2graph_cols)
 
-    fig.suptitle('Annual mean and diurnal mean of surface pressure at', fontsize=fontsize)
+    fig.suptitle(f'Surface pressure annual mean {diurne}, at', fontsize=fontsize)
     ax[0].set_title(f'Viking 1 ({latitude1:.0f}°N, {longitude1:.0f}°E)', fontsize=fontsize)
     ax[1].set_title(f'Viking 2 ({latitude2:.0f}°N, {longitude2:.0f}°E)', fontsize=fontsize)
 
@@ -2599,12 +2615,8 @@ def display_ps_at_viking(data_pressure_at_viking1, latitude1, longitude1, data_p
     ax[0].plot(data_pressure_at_viking1[:], color='red', label='SIMU')
     ax[1].plot(data_pressure_at_viking2[:], color='red', label='SIMU')
 
-    ax2 = plt.twiny(ax[0])
-    ax2.scatter(data_sols_mcd_1, data_pressure_viking1_mcd, c='blue', label='MCD 5.3')
-    ax2.set_xlim(0, 360)
-    ax2 = plt.twiny(ax[1])
-    ax2.scatter(data_sols_mcd_2, data_pressure_viking2_mcd, c='blue', label='MCD 5.3')
-    ax2.set_xlim(0, 360)
+    ax[0].scatter(data_sols_mcd_1, data_pressure_viking1_mcd, c='blue', label='MCD 5.3')
+    ax[1].scatter(data_sols_mcd_2, data_pressure_viking2_mcd, c='blue', label='MCD 5.3')
 
     for axes in ax.reshape(-1):
         axes.legend(loc='best')
@@ -2613,28 +2625,28 @@ def display_ps_at_viking(data_pressure_at_viking1, latitude1, longitude1, data_p
         axes.tick_params(axis='both', which='major', labelsize=fontsize)
         axes.set_xlim(0, 669)
 
-    savename = 'ps_at_viking_land_site'
-    fig.savefig(savename + '.png', bbox_inches='tight')
-
-    dict_var = [{"data": data_sols_1, "varname": "Time Viking 1", "units": "sols", "shortname": "Time_VK1"},
+    fig.savefig(f"{savename}.png", bbox_inches='tight')
+    dict_var = [{"data": data_sols_1, "varname": "Time Viking 1", "units": "sols", "shortname": "Time_VK1",
+                 "dimension": True},
                 {"data": data_pressure_viking1, "varname": "Pressure at Viking 1", "units": "Pa",
-                 "shortname": "Pres_VK1"},
-                {"data": data_sols_2, "varname": "Time Viking 2", "units": "sols", "shortname": "Time_VK2"},
+                 "shortname": "Pres_VK1", "dimension": False},
+                {"data": data_sols_2, "varname": "Time Viking 2", "units": "sols", "shortname": "Time_VK2",
+                 "dimension": True},
                 {"data": data_pressure_viking2, "varname": "Pressure at Viking 2", "units": "Pa",
-                 "shortname": "Pres_VK2"},
-                {"data": arange(669), "varname": "Time", "units": "sols", "shortname": "Time_sim"},
-                {"data": data_pressure_at_viking1, "varname": "Pressure simulated at Viking 1", "units": "Pa",
-                 "shortname": "P_sim_VK1"},
-                {"data": data_pressure_at_viking2, "varname": "Pressure simulated at Viking 2", "units": "Pa",
-                 "shortname": "P_sim_VK2"},
+                 "shortname": "Pres_VK2", "dimension": False},
+                {"data": arange(669), "varname": "Time", "units": "sols", "shortname": "Time_sim", "dimension": True},
+                {"data": data_pressure_at_viking1, "varname": f"Pressure simulated at Viking 1 zonal mean {diurne}",
+                 "units": "Pa", "shortname": "P_sim_VK1", "dimension": False},
+                {"data": data_pressure_at_viking2, "varname": f"Pressure simulated at Viking 2 zonal mean {diurne}",
+                 "units": "Pa", "shortname": "P_sim_VK2", "dimension": False},
                 {"data": array([latitude1, longitude1]), "varname": "Viking lander 1 site coordinate in GCM",
-                 "units": "deg N, deg E", "shortname": "VK1_XYsim"},
+                 "units": "deg N, deg E", "shortname": "VK1_XYsim", "dimension": True},
                 {"data": array([latitude2, longitude2]), "varname": "Viking lander 2 site coordinate in GCM",
-                 "units": "deg N, deg E", "shortname": "VK2_XYsim"},
+                 "units": "deg N, deg E", "shortname": "VK2_XYsim", "dimension": True},
                 {"data": array([22.27, 312.05]), "varname": "Viking lander 1 site coordinate",
-                 "units": "deg N, deg E", "shortname": "VK1_XY"},
+                 "units": "deg N, deg E", "shortname": "VK1_XY", "dimension": False},
                 {"data": array([47.67, 134.28]), "varname": "Viking lander 2 site coordinate",
-                 "units": "deg N, deg E", "shortname": "VK2_XY"}
+                 "units": "deg N, deg E", "shortname": "VK2_XY", "dimension": False}
                 ]
 
     save_figure_data(dict_var, savename=savename)
@@ -2661,6 +2673,8 @@ def display_vars_1fig_profiles(info_netcdf, list_data, latitude_selected, x_min,
     for i, d, s in zip(arange(len(save_name)), list_data, save_name):
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
         # plot variable 1
+        print(d)
+        print(d.ndim, d.shape)
         if d.ndim > 1:
             for j in range(d.shape[1]):
                 ax.set_xscale(x_scale)
@@ -2683,7 +2697,7 @@ def display_vars_1fig_profiles(info_netcdf, list_data, latitude_selected, x_min,
             ax.invert_yaxis()
         ax.legend(loc='best')
         ax.set_xlabel(x_label)
-        ax.set_ylabel(altitude_name + ' (' + units + ')')
+        ax.set_ylabel(f"{altitude_name} ({units})")
         if title_option is not None:
             ax.set_title(f'{title}, and {title_option[i]}', fontsize=fontsize)
         fig.savefig(f'{s}.png', bbox_inches='tight')
@@ -2763,15 +2777,33 @@ def display_vars_polar_projection(info_netcdf, data_np, data_sp, levels, unit, c
     ax1.set_title('South polar region', fontsize=fontsize)
     ctf = ax1.contourf(info_netcdf.data_dim.longitude[:], latitude_sp, data_sp, levels=levels, transform=plate_carree,
                        cmap=cmap)
-    workaround_gridlines(plate_carree, axes=ax1, pole='south')
     ax1.set_global()
+    workaround_gridlines(plate_carree, axes=ax1, pole='south')
+    ax1.text(1, 1, '45°E', verticalalignment='top', horizontalalignment='right', rotation=45,
+              transform=ax1.transAxes)
+    ax1.text(1, 0, '135°E', verticalalignment='bottom', horizontalalignment='right', rotation=-45,
+              transform=ax1.transAxes)
+    ax1.text(0, 0, '225°E', verticalalignment='bottom', horizontalalignment='left', rotation=-315,
+              transform=ax1.transAxes)
+
+    ax1.text(0, 1, '315°E', verticalalignment='top', horizontalalignment='left', rotation=315,
+              transform=ax1.transAxes)
 
     # North polar region
     ax2.set_title('North polar region', fontsize=fontsize)
     ax2.contourf(info_netcdf.data_dim.longitude[:], latitude_np, data_np, levels=levels, transform=plate_carree,
                  cmap=cmap)
-    workaround_gridlines(plate_carree, axes=ax2, pole='north')
     ax2.set_global()
+    workaround_gridlines(plate_carree, axes=ax2, pole='north')
+    ax2.text(1, 1, '135°E', verticalalignment='top', horizontalalignment='right', rotation=45,
+              transform=ax2.transAxes, fontsize=fontsize)
+    ax2.text(1, 0, '45°E', verticalalignment='bottom', horizontalalignment='right', rotation=-45,
+              transform=ax2.transAxes, fontsize=fontsize)
+    ax2.text(0, 0, '315°E', verticalalignment='bottom', horizontalalignment='left', rotation=-315,
+              transform=ax2.transAxes, fontsize=fontsize)
+
+    ax2.text(0, 1, '225°E', verticalalignment='top', horizontalalignment='left', rotation=315,
+              transform=ax2.transAxes, fontsize=fontsize)
 
     pos1 = ax2.get_position().x0 + ax2.get_position().width + 0.05
     fig.subplots_adjust(right=0.9)
@@ -2786,6 +2818,7 @@ def display_vars_polar_projection(info_netcdf, data_np, data_sp, levels, unit, c
 def display_vars_polar_projection_multi_plot(info_netcdf, time, vmin, vmax, norm, cmap, unit,
                                              title, save_name, levels=None, co2_ice_cover=None):
     import cartopy.crs as crs
+    from math import ceil
     from numpy import unique, ma
     from matplotlib import cm
     from matplotlib.colors import LogNorm, Normalize, BoundaryNorm
@@ -2865,13 +2898,16 @@ def display_vars_polar_projection_multi_plot(info_netcdf, time, vmin, vmax, norm
     y_min, y_max = orthographic.y_limits
     orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
-    fig, ax = plt.subplots(nrows=3, ncols=4, subplot_kw={'projection': orthographic}, figsize=figsize_1graph_xtend)
+    nrows = ceil(time.shape[0] / 4)
+    dtime = time[1] - time[0]
+
+    fig, ax = plt.subplots(nrows=nrows, ncols=4, subplot_kw={'projection': orthographic}, figsize=figsize_1graph_xtend)
     fig.suptitle(f'North polar region, {title} ({unit})', fontsize=fontsize, y=1.05)
     ctf = None
 
     for i, axes in enumerate(ax.reshape(-1)):
         if i < 24:
-            axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°', fontsize=fontsize)
+            axes.set_title(f'{int(time[i])}° - {int(time[i]+dtime)}°', fontsize=fontsize)
             if array_mask and unique(data_np[i, :, :]).shape[0] != 1:
                 # Need at least 1 row filled with values
                 ctf = axes.pcolormesh(info_netcdf.data_dim.longitude[:], latitude_np, data_np[i, :, :], norm=norm,
@@ -2915,11 +2951,11 @@ def display_vars_polar_projection_multi_plot(info_netcdf, time, vmin, vmax, norm
     y_min, y_max = orthographic.y_limits
     orthographic._y_limits = (y_min * 0.5, y_max * 0.5)
     orthographic._x_limits = (y_min * 0.5, y_max * 0.5)  # Zoom de 60° à 90°
-    fig, ax = plt.subplots(nrows=3, ncols=4, subplot_kw={'projection': orthographic}, figsize=figsize_1graph_xtend)
+    fig, ax = plt.subplots(nrows=nrows, ncols=4, subplot_kw={'projection': orthographic}, figsize=figsize_1graph_xtend)
     fig.suptitle(f'South polar region, {title} ({unit})', fontsize=fontsize, y=1.05)
     for i, axes in enumerate(ax.reshape(-1)):
         if i < 24:
-            axes.set_title(f'{int(time[i])}° - {int(time[i + 1])}°', fontsize=fontsize)
+            axes.set_title(f'{int(time[i])}° - {int(time[i]+dtime)}°', fontsize=fontsize)
             if array_mask and unique(data_sp[i, :, :]).shape[0] != 1:
                 ctf = axes.pcolormesh(info_netcdf.data_dim.longitude[:], latitude_sp, data_sp[i, :, :], norm=norm,
                                       transform=plate_carree, cmap=cmap, shading='flat')
@@ -2957,14 +2993,14 @@ def display_vars_polar_projection_multi_plot(info_netcdf, time, vmin, vmax, norm
         plt.savefig(f'{save_name}_southern_polar_region_{int(info_netcdf.local_time[0])}h.png', bbox_inches='tight')
     else:
         plt.savefig(f'{save_name}_southern_polar_region_diurnal_mean.png', bbox_inches='tight')
-
     dict_var = [{"data": info_netcdf.data_dim.longitude[:], "varname": "Longitude", "units": "deg E", "shortname":
         "longitude", "dimension": True},
                 {"data": latitude_np[:], "varname": "Northern latitude", "units": "deg N", "shortname": "latitude_np",
                  "dimension": True},
                 {"data": latitude_sp[:], "varname": "Southern latitude", "units": "deg N", "shortname": "latitude_sp",
                  "dimension": True},
-                {"data": arange(0, 360, 30), "varname": "Solar longitde  bin", "units": "deg", "shortname": "time",
+                {"data": time, "varname": "Solar longitde  bin", "units": "deg", "shortname":
+                    "time",
                  "dimension": True},
                 {"data": data_np[:, :, :], "varname": "CO2 ice mass at the surface", "units": "kg", "shortname":
                     "co2_ice_north"},
