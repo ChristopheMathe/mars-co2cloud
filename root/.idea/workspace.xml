@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="BranchesTreeState">
     <expand>
       <path>
@@ -19,7 +22,13 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8facde19-e1bd-419b-9b48-fcac683b581c" name="Default" comment="squash! add data folder" />
+    <list default="true" id="8facde19-e1bd-419b-9b48-fcac683b581c" name="Default" comment="squash! add data folder">
+      <change beforePath="$PROJECT_DIR$/.idea/ncplot.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ncplot.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/DataObservation.py" beforeDir="false" afterPath="$PROJECT_DIR$/packages/lib_observation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/packages/DataProcessed.py" beforeDir="false" afterPath="$PROJECT_DIR$/packages/data_processing.py" afterDir="false" />
+    </list>
     <list id="631213cd-31e3-47bd-ad8c-ae27494ab1cb" name="add data folder" comment="" />
     <list id="30850bc1-22a6-48d0-b31e-e83f40c25312" name="add data mesocloud" comment="" />
     <list id="d74d51fc-5aa1-4c50-92df-8d95b3db9ef9" name="add data mesocloud altitude" comment="" />
@@ -54,6 +63,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="Christophe Mathé &lt;serakhiel91@gmail.com&gt;" />
+      </list>
+    </option>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
         <entry key="$PROJECT_DIR$/.." value="add_data" />
@@ -77,8 +91,8 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="vcs.Git" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../miscellaneous/co2_radiative_transfert/script.py" />
+    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.project.make" />
   </component>
   <component name="RunManager">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
@@ -175,7 +189,21 @@
       <option name="project" value="LOCAL" />
       <updated>1587550926659</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="squash! add data folder">
+      <created>1651828832024</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1651828832024</updated>
+    </task>
+    <task id="LOCAL-00003" summary="minor fixes">
+      <created>1652365026654</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1652365026654</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TodoView">
@@ -205,32 +233,39 @@
       <path value="$PROJECT_DIR$/CO2-cloud-mars" />
     </ignored-roots>
     <MESSAGE value="Initialization" />
-    <option name="LAST_COMMIT_MESSAGE" value="Initialization" />
+    <MESSAGE value="correction Tobie equation" />
+    <MESSAGE value="squash! add data folder" />
+    <MESSAGE value="minor fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="minor fixes" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="472" y="129" width="968" height="823" key="CommitChangelistDialog2" timestamp="1651586641084">
+    <state x="472" y="129" width="968" height="823" key="CommitChangelistDialog2" timestamp="1652365026426">
       <screen x="0" y="24" width="1920" height="1032" />
     </state>
-    <state x="472" y="129" width="968" height="823" key="CommitChangelistDialog2/0.24.1920.1032@0.24.1920.1032" timestamp="1651586641084" />
-    <state x="743" y="298" width="426" height="484" key="FileChooserDialogImpl" timestamp="1651758157825">
+    <state x="472" y="129" width="968" height="823" key="CommitChangelistDialog2/0.24.1920.1032@0.24.1920.1032" timestamp="1652365026426" />
+    <state x="743" y="298" width="426" height="484" key="FileChooserDialogImpl" timestamp="1652097222231">
       <screen x="0" y="24" width="1920" height="1032" />
     </state>
-    <state x="743" y="298" width="426" height="484" key="FileChooserDialogImpl/0.24.1920.1032@0.24.1920.1032" timestamp="1651758157825" />
+    <state x="743" y="298" width="426" height="484" key="FileChooserDialogImpl/0.24.1920.1032@0.24.1920.1032" timestamp="1652097222231" />
+    <state x="449" y="175" key="SettingsEditor" timestamp="1652364990722">
+      <screen x="0" y="24" width="1920" height="1032" />
+    </state>
+    <state x="449" y="175" key="SettingsEditor/0.24.1920.1032@0.24.1920.1032" timestamp="1652364990722" />
     <state x="805" y="456" width="302" height="169" key="VCS.ChangelistChooser" timestamp="1651586388759">
       <screen x="0" y="24" width="1920" height="1032" />
     </state>
     <state x="805" y="456" width="302" height="169" key="VCS.ChangelistChooser/0.24.1920.1032@0.24.1920.1032" timestamp="1651586388759" />
-    <state x="555" y="276" width="802" height="528" key="Vcs.Push.Dialog.v2" timestamp="1651586426393">
+    <state x="555" y="276" width="802" height="528" key="Vcs.Push.Dialog.v2" timestamp="1652365028975">
       <screen x="0" y="24" width="1920" height="1032" />
     </state>
-    <state x="555" y="276" width="802" height="528" key="Vcs.Push.Dialog.v2/0.24.1920.1032@0.24.1920.1032" timestamp="1651586426393" />
+    <state x="555" y="276" width="802" height="528" key="Vcs.Push.Dialog.v2/0.24.1920.1032@0.24.1920.1032" timestamp="1652365028975" />
     <state x="609" y="246" width="693" height="589" key="git4idea.branch.GitSmartOperationDialog" timestamp="1651586411215">
       <screen x="0" y="24" width="1920" height="1032" />
     </state>
     <state x="609" y="246" width="693" height="589" key="git4idea.branch.GitSmartOperationDialog/0.24.1920.1032@0.24.1920.1032" timestamp="1651586411215" />
-    <state x="623" y="251" width="672" height="678" key="search.everywhere.popup" timestamp="1651695374637">
+    <state x="623" y="251" width="672" height="678" key="search.everywhere.popup" timestamp="1652097397838">
       <screen x="0" y="24" width="1920" height="1032" />
     </state>
-    <state x="623" y="251" width="672" height="678" key="search.everywhere.popup/0.24.1920.1032@0.24.1920.1032" timestamp="1651695374637" />
+    <state x="623" y="251" width="672" height="678" key="search.everywhere.popup/0.24.1920.1032@0.24.1920.1032" timestamp="1652097397838" />
   </component>
 </project>
