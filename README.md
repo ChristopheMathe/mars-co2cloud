@@ -2,7 +2,7 @@
 I did this repository during my work at LATMOS and LMD on the modelling of CO<sub>2</sub> mesospheric clouds in the Martian atmosphere from October 2019 to May 2022.
 
 
-## 1. Root
+## 1. Scripts
 This directory contains the main python script called `ncplot.pt`. It also contains secondaries python scripts used to check: the water cycle of the simulation (`check_watercycle.py`), the convergence of basics variables over several years simulated (`check_convergence.py`).
 
 
@@ -179,12 +179,12 @@ This Python scrips is used to extract profiles needed to run the Mars PCM in 1-D
 
 
 
-## 2. Spicam_cloud
-This directory contains the main python script `stats.py`, analysing SPICAM data to find cold pockets and their characteristics.
+## 2. Packages
 
-Cold pockets are defined when the temperature environment of the atmosphere of Mars is below the condensation temperature of carbon dioxide.
 
-## 3. Miscallenaous
+
+## 3. Miscellaneous
+
 
 
 # Prerequisities
