@@ -42,5 +42,5 @@ class InfoFile(FileName, IdxDim, DataDim, TargetName, DataTarget, LocalTime):
         self.data_dim = DataDim(time=None, altitude=None, latitude=None, longitude=None)
         self.target_name = TargetName()
         self.data_target = DataTarget()
-        self.local_time = None#LocalTime()
+        self.local_time = None
     pass

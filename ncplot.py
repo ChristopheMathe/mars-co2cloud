@@ -1,4 +1,3 @@
-#!/bin/bash python3
 from packages.displays import *
 from packages.ncdump import *
 from os import listdir
@@ -1072,10 +1071,9 @@ def temp(info_netcdf, view_mode):
             path_2 = '../occigen_test_64x48x32_1years_Tµphy_para_start_simu_ref_Margaux_co2clouds_Radiatif_actif/'
             files = listdir(path_2)
             print(files)
-            directory = []
             try:
                 directory = [x for x in files if 'occigen' in x][0] + '/'
-            except not directory:
+            except IndexError:
                 directory = None
 
             if directory is not None:
@@ -1369,7 +1367,7 @@ def main():
     return
 
 
-if '__main__' == __name__:
+if __name__ == '__main__':
     from gc import collect
 
     main()

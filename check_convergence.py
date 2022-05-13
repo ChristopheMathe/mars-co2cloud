@@ -1,4 +1,3 @@
-#!/bin/bash python3
 from packages.lib_function import *
 from packages.ncdump import *
 from sys import exit

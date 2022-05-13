@@ -1,4 +1,3 @@
-#!/bin/bash python3
 from numpy import abs, amax, argmax, savetxt, c_, append, unravel_index
 from netCDF4 import Dataset
 from os import listdir, mkdir, path

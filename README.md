@@ -1,32 +1,57 @@
-# Main
-I did this repository during my work at LATMOS and LMD on the modelling of CO<sub>2</sub> mesospheric clouds in the Martian atmosphere from October 2019 to May 2022.
+I did this repository during my work at LATMOS and LMD on the modelling of CO<sub>2</sub> mesospheric clouds in the
+Martian atmosphere from October 2019 to May 2022.
+
+The readme describe in a first part all Python scripts (how to install, how to run, what is needed). The second part 
+describe the `packages` directory which contains Python routines used by latter scripts. The third part describe the
+`miscellaneous` directory which contains some Fortran code or Python scripts I wrote during my work. The last part
+gives information on the prerequisites to run Python scripts (excepts those on `miscellaneous`).
+
+# 1. Scripts
+This directory contains the main python script called `ncplot.pt`. It also contains secondaries python scripts used to
+check: the water cycle of the simulation (`check_watercycle.py`), the convergence of basics variables over several
+years simulated (`check_convergence.py`).
+
+## 1.1 Install
+On a terminal, run the following command line:  
+`git clone https://github.com/ChristopheMathe/mars-co2cloud.git`
+
+The new directory `mars-co2cloud` is created which contains all python scripts. Ensure you have the prerequisites
+described in the part fourth to run these Python scripts.
+
+On Ciclad, you can simply run the following command line:  
+`module load python/meso-3.8`
+
+You need to download observational data at the address on the CICLAD server: `/data/cmathe/observational_data
+/`. Place the directory `data/` in the same location of `ncplot.py`. Since the data are too big to be store on gitHub
+, we choose this solution. If you do not have access to CICLAD server, feel free to contact me   
+
+[christophe.mathe@obspm.fr](christophe.mathe@obspm.fr)
+<christophe.mathe@obspm.fr>
+
+## 1.2 ncplot.py
+Designed to plot netCDF file from the Mars PCM. This python script is especially designed to CO<sub>2</sub> clouds
+simulation (co2clouds flag in the Mars PCM).
+
+You can find more details about this script, and especially about figures you can done with it on the wiki: 
+https://github.com/ChristopheMathe/mars-co2cloud/wiki
 
 
-## 1. Scripts
-This directory contains the main python script called `ncplot.pt`. It also contains secondaries python scripts used to check: the water cycle of the simulation (`check_watercycle.py`), the convergence of basics variables over several years simulated (`check_convergence.py`).
-
-
-### 1.1 ncplot.py
-Designed to plot NETCDF4 file from the Mars PCM. This python script is especially designed to CO<sub>2</sub> clouds simulation (co2clouds flag in the Mars PCM).
-
-You can find more details about this script, and especially about figures you can done with it on the wiki: https://github.com/ChristopheMathe/mars-co2cloud/wiki
-
-
-#### 1.1.1 Run the script
+### 1.2.1 Run the script
 On a terminal, run the script:  
 `python3 ncplot.py`  
 
 The script will ask you to select a netCDF file (if more than one file).  
     <pre><code>
-    Netcdf files available: (0) concat_3D_year3_LT_all.nc  
-                            (1) concat_4D_year3_P_LT_all.nc  
-                            (2) concat_4D_year3_S_64km_riceco2_rho_ccnNco2_LT_all.nc  
-		                        (3) concat_4D_year3_S_satuco2_LT_all.nc  
-		                        (4) concat_convergence_year1-3_LT_all.nc  
+    Netcdf files available: (0) concat_3D_year3_LT_all.nc
+                            (1) concat_4D_year3_P_LT_all.nc
+                            (2) concat_4D_year3_S_64km_riceco2_rho_ccnNco2_LT_all.nc
+                            (3) concat_4D_year3_S_satuco2_LT_all.nc
+                            (4) concat_convergence_year1-3_LT_all.nc
     Select the file number:
     </code></pre>
 
-For example, I select the file `(1)`. The script open the file and list all variables availables with theirs dimension information, as follow:  
+For example, I select the file `(1)`. The script open the file and list all variables availables with theirs dimension
+information, as follow:  
 `Select the file number: 1`
 
 <pre><code>
@@ -96,13 +121,16 @@ Finally, the script asks you what plot you want to do. Here an example for`co2_i
       14: Polar plot every 30° ls mean, column density, lat=60°-90° (fig: lat-ls)
 
   Select number:
-</pre></code>
+</code></pre>
 
-Once you selected a `display mode`, the scprit will processed data and then display the resuls. In some display modes, the script can ask to the user somes complementaries informations like which latitude you want or do we perform the mean over the year instead of binning.
+Once you selected a `display mode`, the script will processed data and then display the results. In some display modes,
+the script can ask to the user some complementarities information like which latitude you want or do we perform the
+mean over the year instead of binning.
 
+The script saves the figure on the local directory, and saves figures data on a netCDF4 file in the new local folder 
+`figure_data/`
 
-TODO: talk about figure_data folder
-#### 1.1.2 Best practics
+### 1.2.2 Best practices
 I recommand to you to make a symbol link of these python scripts in the directory where your data are located.
 
 The `ncplot.py` script takes arguments on the command line:  
@@ -111,8 +139,10 @@ For example:
 `python3 ncplot.py 1 co2_ice 202`  
 
 
-### 1.2 check_watercycle.py
-This python script plots and compares with TES data and/or M. Vals simulation (who worked on H2O cycle on Mars) the following variables: atmospheric water ice, water vapor, water ice at the surface, surface pressure, surface temperature, and also CO2 ice at the surface.
+## 1.3 check_watercycle.py
+This python script plots and compares with TES data and/or M. Vals simulation (who worked on H2O cycle on Mars) the
+following variables: atmospheric water ice, water vapor, water ice at the surface, surface pressure, surface
+temperature, and also CO<sub>2</sub> ice at the surface.
 
 Need 3D-variables from Mars PCM outputs:
 * h2o_ice_s
@@ -137,8 +167,11 @@ Results:
 
 
 
-### 1.3 check_convergence.py
-This Python script plots for each year the global mean of basics variables: surface temperature, surface pressure, CO2 ice at the surface, H2O ice at the surface, the total amount of water ice in the atmosphere, and the total amount of water vapor in the atmosphere. The script also plots the total amount of water along the year for each year, in order to see the water conservation.
+## 1.4 check_convergence.py
+This Python script plots for each year the global mean of basics variables: surface temperature, surface pressure, 
+CO<sub>2</sub> ice at the surface, H2O ice at the surface, the total amount of water ice in the atmosphere, and the
+total amount of water vapor in the atmosphere. The script also plots the total amount of water along the year for
+each year, in order to see the water conservation.
 
 This script works with several input files as long as all variables are present.
 
@@ -158,8 +191,9 @@ Results:
 
 
 
-### 1.4 extract_profile.py
-This Python scrips is used to extract profiles needed to run the Mars PCM in 1-D. Your input netCDF4 file must contains following 4-D variables:
+## 1.5 extract_profile.py
+This Python scrips is used to extract profiles needed to run the Mars PCM in 1-D. Your input netCDF4 file must contains
+ following 4-D variables:
 * temp
 * co2
 * co2_ice
@@ -179,16 +213,39 @@ This Python scrips is used to extract profiles needed to run the Mars PCM in 1-D
 
 
 
-## 2. Packages
+# 2. Packages
+In this directory, all files are used as modules. 
+
+## 2.1 constant_parameter.py
+This file contains the list of parameters used everywhere like the fontsize, the figsize, etc.
+
+## 2.2 create_infofile.py
+This file create the object `info_netcdf` which contains information on :
+* info_netcdf.filename = the input file name
+* info_netcdf.idx_dim.x = the index dimension where x is time, altitude, latitude, or longitude
+* info_netcdf.data_dim.x = the data dimension where x is time, altitude, latitude, or longitude
+* info_netcdf.target_name = the name of the variable chosen
+* info_netcdf.data_target = the data of the variable chosen
+* info_netcdf.local_time = the local time chosen
+
+## 2.3 data_processing.py
+
+## 2.4 displays.py
+
+## 2.5 lib_functions.py
+
+## 2.6 lib_observation.py
+This file contains observational data available. You need either to 
+
+## 2.7 ncdump.py
 
 
 
-## 3. Miscellaneous
+# 3. Miscellaneous
 
 
-
-# Prerequisities
-The script was developped using:
+# 4. Prerequisites
+The script was developed using:
 * Python,     version = 3.8
 * netCDF,     version = 1.5.3
 * numpy,      version = 1.19.2

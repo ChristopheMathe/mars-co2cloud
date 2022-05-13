@@ -18,7 +18,7 @@ def get_argument(*argv, info_netcdf):
     files = listdir('.')
     try:
         directory_store = [x for x in files if 'occigen' in x or 'simu' in x][0] + '/'
-    except FileNotFoundError:
+    except IndexError:
         directory_store = None
 
     if directory_store is None:
@@ -82,7 +82,7 @@ def getfilename(files, selection=None):
         else:
             filename = list_files[0]
     else:
-        print('There is no Netcdf file in this directory !')
+        print('There is no netCDF file in this directory !')
         filename = ''
         exit()
     return filename
