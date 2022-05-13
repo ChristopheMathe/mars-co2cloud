@@ -4,8 +4,9 @@ from packages.ncdump import *
 from netCDF4 import Dataset
 from matplotlib.colors import TwoSlopeNorm, LinearSegmentedColormap
 from numpy.ma import masked_inside
+from numpy import mean, asarray, linspace, interp, zeros, where, arange
 from os import listdir
-from pylab import *
+from math import isnan
 import matplotlib.pyplot as plt
 from sys import exit
 
@@ -64,6 +65,7 @@ def extract_data(data, mvals):
         data_ps = data.variables['ps'][idx::len(data_local_time), :, :]
         data_tsurf = data.variables['tsurf'][idx::len(data_local_time), :, :]
         data_co2ice = data.variables['co2ice'][idx::len(data_local_time), :, :]
+    #TODO: deal with watercaptag !
 
     # correct data
     data_h2o_ice_s = correction_value(data=data_h2o_ice_s, operator='inf', value=1e-13)
@@ -256,7 +258,7 @@ def main():
     zonal_mean_tes_h2o_vap = mean(data_tes_h2o_vap, axis=2).T
     zonal_mean_tes_tsurf_day = mean(data_tes_tsurf_day, axis=2).T
 
-    cmap_lin = get_cmap('jet')
+    cmap_lin = plt.get_cmap('jet')
     levels1 = [0, 0.025, 0.05, 0.075, 0.10, 0.15, 0.20, 0.75, 2.0, 4.0]
     cmap_non_lin1 = NonLinearColormap(cmap=cmap_lin, levels=levels1, name_cmap='jet', segment_data=100)
 
@@ -438,7 +440,7 @@ def main():
             if mask.mask.any():
                 for lat in range(data_pfs_latitude[:].shape[0]):
                     a = mean(one_year_data[mask.mask, lat])
-                    if math.isnan(a):
+                    if isnan(a):
                         print(one_year_data[mask.mask, lat])
                     else:
                         zonal_mean[j, i, lat] = a

@@ -1,11 +1,10 @@
 #!/bin/bash python3
 from packages.lib_function import *
 from packages.ncdump import *
-from packages.DataObservation import viking_lander
-from sys import argv, exit
+from sys import exit
 import matplotlib.pyplot as plt
-from numpy import ceil, floor, min, max, mean, zeros, sum, arange, abs, concatenate, append, linspace
-from matplotlib.colors import LinearSegmentedColormap, ListedColormap
+from numpy import mean, zeros, sum, arange, concatenate, linspace
+
 
 def number_year(data_time):
     # Define the number of years simulated
@@ -105,7 +104,7 @@ def main():
     data_tsurf = concatenation(filenames=filenames, target='tsurf')
     try:
         data_co2ice = concatenation(filenames=filenames, target='co2ice')
-    except:
+    except KeyError:
         data_co2ice = zeros(data_ps.shape)
     data_h2o_ice_s = concatenation(filenames=filenames, target='h2o_ice_s')
     data_watercap = concatenation(filenames=filenames, target='watercap')

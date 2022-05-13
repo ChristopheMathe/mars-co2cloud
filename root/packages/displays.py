@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
-from .DataObservation import *
-from .DataProcessed import *
+from .data_processing import *
+from .lib_observation import *
 from .constant_parameter import *
 
 

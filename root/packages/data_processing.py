@@ -1724,7 +1724,7 @@ def vars_zonal_mean_in_time_co2ice_exists(info_netcdf):
                                                               dimension_slice=data_time[:],
                                                               value=[i * time_step, (i + 1) * time_step])
 
-            time_selected = data_time[idx_time[0]:idx_time[1]]
+            time_selected = data_time[idx_time[0]:idx_time[1]+1]
 
             print(f'\t\tselected: {time_selected[0]:.0f} {time_selected[-1]:.0f}')
             list_time_selected.append(f'{time_selected[0]:.0f} - {time_selected[-1]:.0f} °Ls')
@@ -1737,7 +1737,7 @@ def vars_zonal_mean_in_time_co2ice_exists(info_netcdf):
             list_data.append(data_final)
             filenames.append(f'{directory_output}/{info_netcdf.target_name}_mean_{latitude_selected[0]:.0f}N_'
                              f'{latitude_selected[-1]:.0f}N_Ls_{time_selected[0]:.0f}-'
-                             f'{time_selected[-1]:.0f}_{info_netcdf.local_time:.0f}h')
+                             f'{time_selected[-1]:.0f}_{info_netcdf.local_time[0]:.0f}h')
 
         del data_sliced_lat, data_co2_ice_sliced_lat
 

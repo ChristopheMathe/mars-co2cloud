@@ -6,17 +6,22 @@ from packages.ncdump import getfilename
 
 
 def main():
-    list_var = ['temp',     # temperature
-                'co2',      # co2 vap mmr
-                'co2_ice',  # co2 ice mmr
-                'h2o_vap',  # h2o vap mmr
-                'h2o_ice',  # h2o ice mmr
-                'ccnq',     # ccn mass for h2o (mmr)      => ccn_mass
-                'ccnN',     # ccn number for h2o (#/kg)   => ccn_number
-                'ccnqco2',  # ccn mass for co2 (mmr)      => ccnco2_mass
-                'ccnNco2',  # ccn number for co2 (#/kg)   => ccnco2_number
-                'dustq',    # dust mass (mmr)             => dust_mass
-                'dustN'     # dust number (#/kg)          => dust_number
+    list_var = ['temp',               # temperature
+                'co2',                # co2 vap mmr
+                'co2_ice',            # co2 ice mmr
+                'h2o_vap',            # h2o vap mmr
+                'h2o_ice',            # h2o ice mmr
+                'ccnq',               # ccn mass for h2o (mmr)                           => ccn_mass
+                'ccnN',               # ccn number for h2o (#/kg)                        => ccn_number
+                'ccnqco2',            # ccn mass for co2 (mmr)                           => ccnco2_mass
+                'ccnNco2',            # ccn number for co2 (#/kg)                        => ccnco2_number
+                'ccnqco2_h2o_m_ice',  # h2o ccn mass of h2o ice for co2 (mmr)            => ccnco2_h2o_mass_ice
+                'ccnqco2_h2o_m_ccn',  # h2o ccn mass of dust for co2 (mmr)               => ccnco2_h2o_mass_ccn
+                'ccnNco2_h2o',        # ccn number of h2o ice for co2 (#/kg)             => ccnco2_h2o_mass_ice
+                'ccnqco2_meteor',     # ccn mass of meteoric particle for co2 (mmr)      => ccnco2_meteor_mass
+                'ccnNco2_meteor',     # ccn number of meteoric particle for co2 (#/kg)   => ccnco2_meteor_number
+                'dustq',              # dust mass (mmr)                                  => dust_mass
+                'dustN'               # dust number (#/kg)                               => dust_number
                 ]
 
     format_output = '%.8e'
@@ -33,7 +38,7 @@ def main():
     data_latitude = bigdata.variables['latitude']
 
     # choose the solar longitude and latitude for the extraction
-    target_ls = float(input(f'Select the time for the extraction (max={amax(data_time)}): '))
+    target_ls = float(input(f'Select the time for the extraction (max={amax(data_time):.2f} sols): '))
     target_latitude = float(input('Select the latitude for the extraction: '))
     target_mmr_max = input('Select the longitude where the mmr is max? (y/n): ')
 
@@ -41,7 +46,6 @@ def main():
     idx_ls = (abs(data_time[:] - target_ls)).argmin()
 
     # add/remove a variable for the extraction
-    # TODO: add/remove a variable for the extraction
     print('Variable for the extraction: ', repr(list_var))
 
     # extract data at longitude where co2_ice mmr is max
@@ -62,8 +66,11 @@ def main():
     # extract data
     for i, value_i in enumerate(list_var):
         print(i, value_i)
-        data = bigdata.variables[list_var[i]][idx_ls, :, idx_latitude, idx_longitude]
-
+        try:
+            data = bigdata.variables[list_var[i]][idx_ls, :, idx_latitude, idx_longitude]
+        except KeyError:
+            print(f'{value_i} is not found in the file, the script continue')
+            continue
         # add a value
         data = append(data, data[-1])
 
@@ -82,6 +89,21 @@ def main():
 
         elif value_i == 'ccnNco2':
             savetxt(f'{directory_output}profile_ccnco2_number', c_[data], fmt=format_output)
+
+        elif value_i == 'ccnqco2_h2o_m_ice':
+            savetxt(f'{directory_output}profile_ccnco2_h2o_mass_ice', c_[data], fmt=format_output)
+
+        elif value_i == 'ccnqco2_h2o_m_ccn':
+            savetxt(f'{directory_output}profile_ccnco2_h2o_mass_ccn', c_[data], fmt=format_output)
+
+        elif value_i == 'ccnNco2_h2o':
+            savetxt(f'{directory_output}profile_ccnco2_h2o_number', c_[data], fmt=format_output)
+
+        elif value_i == 'ccnqco2_meteor':
+            savetxt(f'{directory_output}profile_ccnco2_meteor_mass', c_[data], fmt=format_output)
+
+        elif value_i == 'ccnNco2_meteor':
+            savetxt(f'{directory_output}profile_ccnco2_meteor_number', c_[data], fmt=format_output)
 
         elif value_i == 'dustq':
             savetxt(f'{directory_output}profile_dust_mass', c_[data], fmt=format_output)

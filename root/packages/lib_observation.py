@@ -1,7 +1,7 @@
 from .ncdump import get_data
 from netCDF4 import Dataset
 from numpy import loadtxt
-from config import root_dir
+from config import data_dir
 
 
 def observation_mola(only_location=None):
@@ -27,7 +27,7 @@ def observation_mola(only_location=None):
             :Title = "MOLA cloud top altitude above surface data (binned)" ;
     """
 
-    path = f'{root_dir}/data/obs_mola/MOLA_cloudaltis_1x1.nc'
+    path = f'{data_dir}/data/obs_mola/MOLA_cloudaltis_1x1.nc'
     mola_latitude, list_var = get_data(filename=path, target='Latitude')
     mola_ls, list_var = get_data(filename=path, target='Ls')
     mola_altitude, list_var = get_data(filename=path, target='Altitude')
@@ -82,7 +82,7 @@ def observation_tes(target, year=None):
             T_50Pa_nit(time, latitude, longitude) ; T_50Pa_nit:long_name = "Nighttime (~2 am) temperature at 50 Pa" ;
     '''
 
-    directory_tes = f'{root_dir}/data/obs_tes/'
+    directory_tes = f'{data_dir}/data/obs_tes/'
 
     data = None
     if year is not None:
@@ -249,9 +249,9 @@ def observation_pfs(target, year=None):
     '''
 
     # 1-D
-    data_lat = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='lat')  # Latitude
-    data_lon = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='lon')  # Longitude
-    data_pressure = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='Pressures')  # Pressure
+    data_lat = get_data(f'{data_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='lat')  # Latitude
+    data_lon = get_data(f'{data_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='lon')  # Longitude
+    data_pressure = get_data(f'{data_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='Pressures')  # Pressure
 
     # 3-D: (Time, latitude, longitude)
     if target in ['loct', 'T_surf', 'p_surf', 'h_surf', 'dust', 'dust_norm', 'ice']:
@@ -262,12 +262,12 @@ def observation_pfs(target, year=None):
         # dust: Column dust optical depth at 1075 cm-1
         # dust_norm: Column dust optical depth at 1075 cm-1, normalised to Psurf = 6.1 mbar
         # ice: Column ice optical depth at 825 cm-1
-        data = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target=target)
+        data = get_data(f'{data_dir}/data/obs_pfs/PFS_dataset_20793.nc', target=target)
     # 4-D: (Time, pressure, latitude, longitude)
     elif target in ['Temperature', 'Altitude']:
         # Temperature: Temperature profile (N_level, N_measure)
         # Altitude: Altitude above the aeroid of Mars for the temperature profile
-        data = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target=target)
+        data = get_data(f'{data_dir}/data/obs_pfs/PFS_dataset_20793.nc', target=target)
     else:
         data = None
         print(f'Wrong target {target} for PFS data.')
@@ -281,10 +281,10 @@ def observation_pfs(target, year=None):
         else:
             iyear = None
             print(f'Wrong year {year}. Must be between {start_year} and {end_year}!')
-        data_ls = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='ls_MY')  # Ls incremented
+        data_ls = get_data(f'{data_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='ls_MY')  # Ls incremented
         data_ls = masked_outside(data_ls, 360 * iyear, 360 * (iyear + 1))
     else:
-        data_ls = get_data(f'{root_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='ls')  # Ls
+        data_ls = get_data(f'{data_dir}/data/obs_pfs/PFS_dataset_20793.nc', target='ls')  # Ls
 
     # Create the 3-D or 4-D array
     ls_unique = unique(data_ls)
@@ -335,7 +335,7 @@ def observation_pfs(target, year=None):
 def mesospheric_clouds_observed():
     from numpy import loadtxt
 
-    directory = f'{root_dir}/data/obs_mesoco2cloud/'
+    directory = f'{data_dir}/data/obs_mesoco2cloud/'
     filenames = ['Mesocloud_obs_CO2_CRISMlimb.txt',
                  'Mesocloud_obs_CO2_CRISMnadir.txt',
                  'Mesocloud_obs_CO2_OMEGA.txt',
@@ -371,7 +371,7 @@ def mesospheric_clouds_altitude_localtime_observed(instrument):
     from numpy import zeros
     data_ls, data_lat, data_lon, data_lt, data_alt, data_alt_min, data_alt_max = None, None, None, None, None, None, \
                                                                                  None
-    folder = f'{root_dir}/data/obs_mesoco2cloud_alti/'
+    folder = f'{data_dir}/data/obs_mesoco2cloud_alti/'
     if instrument == 'HRSC':
         # nro2, alti2, velo2, lat2, long2, loctime2, ls2
         data = loadtxt(folder + 'altilista_HRSC.txt')
@@ -445,11 +445,11 @@ def simulation_mvals(target, localtime):
 
     if target in ['ps', 'tsurf', 'Time', 'latitude', 'longitude', 'altitude']:
         if localtime == 2:
-            filename = f'{root_dir}/data/simu_mvals/concat_vars_3D_LT_2h_Ls.nc'
+            filename = f'{data_dir}/data/simu_mvals/concat_vars_3D_LT_2h_Ls.nc'
         if localtime == 14:
-            filename = f'{root_dir}/data/simu_mvals/concat_vars_3D_LT_14h_Ls.nc'
+            filename = f'{data_dir}/data/simu_mvals/concat_vars_3D_LT_14h_Ls.nc'
     elif target in ['temp']:  # TODO: MISSING THIS FILE
-        filename = f'{root_dir}/data/simu_mvals/concat_vars_4D_P_LT_14h_Ls.nc'
+        filename = f'{data_dir}/data/simu_mvals/concat_vars_4D_P_LT_14h_Ls.nc'
 
     print(f'\tFile name: {filename}')
 
@@ -517,9 +517,9 @@ def viking_lander(lander, mcd):
     path = ''
     if mcd:
         if lander == 1:
-            path = f'{root_dir}/data/obs_viking_landers/viking_lander1_pression_mcd.dat'
+            path = f'{data_dir}/data/obs_viking_landers/viking_lander1_pression_mcd.dat'
         elif lander == 2:
-            path = f'{root_dir}/data/obs_viking_landers/viking_lander2_pression_mcd.dat'
+            path = f'{data_dir}/data/obs_viking_landers/viking_lander2_pression_mcd.dat'
         else:
             print('wrong lander number')
             exit()
@@ -528,10 +528,10 @@ def viking_lander(lander, mcd):
     else:
         sols_0 = 0
         if lander == 1:
-            path = f'{root_dir}/data/obs_viking_landers/viking_lander1_pression.dat'
+            path = f'{data_dir}/data/obs_viking_landers/viking_lander1_pression.dat'
             sols_0 = 209  # http://www-mars.lmd.jussieu.fr/mars/time/martian_time.html , ls=97°
         elif lander == 2:
-            path = f'{root_dir}/data/obs_viking_landers/viking_lander2_pression.dat'
+            path = f'{data_dir}/data/obs_viking_landers/viking_lander2_pression.dat'
             sols_0 = 253  # http://www-mars.lmd.jussieu.fr/mars/time/martian_time.html , ls=117°
         else:
             print('wrong lander number')
@@ -593,7 +593,7 @@ def boundaries_seasonal_caps():
 
 
 def get_polar_cap():
-    filename = f'{root_dir}/data/obs_titus/co2icecover_titus.nc'
+    filename = f'{data_dir}/data/obs_titus/co2icecover_titus.nc'
     dataset = Dataset(filename=filename, mode='r', format='NETCDF4')
 
     data_ls = dataset.variables["Ls"][:]
