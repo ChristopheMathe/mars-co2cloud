@@ -1,6 +1,7 @@
 from sys import exit
 from .ncdump import get_data
 from .constant_parameter import *
+from config import data_dir
 
 
 # correct very low values of co2/h2o mmr
@@ -94,19 +95,6 @@ def create_gif(filenames):
     return
 
 
-def convert_sols_to_ls():
-    from numpy import array
-
-    # sols to ls, step 5°ls
-    time_grid_ls = array([0, 10, 20, 30, 41, 51, 61, 73, 83, 94, 105, 116, 126, 139, 150, 160, 171, 183, 193.47,
-                          205, 215, 226, 236, 248, 259, 269, 279, 289, 299, 309, 317, 327, 337, 347, 355, 364,
-                          371.99, 381, 390, 397, 406, 415, 422, 430, 437, 447, 457, 467, 470, 477, 485, 493, 500,
-                          507, 514.76, 523, 533, 539, 547, 555, 563, 571, 580, 587, 597, 605, 613, 623, 632, 641,
-                          650, 660, 669])
-
-    return time_grid_ls
-
-
 def compute_column_density(info_netcdf, altitude=None):
     from numpy import zeros, sum
 
@@ -165,7 +153,6 @@ def compute_column_density(info_netcdf, altitude=None):
                 data_column[:, alt, :, :] = data_processed[:, alt, :, :] * \
                                             (data_pressure[idx_altitude_min + alt] - data_pressure[
                                                 idx_altitude_min + alt + 1]) / 3.711  # g
-    #            data_column[:, -1, :, :] = data_processed[:, -1, :, :] * data_pressure[altitude_max + 1] / 3.711
     else:
         print(f'Data has {data_processed.ndim} dimension, need 4!')
         exit()
@@ -268,31 +255,14 @@ def extract_where_co2_ice(info_netcdf):
     return data_where_co2_ice
 
 
-def extract_vars_max_along_lon(data, idx_lon=None):
-    from numpy import unravel_index, argmax, asarray
-
-    # Find the max value along longitude
-    if idx_lon is None:
-        if data.ndim == 3:
-            tmp, idx_lon = unravel_index(argmax(data.reshape(data.shape[0], -1), axis=1), data.shape[1:3])
-        else:
-            print('Dimension is not equal to 3, you can do a mistake, have you slice the data for one latitude?')
-
-    # Extract data at the longitude where max is observed, for each time ls
-    data = [data[i, :, idx_lon[i]] for i in range(data.shape[0])]
-    data = asarray(data)
-
-    return data, idx_lon
-
-
 def gcm_area():
-    filename = '/home/mathe/Documents/owncloud/GCM/gcm_aire_phisinit.nc'
+    filename = f'{data_dir}gcm_aire_phisinit.nc'
     data_aire, list_var = get_data(filename=filename, target='aire')
     return data_aire
 
 
 def gcm_surface_local(data_zareoid=None):
-    filename = '/home/mathe/Documents/owncloud/GCM/gcm_aire_phisinit.nc'
+    filename = f'{data_dir}gcm_aire_phisinit.nc'
     data_phisinit, list_var = get_data(filename=filename, target='phisinit')
 
     if data_zareoid is None:
@@ -462,17 +432,6 @@ def linearize_ls(data, data_ls):
     return data, interp_time
 
 
-def linear_grid_ls(data):
-    from numpy import linspace, searchsorted
-
-    axis_ls = linspace(0, 360, data.shape[0])
-    ndx = searchsorted(axis_ls, [0, 90, 180, 270, 360])
-    interp_time = searchsorted(data, axis_ls)
-    axis_ls = axis_ls[ndx]
-
-    return interp_time, axis_ls, ndx
-
-
 def rotate_data(*list_data, do_flip):
     from numpy import flip
     list_data = list(list_data)
@@ -579,6 +538,7 @@ def save_figure_data(list_dict_var, savename):
         else:
             print(f'{list_dict_var[x]["varname"]} has more than 3 dimensions')
     f.close()
+    return
 
 
 def slice_data(data, dimension_slice, idx_dim_slice, value):

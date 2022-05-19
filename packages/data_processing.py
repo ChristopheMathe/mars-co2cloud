@@ -1,10 +1,11 @@
-from numpy import mean, abs, min, max, zeros, where, arange, unravel_index, argmin, argmax, array, ndarray, \
-    count_nonzero, std, append, asarray, power, ma, reshape, swapaxes, log, exp, concatenate, amin, amax, diff
+from numpy import mean, abs, min, max, zeros, where, arange, argmin, argmax, array, ndarray, \
+    count_nonzero, std, append, power, ma, reshape, swapaxes, concatenate, amin, amax, diff
 from .lib_function import *
 from .ncdump import get_data, getfilename
 from os import mkdir, path
 from sys import exit
-from .constant_parameter import cst_stefan, threshold
+from .constant_parameter import cst_stefan, threshold, ptimestep
+from config import data_dir
 
 
 def co2ice_at_viking_lander_site(info_netcdf):
@@ -75,7 +76,7 @@ def co2ice_polar_cloud_distribution(info_netcdf, normalization):
 
     # sliced data between 104 - 360°Ls time to compare with Fig8 of Neumann et al. 2003
     if info_netcdf.data_dim.time.units != 'deg':
-        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
         if len(info_netcdf.local_time) == 1:
             data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time,
                                                            selected_time=info_netcdf.local_time)
@@ -209,7 +210,6 @@ def co2ice_cloud_localtime_along_ls(info_netcdf):
 def co2ice_cumulative_masses_polar_cap(info_netcdf):
     from numpy import sum
 
-    ptimestep = 924.739583 * 8
     data_north, latitude_selected = slice_data(data=info_netcdf.data_target,
                                                idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                dimension_slice=info_netcdf.data_dim.latitude,
@@ -367,7 +367,7 @@ def emis_polar_winter_gg2020_fig13(info_netcdf):
     if info_netcdf.data_dim.time.units != 'deg':
         data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time,
                                                        selected_time=info_netcdf.local_time)
-        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
         if len(info_netcdf.local_time) == 1:
             data_ls = data_ls[idx::len(data_local_time)]
     else:
@@ -493,7 +493,7 @@ def ps_at_viking(info_netcdf):
     latitude2 = info_netcdf.data_dim.latitude[idx_latitude2]
     longitude2 = info_netcdf.data_dim.longitude[idx_longitude2]
 
-    data_ls, tmp = get_data(filename='../concat_Ls.nc', target='Ls')
+    data_ls, tmp = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
     # Diurnal mean
     if len(info_netcdf.local_time) > 1:
         data_pressure_at_viking1 = mean(data_pressure_at_viking1.reshape(669, 12), axis=1)
@@ -601,34 +601,6 @@ def riceco2_mean_local_time_evolution(info_netcdf):
            data_max_alt, latitudes
 
 
-def riceco2_max_day_night(info_netcdf):
-    data_local_time, idx_2, stats = check_local_time(data_time=info_netcdf.data_dim.time, selected_time=2)
-    data_local_time, idx_14, stats = check_local_time(data_time=info_netcdf.data_dim.time, selected_time=14)
-
-    data_day = info_netcdf.data_target[idx_2::len(data_local_time), :, :, :]
-    data_night = info_netcdf.data_target[idx_14::len(data_local_time), :, :, :]
-
-    print('Compute max in progress...')
-    max_satu_day, idx_altitude_day, y_day = get_extrema_in_alt_lon(data=data_day, extrema='max')
-    max_satu_night, idx_altitude_night, y_night = get_extrema_in_alt_lon(data=data_night, extrema='max')
-
-    max_alt_day = zeros(idx_altitude_day.shape)
-    max_alt_night = zeros(idx_altitude_night.shape)
-    for i in range(idx_altitude_night.shape[0]):
-        for j in range(idx_altitude_night.shape[1]):
-            max_alt_night[i, j] = info_netcdf.data_dim.altitude[idx_altitude_night[i, j]]
-            max_alt_day[i, j] = info_netcdf.data_dim.altitude[idx_altitude_day[i, j]]
-            if max_satu_day[i, j] == 0:
-                max_alt_day[i, j] = None
-                max_satu_day[i, j] = None
-
-            if max_satu_night[i, j] == 0:
-                max_alt_night[i, j] = None
-                max_satu_night[i, j] = None
-
-    return
-
-
 def riceco2_top_cloud_altitude(info_netcdf):
     if info_netcdf.data_dim.altitude.long_name != 'Altitude above local surface':
         print(f'{info_netcdf.data_dim.altitude.long_name}')
@@ -691,35 +663,6 @@ def riceco2_top_cloud_altitude(info_netcdf):
     top_cloud = rotate_data(top_cloud, do_flip=False)[0]
     print(f'Max top altitude is {max(top_cloud)} km.')
     return top_cloud
-
-
-def riceco2_zonal_mean_co2ice_exists(info_netcdf):
-    # extract co2_ice data
-    data_co2_ice, list_var = get_data(filename=info_netcdf.filename, target='co2_ice')
-    data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time,
-                                                   selected_time=info_netcdf.local_time)
-    if idx:
-        data_co2_ice = data_co2_ice[idx::len(data_local_time), :, :, :]
-
-    data_slice_lat, latitude_selected = slice_data(data=info_netcdf.data_target,
-                                                   idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                                   dimension_slice=info_netcdf.data_dim.latitude,
-                                                   value=[-15, 15])
-    data_co2_ice_slice_lat, latitude_selected = slice_data(data=data_co2_ice,
-                                                           idx_dim_slice=info_netcdf.idx_dim.latitude,
-                                                           dimension_slice=info_netcdf.data_dim.latitude,
-                                                           value=[-15, 15])
-
-    data = ma.masked_where(data_co2_ice_slice_lat < 1e-13, data_slice_lat)
-
-    zonal_mean = mean(data, axis=3)  # zonal mean
-    zonal_mean = mean(zonal_mean, axis=1)  # altitude mean
-    zonal_mean = rotate_data(zonal_mean, do_flip=True)
-
-    zonal_mean = correction_value(zonal_mean[0], operator='inf', value=threshold)
-    zonal_mean = zonal_mean * 1e6  # m to µm
-
-    return zonal_mean, latitude_selected
 
 
 def riceco2_polar_latitudes(info_netcdf):
@@ -819,7 +762,12 @@ def satuco2_zonal_mean_with_co2_ice(info_netcdf):
     if binned.lower() == 'y':
         # Bin time in 5° Ls
         if max(info_netcdf.data_dim.time) > 360:
-            time_grid_ls = convert_sols_to_ls()
+            # sols to ls, step 5°ls
+            time_grid_ls = array([0, 10, 20, 30, 41, 51, 61, 73, 83, 94, 105, 116, 126, 139, 150, 160, 171, 183, 193.47,
+                                  205, 215, 226, 236, 248, 259, 269, 279, 289, 299, 309, 317, 327, 337, 347, 355, 364,
+                                  371.99, 381, 390, 397, 406, 415, 422, 430, 437, 447, 457, 467, 470, 477, 485, 493,
+                                  500, 507, 514.76, 523, 533, 539, 547, 555, 563, 571, 580, 587, 597, 605, 613, 623,
+                                  632, 641, 650, 660, 669])
             nb_bin = time_grid_ls.shape[0]
 
             data_satuco2_north_binned = zeros((nb_bin, data_satuco2_north.shape[1]))
@@ -919,7 +867,7 @@ def satuco2_time_mean_with_co2_ice(info_netcdf):
     print(f'\tNorth = {north_winter}°Ls')
     print(f'\tSouth = {south_winter}°Ls')
     if info_netcdf.data_dim.time[-1] > 360:
-        data_time, tmp = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_time, tmp = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
         # TODO: check if many local time used => mean
     else:
         data_time = info_netcdf.data_dim.time
@@ -1016,7 +964,7 @@ def satuco2_hu2012_fig9(info_netcdf):
     # Bin time in 5° Ls
     if info_netcdf.data_dim.time.units != 'deg':
         data_time = info_netcdf.data_dim.time
-        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
         if len(info_netcdf.local_time) == 1:
             data_local_time, idx, sats = check_local_time(data_time=info_netcdf.data_dim.time,
                                                           selected_time=info_netcdf.local_time)
@@ -1176,15 +1124,15 @@ def temp_gg2011_fig6(info_netcdf):
         data_final[i, :] = mean(data_tmp[i::len(data_local_time), :], axis=0)
         data_temp_cond_co2_final[i, :] = mean(data_temp_cond_co2[i::len(data_local_time), :], axis=0)
 
-    data_p = ma.masked_values(data_final, 0.)
+    data = ma.masked_values(data_final, 0.)
     data_temp_cond_co2_p = ma.masked_values(data_temp_cond_co2_final, 0.)
     for i in range(len(data_local_time)):
-        data_p[i, :] = data_p[i, :] - data_temp_cond_co2_p[i, :]
+        data[i, :] = data[i, :] - data_temp_cond_co2_p[i, :]
 
     del data_tmp
 
-    print(f'T - T(condensation): min = {min(data_p):.2f}, max = {max(data_p):.2f}')
-    return data_p, data_local_time
+    print(f'T - T(condensation): min = {min(data):.2f}, max = {max(data):.2f}')
+    return data, data_local_time
 
 
 def temp_gg2011_fig7(info_netcdf):
@@ -1499,10 +1447,10 @@ def vars_time_mean(info_netcdf, duration):
             if info_netcdf.data_dim.time[-1] <= 360.:  # Ensure we are in ls time coordinate
                 data_time = info_netcdf.data_dim.time[idx::len(data_local_time)]
             else:
-                data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+                data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
                 data_time = data_ls[idx::len(data_local_time)]
         else:
-            data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+            data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
             data_time = data_ls[:]
     else:
         data_time = info_netcdf.data_dim.time
@@ -1653,7 +1601,7 @@ def vars_zonal_mean_in_time_co2ice_exists(info_netcdf):
         latitude = [float(latitude)]
 
     if info_netcdf.data_dim.time.units != 'deg':
-        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
         if info_netcdf.local_time is not None:
             data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time,
                                                            selected_time=info_netcdf.local_time)

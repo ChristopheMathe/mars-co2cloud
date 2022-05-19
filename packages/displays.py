@@ -287,6 +287,68 @@ def display_co2ice_at_viking_lander_site(data_at_vk1, data_at_vk2, data_time):
                 ]
 
     save_figure_data(list_dict_var=dict_var, savename='co2ice_at_viking_lander_site')
+    return
+
+
+def display_co2ice_cumulative_mass_polar_region(info_netcdf, data_co2_ice_north, data_co2_ice_south,
+                                                data_precip_co2_ice_north, data_precip_co2_ice_south,
+                                                data_direct_condco2_north, data_direct_condco2_south):
+    data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time, selected_time=0)
+
+    if info_netcdf.data_dim.time.units != 'deg':
+        data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
+        data_time = data_ls[idx::len(data_local_time)]
+    else:
+        data_time = info_netcdf.data_dim.time
+
+    fig, ax = plt.subplots(nrows=2, ncols=1, sharex='all', sharey='all', figsize=figsize_1graph)
+    ax[0].set_yscale('symlog')
+    ax[1].set_yscale('symlog')
+    ax[0].set_title(u'Northern polar region, diurnal mean, lat=[60:90]°N', fontsize=fontsize)
+    ax[0].plot(data_time[1:], data_co2_ice_north, color='black', label='Total co2 ice')
+    ax[0].plot(data_time[1:], data_precip_co2_ice_north[:-1], color='blue', label='Precipitation')
+    ax[0].plot(data_time[1:], data_direct_condco2_north, color='red', label='Direct condensation')
+    ax[0].hlines(0, xmin=0, xmax=360, color='grey')
+    ax[0].legend(loc='best')
+
+    ax[1].set_title(u'Southern polar region, diurnal mean, lat=[60:90]°S', fontsize=fontsize)
+    ax[1].plot(data_time[1:], data_co2_ice_south, color='black', label='Total co2 ice')
+    ax[1].plot(data_time[1:], data_precip_co2_ice_south[:-1], color='blue', label='Precipitation')
+    ax[1].plot(data_time[1:], data_direct_condco2_south, color='red', label='Direct condensation')
+    ax[1].hlines(0, xmin=0, xmax=360, color='grey')
+    ax[1].legend(loc='best')
+
+    ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
+    ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
+    ax[0].set_xlim(0, 360)
+
+    fig.text(0.05, 0.5, 'Flux (kg/m2)', ha='center', va='center', rotation='vertical',
+             fontsize=fontsize)
+    fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=fontsize)
+
+    savename = 'co2ice_cumulative_mass_polar_region_diurnal_mean'
+    fig.savefig(f'{savename}.png', bbox_inches='tight')
+    fig.savefig(f'{savename}.eps', bbox_inches='tight')
+    fig.savefig(f'{savename}.pdf', bbox_inches='tight')
+
+    dict_var = [{"data": data_time[1:], "varname": "Solar longitude", "units": "deg", "shortname": "Time",
+                 "dimension": True},
+                {"data": data_co2_ice_north, "varname": "Flux total of CO2 ice toward the surface",
+                 "units": "kg.m-2", "shortname": "north_co2_total", "dimension": False},
+                {"data": data_precip_co2_ice_north[:-1], "varname": "Precipitation flux of CO2 ice toward the surface",
+                 "units": "kg.m-2", "shortname": "north_co2_precip", "dimension": False},
+                {"data": data_direct_condco2_north, "varname": "Direct condensation flux of CO2 ice toward the surface",
+                 "units": "kg.m-2", "shortname": "north_co2_dcondens", "dimension": False},
+                {"data": data_co2_ice_south, "varname": "Flux total of CO2 ice toward the surface", "units": "kg.m-2",
+                 "shortname": "south_co2_total", "dimension": False},
+                {"data": data_precip_co2_ice_south[:-1], "varname": "Precipitation flux of CO2 ice toward the surface",
+                 "units": "kg.m-2", "shortname": "south_co2_precip", "dimension": False},
+                {"data": data_direct_condco2_south, "varname": "Direct condensation flux of CO2 ice toward the surface",
+                 "units": "kg.m-2", "shortname": "south_co2_dcondens", "dimension": False}
+                ]
+
+    save_figure_data(list_dict_var=dict_var, savename=savename)
+    return
 
 
 def display_co2_ice_mola(info_netcdf):
@@ -296,7 +358,7 @@ def display_co2_ice_mola(info_netcdf):
     data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
                                                         selected_time=info_netcdf.local_time)
 
-    data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+    data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
     if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
         if info_netcdf.data_dim.time.units != 'deg':
             data_time = data_ls[idx::len(data_local_time)]
@@ -466,7 +528,7 @@ def display_co2_ice_max_longitude_altitude(info_netcdf, max_mmr, max_alt, max_te
     data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
                                                         selected_time=0)
 
-    data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+    data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
     if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
         if info_netcdf.data_dim.time.units != 'deg':
             data_ls = data_ls[idx::len(data_local_time)]
@@ -641,7 +703,7 @@ def display_co2_ice_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, nor
     data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time, selected_time=0)
 
     if info_netcdf.data_dim.time.units != 'deg':
-        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
         if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
             data_time = data_ls[idx::len(data_local_time)]
             data, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
@@ -708,67 +770,6 @@ def display_co2_ice_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, nor
     plt.savefig(f'{save_name}.png', bbox_inches='tight')
 
     save_figure_data(list_dict_var=dict_var, savename=save_name)
-    return
-
-
-def display_co2ice_cumulative_mass_polar_region(info_netcdf, data_co2_ice_north, data_co2_ice_south,
-                                                data_precip_co2_ice_north, data_precip_co2_ice_south,
-                                                data_direct_condco2_north, data_direct_condco2_south):
-    data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time, selected_time=0)
-
-    if info_netcdf.data_dim.time.units != 'deg':
-        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
-        data_time = data_ls[idx::len(data_local_time)]
-    else:
-        data_time = info_netcdf.data_dim.time
-
-    fig, ax = plt.subplots(nrows=2, ncols=1, sharex='all', sharey='all', figsize=figsize_1graph)
-    ax[0].set_yscale('symlog')
-    ax[1].set_yscale('symlog')
-    ax[0].set_title(u'Northern polar region, diurnal mean, lat=[60:90]°N', fontsize=fontsize)
-    ax[0].plot(data_time[1:], data_co2_ice_north, color='black', label='Total co2 ice')
-    ax[0].plot(data_time[1:], data_precip_co2_ice_north[:-1], color='blue', label='Precipitation')
-    ax[0].plot(data_time[1:], data_direct_condco2_north, color='red', label='Direct condensation')
-    ax[0].hlines(0, xmin=0, xmax=360, color='grey')
-    ax[0].legend(loc='best')
-
-    ax[1].set_title(u'Southern polar region, diurnal mean, lat=[60:90]°S', fontsize=fontsize)
-    ax[1].plot(data_time[1:], data_co2_ice_south, color='black', label='Total co2 ice')
-    ax[1].plot(data_time[1:], data_precip_co2_ice_south[:-1], color='blue', label='Precipitation')
-    ax[1].plot(data_time[1:], data_direct_condco2_south, color='red', label='Direct condensation')
-    ax[1].hlines(0, xmin=0, xmax=360, color='grey')
-    ax[1].legend(loc='best')
-
-    ax[0].tick_params(axis='both', which='major', labelsize=fontsize)
-    ax[1].tick_params(axis='both', which='major', labelsize=fontsize)
-    ax[0].set_xlim(0, 360)
-
-    fig.text(0.05, 0.5, 'Flux (kg/m2)', ha='center', va='center', rotation='vertical',
-             fontsize=fontsize)
-    fig.text(0.5, 0.06, 'Solar longitude (°)', ha='center', va='center', fontsize=fontsize)
-
-    savename = 'co2ice_cumulative_mass_polar_region_diurnal_mean'
-    fig.savefig(f'{savename}.png', bbox_inches='tight')
-    fig.savefig(f'{savename}.eps', bbox_inches='tight')
-    fig.savefig(f'{savename}.pdf', bbox_inches='tight')
-
-    dict_var = [{"data": data_time[1:], "varname": "Solar longitude", "units": "deg", "shortname": "Time",
-                 "dimension": True},
-                {"data": data_co2_ice_north, "varname": "Flux total of CO2 ice toward the surface",
-                 "units": "kg.m-2", "shortname": "north_co2_total", "dimension": False},
-                {"data": data_precip_co2_ice_north[:-1], "varname": "Precipitation flux of CO2 ice toward the surface",
-                 "units": "kg.m-2", "shortname": "north_co2_precip", "dimension": False},
-                {"data": data_direct_condco2_north, "varname": "Direct condensation flux of CO2 ice toward the surface",
-                 "units": "kg.m-2", "shortname": "north_co2_dcondens", "dimension": False},
-                {"data": data_co2_ice_south, "varname": "Flux total of CO2 ice toward the surface", "units": "kg.m-2",
-                 "shortname": "south_co2_total", "dimension": False},
-                {"data": data_precip_co2_ice_south[:-1], "varname": "Precipitation flux of CO2 ice toward the surface",
-                 "units": "kg.m-2", "shortname": "south_co2_precip", "dimension": False},
-                {"data": data_direct_condco2_south, "varname": "Direct condensation flux of CO2 ice toward the surface",
-                 "units": "kg.m-2", "shortname": "south_co2_dcondens", "dimension": False}
-                ]
-
-    save_figure_data(list_dict_var=dict_var, savename=savename)
     return
 
 
@@ -1139,7 +1140,7 @@ def display_riceco2_top_cloud_altitude(info_netcdf, top_cloud, mola=False):
     from matplotlib.colors import Normalize, TwoSlopeNorm
 
     if info_netcdf.data_dim.time.units != 'deg':
-        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
         data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
                                                             selected_time=info_netcdf.local_time)
         data_time = data_ls[idx::len(data_local_time)]
@@ -1467,7 +1468,7 @@ def display_satuco2_with_co2_ice_altitude_ls(info_netcdf, data_satuco2_north, da
 
     data_time, list_var = get_data(filename=info_netcdf.filename, target='Time')
     if data_time.units != 'deg':
-        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
         data_local_time, idx, stats_file = check_local_time(data_time=data_time, selected_time=info_netcdf.local_time)
         data_time = data_ls[idx::len(data_local_time)]
 
@@ -1740,7 +1741,7 @@ def display_satuco2_maxval_with_maxalt(info_netcdf, data_maxval, data_altval):
     data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
                                                         selected_time=info_netcdf.local_time)
 
-    data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+    data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
     if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
         if info_netcdf.data_dim.time.units != 'deg':
             data_time = data_ls[idx::len(data_local_time)]
@@ -1901,7 +1902,7 @@ def display_temp_structure_polar_region(info_netcdf, data_north, data_south, nor
 
 def display_temp_cold_pocket_spicam(info_netcdf, title, save_name):
     if info_netcdf.data_dim.time.units != 'deg':
-        data_time, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_time, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
     else:
         data_time = info_netcdf.data_dim.time
 
@@ -2092,7 +2093,7 @@ def display_vars_altitude_ls(info_netcdf, varname_1, shortname_1, latitude, norm
                                                           value=latitude)
             latitude = info_netcdf.data_dim.latitude[idx_latitude - 1: idx_latitude + 2]
 
-    data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+    data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
     if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
         if info_netcdf.data_dim.time.units != 'deg':
             data_ls = data_ls[idx::len(data_local_time)]
@@ -2284,7 +2285,7 @@ def display_vars_latitude_ls(info_netcdf, unit, norm, vmin, vmax, cmap, observat
     data_local_time, idx, stats_file = check_local_time(data_time=info_netcdf.data_dim.time,
                                                         selected_time=info_netcdf.local_time)
 
-    data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+    data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
     if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
         if info_netcdf.data_dim.time.units != 'deg':
             data_time = data_ls[idx::len(data_local_time)]
@@ -2551,7 +2552,7 @@ def display_vars_ls_longitude(info_netcdf, norm, vmin, vmax, unit, shortname, ti
                                                    selected_time=info_netcdf.local_time)
 
     if info_netcdf.data_dim.time.units != 'deg':
-        data_ls, list_var = get_data(filename='../concat_Ls.nc', target='Ls')
+        data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
         data_time = data_ls[idx::len(data_local_time)]
         print(info_netcdf.data_target.shape, data_time.shape, data_local_time.shape, idx)
         info_netcdf.data_target, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)

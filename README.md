@@ -23,10 +23,8 @@ On Ciclad, you can simply run the following command line:
 
 You need to download observational data at the address on the CICLAD server: `/data/cmathe/observational_data
 /`. Place the directory `data/` in the same location of `ncplot.py`. Since the data are too big to be store on gitHub
-, we choose this solution. If you do not have access to CICLAD server, feel free to contact me   
-
-[christophe.mathe@obspm.fr](christophe.mathe@obspm.fr)
-<christophe.mathe@obspm.fr>
+, we choose this solution. If you do not have access to CICLAD server, feel free to contact me at
+ <christophe.mathe@obspm.fr>.
 
 ## 1.2 ncplot.py
 Designed to plot netCDF file from the Mars PCM. This python script is especially designed to CO<sub>2</sub> clouds
@@ -216,29 +214,13 @@ This Python scrips is used to extract profiles needed to run the Mars PCM in 1-D
 # 2. Packages
 In this directory, all files are used as modules. 
 
-## 2.1 constant_parameter.py
-This file contains the list of parameters used everywhere like the fontsize, the figsize, etc.
-
-## 2.2 create_infofile.py
-This file create the object `info_netcdf` which contains information on :
-* info_netcdf.filename = the input file name
-* info_netcdf.idx_dim.x = the index dimension where x is time, altitude, latitude, or longitude
-* info_netcdf.data_dim.x = the data dimension where x is time, altitude, latitude, or longitude
-* info_netcdf.target_name = the name of the variable chosen
-* info_netcdf.data_target = the data of the variable chosen
-* info_netcdf.local_time = the local time chosen
-
-## 2.3 data_processing.py
-
-## 2.4 displays.py
-
-## 2.5 lib_functions.py
-
-## 2.6 lib_observation.py
-This file contains observational data available. You need either to 
-
-## 2.7 ncdump.py
-
+* constant_parameter.py
+* create_infofile.py
+* data_processing.py
+* displays.py
+* lib_functions.py
+* lib_observation.py (this file list all observational data available. Need the `data/` directory)
+* ncdump.py (this file open the netCDF file and extract all information needed)
 
 
 # 3. Miscellaneous
@@ -248,6 +230,7 @@ This file contains observational data available. You need either to
 The script was developed using:
 * Python,     version = 3.8
 * netCDF,     version = 1.5.3
+* scipy,      version = 
 * numpy,      version = 1.19.2
 * matplotlib, version = 3.4.0
 * cartopy,    version = 0.18.0

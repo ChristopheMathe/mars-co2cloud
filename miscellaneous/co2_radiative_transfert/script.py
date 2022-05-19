@@ -10,7 +10,8 @@ tab_coef = array([])
 #list_filename = ['optprop_co2ice_ir_n50.dat', 'optprop_co2ice_vis_n50.dat',
 #                 'optprop_iceir_n50.dat', 'optprop_icevis_n50.dat']
 
-list_filename = ['optprop_co2_ir_fait_avec_co2_ref_index_IR_ddelta1.dat']
+list_filename = ['scatprop_co2_nue02_fait_avec_co2_ref_index_IR.dat']
+
 for f, filename in enumerate(list_filename):
     directory_save = filename[:-4] + '/'
     try:
@@ -32,14 +33,15 @@ for f, filename in enumerate(list_filename):
             tab_freq = append(tab_freq, fread.readline().split())
         tab_freq = asarray(tab_freq, dtype=float)
         fread.readline()                 # Commented line
-        nline = int(nradius/ncol)
+        nline = max(int(nradius/ncol), 1)
+        print(nline)
         for i in range(nline):
             tab_radius = append(tab_radius, fread.readline().split())
         tab_radius = asarray(tab_radius, dtype=float)
         fread.readline()                 # Commented line
         fread.readline()                 # Commented line
         for j in range(nradius):
-            print(f'radius = {tab_radius[j]}, {j+1}')
+            print(f'radius = {tab_radius[j]}')
             for i in range(nline_freq):
                 tab_coef = append(tab_coef, fread.readline().split())
                 tab_coef = asarray(tab_coef, dtype=float)

@@ -142,7 +142,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
     print('     5: cloud evolution with satuco2/temperature/radius/CCNCO2/h2o_ice for each time, lat[-15:15]°N (fig: '
                    'alt-lat)')
     print('     6: mmr structure at a given latitude (fig: alt-ls)')
-    print('     7: Density column evolution in polar region, polar projection (fig: lon-lat)')
+    print('     7: Column density evolution in polar region, polar projection (fig: lon-lat)')
     if len(info_netcdf.local_time) > 1:
         print('     9: localtime co2_ice column density, zonal mean, [XX-YY]°N (fig: hl-ls)')
         print('        901: localtime co2_ice at 0.5 Pa, 0°N, zonal mean (hl-ls)')
@@ -264,7 +264,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
             display_co2_ice_distribution_altitude_latitude_polar(info_netcdf, distribution_north, distribution_south,
                                                                  latitude_north, latitude_south,
                                                                  save_name=f'distribution_polar_clouds_'
-                                                                           f'{info_netcdf.local_time[0]}h')
+                                                                           f'{info_netcdf.local_time[0]:.0f}h')
         else:
             display_co2_ice_distribution_altitude_latitude_polar(info_netcdf, distribution_north, distribution_south,
                                                                  latitude_north, latitude_south,

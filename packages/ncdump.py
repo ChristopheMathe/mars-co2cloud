@@ -89,16 +89,12 @@ def getfilename(files, selection=None):
 
 
 def get_data(filename, target=None):
-    # name_dimension_target = data.variables[variable_target].dimensions  # get access to all dimensions names
-    # dimension = array(len(name_dimension_target))
-
     data = Dataset(filename, "r", format="NETCDF4")
     if target is None:
-        tmp, tmp, tmp, list_var, variable_target = nc_extract(filename, data, verb=True)
-        if variable_target is None:
-            variable_target = input('Select the variable: ')  # TODO check if variable exists
+        list_var = nc_extract(filename, data, verb=True)
+        variable_target = input('Select the variable: ')  # TODO check if variable exists
     else:
-        tmp, tmp, tmp, list_var, tmp = nc_extract(filename, data, verb=False)
+        list_var = nc_extract(filename, data, verb=False)
         variable_target = target
 
     data_target = data.variables[variable_target]
@@ -183,18 +179,12 @@ def nc_extract(filename, nc_fid, verb=True):
             test.remove('controle')
         if 'phisinit' in test:
             test.remove('phisinit')
-        if len(test) == 2:
-            target = test[0]
-        else:
-            for var in test:
-                #  if var not in nc_dims: otherwise we duplicate information of nc_dims
-                a = isin(nc_size, nc_fid.variables[var].shape)
-                print(f'|{var:30s} | {a[0]:<10d} | {a[1]:<10d} | {a[2]:<10d} | {a[3]:<10d}|')
-                if var is not test[-1]:
-                    print(f'|{"":{"-"}<{31}}+{"":{"-"}<{12}}+{"":{"-"}<{12}}+{"":{"-"}<{12}}+{"":{"-"}<{11}}|')
-            print(f'|{"":{"="}<{max_width}}|')
-            target = None
-    else:
-        target = None
+        for var in test:
+            #  if var not in nc_dims: otherwise we duplicate information of nc_dims
+            a = isin(nc_size, nc_fid.variables[var].shape)
+            print(f'|{var:30s} | {a[0]:<10d} | {a[1]:<10d} | {a[2]:<10d} | {a[3]:<10d}|')
+            if var is not test[-1]:
+                print(f'|{"":{"-"}<{31}}+{"":{"-"}<{12}}+{"":{"-"}<{12}}+{"":{"-"}<{12}}+{"":{"-"}<{11}}|')
+        print(f'|{"":{"="}<{max_width}}|')
 
-    return nc_attrs, nc_dims, nc_size, nc_vars, target
+    return nc_vars

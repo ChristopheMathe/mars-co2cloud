@@ -11,7 +11,13 @@ figsize_12graph_3rows_4cols = (20, 15)
 fontsize = 18
 
 # Physical constants
-cst_stefan = 5.67e-8
+mars_sol = 88775  # durée d'un sol en secondes
+cst_stefan = 5.67e-8  # S.I.
 
 # Miscellaneous parameters
 threshold = 1e-13
+
+# Simulation parameter
+ndynstep = 960  # nombres de step en un sol
+ecritphy = 80  # on écrit les data tous les 80 step
+ptimestep = (mars_sol/ndynstep) * ecritphy  # ptimestep est le temps entre deux sorties
