@@ -9,6 +9,20 @@ from config import data_dir
 
 
 def co2ice_at_viking_lander_site(info_netcdf):
+    """
+    Purpose: Select the CO2 ice at the surface at Viking landers location
+             Viking 1: (22.27°N, 312.05°E so -48°E) near Chryse Planitia
+             https://nssdc.gsfc.nasa.gov/planetary/viking.html
+             Viking 2:  (47.67°N, 134.28°E) near Utopia Planitia
+
+    View mode: [co2ice: 4]
+    :param info_netcdf:  the object info_netcdf
+
+    :return: data_at_viking1 = CO2 ice at the surface at Viking lander 1 site
+             data_at_viking2 = CO2 ice at the surface at Viking lander 2 site
+             data_time       = the time axis
+
+    """
     data_area = gcm_area()
 
     # Viking 1: (22.27°N, 312.05°E so -48°E) near Chryse Planitia
@@ -22,7 +36,7 @@ def co2ice_at_viking_lander_site(info_netcdf):
                                                  dimension_slice=info_netcdf.data_dim.longitude,
                                                  value=-48)
     data_area_at_viking1, idx_latitude1 = slice_data(data=data_area,
-                                                     idx_dim_slice=info_netcdf.idx_dim.latitude -1, #no time dim
+                                                     idx_dim_slice=info_netcdf.idx_dim.latitude - 1,  # no time dim
                                                      dimension_slice=info_netcdf.data_dim.latitude,
                                                      value=22)
     data_area_at_viking1, idx_longitude1 = slice_data(data=data_area_at_viking1,
@@ -56,6 +70,18 @@ def co2ice_at_viking_lander_site(info_netcdf):
 
 
 def co2ice_polar_cloud_distribution(info_netcdf, normalization):
+    """
+    Purpose: polar CO2 cloud distribution to compare with Fig.8 of Neumann et al. (2003)
+
+    View mode: [co2_ice: 4]
+
+    :param info_netcdf: the object info_netcdf
+    :param normalization: normalize results to 2000 counts like Fig.8 of Neumann
+    :return: distribution_north = CO2 ice cloud distribution in the northern polar region
+             distribution_south = CO2 ice cloud distribution in the southern polar region
+             latitude_north     = northern latitudes selected
+             latitude_south     = southern latitudes selected
+    """
     if info_netcdf.data_dim.altitude.long_name != 'Altitude above areoid':
         print('Data did not zrecasted above the areoid')
         print(f'\tCurrent: {info_netcdf.data_dim.altitude.long_name}')
@@ -109,6 +135,21 @@ def co2ice_polar_cloud_distribution(info_netcdf, normalization):
 
 
 def co2ice_cloud_evolution(info_netcdf):
+    """
+    Purpose: cloud evolution with CO2 saturation, temperature, CO2 ice radius particles, CCN used,
+             and water ice for each time, mean over latitudes 15°S and 15°N
+
+    View mode: [co2_ice: 5]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return data_satuco2 = CO2 saturation data
+            data_temp    = temperature data
+            data_riceco2 = CO2 ice radius particles data
+            data_ccnco2  = CCN used data
+            data_h2o_ice = water ice data
+            latitudes    = latitudes selected
+     """
     from numpy import ma
     lat_1 = -15
     lat_2 = 15
@@ -183,6 +224,17 @@ def co2ice_cloud_evolution(info_netcdf):
 
 
 def co2ice_cloud_localtime_along_ls(info_netcdf):
+    """
+    Purpose: compute the zonal mean and latitudinal mean (if boundaries given) of CO2 ice
+             [mass mixing ratio/column density] for each local time along the year.
+
+    View mode: [co2_ice: 9, 901]
+
+    :param info_netcdf: the object info_netcdf
+    :return altitude_min = minimum altitude given
+            latitude_min = latitude bottom boundary
+            latitude_max = latitude top boundary
+    """
     latitude_min = float(input("Enter minimum latitude: "))
     latitude_max = float(input("Enter maximum latitude: "))
     info_netcdf.data_target, latitude = slice_data(data=info_netcdf.data_target,
@@ -208,6 +260,22 @@ def co2ice_cloud_localtime_along_ls(info_netcdf):
 
 
 def co2ice_cumulative_masses_polar_cap(info_netcdf):
+    """
+    Purpose: CO2 ice cumulative masses at the surface in polar cap region, in order to compare with
+             fig.10 of Hu et al. (2012). It works for a Mars PCM simulation configuration: iphy=10
+             and ecritphy=80. Change the parameter `ptimestep` in `constant_parameter.py` if your
+             simulation was performed with a different configuration.
+
+    View mode: [co2ice: 2]
+
+    :param info_netcdf: the object info_netcdf
+    :return: accumulation_co2ice_north = total amount of CO2 ice at the surface in the northern polar region
+             accumulation_co2ice_south = total amount of CO2 ice at the surface in the southern polar region
+             accumulation_precip_co2_ice_north = precipitation deposit of CO2 ice at the surface
+             accumulation_precip_co2_ice_south = precipitation deposit of CO2 ice at the surface
+             accumulation_direct_condco2_north = direct condensation of CO2 ice at the surface
+             accumulation_direct_condco2_south = direct condensation of CO2 ice at the surface
+    """
     from numpy import sum
 
     data_north, latitude_selected = slice_data(data=info_netcdf.data_target,
@@ -267,6 +335,17 @@ def co2ice_cumulative_masses_polar_cap(info_netcdf):
 
 
 def co2ice_time_mean(info_netcdf, duration, column=None):
+    """
+    Purpose: Polar plot every 30° ls mean, column density, lat=60°-90°
+
+    View mode: [co2_ice: 14] [co2ice: 3]
+
+    :param info_netcdf: the object info_netcdf
+    :param duration: the time binning
+    :param column: if you want to compute the CO2 ice column density
+
+    :return: time: axis time binning
+    """
     info_netcdf.data_target, time = vars_time_mean(info_netcdf=info_netcdf, duration=duration)
 
     info_netcdf.data_target = correction_value(data=info_netcdf.data_target, operator='inf', value=threshold)
@@ -279,6 +358,15 @@ def co2ice_time_mean(info_netcdf, duration, column=None):
 
 
 def co2ice_density_column_evolution(info_netcdf):
+    """
+    Purpose: Column density evolution in polar region, polar projection
+
+    View mode: [co2_ice: 7]
+
+    :param info_netcdf: the object info_netcdf
+    :return: time_range = the time axis selected
+             latitudes  = latitudes selected
+    """
     from math import floor
 
     # Show the evolution of density column at winter polar region
@@ -330,6 +418,17 @@ def co2ice_density_column_evolution(info_netcdf):
 
 
 def co2ice_coverage(info_netcdf):
+    """
+    Purpose: Compute the percentage of year covered by CO2 ice in the atmosphere.
+
+    View mode: [co2_ice: 3]
+
+    :param info_netcdf:  the object info_netcdf
+
+    :return: data_co2ice_coverage      = CO2 ice coverage data
+             data_co2ice_coverage_meso = CO2 ice coverage above 10 Pa data
+    """
+
     if len(info_netcdf.local_time) == 1:
         data_local_time, idx, tmp = check_local_time(data_time=info_netcdf.data_dim.time,
                                                      selected_time=info_netcdf.local_time)
@@ -363,6 +462,16 @@ def co2ice_coverage(info_netcdf):
 
 
 def emis_polar_winter_gg2020_fig13(info_netcdf):
+    """
+    Purpose: Polar plot time mean during winter, to compare with fig. 13 of Gary-Bicas et al. (2020)
+
+    View mode: [emis: 3]
+
+    :param info_netcdf:  the object info_netcdf
+
+    :return: data_mean_np = emissivity data in the northern polar region
+             data_mean_sp = emissivity data in the southern polar region
+    """
     # Slice in time
     if info_netcdf.data_dim.time.units != 'deg':
         data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time,
@@ -403,6 +512,15 @@ def emis_polar_winter_gg2020_fig13(info_netcdf):
 
 
 def flux_lw_apparent_temperature_zonal_mean(info_netcdf):
+    """
+    Purpose: Compute the apparent temperature using the equation Flux = sigma T^4
+
+    View mode: [fluxtop_lw: 3]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: temperature_apparent
+    """
     # Flux = sigma T^4
     if len(info_netcdf.local_time) > 1:
         info_netcdf.data_target = compute_diurnal_mean(info_netcdf=info_netcdf, data=info_netcdf.data_target)
@@ -413,6 +531,19 @@ def flux_lw_apparent_temperature_zonal_mean(info_netcdf):
 
 
 def h2o_ice_alt_ls_with_co2_ice(info_netcdf, directory, files):
+    """
+    Purpose: Water ice profiles with CO2 ice profiles
+
+    View mode: [h2o_ice: 8]
+
+    :param info_netcdf: the object info_netcdf
+    :param directory: path where filename was found
+    :param files: list of netCDF files available in `directory`
+
+    :return: zonal_mean         = zonal mean of water ice data
+             zonal_mean_co2_ice = zonal mean of CO2 ice data
+             latitude_out       = latitude selected
+    """
     latitude = input('Which latitude (°N)? ')
     if len(latitude.split(',')) > 1:
         latitude = array(latitude.split(','), dtype=float)
@@ -467,8 +598,24 @@ def h2o_ice_alt_ls_with_co2_ice(info_netcdf, directory, files):
 
 
 def ps_at_viking(info_netcdf):
-    # Viking 1: (22.27°N, 312.05°E so -48°E) near Chryse Planitia
-    # https://nssdc.gsfc.nasa.gov/planetary/viking.html
+    """
+    Purpose: zonal mean at viking land site
+    https://nssdc.gsfc.nasa.gov/planetary/viking.html
+        Viking 1: (22.27°N, 312.05°E so -48°E) near Chryse Planitia
+        Viking 2:  (47.67°N, 134.28°E) near Utopia Planitia
+
+    View mode: [ps: 2]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data_pressure_at_viking1 = zonal mean of surface pressure at Viking lander 1 site
+             latitude1                = latitude of the cell at Viking lander 1 site
+             longitude1               = longitude of the cell at Viking lander 1 site
+             data_pressure_at_viking2 = zonal mean of surface pressure at Viking lander 2 site
+             latitude2                = latitude of the cell at Viking lander 2 site
+             longitude2               = longitude of the cell at Viking lander 2 site
+             data_ls                  = the time axis
+    """
     data_pressure_at_viking1, idx_latitude1 = slice_data(data=info_netcdf.data_target,
                                                          idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                          dimension_slice=info_netcdf.data_dim.latitude,
@@ -481,7 +628,6 @@ def ps_at_viking(info_netcdf):
     latitude1 = info_netcdf.data_dim.latitude[idx_latitude1]
     longitude1 = info_netcdf.data_dim.longitude[idx_longitude1]
 
-    # Viking 2:  (47.67°N, 134.28°E) near Utopia Planitia
     data_pressure_at_viking2, idx_latitude2 = slice_data(data=info_netcdf.data_target,
                                                          idx_dim_slice=info_netcdf.idx_dim.latitude,
                                                          dimension_slice=info_netcdf.data_dim.latitude,
@@ -506,6 +652,18 @@ def ps_at_viking(info_netcdf):
 
 
 def riceco2_local_time_evolution(info_netcdf, latitude):
+    """
+    Purpose: radius local time evolution at a latitude
+
+    View mode: [riceco2: 8]
+
+    :param info_netcdf: the object info_netcdf
+    :param latitude: the latitude choose by the user
+
+    :return: data_mean * 1e6 = the radius mean and convert to µm
+             data_std        = the standard deviation of the mean
+             latitude        = the closest latitude on the Mars PCM grid
+    """
     info_netcdf.data_target = extract_where_co2_ice(info_netcdf=info_netcdf)
 
     data, idx_latitudes = slice_data(data=info_netcdf.data_target,
@@ -532,6 +690,22 @@ def riceco2_local_time_evolution(info_netcdf, latitude):
 
 
 def riceco2_mean_local_time_evolution(info_netcdf):
+    """
+    Purpose: mean radius local time evolution at latitude, compute the zonal mean
+
+    View mode: [riceco2: 9]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data_min_radius  = minimum radius found
+             data_max_radius  = maximum radius found
+             data_mean_radius = mean radius
+             data_mean_alt    = roughly mean altitude where radius were found
+             data_std_radius  = standard deviation of the mean radius
+             data_min_alt     = minimum altitude where radius were found
+             data_max_alt     = maximum altitude where radius were found
+             latitudes        = latitudes selected
+    """
     from scipy.stats import tmean, tsem
     data = extract_where_co2_ice(info_netcdf=info_netcdf)
     data = data * 1e6
@@ -602,6 +776,16 @@ def riceco2_mean_local_time_evolution(info_netcdf):
 
 
 def riceco2_top_cloud_altitude(info_netcdf):
+    """
+    Purpose: altitude of top clouds using equation 22 from Tobie et al. (2003), in order to compare with MOLA
+             observations.
+
+    View mode: [riceco2: 3, 301]
+
+    :param info_netcdf:  the object info_netcdf
+
+    :return: top_cloud = altitude of top cloud as seen by MOLA
+    """
     if info_netcdf.data_dim.altitude.long_name != 'Altitude above local surface':
         print(f'{info_netcdf.data_dim.altitude.long_name}')
         exit()
@@ -666,6 +850,18 @@ def riceco2_top_cloud_altitude(info_netcdf):
 
 
 def riceco2_polar_latitudes(info_netcdf):
+    """
+    Purpose: radius structure in polar regions for each latitudes, diurnal and zonal mean
+
+    View mode: [riceco2: 7]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data_zonal_mean_north.T = radius mean in the northern polar region (transposed for display)
+             data_zonal_mean_south.T = radius mean in the southern polar region
+             stddev_north.T          = standard deviation attached in the northern polar region
+             stddev_south.T          = standard deviation attached in the southern polar region
+    """
     from scipy.stats import tmean, tsem
     data = extract_where_co2_ice(info_netcdf=info_netcdf)
     data = data * 1e6
@@ -702,6 +898,24 @@ def riceco2_polar_latitudes(info_netcdf):
 
 
 def satuco2_zonal_mean_with_co2_ice(info_netcdf):
+    """
+    Purpose: zonal mean of saturation, for 3 latitudes, with co2ice mmr
+
+    View mode: [satuco2: 1]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data_satuco2_north      = zonal mean of CO2 saturation close to 80°N
+             data_satuco2_eq         = zonal mean of CO2 saturation close to 0°N
+             data_satuco2_south      = zonal mean of CO2 saturation close to 80°S
+             data_co2ice_north       = zonal mean of CO2 ice column density close to 80°N
+             data_co2ice_eq          = zonal mean of CO2 ice column density close to 0°N
+             data_co2ice_south       = zonal mean of CO2 ice column density close to 80°S
+             north_latitude_selected = latitude close to 80°N
+             eq_latitude_selected    = latitude close to 0°N
+             south_latitude_selected = latitude close to 80°S
+             binned                  = True/False data binned
+    """
     # Select the three latitudes
     north = 80
     eq = 0
@@ -835,6 +1049,23 @@ def satuco2_zonal_mean_with_co2_ice(info_netcdf):
 
 
 def satuco2_time_mean_with_co2_ice(info_netcdf):
+    """
+    Purpose: saturation with co2ice mmr: [0:30]°ls SP, [0:30] EQ, [270-300]°ls NP
+
+    View mode: [satuco2: 3]
+
+    :param info_netcdf:  the object info_netcdf
+
+    :return: data_satuco2_north = CO2 saturation in the northern polar region
+             data_satuco2_eq    = CO2 saturation in the equatorial region
+             data_satuco2_south = CO2 saturation in the southern polar region
+             data_co2ice_north  = CO2 ice in the northern polar region
+             data_co2ice_eq     = CO2 ice in the equatorial region
+             data_co2ice_south  = CO2 ice in the southern polar region
+             north              = 80°N
+             equator            = 0°N
+             south              = 80°S
+    """
     # Select the three latitudes
     north = 80
     equator = 0
@@ -936,6 +1167,16 @@ def satuco2_time_mean_with_co2_ice(info_netcdf):
 
 
 def satuco2_hu2012_fig9(info_netcdf):
+    """
+    Purpose: Thickness atmosphere layer in polar regions, in order to compare to Fig. 9 from Hu et al. (2012)
+
+    View mode: [satuco2: 4]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data_icelayer     = mean thickness layer
+             data_icelayer_std = standard deviation of the thickness layer
+    """
     if info_netcdf.data_dim.altitude.long_name != 'Altitude above local surface':
         print('The netCDF file did not zrecasted above the local surface')
         exit()
@@ -1037,6 +1278,15 @@ def satuco2_hu2012_fig9(info_netcdf):
 
 
 def satuco2_altitude_longitude(info_netcdf):
+    """
+    Purpose: Saturation at 0°N along longitude
+
+    View mode: [satuco2: 5]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data = time mean of CO2 saturation
+    """
     data, latitude = slice_data(data=info_netcdf.data_target,
                                 idx_dim_slice=info_netcdf.idx_dim.latitude,
                                 dimension_slice=info_netcdf.data_dim.latitude,
@@ -1048,6 +1298,16 @@ def satuco2_altitude_longitude(info_netcdf):
 
 
 def satuco2_maxvalue_with_maxalt(info_netcdf):
+    """
+    Purpose: Max saturation with its location
+
+    View mode: [satuco2: 7]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data_maxval.T = max value of CO2 saturation data (transposed for display)
+             data_altval.T = altitude of these max values
+    """
     # Diurnal mean
     nb_lt = len(info_netcdf.local_time)
     nb_sols = int(info_netcdf.data_dim.time.shape[0] / nb_lt)
@@ -1077,6 +1337,17 @@ def satuco2_maxvalue_with_maxalt(info_netcdf):
 
 
 def temp_gg2011_fig6(info_netcdf):
+    """
+    Purpose: temperature - CO2 condensation temperature between Ls=120–150° at longitude 0°E and latitude 0°N, in order
+             to compare to Fig. 6 from Gonzalez-Galindo et al. (2011)
+
+    View mode: [temp: 1]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data = data processed
+             data_local_time = local time axis
+    """
     # GG2011 worked with stats file
     data_rho, list_var = get_data(filename=info_netcdf.filename, target='rho')
 
@@ -1136,6 +1407,17 @@ def temp_gg2011_fig6(info_netcdf):
 
 
 def temp_gg2011_fig7(info_netcdf):
+    """
+    Purpose: temperature - CO2 condensation temperature between Ls=0–30°, at 16h local time, in order to compare to
+             Fig. 7 from Gonzalez-Galindo (2011)
+
+    View mode: [temp: 2]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data_final = data processed
+             data_surface_local = altitude axis
+    """
     data_rho, list_var = get_data(filename=info_netcdf.filename, target='rho')
 
     # Check the kind of zrecast have been performed : above areoid (A) must be performed
@@ -1172,6 +1454,17 @@ def temp_gg2011_fig7(info_netcdf):
 
 
 def temp_gg2011_fig8(info_netcdf):
+    """
+    Purpose: zonal mean of temperature at LT=16h between Ls=0-30°, and difference temperature between 12h and 00h,
+             in order to compare to Fig. 8 from Gonzalez-Galindo et al. (2011)
+
+    View mode: [temp: 3]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data_zonal_mean_16h = temperature at 16h
+             data_thermal_tide = temperature difference midday-midnight
+    """
     # Slice data: Ls=0-30°
     data, ls = slice_data(data=info_netcdf.data_target,
                           idx_dim_slice=info_netcdf.idx_dim.time,
@@ -1205,6 +1498,17 @@ def temp_gg2011_fig8(info_netcdf):
 
 
 def temp_gg2011_fig9(info_netcdf):
+    """
+    Purpose: Temperature - CO2 condensation temperature at 16h local time, between Ls=0–30°, at latitude 0°N,
+             in order to compare to Fig.9 G-G2011
+
+    View mode: [temp: 4]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data_final         = delta temperature
+             data_surface_local = altitude axis
+    """
     data_rho, list_var = get_data(filename=info_netcdf.filename, target='rho')
 
     # Check the kind of zrecast have been performed : above areoid (A) must be performed
@@ -1248,6 +1552,17 @@ def temp_gg2011_fig9(info_netcdf):
 
 
 def temp_stationary_wave(info_netcdf):
+    """
+    Purpose: stationary wave, year mean at 0°N
+
+    View mode: [temp: 8]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data_final = data processed
+             diff_temp  = True/False if user chose to compute temperature difference between temperature and CO2
+                          condensation temperature
+    """
     data, latitudes = slice_data(data=info_netcdf.data_target,
                                  idx_dim_slice=info_netcdf.idx_dim.latitude,
                                  dimension_slice=info_netcdf.data_dim.latitude,
@@ -1287,6 +1602,16 @@ def temp_stationary_wave(info_netcdf):
 
 
 def temp_thermal_structure_polar_region(info_netcdf):
+    """
+    Purpose: Thermal structure in winter polar regions at 60°N/S
+
+    View mode: [temp: 6, 601]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: data_north = zonal mean temperature at 60°N
+             data_south = zonal mean temperature at 60°S
+    """
     data_north, latitude_north = slice_data(data=info_netcdf.data_target,
                                             idx_dim_slice=info_netcdf.idx_dim.latitude,
                                             dimension_slice=info_netcdf.data_dim.latitude,
@@ -1303,6 +1628,15 @@ def temp_thermal_structure_polar_region(info_netcdf):
 
 
 def temp_cold_pocket(info_netcdf):
+    """
+    Purpose: zonal mean of temperature - CO2 condensation temperature, and altitude of cold pockets, in order to
+             compared to SPICAM data
+
+    View mode: [temp: 7]
+    :param info_netcdf: the object info_netcdf
+
+    :return:
+    """
     if info_netcdf.data_dim.altitude.units != 'Pa':
         print('Stop ! File did not zrecasted in Pressure')
         exit()
@@ -1330,6 +1664,14 @@ def temp_cold_pocket(info_netcdf):
 
 
 def vars_altitude_ls(info_netcdf, latitude):
+    """
+    Purpose: diurnal mean and latitudinal mean of variable, in order to plot figure in x=solar longitude, y=altitude.
+
+    View mode: [co2_ice: 6], [temp: 14]
+
+    :param info_netcdf: the object info_netcdf
+    :param latitude: selected latitude
+    """
     # Diurnal mean
     nb_lt = len(info_netcdf.local_time)
     nb_sols = int(info_netcdf.data_dim.time.shape[0] / nb_lt)
@@ -1356,6 +1698,17 @@ def vars_altitude_ls(info_netcdf, latitude):
 
 
 def vars_extract_at_grid_point(info_netcdf, latitude, longitude):
+    """
+    Purpose: follow variable profile evolution at a grid cell, in order to plot figure in x=time, y=altitude
+
+    View mode: [co2_ice: 13], [temp: 9]
+
+    :param info_netcdf: the object info_netcdf
+    :param latitude: selected latitude
+    :param longitude: selected longitude
+
+    :return: data.T = variable data (transposed for display)
+    """
     if len(info_netcdf.local_time) > 1:
         info_netcdf.data_target = compute_diurnal_mean(info_netcdf=info_netcdf, data=info_netcdf.data_target)
 
@@ -1372,6 +1725,20 @@ def vars_extract_at_grid_point(info_netcdf, latitude, longitude):
 
 
 def vars_max_value_with_others(info_netcdf):
+    """
+    Purpose: maximum in altitude and longitude, with others variables at these places
+
+    View mode: [co2_ice: 1]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: max_mmr          = max value of mass mixing ratio (CO2 ice, water ice, etc)
+             max_temp         = temperature at max_mmr location
+             max_satu         = CO2 saturation at max_mmr location
+             max_radius * 1e6 = CO2 ice radius at max_mmr location, and converted to µm
+             max_ccn_n        = CCN used for CO2 ice at max_mmr location
+             max_alt          = altitude at max_mmr location
+    """
     diurnal_mean = False
     if len(info_netcdf.local_time) > 1:
         diurnal_mean = True
@@ -1438,6 +1805,17 @@ def vars_max_value_with_others(info_netcdf):
 
 
 def vars_time_mean(info_netcdf, duration):
+    """
+    Purpose: compute time mean, or by binning with a 'duration' set.
+
+    View mode: [emis: 2, 201], [h2o_ice_s: 1], [radflux: 2], [tsurf: 2] and those in def co2ice_time_mean
+
+    Inputs: info_netcdf = the object info_netcdf
+            duration    = binning time
+
+    Return: data_mean = data processed
+            time_bin  = time axis
+    """
     from math import ceil
 
     if info_netcdf.data_dim.time.units != 'degrees':
@@ -1488,6 +1866,19 @@ def vars_time_mean(info_netcdf, duration):
 
 
 def vars_zonal_mean(data_input, local_time=None, layer=None, flip=None):
+    """
+    Purpose: compute the zonal mean, at an altitude layer or not.
+
+    View mode: [co2ice: 1], [emis: 1],  [ps: 1], [radflux: 1], [riceco2: 5], [tau: 1], [tau1mic: 1], [tauTES: 1],
+               [temp: 5], [tsurf: 1]
+
+    :param data_input: can be either info_file object or an array data
+    :param local_time: if more than 1 local time, compute diurnal mean
+    :param layer: compute the zonal mean at the layer level, otherwise save the altitude dimension
+    :param flip: flip data (for display)
+    :return:zonal_mean     = zonal mean of variable
+            layer_selected = index of layer in altitude axis
+    """
     from .create_infofile import InfoFile
     data, layer_selected = None, None
 
@@ -1543,6 +1934,16 @@ def vars_zonal_mean(data_input, local_time=None, layer=None, flip=None):
 
 
 def vars_zonal_mean_column_density(info_netcdf):
+    """
+    Purpose: zonal mean column density of variable
+
+    View mode: [co2_ice: 2, 201, 202]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return idx_altitude_min = bottom altitude index
+            idx_altitude_max = top altitude index
+    """
     # diurnal mean
     nb_lt = len(info_netcdf.local_time)
     if nb_lt > 1:
@@ -1568,6 +1969,16 @@ def vars_zonal_mean_column_density(info_netcdf):
 
 
 def vars_zonal_mean_where_co2ice_exists(info_netcdf, polar_region):
+    """
+    Purpose: mean radius profile along year, with global mean radius
+
+    View mode: [riceco2: 6]
+
+    :param info_netcdf: the object info_netcdf
+    :param polar_region: if True, compute only in polar region 45°-90° N/S
+
+    :return: list_data = list of mean radius profiles data
+    """
     data_where_co2_ice = extract_where_co2_ice(info_netcdf=info_netcdf)
 
     if polar_region:
@@ -1594,6 +2005,18 @@ def vars_zonal_mean_where_co2ice_exists(info_netcdf, polar_region):
 
 
 def vars_zonal_mean_in_time_co2ice_exists(info_netcdf):
+    """
+    Purpose: zonal mean variable at a latitude where co2_ice exists. Time binning is possible.
+
+    View mode: [riceco2: 1], [ccnNco2: 1]
+
+    :param info_netcdf: the object info_netcdf
+
+    :return: list_data          = list data if binning is asked by user
+             filenames          = list of save name attached to data
+             latitude_selected  = selected latitude
+             list_time_selected = time axis
+    """
     latitude = input("Select a latitude or boundaries separated by a coma:")
     if len(latitude.split(',')) > 1:
         latitude = array(latitude.split(','), dtype=float)
@@ -1693,6 +2116,19 @@ def vars_zonal_mean_in_time_co2ice_exists(info_netcdf):
 
 
 def vars_localtime_longitude(info_netcdf, latitude, altitude, density=None):
+    """
+    Purpose: variable along longitude and local time, latitudinal mean (if more than one latitude), altitude mean (if
+             more than one altitude).
+
+    View mode: [co2_ice: 10, 101, 102], [temp: 10, 101, 102]
+
+    :param info_netcdf: the object info_netcdf
+    :param latitude: latitude selected
+    :param altitude: altitude selected
+    :param density: True/False compute column density
+
+    :return: data_mean = data processed
+    """
     info_netcdf.data_target, idx_altitude = slice_data(data=info_netcdf.data_target,
                                                        idx_dim_slice=info_netcdf.idx_dim.altitude,
                                                        dimension_slice=info_netcdf.data_dim.altitude,
@@ -1720,6 +2156,17 @@ def vars_localtime_longitude(info_netcdf, latitude, altitude, density=None):
 
 
 def vars_ls_longitude(info_netcdf, latitude, altitude, density=None):
+    """
+    Purpose: variable along longitude and solar longitude, latitudinal mean (if more than two latitude), altitude mean
+             (if more than one altitude), diurnal mean (if more than one local time).
+
+    View mode: [co2_ice: 11, 111, 112], [co2ice: 5], [temp: 11, 111, 112]
+
+    :param info_netcdf: the object info_netcdf
+    :param latitude: latitude selected
+    :param altitude: altitude selected
+    :param density: True/False compute column density
+    """
     info_netcdf.data_target = compute_diurnal_mean(info_netcdf=info_netcdf, data=info_netcdf.data_target)
     if altitude is not None:
         info_netcdf.data_target, idx_altitude = slice_data(data=info_netcdf.data_target,
@@ -1747,6 +2194,18 @@ def vars_ls_longitude(info_netcdf, latitude, altitude, density=None):
 
 
 def vars_localtime_ls(info_netcdf, latitude, altitude):
+    """
+    Purpose: zonal mean evolution of variable at a latitude and altitude location, in order to plot figure x=solar
+             longitude, y=local time
+
+    View mode: [co2_ice: 9, 901], [satuco2: 6], [temp: 12]
+
+    :param info_netcdf: the object info_netcdf
+    :param latitude: latitude selected
+    :param altitude: altitude selected
+
+    :return: data.T = data processed (transposed for display)
+    """
     data, idx_latitude = slice_data(data=info_netcdf.data_target,
                                     idx_dim_slice=info_netcdf.idx_dim.latitude,
                                     dimension_slice=info_netcdf.data_dim.latitude,
@@ -1765,6 +2224,15 @@ def vars_localtime_ls(info_netcdf, latitude, altitude):
 
 
 def vars_min_mean_max(info_netcdf, latitude, altitude):
+    """
+    Purpose: min, mean, max temperature, zonal mean, above 1 Pa, [-15:15]N (.dat)
+
+    View mode: [temp: 13]
+
+    :param info_netcdf: the object info_netcdf
+    :param latitude: latitude selected
+    :param altitude: altitude selected
+    """
     info_netcdf.data_target, tmp = slice_data(data=info_netcdf.data_target,
                                               dimension_slice=info_netcdf.data_dim.latitude,
                                               idx_dim_slice=info_netcdf.idx_dim.latitude,
