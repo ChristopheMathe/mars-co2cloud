@@ -291,7 +291,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
                                      latitude=[latitude], shortname_1='co2_ice', varname_1='CO$_2$ ice mmr',
                                      alti_line=True, norm='log', unit='kg/kg', vmin=1e-13, vmax=1e-4,
                                      title=f'{info_netcdf.target_name} mmr at {latitude}'
-                                           f' ({info_netcdf.local_time[0]:.0f} h), DS: MY28',
+                                           f' ({info_netcdf.local_time[0]:.0f} h)',
                                      save_name=f'{info_netcdf.target_name}_zonal_mean_{latitude}N_'
                                                f'{info_netcdf.local_time[0]:.0f}h')
         else:
@@ -299,7 +299,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
                                      latitude=[latitude], shortname_1='co2_ice', varname_1='CO$_2$ ice mmr',
                                      alti_line=True, norm='log', unit='kg/kg', vmin=1e-13, vmax=1e-4,
                                      title=f'{info_netcdf.target_name} mmr at {latitude}'
-                                           f' (diurnal mean), DS: MY28',
+                                           f' (diurnal mean)',
                                      save_name=f'{info_netcdf.target_name}_zonal_mean_{latitude}N_'
                                                f'diurnal_mean')
 
