@@ -21,9 +21,7 @@ described in the part fourth to run these Python scripts.
 On Ciclad, you can simply run the following command line:  
 `module load python/meso-3.8`
 
-You need to download observational data at the address on the CICLAD server: `/data/cmathe/observational_data
-/`. Place the directory `data/` in the same location of `ncplot.py`. Since the data are too big to be store on gitHub
-, we choose this solution. If you do not have access to CICLAD server, feel free to contact me at
+You need to download observational data at the address on the CICLAD server: `/data/cmathe/observational_data/data/`. Place the directory `data/` in the same location of `ncplot.py`. Since the data are too big to be store on gitHub, we choose this solution. If you do not have access to CICLAD server, feel free to contact me at
  <christophe.mathe@obspm.fr>.
 
 ## 1.2 ncplot.py
