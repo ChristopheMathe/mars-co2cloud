@@ -517,10 +517,9 @@ def display_co2_ice_cloud_evolution_latitude(info_netcdf, data_satuco2, data_tem
     return
 
 
-def display_co2_ice_max_longitude_altitude(info_netcdf, max_mmr, max_alt, max_temp, max_satu, max_radius, max_ccn_n,
-                                           unit):
+def display_co2_ice_max_longitude_altitude(info_netcdf, max_mmr, max_alt, max_temp, max_satu, max_radius, max_ccn_n):
     from matplotlib.colors import LogNorm, TwoSlopeNorm, Normalize, BoundaryNorm
-    from numpy import arange, logspace, max, min
+    from numpy import arange, logspace, max
     from math import log10
 
     cmap = plt.get_cmap('inferno')
@@ -562,7 +561,7 @@ def display_co2_ice_max_longitude_altitude(info_netcdf, max_mmr, max_alt, max_te
     pc = ax[0, 0].pcolormesh(max_mmr, norm=LogNorm(vmin=1e-13, vmax=1e0), cmap=cmap, shading='flat')
     ax[0, 0].set_facecolor('white')
     cbar = plt.colorbar(pc, ax=ax[0, 0])
-    cbar.ax.set_title(unit, fontsize=fontsize)
+    cbar.ax.set_title('kg/kg', fontsize=fontsize)
     cbar.ax.tick_params(labelsize=fontsize)
 
     # plot 2
@@ -621,8 +620,7 @@ def display_co2_ice_max_longitude_altitude(info_netcdf, max_mmr, max_alt, max_te
         fig.savefig(f'max_{info_netcdf.target_name}_in_altitude_longitude{info_netcdf.local_time[0]:2.0f}h.png',
                     bbox_inches='tight')
     else:
-        fig.savefig(f'max_{info_netcdf.target_name}_in_altitude_longitude_diurnal_mean.png',
-                    bbox_inches='tight')
+        fig.savefig(f'max_{info_netcdf.target_name}_in_altitude_longitude_diurnal_mean.png', bbox_inches='tight')
     plt.show()
     return
 
@@ -688,88 +686,6 @@ def display_co2_ice_density_column_evolution_polar_region(info_netcdf, time, lat
 
     # create the gif
     create_gif(save_name)
-    return
-
-
-def display_co2_ice_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, norm, vmin, vmax, save_name):
-    from matplotlib.colors import LogNorm, Normalize
-    from numpy.ma import masked_inside
-
-    if norm == 'log':
-        norm = LogNorm(vmin=vmin, vmax=vmax)
-    else:
-        norm = Normalize(vmin=vmin, vmax=vmax)
-
-    data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time, selected_time=0)
-
-    if info_netcdf.data_dim.time.units != 'deg':
-        data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
-        if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
-            data_time = data_ls[idx::len(data_local_time)]
-            data, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
-            ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
-        else:
-            data_ls = data_ls[:info_netcdf.data_dim.time.shape[0]]
-            data_time = data_ls[idx::len(data_local_time)]
-            data, data_time = linearize_ls(data=info_netcdf.data_taget, data_ls=data_time)
-            ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time, tab_ls=data_time[::20])
-    else:
-        data_time = info_netcdf.data_dim.time[idx::len(data_local_time)]
-        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
-        data = info_netcdf.data_target
-
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
-    ctf = ax.pcolormesh(data_time[:], data_local_time[:], data, norm=norm, cmap="plasma", shading='auto')
-    cbar = fig.colorbar(ctf)
-    cbar.ax.set_title(unit, fontsize=fontsize)
-    cbar.ax.tick_params(labelsize=fontsize)
-
-    ax.set_facecolor('white')
-
-    ax.set_title(title, fontsize=fontsize)
-    ax.set_xlabel('Solar longitude (°)', fontsize=fontsize)
-    ax.set_ylabel('Local time (h)', fontsize=fontsize)
-    ax.set_xticks(ndx)
-    ax.set_xticklabels(axis_ls, fontsize=fontsize)
-    ax.set_yticks(data_local_time)
-    ax.set_yticklabels(data_local_time, fontsize=fontsize)
-
-    dict_var = [{'data': data_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Ls',
-                 'dimension': True},
-                {'data': data_local_time[:], 'varname': 'Local time', 'units': 'h', 'shortname': 'Local_time',
-                 'dimension': True},
-                {'data': data[:, :], 'varname': f'{title}', 'units': f'{unit}', 'shortname': 'co2_ice'},
-                ]
-
-    # observation
-    list_instrument = ['HRSC', 'OMEGAlimb', 'OMEGAnadir', 'SPICAM', 'THEMIS', 'NOMAD']
-    list_marker = ['s', 'o', 'v', 'P', 'X', '1']
-    list_colors = ['black', 'brown', 'green', 'aquamarine', 'red', 'blue']
-    for i, value_i in enumerate(list_instrument):
-        data_ls, data_lat, data_lon, data_lt, data_alt, data_alt_min, data_alt_max = \
-            mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
-
-        mask = masked_inside(data_lat, lat_min, lat_max)  # mask inside but we want mask.mask = True
-        if mask.mask.any():
-            tmp_alt = array([])
-            tmp_ls = array([])
-            for j in range(data_alt[mask.mask].shape[0]):
-                if data_alt[mask.mask][j] != 0:
-                    tmp_alt = append(tmp_alt, data_lt[mask.mask][j])
-                    tmp_ls = append(tmp_ls, data_ls[mask.mask][j])
-            ax.scatter(tmp_ls, tmp_alt, color=list_colors[i], marker=list_marker[i],
-                       label=value_i)
-            dict_var.append({'data': tmp_ls, 'varname': f'Solar longitude ({value_i})', 'units': 'deg',
-                             'shortname': f'Ls_{value_i}', 'dimension': True})
-            dict_var.append({'data': tmp_alt, 'varname': f'Local time ({value_i})', 'units': 'h',
-                             'shortname': f'Local_time_{value_i}', 'dimension': False})
-
-    ax.legend(loc=0)
-    plt.savefig(f'{save_name}.eps', bbox_inches='tight')
-    plt.savefig(f'{save_name}.pdf', bbox_inches='tight')
-    plt.savefig(f'{save_name}.png', bbox_inches='tight')
-
-    save_figure_data(list_dict_var=dict_var, savename=save_name)
     return
 
 
@@ -2535,6 +2451,88 @@ def display_vars_localtime_longitude(info_netcdf, norm, vmin, vmax, unit, short_
          "dimension": True},
         {"data": info_netcdf.data_target, "varname": f"{title}", "units": f"{unit}", "shortname": f"{short_name}"}
     ]
+
+    save_figure_data(list_dict_var=dict_var, savename=save_name)
+    return
+
+
+def display_vars_localtime_ls(info_netcdf, lat_min, lat_max, title, unit, norm, vmin, vmax, save_name):
+    from matplotlib.colors import LogNorm, Normalize
+    from numpy.ma import masked_inside
+
+    if norm == 'log':
+        norm = LogNorm(vmin=vmin, vmax=vmax)
+    else:
+        norm = Normalize(vmin=vmin, vmax=vmax)
+
+    data_local_time, idx, stats = check_local_time(data_time=info_netcdf.data_dim.time, selected_time=0)
+
+    if info_netcdf.data_dim.time.units != 'deg':
+        data_ls, list_var = get_data(filename=f'{data_dir}concat_Ls.nc', target='Ls')
+        if info_netcdf.data_dim.time.shape[0] == data_ls.shape[0]:
+            data_time = data_ls[idx::len(data_local_time)]
+            data, data_time = linearize_ls(data=info_netcdf.data_target, data_ls=data_time)
+            ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+        else:
+            data_ls = data_ls[:info_netcdf.data_dim.time.shape[0]]
+            data_time = data_ls[idx::len(data_local_time)]
+            data, data_time = linearize_ls(data=info_netcdf.data_taget, data_ls=data_time)
+            ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time, tab_ls=data_time[::20])
+    else:
+        data_time = info_netcdf.data_dim.time[idx::len(data_local_time)]
+        ndx, axis_ls, ls_lin = get_ls_index(data_time=data_time)
+        data = info_netcdf.data_target
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize_1graph)
+    ctf = ax.pcolormesh(data_time[:], data_local_time[:], data, norm=norm, cmap="plasma", shading='auto')
+    cbar = fig.colorbar(ctf)
+    cbar.ax.set_title(unit, fontsize=fontsize)
+    cbar.ax.tick_params(labelsize=fontsize)
+
+    ax.set_facecolor('white')
+
+    ax.set_title(title, fontsize=fontsize)
+    ax.set_xlabel('Solar longitude (°)', fontsize=fontsize)
+    ax.set_ylabel('Local time (h)', fontsize=fontsize)
+    ax.set_xticks(ndx)
+    ax.set_xticklabels(axis_ls, fontsize=fontsize)
+    ax.set_yticks(data_local_time)
+    ax.set_yticklabels(data_local_time, fontsize=fontsize)
+
+    dict_var = [{'data': data_time[:], 'varname': 'Solar longitude', 'units': 'deg', 'shortname': 'Ls',
+                 'dimension': True},
+                {'data': data_local_time[:], 'varname': 'Local time', 'units': 'h', 'shortname': 'Local_time',
+                 'dimension': True},
+                {'data': data[:, :], 'varname': f'{title}', 'units': f'{unit}', 'shortname': 'co2_ice'},
+                ]
+
+    # observation
+    list_instrument = ['HRSC', 'OMEGAlimb', 'OMEGAnadir', 'SPICAM', 'THEMIS', 'NOMAD']
+    list_marker = ['s', 'o', 'v', 'P', 'X', '1']
+    list_colors = ['black', 'brown', 'green', 'aquamarine', 'red', 'blue']
+    for i, value_i in enumerate(list_instrument):
+        data_ls, data_lat, data_lon, data_lt, data_alt, data_alt_min, data_alt_max = \
+            mesospheric_clouds_altitude_localtime_observed(instrument=value_i)
+
+        mask = masked_inside(data_lat, lat_min, lat_max)  # mask inside but we want mask.mask = True
+        if mask.mask.any():
+            tmp_alt = array([])
+            tmp_ls = array([])
+            for j in range(data_alt[mask.mask].shape[0]):
+                if data_alt[mask.mask][j] != 0:
+                    tmp_alt = append(tmp_alt, data_lt[mask.mask][j])
+                    tmp_ls = append(tmp_ls, data_ls[mask.mask][j])
+            ax.scatter(tmp_ls, tmp_alt, color=list_colors[i], marker=list_marker[i],
+                       label=value_i)
+            dict_var.append({'data': tmp_ls, 'varname': f'Solar longitude ({value_i})', 'units': 'deg',
+                             'shortname': f'Ls_{value_i}', 'dimension': True})
+            dict_var.append({'data': tmp_alt, 'varname': f'Local time ({value_i})', 'units': 'h',
+                             'shortname': f'Local_time_{value_i}', 'dimension': False})
+
+    ax.legend(loc=0)
+    plt.savefig(f'{save_name}.eps', bbox_inches='tight')
+    plt.savefig(f'{save_name}.pdf', bbox_inches='tight')
+    plt.savefig(f'{save_name}.png', bbox_inches='tight')
 
     save_figure_data(list_dict_var=dict_var, savename=save_name)
     return

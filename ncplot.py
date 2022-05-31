@@ -170,7 +170,7 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
         print('Display:')
         display_co2_ice_max_longitude_altitude(info_netcdf=info_netcdf, max_mmr=max_mmr, max_alt=max_alt,
                                                max_temp=max_temp, max_satu=max_satu, max_radius=max_radius,
-                                               max_ccn_n=max_ccn_n, unit='kg/kg')
+                                               max_ccn_n=max_ccn_n)
 
     elif view_mode in [2, 201, 202]:
         print('Processing data:')
@@ -360,12 +360,12 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
             altitude_min, latitude_min, latitude_max = co2ice_cloud_localtime_along_ls(info_netcdf=info_netcdf)
 
             print('Display:')
-            display_co2_ice_localtime_ls(info_netcdf=info_netcdf, lat_min=latitude_min, lat_max=latitude_max,
-                                         unit='kg/m2', norm='log', vmin=1e-13, vmax=1e-6,
-                                         title=f'Zonal mean of CO2 ice column density\n'
+            display_vars_localtime_ls(info_netcdf=info_netcdf, lat_min=latitude_min, lat_max=latitude_max,
+                                      unit='kg/m2', norm='log', vmin=1e-13, vmax=1e-6,
+                                      title=f'Zonal mean of CO2 ice column density\n'
                                                f' above {altitude_min:.0e}Pa, between [{latitude_min:.0f}:'
                                                f'{latitude_max:.0f}]°N',
-                                         save_name=f'co2_ice_zonal_mean_localtime_ls_{latitude_min:.0f}_'
+                                      save_name=f'co2_ice_zonal_mean_localtime_ls_{latitude_min:.0f}_'
                                                    f'{latitude_max:.0f}N_above_{altitude_min:.0e}Pa')
 
         else:
@@ -373,9 +373,9 @@ def co2_ice(info_netcdf, view_mode, files, directory_store):
             info_netcdf.data_target = vars_localtime_ls(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
 
             print('Display:')
-            display_co2_ice_localtime_ls(info_netcdf=info_netcdf, unit='kg/kg', norm='log', lat_min=0, lat_max=0,
-                                         vmin=1e-13, vmax=1e-9, title='CO2 ice mmr at 0°N and 0.5 Pa',
-                                         save_name='co2_ice_zonal_mean_localtime_ls_0N_0p5Pa')
+            display_vars_localtime_ls(info_netcdf=info_netcdf, unit='kg/kg', norm='log', lat_min=0, lat_max=0,
+                                      vmin=1e-13, vmax=1e-9, title='CO2 ice mmr at 0°N and 0.5 Pa',
+                                      save_name='co2_ice_zonal_mean_localtime_ls_0N_0p5Pa')
 
     elif view_mode in [10, 101, 102]:
         if len(info_netcdf.local_time) == 1:
@@ -919,9 +919,9 @@ def satuco2(info_netcdf, view_mode):
         info_netcdf.data_target = vars_localtime_ls(info_netcdf, latitude=0, altitude=0.5)
 
         print('Display:')
-        display_co2_ice_localtime_ls(info_netcdf=info_netcdf, unit='', norm='linear', vmin=1, vmax=10, lat_min=-3,
-                                     lat_max=3, title='CO2 saturation at 0°N and 0.5 Pa',
-                                     save_name='satuco2_zonal_mean_localtime_ls_0N_0p5Pa')
+        display_vars_localtime_ls(info_netcdf=info_netcdf, unit='', norm='linear', vmin=1, vmax=10, lat_min=-3,
+                                  lat_max=3, title='CO2 saturation at 0°N and 0.5 Pa',
+                                  save_name='satuco2_zonal_mean_localtime_ls_0N_0p5Pa')
 
     elif view_mode == 7:
         print('Processing data:')
@@ -1236,9 +1236,9 @@ def temp(info_netcdf, view_mode):
         info_netcdf.data_target = vars_localtime_ls(info_netcdf=info_netcdf, latitude=0, altitude=0.5)
 
         print('Display:')
-        display_co2_ice_localtime_ls(info_netcdf=info_netcdf, lat_min=0, lat_max=0, unit='K', norm='linear', vmin=120,
-                                     vmax=160, title='Temperature at 0°N and 0.5 Pa',
-                                     save_name='temp_zonal_mean_localtime_ls_0N_0p5Pa')
+        display_vars_localtime_ls(info_netcdf=info_netcdf, lat_min=0, lat_max=0, unit='K', norm='linear', vmin=120,
+                                  vmax=160, title='Temperature at 0°N and 0.5 Pa',
+                                  save_name='temp_zonal_mean_localtime_ls_0N_0p5Pa')
 
     if view_mode == 13:
         print('Processing data:')

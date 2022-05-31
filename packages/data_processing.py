@@ -949,7 +949,7 @@ def satuco2_zonal_mean_with_co2_ice(info_netcdf):
     data_co2ice = correction_value(data_co2ice[:, :, :, :], operator='inf', value=threshold)
 
     if len(info_netcdf.local_time) == 1:
-        data_co2ice, tmp = extract_at_a_local_time(info_netcdf=info_netcdf.filename, data=data_co2ice)
+        data_co2ice, tmp = extract_at_a_local_time(info_netcdf=info_netcdf, data=data_co2ice)
 
     # Slice co2 ice mmr at these 3 latitudes
     data_co2ice_north, north_latitude_selected = slice_data(data_co2ice,
