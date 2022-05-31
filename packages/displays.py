@@ -1360,10 +1360,10 @@ def display_satuco2_with_co2_ice_altitude_ls(info_netcdf, data_satuco2_north, da
 
     # Get latitude range between value-1 et value+1
     data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs, \
-    data_maven_limb, data_spicam, data_tesmoc, data_themis = mesospheric_clouds_observed()
+    data_maven_limb, data_spicam, data_tesmoc, data_themis, data_nomad = mesospheric_clouds_observed()
 
     list_obs = [data_crism_limb, data_crism_nadir, data_omega, data_pfs_eye, data_pfs_stats, data_hrsc, data_iuvs,
-                data_maven_limb, data_spicam, data_tesmoc, data_themis]
+                data_maven_limb, data_spicam, data_tesmoc, data_themis, data_nomad]
 
     data_zareoid, altitude_unit, altitude_name, data_surface_local, ticks_altitude = None, None, None, None, None
 
